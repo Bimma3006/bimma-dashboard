@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- saved from url=(0042)file:///Users/james/Downloads/index_6.html -->
+<!-- saved from url=(0042)file:///Users/james/Downloads/index_7.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bimma Retail — FBA Dashboard</title>
-<link href="./index_files/css2" rel="stylesheet">
+<link href="file:///Users/james/Downloads/index_files/css2" rel="stylesheet">
 <style>
 :root {
   --bg: #f5f3ee;
@@ -294,9 +294,9 @@ tbody td { padding:9px 12px; vertical-align:middle; }
         <div class="stat-card s-amber"><div class="stat-label">UPLOADED</div><div class="stat-value" id="s-uploaded">—</div><div class="stat-sub">to listing loader</div></div>
         <div class="stat-card s-dark"><div class="stat-label">THIS MONTH</div><div class="stat-value" id="s-month">—</div><div class="stat-sub">deals</div></div>
       </div>
-      <div id="bulkUploadBanner" style="background:var(--amber-bg);border:1px solid var(--accent2);border-radius:8px;padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <div id="bulkUploadBanner" style="background:var(--amber-bg);border:1px solid var(--accent2);border-radius:8px;padding:14px 18px;margin-bottom:16px;display:none;justify-content:space-between;align-items:center;gap:12px;">
         <div>
-          <div style="font-weight:700;font-size:13px;color:var(--amber)">396 historical deals not marked as uploaded</div>
+          <div style="font-weight:700;font-size:13px;color:var(--amber)" id="bulkBannerTitle">historical deals not marked as uploaded</div>
           <div style="font-family:var(--font-m);font-size:10px;color:var(--muted);margin-top:3px">Mark all existing purchases as uploaded so only new deals go into the Listing loader queue</div>
         </div>
         <button class="btn btn-primary" onclick="bulkMarkUploaded()" id="bulkMarkBtn">MARK ALL AS UPLOADED</button>
@@ -342,8 +342,8 @@ tbody td { padding:9px 12px; vertical-align:middle; }
       <div class="table-controls">
         <select class="t-select" id="listingMonthFilter" onchange="filterListing()"><option value="all">All months</option></select>
         <select class="t-select" id="listingStatusFilter" onchange="filterListing()">
-          <option value="all">All items</option>
           <option value="pending">Pending only</option>
+          <option value="all">All items</option>
           <option value="uploaded">Uploaded only</option>
         </select>
         <button class="btn btn-primary" onclick="exportListingTSV()">⬇ EXPORT TSV</button>
@@ -485,6 +485,8 @@ let clientId = localStorage.getItem('bimma_goog_cid') || '';
 window.onload = () => {
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
   if (clientId) { document.getElementById('clientIdInput').value = clientId; loadGIS(); }
+  // Redraw chart if window resizes
+  window.addEventListener('resize', () => { if (_lastChartUniq.length) _drawChart(); });
 };
 
 function loadGIS() {
@@ -590,7 +592,7 @@ async function loadData() {
       uploaded: row[10]==='TRUE'||row[10]===true||row[10]==='Yes',
       rowIdx: i + 2
     }));
-    renderDashboard(); renderPurchases(allRows); renderListing(allRows); renderPrep(allRows); renderExpenses();
+    renderDashboard(); renderPurchases(allRows); filterListing(); renderPrep(allRows); renderExpenses();
     populateFilters();
     toast(`Loaded ${allRows.length} purchases`, 'success');
   } catch(e) { toast('Load error: ' + e.message, 'error'); }
@@ -620,7 +622,7 @@ function renderDashboard() {
     if (unup === 0) { banner.style.display = 'none'; }
     else {
       banner.style.display = 'flex';
-      banner.querySelector('div div').textContent = unup + ' historical deals not marked as uploaded';
+      document.getElementById('bulkBannerTitle').textContent = unup + ' historical deals not marked as uploaded';
     }
   }
   document.getElementById('s-spend').textContent = '£' + fmt(spend);
@@ -637,8 +639,8 @@ function renderDashboard() {
   });
   const uniq = [...new Set(order)];
 
-  // Chart
-  renderChart(uniq, months);
+  // Chart — defer one frame so layout is complete, then draw
+  setTimeout(() => renderChart(uniq, months), 50);
 
   // Month cards
   const grid = document.getElementById('monthsGrid');
@@ -663,17 +665,31 @@ function renderDashboard() {
   }).join('');
 }
 
+// Store last chart data for resize re-render
+let _lastChartUniq = [], _lastChartMonths = {};
+
 function renderChart(uniq, months) {
+  _lastChartUniq = uniq; _lastChartMonths = months;
+  _drawChart();
+}
+
+function _drawChart() {
+  const uniq = _lastChartUniq, months = _lastChartMonths;
+  if (!uniq || !uniq.length) return;
   const canvas = document.getElementById('spendChart');
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const data = uniq.map(m => months[m].reduce((s,r) => s+r.spend, 0));
   const labels = uniq;
   const maxVal = Math.max(...data) * 1.15 || 1;
 
-  // Set actual pixel size
+  // Set actual pixel size — use clientWidth of parent, fallback to 800
   const wrap = canvas.parentElement;
-  canvas.width = wrap.offsetWidth || 800;
+  const w = wrap.clientWidth || wrap.offsetWidth || 800;
+  canvas.width = w;
   canvas.height = 200;
+  canvas.style.width = '100%';
+  canvas.style.height = '200px';
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const padL = 72, padR = 16, padT = 16, padB = 40;
@@ -769,14 +785,15 @@ function filterPurchases() {
 
 // ── LISTING ──
 function renderListing(rows) {
-  const pending = rows.filter(r => !r.uploaded).length;
-  const done = rows.filter(r => r.uploaded).length;
+  // Summary counts always based on ALL rows
+  const pending = allRows.filter(r => !r.uploaded).length;
+  const done = allRows.filter(r => r.uploaded).length;
   document.getElementById('ls-pending').textContent = pending;
   document.getElementById('ls-done').textContent = done;
-  document.getElementById('ls-total').textContent = rows.length;
+  document.getElementById('ls-total').textContent = allRows.length;
 
   const tb = document.getElementById('listingTbody');
-  if (!rows.length) { tb.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No items</div></div></td></tr>`; return; }
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">No pending items</div><div class="empty-sub">All deals have been uploaded</div></div></td></tr>`; return; }
   tb.innerHTML = rows.map(r => {
     const listingPrice = (r.sell * 1.25).toFixed(2);
     return `<tr>
@@ -799,7 +816,7 @@ function filterListing() {
   let f = allRows;
   if (m !== 'all') f = f.filter(r => monthKey(r.date) === m);
   if (s === 'pending') f = f.filter(r => !r.uploaded);
-  if (s === 'uploaded') f = f.filter(r => r.uploaded);
+  else if (s === 'uploaded') f = f.filter(r => r.uploaded);
   renderListing(f);
 }
 

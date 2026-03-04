@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0043)file:///Users/james/Downloads/index_10.html -->
+<!-- saved from url=(0043)file:///Users/james/Downloads/index_12.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -269,7 +269,6 @@ tbody td { padding:9px 12px; vertical-align:middle; }
     <div class="nav-item active" data-page="dashboard" onclick="showPage(&#39;dashboard&#39;,this)"><span class="nav-icon">📊</span>Dashboard</div>
     <div class="nav-item" data-page="purchases" onclick="showPage(&#39;purchases&#39;,this)"><span class="nav-icon">📦</span>Purchases</div>
     <div class="nav-item" data-page="listing" onclick="showPage(&#39;listing&#39;,this)"><span class="nav-icon">🚀</span>Listing Uploader</div>
-    <div class="nav-item" data-page="add" onclick="showPage(&#39;add&#39;,this)"><span class="nav-icon">➕</span>Add Purchase</div>
     <div class="nav-item" data-page="prep" onclick="showPage(&#39;prep&#39;,this)"><span class="nav-icon">📬</span>Prep Tracker</div>
     <div class="nav-item" data-page="expenses" onclick="showPage(&#39;expenses&#39;,this)"><span class="nav-icon">💰</span>Expenses</div>
   </nav>
@@ -303,25 +302,6 @@ tbody td { padding:9px 12px; vertical-align:middle; }
         <div class="stat-card s-amber"><div class="stat-label">UPLOADED</div><div class="stat-value" id="s-uploaded">—</div><div class="stat-sub">to listing loader</div></div>
         <div class="stat-card s-dark"><div class="stat-label">THIS MONTH</div><div class="stat-value" id="s-month">—</div><div class="stat-sub">deals</div></div>
       </div>
-      <div id="bulkUploadBanner" style="background:var(--amber-bg);border:1px solid var(--accent2);border-radius:8px;padding:14px 18px;margin-bottom:16px;display:none;justify-content:space-between;align-items:center;gap:12px;">
-        <div>
-          <div style="font-weight:700;font-size:13px;color:var(--amber)" id="bulkBannerTitle"></div>
-          <div style="font-family:var(--font-m);font-size:10px;color:var(--muted);margin-top:3px">Mark all existing purchases as uploaded so only new deals go into the Listing loader queue</div>
-        </div>
-        <button class="btn btn-primary" onclick="bulkMarkUploaded()" id="bulkMarkBtn">MARK ALL AS UPLOADED</button>
-      </div>
-      <div class="chart-card">
-        <div class="chart-header">
-          <div class="chart-title">Monthly Spend</div>
-          <span style="font-family:var(--font-m);font-size:10px;color:var(--muted)">Total spend £ per month</span>
-        </div>
-        <div class="chart-wrap" id="spendChart"></div>
-      </div>
-      <div class="section-title">Monthly Overview</div>
-      <div class="months-grid" id="monthsGrid">
-        <div class="loading"><div class="spinner"></div>Connect to Google Sheets to load</div>
-      </div>
-    </div>
 
     <!-- PURCHASES -->
     <div class="page" id="page-purchases">
@@ -363,57 +343,6 @@ tbody td { padding:9px 12px; vertical-align:middle; }
         </table>
       </div>
     </div>
-
-    <!-- ADD PURCHASE -->
-    <div class="page" id="page-add">
-      <div class="section-title">Add New Purchase</div>
-      <div class="form-card">
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">DATE</label>
-            <input class="form-input" type="date" id="f-date" oninput="calcPreview()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">SKU</label>
-            <input class="form-input" type="text" id="f-sku" placeholder="DD/MM/YY-PRICE-COUNTRY">
-          </div>
-          <div class="form-group fg-full">
-            <label class="form-label">PRODUCT TITLE</label>
-            <input class="form-input" type="text" id="f-title" placeholder="Full product name">
-          </div>
-          <div class="form-group">
-            <label class="form-label">ASIN</label>
-            <input class="form-input" type="text" id="f-asin" placeholder="B0XXXXXXXXX">
-          </div>
-          <div class="form-group">
-            <label class="form-label">AMAZON SUPPLIER</label>
-            <input class="form-input" type="text" id="f-supplier" placeholder="Supplier name">
-          </div>
-          <div class="form-group">
-            <label class="form-label">BUY PRICE (inc VAT)</label>
-            <input class="form-input" type="number" id="f-buy" placeholder="0.00" step="0.01" oninput="calcPreview()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">SELL PRICE</label>
-            <input class="form-input" type="number" id="f-sell" placeholder="0.00" step="0.01" oninput="calcPreview()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">QUANTITY</label>
-            <input class="form-input" type="number" id="f-qty" placeholder="1" oninput="calcPreview()">
-          </div>
-        </div>
-        <div class="calc-preview" id="calcPreview">
-          <div class="calc-row"><span class="calc-label">Total Spend (inc VAT)</span><span class="calc-value" id="cp-spend">—</span></div>
-          <div class="calc-row"><span class="calc-label">VAT (20%)</span><span class="calc-value" id="cp-vat">—</span></div>
-          <div class="calc-row"><span class="calc-label">Listing Price (sell × 1.25)</span><span class="calc-value" id="cp-list">—</span></div>
-        </div>
-        <div class="form-actions">
-          <button class="btn btn-primary" id="addBtn" onclick="addPurchase()" disabled="">+ ADD TO SHEET</button>
-          <button class="btn btn-outline" onclick="clearForm()">CLEAR</button>
-        </div>
-      </div>
-    </div>
-
 
     <!-- PREP TRACKER -->
     <div class="page" id="page-prep">
@@ -488,8 +417,7 @@ let clientId = localStorage.getItem('bimma_goog_cid') || '';
 
 // ── INIT ──
 window.onload = () => {
-  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
-  if (clientId) { document.getElementById('clientIdInput').value = clientId; loadGIS(); }
+    if (clientId) { document.getElementById('clientIdInput').value = clientId; loadGIS(); }
 };
 
 function loadGIS() {
@@ -535,7 +463,6 @@ function setConnected() {
   document.getElementById('authLabel').textContent = 'Connected';
   document.getElementById('authBtn').textContent = 'SIGN OUT';
   document.getElementById('refreshBtn').disabled = false;
-  document.getElementById('addBtn').disabled = false;
 }
 
 function signOut() {
@@ -545,7 +472,6 @@ function signOut() {
   document.getElementById('authLabel').textContent = 'Not connected';
   document.getElementById('authBtn').textContent = 'CONNECT SHEETS';
   document.getElementById('refreshBtn').disabled = true;
-  document.getElementById('addBtn').disabled = true;
   toast('Signed out');
 }
 
@@ -617,16 +543,6 @@ function renderDashboard() {
   const now = new Date();
   const thisM = mn[now.getMonth()] + ' ' + now.getFullYear();
   const thisDeals = allRows.filter(r => monthKey(r.date) === thisM).length;
-
-  const banner = document.getElementById('bulkUploadBanner');
-  if (banner) {
-    const unup = allRows.filter(r => !r.uploaded).length;
-    if (unup === 0) { banner.style.display = 'none'; }
-    else {
-      banner.style.display = 'flex';
-      document.getElementById('bulkBannerTitle').textContent = unup + ' deals not marked as uploaded';
-    }
-  }
   document.getElementById('s-spend').textContent = '£' + fmt(spend);
   document.getElementById('s-deals').textContent = allRows.length;
   document.getElementById('s-uploaded').textContent = uploaded + '/' + allRows.length;
@@ -672,12 +588,8 @@ function renderChart(uniq, months) {
   if (!wrap || !uniq.length) return;
   const data = uniq.map(m => months[m].reduce((s,r) => s+r.spend, 0));
   const maxVal = Math.max(...data) || 1;
-
-  // Y-axis ticks
   const ticks = [maxVal, maxVal*0.75, maxVal*0.5, maxVal*0.25, 0];
   const yAxis = `<div class="bar-yaxis">${ticks.map(t => `<div class="bar-ytick">£${fmt(t)}</div>`).join('')}</div>`;
-
-  // Bars
   const bars = uniq.map((label, i) => {
     const pct = (data[i] / maxVal * 100).toFixed(1);
     const isCurrent = i === uniq.length - 1;
@@ -690,7 +602,6 @@ function renderChart(uniq, months) {
       <div class="bar-label">${shortLabel}</div>
     </div>`;
   }).join('');
-
   wrap.innerHTML = `<div style="position:relative;padding-left:52px;height:100%;">${yAxis}<div class="bar-chart">${bars}</div></div>`;
 }
 
@@ -739,7 +650,6 @@ function toggleListingShowAll() {
 }
 
 function renderListing(rows) {
-  // Summary always based on ALL rows
   const pending = allRows.filter(r => !r.uploaded).length;
   const done = allRows.filter(r => r.uploaded).length;
   document.getElementById('ls-pending').textContent = pending;
@@ -842,84 +752,8 @@ async function removeFromListingLoader(sku) {
   });
 }
 
-// ── ADD PURCHASE ──
-function calcPreview() {
-  const buy = parseFloat(document.getElementById('f-buy').value)||0;
-  const sell = parseFloat(document.getElementById('f-sell').value)||0;
-  const qty = parseInt(document.getElementById('f-qty').value)||1;
-  const prev = document.getElementById('calcPreview');
-  if (buy > 0 || sell > 0) {
-    const spend = buy * qty;
-    const vat = spend - (spend/1.2);
-    const lp = sell * 1.25;
-    document.getElementById('cp-spend').textContent = '£' + spend.toFixed(2);
-    document.getElementById('cp-vat').textContent = '£' + vat.toFixed(2);
-    document.getElementById('cp-list').textContent = '£' + lp.toFixed(2);
-    prev.classList.add('show');
-  } else { prev.classList.remove('show'); }
-}
 
-async function addPurchase() {
-  if (!accessToken) { toast('Not connected', 'error'); return; }
-  const date = document.getElementById('f-date').value;
-  const sku = document.getElementById('f-sku').value.trim();
-  const title = document.getElementById('f-title').value.trim();
-  const asin = document.getElementById('f-asin').value.trim();
-  const buy = parseFloat(document.getElementById('f-buy').value)||0;
-  const sell = parseFloat(document.getElementById('f-sell').value)||0;
-  const qty = parseInt(document.getElementById('f-qty').value)||1;
-  const supplier = document.getElementById('f-supplier').value.trim();
-  if (!date||!title) { toast('Date and title required', 'error'); return; }
 
-  const spend = buy * qty;
-  const vat = spend - (spend/1.2);
-  const btn = document.getElementById('addBtn');
-  btn.disabled = true; btn.textContent = 'SAVING...';
-
-  try {
-    // 1. Write to master Purchasing sheet
-    const purchRow = [date,sku,title,asin,buy,sell,qty,spend.toFixed(2),vat.toFixed(2),supplier,'FALSE'];
-    await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(PURCH_TAB)}!A:K:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
-      method: 'POST', body: JSON.stringify({ values: [purchRow] })
-    });
-
-    // 2. Write to correct month tab (e.g. "Mar 2026")
-    const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const d = new Date(date);
-    const monthTabName = mn[d.getMonth()] + ' ' + d.getFullYear();
-    // Check if month tab exists — if not, just skip (Apps Script handles tab creation)
-    try {
-      await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(monthTabName)}!A:K:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
-        method: 'POST', body: JSON.stringify({ values: [purchRow] })
-      });
-    } catch(e) {
-      console.warn('Month tab not found:', monthTabName, '— skipping');
-    }
-
-    // 3. Automatically add to Listing loader queue
-    const price = (Math.round(sell * 1.25 * 100) / 100).toFixed(2);
-    const listingRow = [sku, asin, 1, 'New', price, qty, 'a', 'AMAZON_EU', 'FALSE',
-      'not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'];
-    // Check not already in listing loader
-    const existing = await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:A`);
-    const existingSkus = (existing.values||[]).flat();
-    if (!existingSkus.includes(sku)) {
-      await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:N:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
-        method: 'POST', body: JSON.stringify({ values: [listingRow] })
-      });
-    }
-
-    toast('✓ Added to Purchasing sheet, month tab & Listing loader!', 'success');
-    clearForm(); loadData();
-  } catch(e) { toast('Add failed: ' + e.message, 'error'); }
-  finally { btn.disabled = false; btn.textContent = '+ ADD TO SHEET'; }
-}
-
-function clearForm() {
-  ['f-sku','f-title','f-asin','f-buy','f-sell','f-qty','f-supplier'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('calcPreview').classList.remove('show');
-}
 
 // ── EXPORT TSV ──
 async function exportListingTSV() {
@@ -1033,7 +867,8 @@ function monthKey(d) {
     if (d.includes('/')) {
       const p = d.split('/');
       if (p.length===3) { const y = p[2].length===4?parseInt(p[2]):2000+parseInt(p[2]); dt = new Date(y, parseInt(p[1])-1, parseInt(p[0])); }
-    } else { dt = new Date(d); }
+    } else if (/^\d{4}-\d{2}-\d{2}/.test(d)) { const p = d.split('-'); dt = new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])); }
+    else { dt = new Date(d); }
   }
   if (!dt||isNaN(dt.getTime())) return null;
   return mn[dt.getMonth()] + ' ' + dt.getFullYear();
@@ -1060,7 +895,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = {dashboard:'Dashboard',purchases:'Purchases',listing:'Listing Uploader',add:'Add Purchase'};
+  const titles = {dashboard:'Dashboard',purchases:'Purchases',listing:'Listing Uploader'};
   document.getElementById('topbarTitle').textContent = titles[name]||name;
   closeSidebar();
 }
@@ -1082,42 +917,6 @@ function closeSidebar() {
 
 
 
-// ── BULK MARK ALL EXISTING AS UPLOADED ──
-async function bulkMarkUploaded() {
-  if (!accessToken) { toast('Not connected', 'error'); return; }
-  const unuploaded = allRows.filter(r => !r.uploaded);
-  if (!unuploaded.length) { toast('All already marked as uploaded', 'success'); return; }
-
-  const btn = document.getElementById('bulkMarkBtn');
-  btn.disabled = true; btn.textContent = 'MARKING...';
-  toast('Marking ' + unuploaded.length + ' deals as uploaded...', '');
-
-  try {
-    // Build batch update for all unuploaded rows in master sheet
-    const requests = unuploaded.map(r => ({
-      range: `${PURCH_TAB}!K${r.rowIdx}`,
-      values: [['TRUE']]
-    }));
-
-    // Do in batches of 100 to avoid API limits
-    for (let i = 0; i < requests.length; i += 100) {
-      const batch = requests.slice(i, i + 100);
-      await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchUpdate`, {
-        method: 'POST',
-        body: JSON.stringify({ valueInputOption: 'RAW', data: batch })
-      });
-    }
-
-    // Hide the banner
-    document.getElementById('bulkUploadBanner').style.display = 'none';
-    toast('✓ All ' + unuploaded.length + ' deals marked as uploaded!', 'success');
-    loadData();
-  } catch(e) {
-    toast('Bulk mark failed: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false; btn.textContent = 'MARK ALL AS UPLOADED';
-  }
-}
 
 // ── PREP TRACKER ──
 function getPrepData() { try { return JSON.parse(localStorage.getItem('bimma_prep')||'{}'); } catch { return {}; } }
@@ -1255,4 +1054,4 @@ function toast(msg, type) {
 </script>
 
 
-</body></html>
+</div></body></html>

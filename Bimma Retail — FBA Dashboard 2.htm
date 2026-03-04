@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<!-- saved from url=(0042)file:///Users/james/Downloads/index_4.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bimma Retail — FBA Dashboard</title>
+<link href="./Bimma Retail — FBA Dashboard 2_files/css2" rel="stylesheet">
+<script src="./Bimma Retail — FBA Dashboard 2_files/chart.umd.min.js"></script><style type="text/css" id="operaUserStyle"></style>
+<style>
+:root {
+  --bg: #f5f3ee;
+  --surface: #ffffff;
+  --surface2: #f0ede6;
+  --border: #e0dbd0;
+  --dark: #1a1814;
+  --accent: #e8620a;
+  --accent2: #c4a35a;
+  --green: #1a7a4a;
+  --green-bg: #edf7f1;
+  --red: #c0392b;
+  --red-bg: #fdf0ee;
+  --amber: #b07d0a;
+  --amber-bg: #fdf8ed;
+  --text: #1a1814;
+  --muted: #8a8070;
+  --sidebar-w: 220px;
+  --font-d: 'Syne', sans-serif;
+  --font-m: 'JetBrains Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-d); min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  position: fixed; left:0; top:0; bottom:0; width:var(--sidebar-w);
+  background: var(--dark); display:flex; flex-direction:column; z-index:100;
+}
+.sidebar-logo { padding:24px 22px 18px; border-bottom:1px solid #2e2a25; }
+.wordmark { font-size:18px; font-weight:800; color:#fff; letter-spacing:-0.02em; line-height:1.1; }
+.wordmark span { color:var(--accent); }
+.sub { font-family:var(--font-m); font-size:9px; color:var(--accent2); letter-spacing:0.1em; margin-top:4px; }
+.nav { flex:1; padding:12px 0; overflow-y:auto; }
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:10px 22px;
+  font-size:13px; font-weight:600; color:#777; cursor:pointer;
+  transition:all 0.15s; border-left:3px solid transparent; user-select:none;
+}
+.nav-item:hover { color:#fff; background:#252118; }
+.nav-item.active { color:#fff; border-left-color:var(--accent); background:#252118; }
+.nav-icon { font-size:15px; width:18px; text-align:center; flex-shrink:0; }
+.sidebar-auth { padding:14px 22px; border-top:1px solid #2e2a25; }
+.auth-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.auth-dot { width:7px; height:7px; border-radius:50%; background:#444; flex-shrink:0; transition:background 0.3s; }
+.auth-dot.on { background:var(--green); }
+.auth-label { font-family:var(--font-m); font-size:10px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.btn-auth { width:100%; background:var(--accent); color:#fff; border:none; border-radius:4px; padding:9px; font-family:var(--font-m); font-size:11px; font-weight:700; letter-spacing:0.05em; cursor:pointer; transition:opacity 0.15s; }
+.btn-auth:hover { opacity:0.85; }
+
+/* MAIN */
+.main { margin-left:var(--sidebar-w); min-height:100vh; display:flex; flex-direction:column; }
+.topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:14px 28px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; gap:12px; }
+.topbar-title { font-size:17px; font-weight:800; letter-spacing:-0.02em; white-space:nowrap; }
+.topbar-right { display:flex; gap:8px; align-items:center; flex-shrink:0; }
+
+/* BUTTONS */
+.btn { font-family:var(--font-m); font-size:11px; font-weight:700; padding:8px 14px; border-radius:4px; border:none; cursor:pointer; letter-spacing:0.04em; transition:all 0.15s; white-space:nowrap; }
+.btn:hover { opacity:0.85; transform:translateY(-1px); }
+.btn:active { transform:translateY(0); }
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+.btn-green { background:var(--green); color:#fff; }
+.btn-red { background:var(--red); color:#fff; }
+.btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+
+/* CONTENT */
+.content { padding:24px 28px; flex:1; }
+.page { display:none; }
+.page.active { display:block; }
+.section-title { font-size:18px; font-weight:800; letter-spacing:-0.02em; margin-bottom:18px; }
+
+/* STATS GRID */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:18px 20px; position:relative; overflow:hidden; }
+.stat-card::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent); }
+.stat-card.s-green::after { background:var(--green); }
+.stat-card.s-amber::after { background:var(--accent2); }
+.stat-card.s-dark::after { background:var(--dark); }
+.stat-label { font-family:var(--font-m); font-size:9px; color:var(--muted); letter-spacing:0.1em; margin-bottom:6px; }
+.stat-value { font-size:26px; font-weight:800; letter-spacing:-0.03em; line-height:1; }
+.stat-sub { font-family:var(--font-m); font-size:10px; color:var(--muted); margin-top:5px; }
+
+/* CHART */
+.chart-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:20px 22px; margin-bottom:24px; }
+.chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.chart-title { font-size:14px; font-weight:700; }
+.chart-wrap { position:relative; height:200px; }
+
+/* MONTH CARDS */
+.months-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.month-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:18px; cursor:pointer; transition:all 0.15s; }
+.month-card:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,0.07); }
+.mc-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+.mc-name { font-size:15px; font-weight:800; }
+.mc-deals { font-family:var(--font-m); font-size:10px; color:var(--muted); margin-top:2px; }
+.upload-badge { font-family:var(--font-m); font-size:10px; font-weight:700; padding:3px 8px; border-radius:3px; white-space:nowrap; }
+.ub-all { background:var(--green-bg); color:var(--green); }
+.ub-some { background:var(--amber-bg); color:var(--amber); }
+.ub-none { background:var(--red-bg); color:var(--red); }
+.mc-stats { display:flex; gap:16px; }
+.mcs-label { font-family:var(--font-m); font-size:9px; color:var(--muted); letter-spacing:0.07em; }
+.mcs-value { font-size:14px; font-weight:700; margin-top:1px; }
+
+/* TABLE */
+.table-controls { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+.t-select { background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:var(--font-m); font-size:11px; padding:8px 10px; border-radius:4px; outline:none; cursor:pointer; }
+.t-select:focus { border-color:var(--accent); }
+.t-search { background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:var(--font-d); font-size:13px; padding:8px 12px; border-radius:4px; outline:none; flex:1; min-width:180px; }
+.t-search:focus { border-color:var(--accent); }
+.t-search::placeholder { color:#ccc; }
+.table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:12px; min-width:700px; }
+thead tr { background:var(--dark); }
+thead th { text-align:left; padding:10px 12px; font-family:var(--font-m); font-size:9px; letter-spacing:0.08em; color:#aaa; font-weight:500; white-space:nowrap; }
+tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:var(--surface2); }
+tbody td { padding:9px 12px; vertical-align:middle; }
+.td-date { font-family:var(--font-m); font-size:10px; color:var(--muted); white-space:nowrap; }
+.td-sku { font-family:var(--font-m); font-size:10px; color:var(--accent); }
+.td-title { max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12px; font-weight:600; }
+.td-price { font-family:var(--font-m); font-size:11px; font-weight:700; white-space:nowrap; }
+.td-center { text-align:center; font-family:var(--font-m); font-size:11px; }
+.roi-pill { display:inline-block; font-family:var(--font-m); font-size:10px; font-weight:700; padding:2px 7px; border-radius:3px; white-space:nowrap; }
+.roi-green { background:var(--green-bg); color:var(--green); }
+.roi-amber { background:var(--amber-bg); color:var(--amber); }
+.roi-red { background:var(--red-bg); color:var(--red); }
+
+/* TOGGLE */
+.toggle-wrap { display:flex; align-items:center; justify-content:center; }
+.toggle { width:36px; height:20px; background:#ddd; border-radius:10px; position:relative; cursor:pointer; transition:background 0.2s; border:none; flex-shrink:0; }
+.toggle.on { background:var(--green); }
+.toggle::after { content:''; position:absolute; width:14px; height:14px; background:#fff; border-radius:50%; top:3px; left:3px; transition:transform 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.toggle.on::after { transform:translateX(16px); }
+.toggle:disabled { opacity:0.4; cursor:not-allowed; }
+
+/* ADD FORM */
+.form-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:24px; max-width:680px; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.fg-full { grid-column:1/-1; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-label { font-family:var(--font-m); font-size:10px; color:var(--muted); letter-spacing:0.07em; }
+.form-input { background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:var(--font-d); font-size:13px; padding:9px 12px; border-radius:4px; outline:none; transition:border-color 0.15s; }
+.form-input:focus { border-color:var(--accent); background:var(--surface); }
+.form-input::placeholder { color:#bbb; }
+.form-actions { margin-top:18px; display:flex; gap:10px; }
+.calc-preview { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:12px 16px; margin-top:14px; display:none; }
+.calc-preview.show { display:block; }
+.calc-row { display:flex; justify-content:space-between; align-items:center; font-family:var(--font-m); font-size:11px; padding:3px 0; }
+.calc-label { color:var(--muted); }
+.calc-value { font-weight:700; }
+
+/* LISTING PAGE */
+.listing-summary { display:flex; gap:12px; margin-bottom:18px; }
+.ls-card { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:12px 16px; }
+.ls-label { font-family:var(--font-m); font-size:9px; color:var(--muted); letter-spacing:0.08em; }
+.ls-value { font-size:20px; font-weight:800; margin-top:3px; }
+.ls-card.pending .ls-value { color:var(--amber); }
+.ls-card.done .ls-value { color:var(--green); }
+
+/* LOADING / EMPTY */
+.loading { text-align:center; padding:48px 24px; color:var(--muted); }
+.spinner { width:28px; height:28px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.empty-state { text-align:center; padding:48px 24px; color:var(--muted); }
+.empty-icon { font-size:32px; margin-bottom:10px; }
+.empty-text { font-size:14px; font-weight:600; margin-bottom:4px; }
+.empty-sub { font-size:12px; }
+
+/* MODAL */
+.modal-ov { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:200; padding:20px; }
+.modal-ov.show { display:flex; }
+.modal { background:var(--surface); border-radius:10px; padding:26px; width:100%; max-width:480px; border:1px solid var(--border); }
+.modal h3 { font-size:17px; font-weight:800; margin-bottom:14px; }
+.setup-steps { display:flex; flex-direction:column; gap:10px; }
+.setup-step { display:flex; gap:10px; align-items:flex-start; font-size:12px; line-height:1.6; color:#555; }
+.step-num { background:var(--accent); color:#fff; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-m); font-size:10px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.setup-step a { color:var(--accent); }
+.setup-step code { background:var(--surface2); color:var(--accent); font-family:var(--font-m); font-size:10px; padding:1px 5px; border-radius:3px; }
+.modal-input { width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text); font-family:var(--font-m); font-size:11px; padding:10px 12px; border-radius:4px; outline:none; margin-top:14px; }
+.modal-input:focus { border-color:var(--accent); }
+.modal-actions { display:flex; gap:8px; margin-top:14px; justify-content:flex-end; }
+
+/* TOAST */
+.toast { position:fixed; bottom:20px; right:20px; background:var(--dark); color:#fff; font-family:var(--font-m); font-size:11px; padding:11px 18px; border-radius:6px; transform:translateY(80px); opacity:0; transition:all 0.3s; z-index:999; border-left:3px solid var(--accent); max-width:300px; }
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.success { border-left-color:var(--green); }
+.toast.error { border-left-color:var(--red); }
+
+/* MOBILE */
+.hamburger { display:none; background:none; border:none; cursor:pointer; padding:4px; color:var(--text); font-size:20px; }
+.sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:90; }
+
+@media (max-width: 768px) {
+  .sidebar { transform:translateX(-100%); transition:transform 0.25s; }
+  .sidebar.open { transform:translateX(0); }
+  .sidebar-overlay.show { display:block; }
+  .main { margin-left:0; }
+  .hamburger { display:block; }
+  .stats-grid { grid-template-columns:1fr 1fr; }
+  .months-grid { grid-template-columns:1fr 1fr; }
+  .form-grid { grid-template-columns:1fr; }
+  .fg-full { grid-column:1; }
+  .content { padding:16px; }
+  .topbar { padding:12px 16px; }
+  .listing-summary { flex-wrap:wrap; }
+  .ls-card { min-width:calc(50% - 6px); }
+}
+
+/* PREP TRACKER */
+.prep-summary { display:flex; gap:12px; margin-bottom:18px; }
+.prep-card { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:12px 16px; }
+.prep-card.arrived .ls-value { color:var(--green); }
+.prep-card.waiting .ls-value { color:var(--amber); }
+
+/* EXPENSES */
+.exp-month-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+.exp-tab { font-family:var(--font-m); font-size:11px; font-weight:700; padding:7px 14px; border-radius:4px; border:1px solid var(--border); background:var(--surface); color:var(--muted); cursor:pointer; transition:all 0.15s; }
+.exp-tab:hover { border-color:var(--accent); color:var(--accent); }
+.exp-tab.active { background:var(--dark); color:#fff; border-color:var(--dark); }
+.exp-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:600px; }
+.exp-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:18px 20px; }
+.exp-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.exp-card-name { font-size:14px; font-weight:700; }
+.exp-badge { font-family:var(--font-m); font-size:9px; color:var(--muted); letter-spacing:0.07em; background:var(--surface2); padding:2px 7px; border-radius:3px; }
+.exp-badge.recurring { color:var(--green); background:var(--green-bg); }
+.exp-amount-input { background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:var(--font-m); font-size:18px; font-weight:700; padding:8px 12px; border-radius:4px; outline:none; width:100%; transition:border-color 0.15s; }
+.exp-amount-input:focus { border-color:var(--accent); background:var(--surface); }
+.exp-saved { font-family:var(--font-m); font-size:10px; color:var(--green); margin-top:6px; opacity:0; transition:opacity 0.3s; }
+.exp-saved.show { opacity:1; }
+.exp-total-card { background:var(--dark); color:#fff; border-radius:8px; padding:18px 20px; margin-top:16px; max-width:600px; display:flex; justify-content:space-between; align-items:center; }
+.exp-total-label { font-family:var(--font-m); font-size:10px; color:#aaa; letter-spacing:0.08em; }
+.exp-total-value { font-size:24px; font-weight:800; color:var(--accent); }
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns:1fr; }
+  .months-grid { grid-template-columns:1fr; }
+  .listing-summary { flex-direction:column; }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="wordmark">Bimma <span>Retail</span></div>
+    <div class="sub">FBA DASHBOARD</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" data-page="dashboard" onclick="showPage(&#39;dashboard&#39;,this)"><span class="nav-icon">📊</span>Dashboard</div>
+    <div class="nav-item" data-page="purchases" onclick="showPage(&#39;purchases&#39;,this)"><span class="nav-icon">📦</span>Purchases</div>
+    <div class="nav-item" data-page="listing" onclick="showPage(&#39;listing&#39;,this)"><span class="nav-icon">🚀</span>Listing Uploader</div>
+    <div class="nav-item" data-page="add" onclick="showPage(&#39;add&#39;,this)"><span class="nav-icon">➕</span>Add Purchase</div>
+    <div class="nav-item" data-page="prep" onclick="showPage(&#39;prep&#39;,this)"><span class="nav-icon">📬</span>Prep Tracker</div>
+    <div class="nav-item" data-page="expenses" onclick="showPage(&#39;expenses&#39;,this)"><span class="nav-icon">💰</span>Expenses</div>
+  </nav>
+  <div class="sidebar-auth">
+    <div class="auth-row">
+      <div class="auth-dot" id="authDot"></div>
+      <span class="auth-label" id="authLabel">Not connected</span>
+    </div>
+    <button class="btn-auth" id="authBtn" onclick="handleAuth()">CONNECT SHEETS</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-outline" onclick="refreshData()" id="refreshBtn" disabled="">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">TOTAL SPEND</div><div class="stat-value" id="s-spend">—</div><div class="stat-sub">all time</div></div>
+        <div class="stat-card s-green"><div class="stat-label">TOTAL DEALS</div><div class="stat-value" id="s-deals">—</div><div class="stat-sub">all time</div></div>
+        <div class="stat-card s-amber"><div class="stat-label">UPLOADED</div><div class="stat-value" id="s-uploaded">—</div><div class="stat-sub">to listing loader</div></div>
+        <div class="stat-card s-dark"><div class="stat-label">THIS MONTH</div><div class="stat-value" id="s-month">—</div><div class="stat-sub">deals</div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Monthly Spend</div>
+          <span style="font-family:var(--font-m);font-size:10px;color:var(--muted)">Total spend £ per month</span>
+        </div>
+        <div class="chart-wrap"><canvas id="spendChart"></canvas></div>
+      </div>
+      <div class="section-title">Monthly Overview</div>
+      <div class="months-grid" id="monthsGrid">
+        <div class="loading"><div class="spinner"></div>Connect to Google Sheets to load</div>
+      </div>
+    </div>
+
+    <!-- PURCHASES -->
+    <div class="page" id="page-purchases">
+      <div class="table-controls">
+        <select class="t-select" id="monthFilter" onchange="filterPurchases()"><option value="all">All months</option></select>
+        <input class="t-search" id="searchInput" placeholder="Search product, SKU, ASIN..." oninput="filterPurchases()">
+      </div>
+      <div style="font-family:var(--font-m);font-size:10px;color:var(--muted);margin-bottom:10px;" id="purchaseCount"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>DATE</th><th>SKU</th><th>PRODUCT</th><th>ASIN</th>
+            <th>BUY</th><th>SELL</th><th>QTY</th><th>SPEND</th><th>SUPPLIER</th><th>UPLOADED</th>
+          </tr></thead>
+          <tbody id="purchasesTbody"><tr><td colspan="10"><div class="loading"><div class="spinner"></div>Connect to load</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LISTING UPLOADER -->
+    <div class="page" id="page-listing">
+      <div class="listing-summary">
+        <div class="ls-card pending"><div class="ls-label">PENDING UPLOAD</div><div class="ls-value" id="ls-pending">—</div></div>
+        <div class="ls-card done"><div class="ls-label">UPLOADED</div><div class="ls-value" id="ls-done">—</div></div>
+        <div class="ls-card"><div class="ls-label">TOTAL</div><div class="ls-value" id="ls-total">—</div></div>
+      </div>
+      <div class="table-controls">
+        <select class="t-select" id="listingMonthFilter" onchange="filterListing()"><option value="all">All months</option></select>
+        <select class="t-select" id="listingStatusFilter" onchange="filterListing()">
+          <option value="all">All items</option>
+          <option value="pending">Pending only</option>
+          <option value="uploaded">Uploaded only</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportListingTSV()">⬇ EXPORT TSV</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>DATE</th><th>SKU</th><th>PRODUCT</th><th>ASIN</th>
+            <th>BUY</th><th>SELL</th><th>LISTING PRICE</th><th>QTY</th><th>UPLOADED</th>
+          </tr></thead>
+          <tbody id="listingTbody"><tr><td colspan="9"><div class="loading"><div class="spinner"></div>Connect to load</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ADD PURCHASE -->
+    <div class="page" id="page-add">
+      <div class="section-title">Add New Purchase</div>
+      <div class="form-card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">DATE</label>
+            <input class="form-input" type="date" id="f-date" oninput="calcPreview()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">SKU</label>
+            <input class="form-input" type="text" id="f-sku" placeholder="DD/MM/YY-PRICE-COUNTRY">
+          </div>
+          <div class="form-group fg-full">
+            <label class="form-label">PRODUCT TITLE</label>
+            <input class="form-input" type="text" id="f-title" placeholder="Full product name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ASIN</label>
+            <input class="form-input" type="text" id="f-asin" placeholder="B0XXXXXXXXX">
+          </div>
+          <div class="form-group">
+            <label class="form-label">AMAZON SUPPLIER</label>
+            <input class="form-input" type="text" id="f-supplier" placeholder="Supplier name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">BUY PRICE (inc VAT)</label>
+            <input class="form-input" type="number" id="f-buy" placeholder="0.00" step="0.01" oninput="calcPreview()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">SELL PRICE</label>
+            <input class="form-input" type="number" id="f-sell" placeholder="0.00" step="0.01" oninput="calcPreview()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">QUANTITY</label>
+            <input class="form-input" type="number" id="f-qty" placeholder="1" oninput="calcPreview()">
+          </div>
+        </div>
+        <div class="calc-preview" id="calcPreview">
+          <div class="calc-row"><span class="calc-label">Total Spend (inc VAT)</span><span class="calc-value" id="cp-spend">—</span></div>
+          <div class="calc-row"><span class="calc-label">VAT (20%)</span><span class="calc-value" id="cp-vat">—</span></div>
+          <div class="calc-row"><span class="calc-label">Listing Price (sell × 1.25)</span><span class="calc-value" id="cp-list">—</span></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="addBtn" onclick="addPurchase()" disabled="">+ ADD TO SHEET</button>
+          <button class="btn btn-outline" onclick="clearForm()">CLEAR</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- PREP TRACKER -->
+    <div class="page" id="page-prep">
+      <div class="prep-summary">
+        <div class="prep-card arrived"><div class="ls-label">ARRIVED AT PREP</div><div class="ls-value" id="prep-arrived">—</div></div>
+        <div class="prep-card waiting"><div class="ls-label">WAITING</div><div class="ls-value" id="prep-waiting">—</div></div>
+        <div class="prep-card"><div class="ls-label">TOTAL</div><div class="ls-value" id="prep-total">—</div></div>
+      </div>
+      <div class="table-controls">
+        <select class="t-select" id="prepMonthFilter" onchange="filterPrep()"><option value="all">All months</option></select>
+        <select class="t-select" id="prepStatusFilter" onchange="filterPrep()">
+          <option value="all">All items</option>
+          <option value="waiting">Waiting only</option>
+          <option value="arrived">Arrived only</option>
+        </select>
+        <input class="t-search" id="prepSearch" placeholder="Search SKU or product..." oninput="filterPrep()" style="flex:1;min-width:160px;">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>DATE</th><th>SKU</th><th>PRODUCT</th><th>QTY</th><th>SUPPLIER</th><th>AT PREP</th>
+          </tr></thead>
+          <tbody id="prepTbody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div>Connect to load</div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div class="page" id="page-expenses">
+      <div class="section-title">Monthly Expenses</div>
+      <div class="exp-month-tabs" id="expMonthTabs"></div>
+      <div class="exp-grid" id="expGrid"></div>
+      <div class="exp-total-card">
+        <div><div class="exp-total-label">TOTAL EXPENSES THIS MONTH</div><div class="exp-total-value" id="expTotal">£0.00</div></div>
+        <div style="font-family:var(--font-m);font-size:10px;color:#666;text-align:right">Auto-saved locally<br>per month</div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
+
+<!-- Setup Modal -->
+<div class="modal-ov" id="setupModal">
+  <div class="modal">
+    <h3>Connect to Google Sheets</h3>
+    <div class="setup-steps">
+      <div class="setup-step"><div class="step-num">1</div><div>Go to <a href="https://console.cloud.google.com/" target="_blank">console.cloud.google.com</a> → create or select a project</div></div>
+      <div class="setup-step"><div class="step-num">2</div><div>Search <code>Google Sheets API</code> → Enable it. Also enable <code>Google Drive API</code></div></div>
+      <div class="setup-step"><div class="step-num">3</div><div>Go to <code>APIs &amp; Services → Credentials → + Create Credentials → OAuth 2.0 Client ID</code> → type: <code>Web application</code></div></div>
+      <div class="setup-step"><div class="step-num">4</div><div>Add your GitHub Pages URL to <code>Authorised JavaScript origins</code> e.g. <code>https://yourusername.github.io</code></div></div>
+      <div class="setup-step"><div class="step-num">5</div><div>Copy your <code>Client ID</code> (ends in <code>.apps.googleusercontent.com</code>) and paste below</div></div>
+    </div>
+    <input class="modal-input" id="clientIdInput" type="text" placeholder="xxxxxxxx.apps.googleusercontent.com">
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">CANCEL</button>
+      <button class="btn btn-primary" onclick="saveAndConnect()">SAVE &amp; CONNECT</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SHEET_ID = '17woLJlpqKBV6TEDROTVuNSTxvvCASlja_cCNmBSXtV0';
+const PURCH_TAB = 'Purchasing sheet';
+const LISTING_TAB = 'Listing loader';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+
+let tokenClient = null, accessToken = null, allRows = [], spendChart = null;
+let clientId = localStorage.getItem('bimma_goog_cid') || '';
+
+// ── INIT ──
+window.onload = () => {
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  if (clientId) { document.getElementById('clientIdInput').value = clientId; loadGIS(); }
+};
+
+function loadGIS() {
+  if (window.google?.accounts) { initToken(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client';
+  s.onload = initToken;
+  s.onerror = () => toast('Failed to load Google auth', 'error');
+  document.head.appendChild(s);
+}
+
+function initToken() {
+  if (!clientId) return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId, scope: SCOPES,
+    callback: r => {
+      if (r.error) { toast('Auth error: ' + r.error, 'error'); return; }
+      accessToken = r.access_token;
+      setConnected();
+      loadData();
+    }
+  });
+}
+
+function handleAuth() {
+  if (accessToken) { signOut(); return; }
+  if (!clientId) { document.getElementById('setupModal').classList.add('show'); return; }
+  if (!tokenClient) { loadGIS(); setTimeout(() => tokenClient?.requestAccessToken(), 900); return; }
+  tokenClient.requestAccessToken();
+}
+
+function saveAndConnect() {
+  const v = document.getElementById('clientIdInput').value.trim();
+  if (!v.includes('.apps.googleusercontent.com')) { toast('Enter a valid Google Client ID', 'error'); return; }
+  clientId = v; localStorage.setItem('bimma_goog_cid', clientId);
+  closeModal(); loadGIS(); setTimeout(() => tokenClient?.requestAccessToken(), 800);
+}
+
+function closeModal() { document.getElementById('setupModal').classList.remove('show'); }
+
+function setConnected() {
+  document.getElementById('authDot').classList.add('on');
+  document.getElementById('authLabel').textContent = 'Connected';
+  document.getElementById('authBtn').textContent = 'SIGN OUT';
+  document.getElementById('refreshBtn').disabled = false;
+  document.getElementById('addBtn').disabled = false;
+}
+
+function signOut() {
+  google.accounts.oauth2.revoke(accessToken);
+  accessToken = null; allRows = [];
+  document.getElementById('authDot').classList.remove('on');
+  document.getElementById('authLabel').textContent = 'Not connected';
+  document.getElementById('authBtn').textContent = 'CONNECT SHEETS';
+  document.getElementById('refreshBtn').disabled = true;
+  document.getElementById('addBtn').disabled = true;
+  toast('Signed out');
+}
+
+// ── DATA ──
+function cleanNum(v) {
+  if (!v && v !== 0) return 0;
+  // Strip currency symbols, spaces, commas
+  return parseFloat(String(v).replace(/[£$,\s]/g, '')) || 0;
+}
+
+function cleanDate(v) {
+  if (!v) return '';
+  const s = String(v).trim();
+  // Already DD/MM/YYYY
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s;
+  // Google Sheets serial number (days since 30 Dec 1899)
+  const n = parseFloat(s);
+  if (!isNaN(n) && n > 1000) {
+    const d = new Date((n - 25569) * 86400 * 1000);
+    const dd = String(d.getUTCDate()).padStart(2,'0');
+    const mm = String(d.getUTCMonth()+1).padStart(2,'0');
+    const yyyy = d.getUTCFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
+  return s;
+}
+
+async function loadData() {
+  toast('Loading...', '');
+  try {
+    // Use FORMATTED_VALUE to get display values (avoids serial dates, gets £ stripped values)
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(PURCH_TAB)}!A2:K?valueRenderOption=FORMATTED_VALUE`;
+    const r = await gFetch(url);
+    allRows = (r.values || []).filter(row => row[0]).map((row, i) => ({
+      date: cleanDate(row[0]||''),
+      sku: row[1]||'',
+      title: row[2]||'',
+      asin: row[3]||'',
+      buy: cleanNum(row[4]),
+      sell: cleanNum(row[5]),
+      qty: parseInt(String(row[6]||'0').replace(/[^0-9]/g,''))||0,
+      spend: cleanNum(row[7]),
+      vat: cleanNum(row[8]),
+      supplier: row[9]||'',
+      uploaded: row[10]==='TRUE'||row[10]===true||row[10]==='Yes',
+      rowIdx: i + 2
+    }));
+    renderDashboard(); renderPurchases(allRows); renderListing(allRows); renderPrep(allRows); renderExpenses();
+    populateFilters();
+    toast(`Loaded ${allRows.length} purchases`, 'success');
+  } catch(e) { toast('Load error: ' + e.message, 'error'); }
+}
+
+function refreshData() { if (accessToken) loadData(); }
+
+async function gFetch(url, opts={}) {
+  const r = await fetch(url, { ...opts, headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json', ...(opts.headers||{}) } });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || 'API error ' + r.status); }
+  return r.json();
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const spend = allRows.reduce((s,r) => s+r.spend, 0);
+  const uploaded = allRows.filter(r => r.uploaded).length;
+  const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now = new Date();
+  const thisM = mn[now.getMonth()] + ' ' + now.getFullYear();
+  const thisDeals = allRows.filter(r => monthKey(r.date) === thisM).length;
+
+  document.getElementById('s-spend').textContent = '£' + fmt(spend);
+  document.getElementById('s-deals').textContent = allRows.length;
+  document.getElementById('s-uploaded').textContent = uploaded + '/' + allRows.length;
+  document.getElementById('s-month').textContent = thisDeals;
+
+  // Group months
+  const months = {}, order = [];
+  allRows.forEach(r => {
+    const k = monthKey(r.date); if (!k) return;
+    if (!months[k]) { months[k] = []; order.push(k); }
+    months[k].push(r);
+  });
+  const uniq = [...new Set(order)];
+
+  // Chart
+  renderChart(uniq, months);
+
+  // Month cards
+  const grid = document.getElementById('monthsGrid');
+  if (!uniq.length) { grid.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No data</div></div>`; return; }
+
+  grid.innerHTML = [...uniq].reverse().map(m => {
+    const rows = months[m];
+    const sp = rows.reduce((s,r) => s+r.spend, 0);
+    const qty = rows.reduce((s,r) => s+r.qty, 0);
+    const up = rows.filter(r => r.uploaded).length;
+    const bc = up===rows.length ? 'ub-all' : up>0 ? 'ub-some' : 'ub-none';
+    return `<div class="month-card" onclick="goToMonth('${m}')">
+      <div class="mc-header">
+        <div><div class="mc-name">${m}</div><div class="mc-deals">${rows.length} deals</div></div>
+        <span class="upload-badge ${bc}">${up}/${rows.length} uploaded</span>
+      </div>
+      <div class="mc-stats">
+        <div><div class="mcs-label">SPEND</div><div class="mcs-value">£${fmt(sp)}</div></div>
+        <div><div class="mcs-label">UNITS</div><div class="mcs-value">${qty}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderChart(uniq, months) {
+  const labels = uniq;
+  const data = uniq.map(m => months[m].reduce((s,r) => s+r.spend, 0));
+  const ctx = document.getElementById('spendChart').getContext('2d');
+  if (spendChart) spendChart.destroy();
+  spendChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Total Spend',
+        data,
+        backgroundColor: data.map((_, i) => i === data.length-1 ? '#e8620a' : '#1a1814'),
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => '£' + fmt(c.raw) } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#8a8070' } },
+        y: { grid: { color: '#f0ede6' }, ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#8a8070', callback: v => '£' + fmt(v) }, border: { display: false } }
+      }
+    }
+  });
+}
+
+// ── PURCHASES ──
+function renderPurchases(rows) {
+  document.getElementById('purchaseCount').textContent = rows.length + ' purchases';
+  const tb = document.getElementById('purchasesTbody');
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No purchases</div></div></td></tr>`; return; }
+  tb.innerHTML = rows.map(r => {
+    const roi = r.sell > 0 && r.buy > 0 ? ((r.sell - (r.buy/1.2)) / (r.buy/1.2) * 100) : null;
+    const roiHtml = roi !== null ? `<span class="roi-pill ${roi>=20?'roi-green':roi>=15?'roi-amber':'roi-red'}">${roi.toFixed(1)}%</span>` : '—';
+    const upClass = r.uploaded ? 'style="color:var(--green)"' : 'style="color:var(--muted)"';
+    return `<tr>
+      <td class="td-date">${fmtDate(r.date)}</td>
+      <td class="td-sku">${esc(r.sku)}</td>
+      <td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td>
+      <td class="td-center" style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${esc(r.asin)}</td>
+      <td class="td-price">£${r.buy.toFixed(2)}</td>
+      <td class="td-price">£${r.sell.toFixed(2)}</td>
+      <td class="td-center">${r.qty}</td>
+      <td class="td-price">£${r.spend.toFixed(2)}</td>
+      <td style="font-size:11px;color:var(--muted)">${esc(r.supplier)}</td>
+      <td class="toggle-wrap"><button class="toggle ${r.uploaded?'on':''}" onclick="toggleUpload(${r.rowIdx},this,'purchases')" title="${r.uploaded?'Uploaded':'Not uploaded'}"></button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterPurchases() {
+  const m = document.getElementById('monthFilter').value;
+  const s = document.getElementById('searchInput').value.toLowerCase();
+  let f = allRows;
+  if (m !== 'all') f = f.filter(r => monthKey(r.date) === m);
+  if (s) f = f.filter(r => r.title.toLowerCase().includes(s)||r.sku.toLowerCase().includes(s)||r.asin.toLowerCase().includes(s));
+  renderPurchases(f);
+}
+
+// ── LISTING ──
+function renderListing(rows) {
+  const pending = rows.filter(r => !r.uploaded).length;
+  const done = rows.filter(r => r.uploaded).length;
+  document.getElementById('ls-pending').textContent = pending;
+  document.getElementById('ls-done').textContent = done;
+  document.getElementById('ls-total').textContent = rows.length;
+
+  const tb = document.getElementById('listingTbody');
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No items</div></div></td></tr>`; return; }
+  tb.innerHTML = rows.map(r => {
+    const listingPrice = (r.sell * 1.25).toFixed(2);
+    return `<tr>
+      <td class="td-date">${fmtDate(r.date)}</td>
+      <td class="td-sku">${esc(r.sku)}</td>
+      <td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td>
+      <td class="td-center" style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${esc(r.asin)}</td>
+      <td class="td-price">£${r.buy.toFixed(2)}</td>
+      <td class="td-price">£${r.sell.toFixed(2)}</td>
+      <td class="td-price" style="color:var(--accent)">£${listingPrice}</td>
+      <td class="td-center">${r.qty}</td>
+      <td class="toggle-wrap"><button class="toggle ${r.uploaded?'on':''}" onclick="toggleUpload(${r.rowIdx},this,'listing')" title="${r.uploaded?'Uploaded':'Not uploaded'}"></button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterListing() {
+  const m = document.getElementById('listingMonthFilter').value;
+  const s = document.getElementById('listingStatusFilter').value;
+  let f = allRows;
+  if (m !== 'all') f = f.filter(r => monthKey(r.date) === m);
+  if (s === 'pending') f = f.filter(r => !r.uploaded);
+  if (s === 'uploaded') f = f.filter(r => r.uploaded);
+  renderListing(f);
+}
+
+// ── TOGGLE UPLOAD ──
+async function toggleUpload(rowIdx, btn, context) {
+  if (!accessToken) { toast('Not connected', 'error'); return; }
+  btn.disabled = true;
+  const isOn = btn.classList.contains('on');
+  const newVal = !isOn;
+  btn.classList.toggle('on', newVal);
+
+  // Update local data
+  const row = allRows.find(r => r.rowIdx === rowIdx);
+  if (row) row.uploaded = newVal;
+
+  try {
+    // 1. Update Purchasing sheet col K
+    const range = `${PURCH_TAB}!K${rowIdx}`;
+    await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=RAW`, {
+      method: 'PUT', body: JSON.stringify({ values: [[newVal ? 'TRUE' : 'FALSE']] })
+    });
+
+    // 2. If turning ON — add to Listing loader. If turning OFF — remove.
+    if (newVal && row) {
+      await addToListingLoader(row);
+    } else if (!newVal && row) {
+      await removeFromListingLoader(row.sku);
+    }
+
+    toast(newVal ? '✓ Added to Listing Loader' : 'Removed from Listing Loader', newVal ? 'success' : '');
+    // Refresh summary counts
+    if (context === 'listing') filterListing();
+  } catch(e) {
+    toast('Update failed: ' + e.message, 'error');
+    btn.classList.toggle('on', isOn);
+    if (row) row.uploaded = isOn;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function addToListingLoader(row) {
+  // Check if SKU already exists
+  const existing = await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:A`);
+  const vals = (existing.values || []).flat();
+  if (vals.includes(row.sku)) return; // already there
+
+  const price = Math.round(row.sell * 1.25 * 100) / 100;
+  const newRow = [row.sku, row.asin, 1, 'New', price, row.qty, 'a', 'AMAZON_EU', false, 'not_applicable', 'not_applicable', 'not_applicable', 'not_applicable', 'not_applicable'];
+  await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:N:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
+    method: 'POST', body: JSON.stringify({ values: [newRow] })
+  });
+}
+
+async function removeFromListingLoader(sku) {
+  const data = await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:A`);
+  const vals = (data.values || []);
+  const rowIdx = vals.findIndex(r => r[0] === sku);
+  if (rowIdx === -1) return;
+  // Delete row via batchUpdate
+  const sheetMeta = await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties`);
+  const sheet = sheetMeta.sheets.find(s => s.properties.title === LISTING_TAB);
+  if (!sheet) return;
+  const sheetId = sheet.properties.sheetId;
+  await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`, {
+    method: 'POST',
+    body: JSON.stringify({ requests: [{ deleteDimension: { range: { sheetId, dimension: 'ROWS', startIndex: rowIdx, endIndex: rowIdx+1 } } }] })
+  });
+}
+
+// ── ADD PURCHASE ──
+function calcPreview() {
+  const buy = parseFloat(document.getElementById('f-buy').value)||0;
+  const sell = parseFloat(document.getElementById('f-sell').value)||0;
+  const qty = parseInt(document.getElementById('f-qty').value)||1;
+  const prev = document.getElementById('calcPreview');
+  if (buy > 0 || sell > 0) {
+    const spend = buy * qty;
+    const vat = spend - (spend/1.2);
+    const lp = sell * 1.25;
+    document.getElementById('cp-spend').textContent = '£' + spend.toFixed(2);
+    document.getElementById('cp-vat').textContent = '£' + vat.toFixed(2);
+    document.getElementById('cp-list').textContent = '£' + lp.toFixed(2);
+    prev.classList.add('show');
+  } else { prev.classList.remove('show'); }
+}
+
+async function addPurchase() {
+  if (!accessToken) { toast('Not connected', 'error'); return; }
+  const date = document.getElementById('f-date').value;
+  const sku = document.getElementById('f-sku').value.trim();
+  const title = document.getElementById('f-title').value.trim();
+  const asin = document.getElementById('f-asin').value.trim();
+  const buy = parseFloat(document.getElementById('f-buy').value)||0;
+  const sell = parseFloat(document.getElementById('f-sell').value)||0;
+  const qty = parseInt(document.getElementById('f-qty').value)||1;
+  const supplier = document.getElementById('f-supplier').value.trim();
+  if (!date||!title) { toast('Date and title required', 'error'); return; }
+
+  const spend = buy * qty;
+  const vat = spend - (spend/1.2);
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true; btn.textContent = 'SAVING...';
+
+  try {
+    // 1. Write to master Purchasing sheet
+    const purchRow = [date,sku,title,asin,buy,sell,qty,spend.toFixed(2),vat.toFixed(2),supplier,'FALSE'];
+    await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(PURCH_TAB)}!A:K:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
+      method: 'POST', body: JSON.stringify({ values: [purchRow] })
+    });
+
+    // 2. Write to correct month tab (e.g. "Mar 2026")
+    const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const d = new Date(date);
+    const monthTabName = mn[d.getMonth()] + ' ' + d.getFullYear();
+    // Check if month tab exists — if not, just skip (Apps Script handles tab creation)
+    try {
+      await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(monthTabName)}!A:K:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
+        method: 'POST', body: JSON.stringify({ values: [purchRow] })
+      });
+    } catch(e) {
+      console.warn('Month tab not found:', monthTabName, '— skipping');
+    }
+
+    // 3. Automatically add to Listing loader queue
+    const price = (Math.round(sell * 1.25 * 100) / 100).toFixed(2);
+    const listingRow = [sku, asin, 1, 'New', price, qty, 'a', 'AMAZON_EU', 'FALSE',
+      'not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'];
+    // Check not already in listing loader
+    const existing = await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:A`);
+    const existingSkus = (existing.values||[]).flat();
+    if (!existingSkus.includes(sku)) {
+      await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:N:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
+        method: 'POST', body: JSON.stringify({ values: [listingRow] })
+      });
+    }
+
+    toast('✓ Added to Purchasing sheet, month tab & Listing loader!', 'success');
+    clearForm(); loadData();
+  } catch(e) { toast('Add failed: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = '+ ADD TO SHEET'; }
+}
+
+function clearForm() {
+  ['f-sku','f-title','f-asin','f-buy','f-sell','f-qty','f-supplier'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('calcPreview').classList.remove('show');
+}
+
+// ── EXPORT TSV ──
+async function exportListingTSV() {
+  if (!accessToken) { toast('Not connected', 'error'); return; }
+
+  // Pull current listing loader queue
+  const listingData = await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:N`);
+  const listingRows = (listingData.values || []);
+  // Skip header row if present (row[0] === 'sku')
+  const dataRows = listingRows.filter(r => r[0] && r[0] !== 'sku');
+
+  if (!dataRows.length) { toast('Listing loader is empty — nothing to export', 'error'); return; }
+
+  const headers = [
+    'sku','product-id','product-id-type','item-condition','price','quantity',
+    'add-delete','fulfillment-center-id','batteries_required',
+    'supplier_declared_dg_hz_regulation1','supplier_declared_dg_hz_regulation2',
+    'supplier_declared_dg_hz_regulation3','supplier_declared_dg_hz_regulation4',
+    'supplier_declared_dg_hz_regulation5'
+  ];
+
+  // Build TSV from listing loader rows directly
+  const tsvRows = dataRows.map(r => {
+    // Pad to 14 cols
+    const padded = [...r];
+    while (padded.length < 14) padded.push('not_applicable');
+    return padded.join('\t');
+  });
+
+  const tsv = [headers.join('\t'), ...tsvRows].join('\n');
+  const blob = new Blob([tsv], { type: 'text/tab-separated-values' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Bimma_Listing_Upload_${new Date().toISOString().split('T')[0]}.tsv`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  // After export: mark as TRUE in Purchasing sheet + month tabs, then clear Listing loader
+  try {
+    const exportedSkus = dataRows.map(r => r[0]);
+
+    // Mark uploaded=TRUE in master Purchasing sheet for each SKU
+    const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    for (const row of allRows) {
+      if (!exportedSkus.includes(row.sku)) continue;
+      // Update master sheet
+      await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(PURCH_TAB)}!K${row.rowIdx}?valueInputOption=RAW`, {
+        method: 'PUT', body: JSON.stringify({ values: [['TRUE']] })
+      });
+      // Update month tab
+      const d = new Date(row.date);
+      if (!isNaN(d)) {
+        const monthTab = mn[d.getMonth()] + ' ' + d.getFullYear();
+        // Find row in month tab by SKU
+        try {
+          const mData = await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(monthTab)}!B:B`);
+          const mRows = (mData.values||[]);
+          const mIdx = mRows.findIndex(r => r[0] === row.sku);
+          if (mIdx !== -1) {
+            await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(monthTab)}!K${mIdx+1}?valueInputOption=RAW`, {
+              method: 'PUT', body: JSON.stringify({ values: [['TRUE']] })
+            });
+          }
+        } catch(e) { console.warn('Could not update month tab:', e.message); }
+      }
+    }
+
+    // Clear all rows from Listing loader (keep header)
+    const sheetMeta = await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties`);
+    const sheet = sheetMeta.sheets.find(s => s.properties.title === LISTING_TAB);
+    if (sheet && dataRows.length > 0) {
+      const sheetId = sheet.properties.sheetId;
+      // Find actual row indices to delete (reverse order to avoid index shifting)
+      const startIdx = listingRows.findIndex(r => r[0] && r[0] !== 'sku');
+      if (startIdx !== -1) {
+        await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`, {
+          method: 'POST',
+          body: JSON.stringify({ requests: [{ deleteDimension: { range: {
+            sheetId, dimension: 'ROWS',
+            startIndex: startIdx,
+            endIndex: startIdx + dataRows.length
+          }}}]})
+        });
+      }
+    }
+
+    toast(`✓ Exported ${dataRows.length} items — marked uploaded & cleared queue`, 'success');
+    loadData();
+  } catch(e) {
+    toast('Export done but sync failed: ' + e.message, 'error');
+  }
+}
+
+// ── UTILS ──
+function populateFilters() {
+  const seen = new Set(), months = [];
+  allRows.forEach(r => { const k = monthKey(r.date); if (k&&!seen.has(k)) { seen.add(k); months.push(k); } });
+  ['monthFilter','listingMonthFilter','prepMonthFilter'].forEach(id => {
+    const el = document.getElementById(id);
+    el.innerHTML = '<option value="all">All months</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
+  });
+}
+
+function monthKey(d) {
+  if (!d) return null;
+  const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let dt;
+  if (d instanceof Date) { dt = d; }
+  else if (typeof d === 'string') {
+    if (d.includes('/')) {
+      const p = d.split('/');
+      if (p.length===3) { const y = p[2].length===4?parseInt(p[2]):2000+parseInt(p[2]); dt = new Date(y, parseInt(p[1])-1, parseInt(p[0])); }
+    } else { dt = new Date(d); }
+  }
+  if (!dt||isNaN(dt.getTime())) return null;
+  return mn[dt.getMonth()] + ' ' + dt.getFullYear();
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  if (typeof d === 'string' && d.includes('/')) return d;
+  try { const dt = new Date(d); return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); } catch { return d; }
+}
+
+function fmt(n) {
+  if (n >= 1000) return (n/1000).toFixed(1) + 'k';
+  return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = {dashboard:'Dashboard',purchases:'Purchases',listing:'Listing Uploader',add:'Add Purchase'};
+  document.getElementById('topbarTitle').textContent = titles[name]||name;
+  closeSidebar();
+}
+
+function goToMonth(m) {
+  showPage('purchases', document.querySelector('[data-page="purchases"]'));
+  document.getElementById('monthFilter').value = m;
+  filterPurchases();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+
+// ── PREP TRACKER ──
+function getPrepData() { try { return JSON.parse(localStorage.getItem('bimma_prep')||'{}'); } catch { return {}; } }
+function savePrepData(d) { localStorage.setItem('bimma_prep', JSON.stringify(d)); }
+
+function renderPrep(rows) {
+  const prepData = getPrepData();
+  const arrived = rows.filter(r => prepData[r.sku]).length;
+  document.getElementById('prep-arrived').textContent = arrived;
+  document.getElementById('prep-waiting').textContent = rows.length - arrived;
+  document.getElementById('prep-total').textContent = rows.length;
+
+  const tb = document.getElementById('prepTbody');
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No purchases found</div></div></td></tr>`; return; }
+  tb.innerHTML = rows.map(r => {
+    const isArrived = !!prepData[r.sku];
+    return `<tr>
+      <td class="td-date">${fmtDate(r.date)}</td>
+      <td class="td-sku">${esc(r.sku)}</td>
+      <td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td>
+      <td class="td-center">${r.qty}</td>
+      <td style="font-size:11px;color:var(--muted)">${esc(r.supplier)}</td>
+      <td class="toggle-wrap"><button class="toggle ${isArrived?'on':''}" onclick="togglePrep('${esc(r.sku)}',this)"></button></td>
+    </tr>`;
+  }).join('');
+}
+
+function togglePrep(sku, btn) {
+  const d = getPrepData();
+  const isOn = btn.classList.contains('on');
+  if (isOn) { delete d[sku]; } else { d[sku] = true; }
+  savePrepData(d);
+  btn.classList.toggle('on', !isOn);
+  // Update summary counts live
+  filterPrep();
+  toast(isOn ? 'Marked as waiting' : '✓ Marked as arrived', isOn ? '' : 'success');
+}
+
+function filterPrep() {
+  const m = document.getElementById('prepMonthFilter').value;
+  const s = document.getElementById('prepStatusFilter').value;
+  const q = document.getElementById('prepSearch').value.toLowerCase();
+  const prepData = getPrepData();
+  let f = allRows;
+  if (m !== 'all') f = f.filter(r => monthKey(r.date) === m);
+  if (s === 'waiting') f = f.filter(r => !prepData[r.sku]);
+  if (s === 'arrived') f = f.filter(r => !!prepData[r.sku]);
+  if (q) f = f.filter(r => r.sku.toLowerCase().includes(q)||r.title.toLowerCase().includes(q));
+  renderPrep(f);
+}
+
+// ── EXPENSES ──
+const EXP_ITEMS = [
+  { key:'keepa',   name:'Keepa',           default:19,  recurring:true  },
+  { key:'selleramp',name:'Seller Amp',     default:27,  recurring:true  },
+  { key:'shipping', name:'Shipping/Prep fees', default:0, recurring:false },
+];
+
+let activeExpMonth = '';
+
+function getExpData() { try { return JSON.parse(localStorage.getItem('bimma_expenses')||'{}'); } catch { return {}; } }
+function saveExpData(d) { localStorage.setItem('bimma_expenses', JSON.stringify(d)); }
+
+function renderExpenses() {
+  // Build month tabs from allRows
+  const seen = new Set(), months = [];
+  allRows.forEach(r => { const k = monthKey(r.date); if(k&&!seen.has(k)){seen.add(k);months.push(k);} });
+  if (!months.length) { document.getElementById('expMonthTabs').innerHTML = '<div style="font-size:13px;color:var(--muted)">Connect to Sheets to load months</div>'; return; }
+
+  if (!activeExpMonth || !months.includes(activeExpMonth)) activeExpMonth = months[months.length-1];
+
+  document.getElementById('expMonthTabs').innerHTML = months.map(m =>
+    `<div class="exp-tab ${m===activeExpMonth?'active':''}" onclick="setExpMonth('${m}')">${m}</div>`
+  ).join('');
+
+  renderExpGrid();
+}
+
+function setExpMonth(m) {
+  activeExpMonth = m;
+  document.querySelectorAll('.exp-tab').forEach(t => t.classList.toggle('active', t.textContent===m));
+  renderExpGrid();
+}
+
+function renderExpGrid() {
+  const d = getExpData();
+  const monthData = d[activeExpMonth] || {};
+  let total = 0;
+
+  document.getElementById('expGrid').innerHTML = EXP_ITEMS.map(item => {
+    const val = monthData[item.key] !== undefined ? monthData[item.key] : item.default;
+    total += parseFloat(val)||0;
+    return `<div class="exp-card">
+      <div class="exp-card-header">
+        <div class="exp-card-name">${item.name}</div>
+        <span class="exp-badge ${item.recurring?'recurring':''}">${item.recurring?'RECURRING':'VARIABLE'}</span>
+      </div>
+      <input class="exp-amount-input" type="number" step="0.01" value="${val||''}" placeholder="0.00"
+        onchange="saveExpense('${item.key}', this.value, this)"
+        oninput="updateExpTotal()" id="exp-${item.key}" />
+      <div class="exp-saved" id="exp-saved-${item.key}">✓ Saved</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('expTotal').textContent = '£' + total.toFixed(2);
+}
+
+function saveExpense(key, val, input) {
+  const d = getExpData();
+  if (!d[activeExpMonth]) d[activeExpMonth] = {};
+  d[activeExpMonth][key] = parseFloat(val)||0;
+  saveExpData(d);
+  const savedEl = document.getElementById('exp-saved-'+key);
+  savedEl.classList.add('show');
+  setTimeout(() => savedEl.classList.remove('show'), 1500);
+  updateExpTotal();
+}
+
+function updateExpTotal() {
+  let total = 0;
+  EXP_ITEMS.forEach(item => {
+    const el = document.getElementById('exp-'+item.key);
+    if (el) total += parseFloat(el.value)||0;
+  });
+  document.getElementById('expTotal').textContent = '£' + total.toFixed(2);
+}
+
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type?' '+type:'');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3000);
+}
+</script>
+
+
+</body></html>

@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<!-- saved from url=(0042)file:///Users/james/Downloads/index_5.html -->
+<!-- saved from url=(0042)file:///Users/james/Downloads/index_6.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bimma Retail — FBA Dashboard</title>
 <link href="./index_files/css2" rel="stylesheet">
-<script src="./index_files/chart.umd.min.js"></script><style type="text/css" id="operaUserStyle"></style>
 <style>
 :root {
   --bg: #f5f3ee;
@@ -247,7 +246,7 @@ tbody td { padding:9px 12px; vertical-align:middle; }
   .listing-summary { flex-direction:column; }
 }
 </style>
-</head>
+<style type="text/css" id="operaUserStyle"></style></head>
 <body>
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
@@ -294,6 +293,13 @@ tbody td { padding:9px 12px; vertical-align:middle; }
         <div class="stat-card s-green"><div class="stat-label">TOTAL DEALS</div><div class="stat-value" id="s-deals">—</div><div class="stat-sub">all time</div></div>
         <div class="stat-card s-amber"><div class="stat-label">UPLOADED</div><div class="stat-value" id="s-uploaded">—</div><div class="stat-sub">to listing loader</div></div>
         <div class="stat-card s-dark"><div class="stat-label">THIS MONTH</div><div class="stat-value" id="s-month">—</div><div class="stat-sub">deals</div></div>
+      </div>
+      <div id="bulkUploadBanner" style="background:var(--amber-bg);border:1px solid var(--accent2);border-radius:8px;padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div>
+          <div style="font-weight:700;font-size:13px;color:var(--amber)">396 historical deals not marked as uploaded</div>
+          <div style="font-family:var(--font-m);font-size:10px;color:var(--muted);margin-top:3px">Mark all existing purchases as uploaded so only new deals go into the Listing loader queue</div>
+        </div>
+        <button class="btn btn-primary" onclick="bulkMarkUploaded()" id="bulkMarkBtn">MARK ALL AS UPLOADED</button>
       </div>
       <div class="chart-card">
         <div class="chart-header">
@@ -607,6 +613,16 @@ function renderDashboard() {
   const thisM = mn[now.getMonth()] + ' ' + now.getFullYear();
   const thisDeals = allRows.filter(r => monthKey(r.date) === thisM).length;
 
+  // Show/hide bulk upload banner
+  const banner = document.getElementById('bulkUploadBanner');
+  if (banner) {
+    const unup = allRows.filter(r => !r.uploaded).length;
+    if (unup === 0) { banner.style.display = 'none'; }
+    else {
+      banner.style.display = 'flex';
+      banner.querySelector('div div').textContent = unup + ' historical deals not marked as uploaded';
+    }
+  }
   document.getElementById('s-spend').textContent = '£' + fmt(spend);
   document.getElementById('s-deals').textContent = allRows.length;
   document.getElementById('s-uploaded').textContent = uploaded + '/' + allRows.length;
@@ -648,33 +664,72 @@ function renderDashboard() {
 }
 
 function renderChart(uniq, months) {
-  if (typeof Chart === 'undefined') {
-    setTimeout(() => renderChart(uniq, months), 300);
-    return;
-  }
-  const labels = uniq;
+  const canvas = document.getElementById('spendChart');
+  const ctx = canvas.getContext('2d');
   const data = uniq.map(m => months[m].reduce((s,r) => s+r.spend, 0));
-  const ctx = document.getElementById('spendChart').getContext('2d');
-  if (spendChart) spendChart.destroy();
-  spendChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Total Spend',
-        data,
-        backgroundColor: data.map((_, i) => i === data.length-1 ? '#e8620a' : '#1a1814'),
-        borderRadius: 4,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => '£' + fmt(c.raw) } } },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#8a8070' } },
-        y: { grid: { color: '#f0ede6' }, ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#8a8070', callback: v => '£' + fmt(v) }, border: { display: false } }
-      }
+  const labels = uniq;
+  const maxVal = Math.max(...data) * 1.15 || 1;
+
+  // Set actual pixel size
+  const wrap = canvas.parentElement;
+  canvas.width = wrap.offsetWidth || 800;
+  canvas.height = 200;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const padL = 72, padR = 16, padT = 16, padB = 40;
+  const chartW = canvas.width - padL - padR;
+  const chartH = canvas.height - padT - padB;
+  const barW = Math.min(40, (chartW / labels.length) * 0.6);
+  const gap = chartW / labels.length;
+
+  // Grid lines
+  const ticks = 4;
+  ctx.strokeStyle = '#f0ede6';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#8a8070';
+  ctx.font = '10px JetBrains Mono, monospace';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= ticks; i++) {
+    const y = padT + chartH - (i / ticks) * chartH;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + chartW, y); ctx.stroke();
+    const val = (maxVal / ticks) * i;
+    ctx.fillText('£' + fmt(val), padL - 6, y + 3);
+  }
+
+  // Bars
+  labels.forEach((label, i) => {
+    const x = padL + i * gap + gap / 2 - barW / 2;
+    const barH = (data[i] / maxVal) * chartH;
+    const y = padT + chartH - barH;
+    const isLast = i === labels.length - 1;
+    ctx.fillStyle = isLast ? '#e8620a' : '#1a1814';
+    // Rounded top
+    const r = Math.min(4, barH/2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + barW - r, y);
+    ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
+    ctx.lineTo(x + barW, y + barH);
+    ctx.lineTo(x, y + barH);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = '#8a8070';
+    ctx.font = '9px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    // Abbreviate label e.g. "Feb 26"
+    const parts = label.split(' ');
+    const shortLabel = parts[0] + ' ' + String(parts[1]).slice(2);
+    ctx.fillText(shortLabel, x + barW/2, padT + chartH + 14);
+
+    // Value on hover stored for later — for now show on top of bar
+    if (isLast) {
+      ctx.fillStyle = '#e8620a';
+      ctx.font = 'bold 10px JetBrains Mono, monospace';
+      ctx.fillText('£' + fmt(data[i]), x + barW/2, y - 6);
     }
   });
 }
@@ -1053,6 +1108,44 @@ function closeSidebar() {
   document.getElementById('sidebarOverlay').classList.remove('show');
 }
 
+
+
+// ── BULK MARK ALL EXISTING AS UPLOADED ──
+async function bulkMarkUploaded() {
+  if (!accessToken) { toast('Not connected', 'error'); return; }
+  const unuploaded = allRows.filter(r => !r.uploaded);
+  if (!unuploaded.length) { toast('All already marked as uploaded', 'success'); return; }
+
+  const btn = document.getElementById('bulkMarkBtn');
+  btn.disabled = true; btn.textContent = 'MARKING...';
+  toast('Marking ' + unuploaded.length + ' deals as uploaded...', '');
+
+  try {
+    // Build batch update for all unuploaded rows in master sheet
+    const requests = unuploaded.map(r => ({
+      range: `${PURCH_TAB}!K${r.rowIdx}`,
+      values: [['TRUE']]
+    }));
+
+    // Do in batches of 100 to avoid API limits
+    for (let i = 0; i < requests.length; i += 100) {
+      const batch = requests.slice(i, i + 100);
+      await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchUpdate`, {
+        method: 'POST',
+        body: JSON.stringify({ valueInputOption: 'RAW', data: batch })
+      });
+    }
+
+    // Hide the banner
+    document.getElementById('bulkUploadBanner').style.display = 'none';
+    toast('✓ All ' + unuploaded.length + ' deals marked as uploaded!', 'success');
+    loadData();
+  } catch(e) {
+    toast('Bulk mark failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'MARK ALL AS UPLOADED';
+  }
+}
 
 // ── PREP TRACKER ──
 function getPrepData() { try { return JSON.parse(localStorage.getItem('bimma_prep')||'{}'); } catch { return {}; } }

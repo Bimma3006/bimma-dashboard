@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- saved from url=(0042)file:///Users/james/Downloads/index_4.html -->
+<!-- saved from url=(0042)file:///Users/james/Downloads/index_5.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bimma Retail — FBA Dashboard</title>
-<link href="./Bimma Retail — FBA Dashboard 2_files/css2" rel="stylesheet">
-<script src="./Bimma Retail — FBA Dashboard 2_files/chart.umd.min.js"></script><style type="text/css" id="operaUserStyle"></style>
+<link href="./index_files/css2" rel="stylesheet">
+<script src="./index_files/chart.umd.min.js"></script><style type="text/css" id="operaUserStyle"></style>
 <style>
 :root {
   --bg: #f5f3ee;
@@ -648,6 +648,10 @@ function renderDashboard() {
 }
 
 function renderChart(uniq, months) {
+  if (typeof Chart === 'undefined') {
+    setTimeout(() => renderChart(uniq, months), 300);
+    return;
+  }
   const labels = uniq;
   const data = uniq.map(m => months[m].reduce((s,r) => s+r.spend, 0));
   const ctx = document.getElementById('spendChart').getContext('2d');

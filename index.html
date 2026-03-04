@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0042)file:///Users/james/Downloads/index_9.html -->
+<!-- saved from url=(0043)file:///Users/james/Downloads/index_10.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -93,6 +93,15 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-d); mi
 .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
 .chart-title { font-size:14px; font-weight:700; }
 .chart-wrap { position:relative; height:200px; }
+.bar-chart { display:flex; align-items:flex-end; gap:4px; height:160px; padding: 0 8px; }
+.bar-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; min-width:0; }
+.bar-val { font-family:var(--font-m); font-size:9px; font-weight:700; white-space:nowrap; opacity:0; transition:opacity 0.2s; }
+.bar-col:hover .bar-val { opacity:1; }
+.bar-col.current .bar-val { opacity:1; color:var(--accent); }
+.bar-inner { width:100%; border-radius:3px 3px 0 0; transition:height 0.4s ease; min-height:2px; }
+.bar-label { font-family:var(--font-m); font-size:9px; color:var(--muted); white-space:nowrap; margin-top:6px; }
+.bar-yaxis { position:absolute; left:0; top:0; bottom:32px; display:flex; flex-direction:column; justify-content:space-between; padding:0 6px 0 0; pointer-events:none; }
+.bar-ytick { font-family:var(--font-m); font-size:9px; color:var(--muted); text-align:right; white-space:nowrap; }
 
 /* MONTH CARDS */
 .months-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
@@ -306,7 +315,7 @@ tbody td { padding:9px 12px; vertical-align:middle; }
           <div class="chart-title">Monthly Spend</div>
           <span style="font-family:var(--font-m);font-size:10px;color:var(--muted)">Total spend £ per month</span>
         </div>
-        <div class="chart-wrap"><canvas id="spendChart"></canvas></div>
+        <div class="chart-wrap" id="spendChart"></div>
       </div>
       <div class="section-title">Monthly Overview</div>
       <div class="months-grid" id="monthsGrid">
@@ -341,11 +350,7 @@ tbody td { padding:9px 12px; vertical-align:middle; }
       </div>
       <div class="table-controls">
         <select class="t-select" id="listingMonthFilter" onchange="filterListing()"><option value="all">All months</option></select>
-        <select class="t-select" id="listingStatusFilter" onchange="filterListing()">
-          <option value="pending" selected="">Pending only</option>
-          <option value="all">All items</option>
-          <option value="uploaded">Uploaded only</option>
-        </select>
+        <button class="btn btn-outline" id="listingShowAllBtn" onclick="toggleListingShowAll()" style="font-size:11px;">Show uploaded too</button>
         <button class="btn btn-primary" onclick="exportListingTSV()">⬇ EXPORT TSV</button>
       </div>
       <div class="table-wrap">
@@ -485,7 +490,6 @@ let clientId = localStorage.getItem('bimma_goog_cid') || '';
 window.onload = () => {
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
   if (clientId) { document.getElementById('clientIdInput').value = clientId; loadGIS(); }
-  window.addEventListener('resize', () => { if (_lastChartUniq.length) _drawChart(); });
 };
 
 function loadGIS() {
@@ -620,7 +624,7 @@ function renderDashboard() {
     if (unup === 0) { banner.style.display = 'none'; }
     else {
       banner.style.display = 'flex';
-      document.getElementById('bulkBannerTitle').textContent = unup + ' historical deals not marked as uploaded';
+      document.getElementById('bulkBannerTitle').textContent = unup + ' deals not marked as uploaded';
     }
   }
   document.getElementById('s-spend').textContent = '£' + fmt(spend);
@@ -663,93 +667,31 @@ function renderDashboard() {
   }).join('');
 }
 
-// Store last chart data for resize re-render
-let _lastChartUniq = [], _lastChartMonths = {};
-
 function renderChart(uniq, months) {
-  _lastChartUniq = uniq; _lastChartMonths = months;
-  setTimeout(_drawChart, 50);
-}
-
-function _drawChart() {
-  const uniq = _lastChartUniq, months = _lastChartMonths;
-  if (!uniq || !uniq.length) return;
-  const canvas = document.getElementById('spendChart');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
+  const wrap = document.getElementById('spendChart');
+  if (!wrap || !uniq.length) return;
   const data = uniq.map(m => months[m].reduce((s,r) => s+r.spend, 0));
-  const labels = uniq;
-  const maxVal = Math.max(...data) * 1.15 || 1;
+  const maxVal = Math.max(...data) || 1;
 
-  const wrap = canvas.parentElement;
-  const dpr = window.devicePixelRatio || 1;
-  const cssW = wrap.clientWidth || wrap.offsetWidth || 800;
-  const cssH = 200;
-
-  // Scale canvas for retina sharpness
-  canvas.width = cssW * dpr;
-  canvas.height = cssH * dpr;
-  canvas.style.width = cssW + 'px';
-  canvas.style.height = cssH + 'px';
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, cssW, cssH);
-
-  const padL = 72, padR = 16, padT = 16, padB = 40;
-  const chartW = cssW - padL - padR;
-  const chartH = cssH - padT - padB;
-  const barW = Math.min(40, (chartW / labels.length) * 0.6);
-  const gap = chartW / labels.length;
-
-  // Grid lines
-  const ticks = 4;
-  ctx.strokeStyle = '#f0ede6';
-  ctx.lineWidth = 1;
-  ctx.fillStyle = '#8a8070';
-  ctx.font = '10px JetBrains Mono, monospace';
-  ctx.textAlign = 'right';
-  for (let i = 0; i <= ticks; i++) {
-    const y = padT + chartH - (i / ticks) * chartH;
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + chartW, y); ctx.stroke();
-    const val = (maxVal / ticks) * i;
-    ctx.fillText('£' + fmt(val), padL - 6, y + 3);
-  }
+  // Y-axis ticks
+  const ticks = [maxVal, maxVal*0.75, maxVal*0.5, maxVal*0.25, 0];
+  const yAxis = `<div class="bar-yaxis">${ticks.map(t => `<div class="bar-ytick">£${fmt(t)}</div>`).join('')}</div>`;
 
   // Bars
-  labels.forEach((label, i) => {
-    const x = padL + i * gap + gap / 2 - barW / 2;
-    const barH = (data[i] / maxVal) * chartH;
-    const y = padT + chartH - barH;
-    const isLast = i === labels.length - 1;
-    ctx.fillStyle = isLast ? '#e8620a' : '#1a1814';
-    // Rounded top
-    const r = Math.min(4, barH/2);
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + barW - r, y);
-    ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
-    ctx.lineTo(x + barW, y + barH);
-    ctx.lineTo(x, y + barH);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
-    ctx.fill();
-
-    // Label
-    ctx.fillStyle = '#8a8070';
-    ctx.font = '9px JetBrains Mono, monospace';
-    ctx.textAlign = 'center';
-    // Abbreviate label e.g. "Feb 26"
+  const bars = uniq.map((label, i) => {
+    const pct = (data[i] / maxVal * 100).toFixed(1);
+    const isCurrent = i === uniq.length - 1;
     const parts = label.split(' ');
     const shortLabel = parts[0] + ' ' + String(parts[1]).slice(2);
-    ctx.fillText(shortLabel, x + barW/2, padT + chartH + 14);
+    const color = isCurrent ? 'var(--accent)' : 'var(--dark)';
+    return `<div class="bar-col${isCurrent?' current':''}">
+      <div class="bar-val" style="color:${color}">£${fmt(data[i])}</div>
+      <div class="bar-inner" style="height:${pct}%;background:${color};" title="${label}: £${fmt(data[i])}"></div>
+      <div class="bar-label">${shortLabel}</div>
+    </div>`;
+  }).join('');
 
-    // Value on hover stored for later — for now show on top of bar
-    if (isLast) {
-      ctx.fillStyle = '#e8620a';
-      ctx.font = 'bold 10px JetBrains Mono, monospace';
-      ctx.fillText('£' + fmt(data[i]), x + barW/2, y - 6);
-    }
-  });
+  wrap.innerHTML = `<div style="position:relative;padding-left:52px;height:100%;">${yAxis}<div class="bar-chart">${bars}</div></div>`;
 }
 
 // ── PURCHASES ──
@@ -786,8 +728,18 @@ function filterPurchases() {
 }
 
 // ── LISTING ──
+let listingShowAll = false;
+
+function toggleListingShowAll() {
+  listingShowAll = !listingShowAll;
+  const btn = document.getElementById('listingShowAllBtn');
+  btn.textContent = listingShowAll ? 'Pending only' : 'Show uploaded too';
+  btn.className = listingShowAll ? 'btn btn-green' : 'btn btn-outline';
+  filterListing();
+}
+
 function renderListing(rows) {
-  // Summary always reflects ALL rows
+  // Summary always based on ALL rows
   const pending = allRows.filter(r => !r.uploaded).length;
   const done = allRows.filter(r => r.uploaded).length;
   document.getElementById('ls-pending').textContent = pending;
@@ -817,11 +769,9 @@ function renderListing(rows) {
 
 function filterListing() {
   const m = document.getElementById('listingMonthFilter').value;
-  const s = document.getElementById('listingStatusFilter').value;
   let f = allRows;
   if (m !== 'all') f = f.filter(r => monthKey(r.date) === m);
-  if (s === 'pending') f = f.filter(r => !r.uploaded);
-  else if (s === 'uploaded') f = f.filter(r => r.uploaded);
+  if (!listingShowAll) f = f.filter(r => !r.uploaded);
   renderListing(f);
 }
 

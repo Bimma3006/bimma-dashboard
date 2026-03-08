@@ -414,7 +414,6 @@ select option { background:var(--surface2); }
     <div class="nav-item" data-page="cogs" onclick="showPage('cogs',this)"><span class="nav-icon">🧮</span>COGS Calculator</div>
     <div class="nav-item" data-page="purchases" onclick="showPage('purchases',this)"><span class="nav-icon">◈</span>Purchases</div>
     <div class="nav-item" data-page="listing" onclick="showPage('listing',this)"><span class="nav-icon">🚀</span>Listing Uploader</div>
-    <div class="nav-item" data-page="add" onclick="showPage('add',this)"><span class="nav-icon">+</span>Add Purchase</div>
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses',this)"><span class="nav-icon">£</span>Expenses</div>
   </div>
   <div class="sidebar-auth">
@@ -865,7 +864,7 @@ async function loadData() {
       uploaded:row[10]==='TRUE'||row[10]===true||row[10]==='Yes', rowIdx:i+2
     }));
     renderDashboard(); renderPurchases(allRows); renderListing(allRows); renderPrep(allRows); renderExpenses();
-    populateFilters();
+    populateFilters(); setListingDefaults();
     toast(`Loaded ${allRows.length} purchases`,'success');
   } catch(e) { toast('Load error: '+e.message,'error'); }
 }
@@ -959,6 +958,13 @@ function filterListing() {
   if(s==='uploaded')f=f.filter(r=>r.uploaded);
   renderListing(f);
 }
+function setListingDefaults() {
+  const monthSel=document.getElementById('listingMonthFilter');
+  if(monthSel&&monthSel.options.length>1) monthSel.selectedIndex=1;
+  const statusSel=document.getElementById('listingStatusFilter');
+  if(statusSel) statusSel.value='pending';
+  filterListing();
+}
 async function toggleUpload(rowIdx,btn,context) {
   if(!accessToken){toast('Not connected','error');return;}
   btn.disabled=true; const isOn=btn.classList.contains('on'); const newVal=!isOn;
@@ -1021,37 +1027,31 @@ function clearForm() {
   document.getElementById('calcPreview').classList.remove('show');
 }
 async function exportListingTSV() {
-  if(!accessToken){toast('Not connected','error');return;}
-  const listingData=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:N`);
-  const listingRows=(listingData.values||[]);
-  const dataRows=listingRows.filter(r=>r[0]&&r[0]!=='sku');
-  if(!dataRows.length){toast('Listing loader is empty','error');return;}
+  const m=document.getElementById('listingMonthFilter').value;
+  const s=document.getElementById('listingStatusFilter').value;
+  let rows=allRows;
+  if(m!=='all')rows=rows.filter(r=>monthKey(r.date)===m);
+  if(s==='pending')rows=rows.filter(r=>!r.uploaded);
+  else if(s==='uploaded')rows=rows.filter(r=>r.uploaded);
+  if(!rows.length){toast('No rows to export','error');return;}
   const headers=['sku','product-id','product-id-type','item-condition','price','quantity','add-delete','fulfillment-center-id','batteries_required','supplier_declared_dg_hz_regulation1','supplier_declared_dg_hz_regulation2','supplier_declared_dg_hz_regulation3','supplier_declared_dg_hz_regulation4','supplier_declared_dg_hz_regulation5'];
-  const tsvRows=dataRows.map(r=>{const p=[...r];while(p.length<14)p.push('not_applicable');return p.join('\t');});
+  const tsvRows=rows.map(r=>{
+    const price=(r.sell*1.25).toFixed(2);
+    return [r.sku,r.asin,1,'New',price,r.qty,'a','AMAZON_EU','FALSE','not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'].join('\t');
+  });
   const tsv=[headers.join('\t'),...tsvRows].join('\n');
   const blob=new Blob([tsv],{type:'text/tab-separated-values'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`Bimma_Listing_Upload_${new Date().toISOString().split('T')[0]}.tsv`; a.click(); URL.revokeObjectURL(a.href);
-  try {
-    const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const exportedSkus=dataRows.map(r=>r[0]);
-    for(const row of allRows){
-      if(!exportedSkus.includes(row.sku))continue;
-      await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(PURCH_TAB+'!K'+row.rowIdx)}?valueInputOption=RAW`,{method:'PUT',body:JSON.stringify({values:[['TRUE']]})});
-      const d=new Date(row.date);
-      if(!isNaN(d)){
-        const monthTab=mn[d.getMonth()]+' '+d.getFullYear();
-        try{ const mData=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(monthTab)}!B:B`); const mIdx=(mData.values||[]).findIndex(r=>r[0]===row.sku); if(mIdx!==-1)await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(monthTab+'!K'+(mIdx+1))}?valueInputOption=RAW`,{method:'PUT',body:JSON.stringify({values:[['TRUE']]})}); }catch(e){}
-      }
-    }
-    const meta=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?fields=sheets.properties`);
-    const sheet=meta.sheets.find(s=>s.properties.title===LISTING_TAB);
-    if(sheet&&dataRows.length>0){
-      const startIdx=listingRows.findIndex(r=>r[0]&&r[0]!=='sku');
-      if(startIdx!==-1)await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`,{method:'POST',body:JSON.stringify({requests:[{deleteDimension:{range:{sheetId:sheet.properties.sheetId,dimension:'ROWS',startIndex:startIdx,endIndex:startIdx+dataRows.length}}}]})});
-    }
-    toast(`✓ Exported ${dataRows.length} items — marked uploaded & cleared queue`,'success'); loadData();
-  } catch(e){ toast('Export done but sync failed: '+e.message,'error'); }
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='Bimma_Listing_Upload_'+new Date().toISOString().split('T')[0]+'.tsv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('✓ Exported '+rows.length+' items','success');
 }
+
 async function bulkMarkUploaded() {
   if(!accessToken){toast('Not connected','error');return;}
   const unuploaded=allRows.filter(r=>!r.uploaded);

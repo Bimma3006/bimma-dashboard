@@ -1246,13 +1246,18 @@ function rmAnalyse(){
     // Parse transactions
     const refundsByAsin={};
     rmParseCSV(txnText).forEach(row=>{
-      if((row['transaction-type']||'').toLowerCase()!=='refund')return;
-      const orderId=(row['order-id']||'').trim();
-      const productName=(row['product-details']||row['description']||'').trim();
-      const totalStr=(row['total']||'0').replace(/[^0-9.-]/g,'');
+      const txnType=(row['Transaction type']||row['transaction-type']||row['Transaction Type']||'').toLowerCase().trim();
+      if(txnType!=='refund')return;
+      const orderId=(row['Order ID']||row['order-id']||row['Order Id']||'').trim();
+      const productName=(row['Product Details']||row['product-details']||row['description']||'').trim();
+      const totalStr=(row['Total (GBP)']||row['total']||row['Total']||'0').replace(/[^0-9.-]/g,'');
       const total=parseFloat(totalStr)||0;
-      const dateStr=(row['date/time']||row['date']||'').trim();
-      const txnDate=dateStr?new Date(dateStr):null;
+      const dateStr=(row['Date']||row['date/time']||row['date']||'').trim();
+      let txnDate=null;
+      if(dateStr){
+        const dp=dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+        txnDate=dp?new Date(parseInt(dp[3]),parseInt(dp[2])-1,parseInt(dp[1])):new Date(dateStr);
+      }
       const stk=stkByOrder[orderId]||{};
       const sku=stk.sku||'';
       const asin=stk.asin||'';

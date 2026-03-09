@@ -215,47 +215,47 @@ select option { background:var(--surface2); }
 }
 .rm-banner-text { font-family:var(--mono); font-size:12px; font-weight:600; color:var(--green); flex:1; }
 .rm-banner-urgent { color:var(--amber); }
-.rm-card { border:1px solid var(--border); border-radius:8px; margin-bottom:12px; overflow:hidden; }
+.rm-card { border:1px solid var(--border); border-radius:10px; margin-bottom:16px; overflow:hidden; }
 .rm-card-header {
-  padding: 14px 18px; cursor:pointer;
-  display:flex; align-items:center; gap:12px; background:var(--surface);
+  padding: 16px 20px; cursor:pointer;
+  display:flex; align-items:center; gap:14px; background:var(--surface);
   transition: background 0.15s;
 }
 .rm-card-header:hover { background:#161616; }
-.rm-asin-link { font-family:var(--mono); font-size:11px; color:var(--green); text-decoration:none; }
+.rm-asin-link { font-family:var(--mono); font-size:12px; color:var(--green); text-decoration:none; white-space:nowrap; }
 .rm-asin-link:hover { text-decoration:underline; }
-.rm-title { font-size:12px; color:#aaa; flex:1; }
-.rm-amount { font-family:var(--mono); font-size:14px; font-weight:600; color:var(--green); }
-.rm-meta { display:flex; gap:12px; font-family:var(--mono); font-size:10px; color:var(--text-dim); flex-wrap:wrap; }
+.rm-title { font-size:13px; color:#bbb; flex:1; }
+.rm-amount { font-family:var(--mono); font-size:15px; font-weight:600; color:var(--green); white-space:nowrap; }
+.rm-meta { display:flex; gap:14px; font-family:var(--mono); font-size:11px; color:var(--text-dim); flex-wrap:wrap; }
 .rm-meta-item { display:flex; align-items:center; gap:4px; }
-.rm-chevron { font-size:10px; color:var(--text-dim); transition:transform 0.2s; margin-left:4px; }
+.rm-chevron { font-size:11px; color:var(--text-dim); transition:transform 0.2s; margin-left:4px; }
 .rm-chevron.open { transform:rotate(180deg); }
-.rm-detail { display:none; padding:16px 18px; background:var(--bg); border-top:1px solid var(--border); }
+.rm-detail { display:none; padding:20px 22px; background:var(--bg); border-top:1px solid var(--border); }
 .rm-detail.open { display:block; }
 .rm-action-banner {
-  background: rgba(0,255,136,0.08);
-  border: 1px solid rgba(0,255,136,0.25);
-  border-radius:6px; padding:12px 16px;
-  display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:12px; flex-wrap:wrap;
+  background: rgba(0,255,136,0.06);
+  border-bottom: 1px solid rgba(0,255,136,0.2);
+  padding:14px 20px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
 }
-.rm-action-text { font-family:var(--mono); font-size:12px; font-weight:600; color:var(--green); }
-.rm-mini-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px; }
-.rm-mini-stat { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:10px 14px; }
-.rm-mini-label { font-family:var(--mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px; }
-.rm-mini-val { font-family:var(--mono); font-size:15px; font-weight:600; }
-.rm-refund-table { width:100%; border-collapse:collapse; font-size:11px; margin-bottom:14px; }
-.rm-refund-table th { font-family:var(--mono); font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); padding:8px 10px; border-bottom:1px solid var(--border); text-align:left; }
-.rm-refund-table td { padding:9px 10px; border-bottom:1px solid #161616; font-family:var(--mono); font-size:12px; }
+.rm-action-text { font-family:var(--mono); font-size:13px; font-weight:600; color:var(--green); }
+.rm-mini-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:18px; }
+.rm-mini-stat { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px 16px; }
+.rm-mini-label { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:6px; }
+.rm-mini-val { font-family:var(--mono); font-size:18px; font-weight:600; }
+.rm-refund-table { width:100%; border-collapse:collapse; margin-bottom:8px; }
+.rm-refund-table th { font-family:var(--mono); font-size:10px; letter-spacing:0.09em; text-transform:uppercase; color:var(--text-dim); padding:10px 14px; border-bottom:1px solid var(--border); text-align:left; background:var(--surface); }
+.rm-refund-table td { padding:12px 14px; border-bottom:1px solid #161616; font-family:var(--mono); font-size:12px; vertical-align:middle; }
 .rm-refund-table tr:last-child td { border-bottom:none; }
-.rm-batches-title { font-family:var(--mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin:14px 0 8px; padding-top:12px; border-top:1px solid var(--border); }
-.rm-requested-section { margin-bottom:24px; }
+.rm-batches-title { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin:20px 0 10px; padding-top:16px; border-top:1px solid var(--border); }
+.rm-requested-section { margin-bottom:28px; }
 .rm-requested-card {
   background:var(--surface); border:1px solid var(--border); border-radius:8px;
-  padding:14px 16px; display:flex; align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;
+  padding:16px 18px; display:flex; align-items:center; gap:14px; margin-bottom:10px; flex-wrap:wrap;
 }
-.pill { font-family:var(--mono); font-size:9px; padding:2px 8px; border-radius:3px; font-weight:600; letter-spacing:0.06em; }
+.pill { font-family:var(--mono); font-size:10px; padding:4px 10px; border-radius:4px; font-weight:600; letter-spacing:0.05em; display:inline-block; }
 .pill-green { background:rgba(0,255,136,0.1); color:var(--green); border:1px solid rgba(0,255,136,0.2); }
-.pill-amber { background:rgba(255,184,0,0.1); color:var(--amber); border:1px solid rgba(255,184,0,0.2); }
+.pill-amber { background:rgba(255,184,0,0.12); color:var(--amber); border:1px solid rgba(255,184,0,0.25); }
 .pill-grey { background:rgba(255,255,255,0.05); color:#666; border:1px solid #222; }
 
 /* ────────────────────────────────────────────
@@ -416,7 +416,7 @@ select option { background:var(--surface2); }
     <div class="nav-item" data-page="listing" onclick="showPage('listing',this)"><span class="nav-icon">🚀</span>Listing Uploader</div>
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses',this)"><span class="nav-icon">£</span>Expenses</div>
   </div>
-  <div style="padding:0 16px 10px;font-family:var(--mono);font-size:9px;color:#333355;letter-spacing:0.08em;text-transform:uppercase;">v1.1 · 08 Mar 26</div>
+  <div style="padding:0 16px 10px;font-family:var(--mono);font-size:9px;color:#333355;letter-spacing:0.08em;text-transform:uppercase;">v1.3 · 09 Mar 26</div>
   <div class="sidebar-auth">
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
@@ -1335,50 +1335,55 @@ function rmRenderResults(allRecover){
       const cw=rmCustomWindows[a.asin];
       const defaultDeadline=a.bestUkDate?(()=>{const d=new Date(a.bestUkDate);d.setDate(d.getDate()+30);return d;})():null;
       const deadlineVal=cw&&cw.date?cw.date:(defaultDeadline?defaultDeadline.toISOString().split('T')[0]:'');
+      // Card-level deadline: custom if set, else bestUkDate+30
+      const cardDeadline=cw&&cw.date?new Date(cw.date):(a.bestUkDate?(()=>{const x=new Date(a.bestUkDate);x.setDate(x.getDate()+30);return x;})():null);
+      const cardDaysLeft=cardDeadline?rmDaysBetween(rmToday,cardDeadline):null;
       const refundRows=a.refunds.map(r=>{
         let canReturn='—';
         if(r.sku&&rmIsUK(r.sku)&&r.skuDate){
-          // Use custom deadline if set, otherwise 30 days from best UK batch date
-          const deadline=cw&&cw.date?new Date(cw.date):(()=>{const x=new Date(a.bestUkDate||r.skuDate);x.setDate(x.getDate()+30);return x;})();
-          const dLeft=rmDaysBetween(rmToday,deadline);
-          canReturn=dLeft>5
-            ?`<span class="pill pill-green">✓ ${dLeft} days left to request</span><div style="font-family:var(--mono);font-size:11px;color:#335533;margin-top:3px;">+30 days to ship back once requested</div>`
-            :dLeft>=0
-              ?`<span class="pill pill-amber">⚡ ${dLeft} day${dLeft!==1?'s':''} left — act now</span>`
-              :`<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Request window closed</span>`;
-        } else if(r.sku&&!rmIsUK(r.sku)){canReturn='<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">EU — no return</span>';}
+          if(cardDeadline){
+            const dLeft=cardDaysLeft;
+            canReturn=dLeft>5
+              ?`<span class="pill pill-green">✓ ${dLeft} days left to request</span><div style="font-family:var(--mono);font-size:11px;color:#335533;margin-top:4px;">+30 days to ship back once requested</div>`
+              :dLeft>=0
+                ?`<span class="pill pill-amber">⚡ ${dLeft} day${dLeft!==1?'s':''} left — act now</span>`
+                :`<span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">Request window closed</span>`;
+          }
+        } else if(r.sku&&!rmIsUK(r.sku)){canReturn='<span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">EU — no return</span>';}
         return `<tr>
-          <td style="font-family:var(--mono);font-size:12px;color:#aaa;padding:9px 10px;">${r.skuDate?r.skuDate.toLocaleDateString('en-GB'):'—'}<br><span style="font-size:10px;color:#555;">${r.sku||''}</span></td>
-          <td style="font-family:var(--mono);font-size:12px;color:#aaa;padding:9px 10px;">${r.date?r.date.toLocaleDateString('en-GB'):'—'}</td>
-          <td style="font-family:var(--mono);font-size:13px;color:var(--red);padding:9px 10px;">-£${r.total.toFixed(2)}</td>
-          <td style="font-family:var(--mono);font-size:11px;color:#666;padding:9px 10px;">${r.orderId}</td>
-          <td style="padding:9px 10px;">${canReturn}</td>
+          <td>${r.skuDate?r.skuDate.toLocaleDateString('en-GB'):'—'}<br><span style="font-size:10px;color:#555;display:block;margin-top:3px;">${r.sku||''}</span></td>
+          <td>${r.date?r.date.toLocaleDateString('en-GB'):'—'}</td>
+          <td style="color:var(--red);">-£${r.total.toFixed(2)}</td>
+          <td style="color:#666;font-size:11px;">${r.orderId}</td>
+          <td>${canReturn}</td>
         </tr>`;
       }).join('');
 
       const batchRows=a.allUkBatches.map(d=>{
-        const deadline=cw&&cw.date?new Date(cw.date):(()=>{const x=new Date(d);x.setDate(x.getDate()+30);return x;})();
+        // Each batch has its own natural deadline, but if custom is set use that
+        const naturalDeadline=(()=>{const x=new Date(d);x.setDate(x.getDate()+30);return x;})();
+        const deadline=cw&&cw.date?new Date(cw.date):naturalDeadline;
         const dLeft=rmDaysBetween(rmToday,deadline);
         const status=dLeft>5
           ?`<span class="pill pill-green">✓ ${dLeft} days left</span>`
           :dLeft>=0
             ?`<span class="pill pill-amber">⚡ ${dLeft} day${dLeft!==1?'s':''} left</span>`
-            :`<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Window closed</span>`;
+            :`<span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">Window closed</span>`;
         return `<tr>
-          <td style="font-family:var(--mono);font-size:12px;color:#aaa;padding:8px 10px;">${d.toLocaleDateString('en-GB')}</td>
-          <td style="font-family:var(--mono);font-size:12px;color:#aaa;padding:8px 10px;">${deadline.toLocaleDateString('en-GB')}</td>
-          <td style="padding:8px 10px;">${status}</td>
+          <td>${d.toLocaleDateString('en-GB')}</td>
+          <td>${deadline.toLocaleDateString('en-GB')}</td>
+          <td>${status}</td>
         </tr>`;
       }).join('');
 
       html+=`<div class="rm-card">
         <div class="rm-action-banner" style="${bannerStyle}">
-          <div><span style="font-family:var(--mono);font-size:12px;font-weight:600;${bannerTextStyle}">↩ Request return from Amazon — get £${a.recoverableAmt.toFixed(2)} back</span></div>
-          <div style="display:flex;align-items:center;gap:10px;">${urgentTag}<button class="btn-sm btn-green" onclick="rmOpenModal('${a.asin}')">↩ Mark as Requested</button></div>
+          <div><span style="font-family:var(--mono);font-size:13px;font-weight:600;${bannerTextStyle}">↩ Request return from Amazon — get £${a.recoverableAmt.toFixed(2)} back</span></div>
+          <div style="display:flex;align-items:center;gap:12px;">${urgentTag}<button class="btn-sm btn-green" onclick="rmOpenModal('${a.asin}')">↩ Mark as Requested</button></div>
         </div>
         <div class="rm-card-header" onclick="rmToggle('${a.asin}')">
           <a href="https://www.amazon.co.uk/dp/${a.asin}" target="_blank" class="rm-asin-link" onclick="event.stopPropagation()">${a.asin} ↗</a>
-          <span class="rm-title">${a.title.substring(0,60)}${a.title.length>60?'…':''}</span>
+          <span class="rm-title">${a.title.substring(0,70)}${a.title.length>70?'…':''}</span>
           <span class="rm-amount">+£${a.recoverableAmt.toFixed(2)}</span>
           <span class="rm-chevron" id="rmChev-${a.asin}">▼</span>
         </div>

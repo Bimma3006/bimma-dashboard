@@ -244,8 +244,8 @@ select option { background:var(--surface2); }
 .rm-mini-label { font-family:var(--mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px; }
 .rm-mini-val { font-family:var(--mono); font-size:15px; font-weight:600; }
 .rm-refund-table { width:100%; border-collapse:collapse; font-size:11px; margin-bottom:14px; }
-.rm-refund-table th { font-family:var(--mono); font-size:9px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); padding:6px 10px 8px; border-bottom:1px solid var(--border); text-align:left; }
-.rm-refund-table td { padding:7px 10px; border-bottom:1px solid #161616; font-family:var(--mono); font-size:11px; }
+.rm-refund-table th { font-family:var(--mono); font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim); padding:8px 10px; border-bottom:1px solid var(--border); text-align:left; }
+.rm-refund-table td { padding:9px 10px; border-bottom:1px solid #161616; font-family:var(--mono); font-size:12px; }
 .rm-refund-table tr:last-child td { border-bottom:none; }
 .rm-batches-title { font-family:var(--mono); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-dim); margin:14px 0 8px; padding-top:12px; border-top:1px solid var(--border); }
 .rm-requested-section { margin-bottom:24px; }
@@ -1338,26 +1338,37 @@ function rmRenderResults(allRecover){
       const refundRows=a.refunds.map(r=>{
         let canReturn='—';
         if(r.sku&&rmIsUK(r.sku)&&r.skuDate){
-          const deadline=new Date(r.skuDate);deadline.setDate(deadline.getDate()+30);
+          // Use custom deadline if set, otherwise 30 days from best UK batch date
+          const deadline=cw&&cw.date?new Date(cw.date):(()=>{const x=new Date(a.bestUkDate||r.skuDate);x.setDate(x.getDate()+30);return x;})();
           const dLeft=rmDaysBetween(rmToday,deadline);
-          canReturn=dLeft>5?`<span class="pill pill-green">✓ ${dLeft} days left to request</span><div style="font-family:var(--mono);font-size:10px;color:#335533;margin-top:2px;">+30 days to ship back once requested</div>`:
-            dLeft>=0?`<span class="pill pill-amber">⚡ ${dLeft} day${dLeft!==1?'s':''} left — act now</span>`:
-            `<span style="color:var(--text-dim);font-size:10px;">Request window closed</span>`;
-        } else if(r.sku&&!rmIsUK(r.sku)){canReturn='<span style="color:var(--text-dim);font-size:10px;">EU — no return</span>';}
+          canReturn=dLeft>5
+            ?`<span class="pill pill-green">✓ ${dLeft} days left to request</span><div style="font-family:var(--mono);font-size:11px;color:#335533;margin-top:3px;">+30 days to ship back once requested</div>`
+            :dLeft>=0
+              ?`<span class="pill pill-amber">⚡ ${dLeft} day${dLeft!==1?'s':''} left — act now</span>`
+              :`<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Request window closed</span>`;
+        } else if(r.sku&&!rmIsUK(r.sku)){canReturn='<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">EU — no return</span>';}
         return `<tr>
-          <td style="font-family:var(--mono);font-size:11px;color:#888;">${r.skuDate?r.skuDate.toLocaleDateString('en-GB'):'—'}<br><span style="font-size:9px;color:#444;">${r.sku||''}</span></td>
-          <td style="font-family:var(--mono);font-size:11px;color:#888;">${r.date?r.date.toLocaleDateString('en-GB'):'—'}</td>
-          <td style="font-family:var(--mono);font-size:12px;color:var(--red);">-£${r.total.toFixed(2)}</td>
-          <td style="font-family:var(--mono);font-size:10px;color:#666;">${r.orderId}</td>
-          <td>${canReturn}</td>
+          <td style="font-family:var(--mono);font-size:12px;color:#aaa;padding:9px 10px;">${r.skuDate?r.skuDate.toLocaleDateString('en-GB'):'—'}<br><span style="font-size:10px;color:#555;">${r.sku||''}</span></td>
+          <td style="font-family:var(--mono);font-size:12px;color:#aaa;padding:9px 10px;">${r.date?r.date.toLocaleDateString('en-GB'):'—'}</td>
+          <td style="font-family:var(--mono);font-size:13px;color:var(--red);padding:9px 10px;">-£${r.total.toFixed(2)}</td>
+          <td style="font-family:var(--mono);font-size:11px;color:#666;padding:9px 10px;">${r.orderId}</td>
+          <td style="padding:9px 10px;">${canReturn}</td>
         </tr>`;
       }).join('');
 
       const batchRows=a.allUkBatches.map(d=>{
         const deadline=cw&&cw.date?new Date(cw.date):(()=>{const x=new Date(d);x.setDate(x.getDate()+30);return x;})();
         const dLeft=rmDaysBetween(rmToday,deadline);
-        const status=dLeft>5?`<span class="pill pill-green">✓ ${dLeft} days left</span>`:dLeft>=0?`<span class="pill pill-amber">⚡ ${dLeft} day${dLeft!==1?'s':''} left</span>`:`<span style="color:var(--text-dim);font-size:10px;">Window closed</span>`;
-        return `<tr><td style="font-family:var(--mono);font-size:11px;color:#888;">${d.toLocaleDateString('en-GB')}</td><td style="font-family:var(--mono);font-size:11px;color:#888;">${deadline.toLocaleDateString('en-GB')}</td><td>${status}</td></tr>`;
+        const status=dLeft>5
+          ?`<span class="pill pill-green">✓ ${dLeft} days left</span>`
+          :dLeft>=0
+            ?`<span class="pill pill-amber">⚡ ${dLeft} day${dLeft!==1?'s':''} left</span>`
+            :`<span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Window closed</span>`;
+        return `<tr>
+          <td style="font-family:var(--mono);font-size:12px;color:#aaa;padding:8px 10px;">${d.toLocaleDateString('en-GB')}</td>
+          <td style="font-family:var(--mono);font-size:12px;color:#aaa;padding:8px 10px;">${deadline.toLocaleDateString('en-GB')}</td>
+          <td style="padding:8px 10px;">${status}</td>
+        </tr>`;
       }).join('');
 
       html+=`<div class="rm-card">
@@ -1401,6 +1412,7 @@ function rmToggle(asin){
 function rmSaveCustomWindow(asin,date){
   rmCustomWindows[asin]={date};
   localStorage.setItem('bimma_customWindows',JSON.stringify(rmCustomWindows));
+  rmAnalyse(); // re-render so all day counts update
 }
 function rmOpenModal(asin){
   rmPendingAsin=asin;

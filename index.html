@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════
-   BIMMA RETAIL  ·  FBA OPS  ·  v1.9
+   BIMMA RETAIL  ·  FBA OPS  ·  v2.0
 ═══════════════════════════════════════ */
 :root {
   --bg:          #07070a;
@@ -848,7 +848,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses',this)"><span class="nav-icon">£</span>Expenses</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v1.8 · 09 Mar 26</div>
+    <div class="sidebar-version">v2.0 · 10 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -1472,8 +1472,13 @@ function filterListing() {
   renderListing(f);
 }
 function setListingDefaults() {
+  const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now=new Date(),currentMonthKey=mn[now.getMonth()]+' '+now.getFullYear();
   const monthSel=document.getElementById('listingMonthFilter');
-  if(monthSel&&monthSel.options.length>1) monthSel.selectedIndex=1;
+  if(monthSel){
+    const opts=Array.from(monthSel.options).map(o=>o.value);
+    monthSel.value=opts.includes(currentMonthKey)?currentMonthKey:'all';
+  }
   const statusSel=document.getElementById('listingStatusFilter');
   if(statusSel) statusSel.value='pending';
   filterListing();
@@ -1736,7 +1741,7 @@ function populateFilters(){
   ['monthFilter','listingMonthFilter'].forEach(id=>{
     const el=document.getElementById(id);
     el.innerHTML='<option value="all">All months</option>'+months.map(m=>`<option value="${m}">${m}</option>`).join('');
-    if(id==='listingMonthFilter'&&months.includes(currentMonthKey)){el.value=currentMonthKey;filterListing();}
+    if(id==='listingMonthFilter'&&months.includes(currentMonthKey))el.value=currentMonthKey;
   });
 }
 function monthKey(d){

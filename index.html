@@ -1495,7 +1495,7 @@ async function addToListingLoader(row) {
   const existing=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:A`);
   if((existing.values||[]).flat().includes(row.sku))return;
   const price=Math.round(row.sell*1.25*100)/100;
-  const newRow=[row.sku,row.asin,1,'New',price,row.qty,'a','DEFAULT',false,'not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'];
+  const newRow=[row.sku,row.asin,1,'New',price,row.qty,'a','AMAZON_EU',false,'not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'];
   await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:N:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,{method:'POST',body:JSON.stringify({values:[newRow]})});
 }
 async function removeFromListingLoader(sku) {
@@ -1527,7 +1527,7 @@ async function addPurchase() {
     const d=new Date(date), monthTabName=mn[d.getMonth()]+' '+d.getFullYear();
     try { await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(monthTabName)}!A:K:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,{method:'POST',body:JSON.stringify({values:[purchRow]})}); } catch(e){}
     const price=(Math.round(sell*1.25*100)/100).toFixed(2);
-    const listingRow=[sku,asin,1,'New',price,qty,'a','DEFAULT','FALSE','not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'];
+    const listingRow=[sku,asin,1,'New',price,qty,'a','AMAZON_EU','FALSE','not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'];
     const existing=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:A`);
     if(!(existing.values||[]).flat().includes(sku))await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:N:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,{method:'POST',body:JSON.stringify({values:[listingRow]})});
     toast('✓ Added to Purchasing sheet & Listing loader!','success'); clearForm(); loadData();
@@ -1547,12 +1547,20 @@ async function exportListingTSV() {
   if(s==='pending')rows=rows.filter(r=>!r.uploaded);
   else if(s==='uploaded')rows=rows.filter(r=>r.uploaded);
   if(!rows.length){toast('No rows to export','error');return;}
-  const headers=['sku','product-id','product-id-type','item-condition','price','quantity','add-delete','fulfillment-channel','batteries_required','supplier_declared_dg_hz_regulation1','supplier_declared_dg_hz_regulation2','supplier_declared_dg_hz_regulation3','supplier_declared_dg_hz_regulation4','supplier_declared_dg_hz_regulation5'];
+  // Amazon Listing Loader (unified) format — matches ListingLoader.xlsm template exactly
+  // 5 header rows required before data rows
+  const settingsRow='TemplateType=unified\tVersion=2026.0310\tTemplateSignature=UFJPRFVDVA==';
+  const blankRow='';
+  const groupRow=['Listing Identity','Product Identity','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','Offer','','','','','Offer (UK) - (Sell on Amazon)','','','','','','','','','Shipping','Safety & Compliance','','','',''].join('\t');
+  const labelRow=['SKU','Merchant Suggested ASIN','External Product ID Type','External Product ID','Skip Offer','Item Condition','Product Tax Code','Fulfillment Channel Code (UK)','Quantity (UK)','Your Price GBP (Sell on Amazon, UK)','Maximum Order Quantity','Merchant Shipping Group (UK)','Are batteries required?','Dangerous Goods Regulations','Dangerous Goods Regulations','Dangerous Goods Regulations','Dangerous Goods Regulations','Dangerous Goods Regulations'].join('\t');
+  const attrRow=['contribution_sku#1.value','merchant_suggested_asin#1.value','externally_assigned_product_identifier#1.type','externally_assigned_product_identifier#1.value','skip_offer#1.value','condition_type#1.value','product_tax_code#1.value','fulfillment_availability#1.fulfillment_channel_code','fulfillment_availability#1.quantity','purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=ALL]#1.our_price#1.schedule#1.value_with_tax','max_order_quantity#1.value','merchant_shipping_group[marketplace_id=A1F83G8C2ARO7P]#1.value','batteries_required#1.value','supplier_declared_dg_hz_regulation#1.value','supplier_declared_dg_hz_regulation#2.value','supplier_declared_dg_hz_regulation#3.value','supplier_declared_dg_hz_regulation#4.value','supplier_declared_dg_hz_regulation#5.value'].join('\t');
+  const exampleRow=''; // blank row 6
   const tsvRows=rows.map(r=>{
     const price=(r.sell*1.25).toFixed(2);
-    return [r.sku,r.asin,1,'New',price,r.qty,'a','DEFAULT','FALSE','not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'].join('\t');
+    const moq=price>=200?2:3;
+    return [r.sku,r.asin,'','','false','new_new','A_GEN_STANDARD','AMAZON_EU',r.qty,price,moq,'','false','not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'].join('\t');
   });
-  const tsv=[headers.join('\t'),...tsvRows].join('\n');
+  const tsv=[settingsRow,blankRow,groupRow,labelRow,attrRow,exampleRow,...tsvRows].join('\n');
   const blob=new Blob([tsv],{type:'text/tab-separated-values'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -1562,7 +1570,21 @@ async function exportListingTSV() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  toast('✓ Exported '+rows.length+' items','success');
+  // Auto-mark exported rows as uploaded in Google Sheet
+  if(accessToken){
+    try {
+      const requests=rows.filter(r=>!r.uploaded).map(r=>({range:`${PURCH_TAB}!K${r.rowIdx}`,values:[['TRUE']]}));
+      if(requests.length){
+        for(let i=0;i<requests.length;i+=100)await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchUpdate`,{method:'POST',body:JSON.stringify({valueInputOption:'RAW',data:requests.slice(i,i+100)})});
+        toast('✓ Exported '+rows.length+' items & marked as uploaded','success');
+        loadData();
+      } else {
+        toast('✓ Exported '+rows.length+' items','success');
+      }
+    } catch(e){ toast('✓ Exported but failed to mark uploaded: '+e.message,'error'); }
+  } else {
+    toast('✓ Exported '+rows.length+' items','success');
+  }
 }
 
 async function bulkMarkUploaded() {
@@ -1709,9 +1731,12 @@ function expConfirmAdd(){
 function populateFilters(){
   const seen=new Set(),months=[];
   allRows.forEach(r=>{const k=monthKey(r.date);if(k&&!seen.has(k)){seen.add(k);months.push(k);}});
+  const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now=new Date(),currentMonthKey=mn[now.getMonth()]+' '+now.getFullYear();
   ['monthFilter','listingMonthFilter'].forEach(id=>{
     const el=document.getElementById(id);
     el.innerHTML='<option value="all">All months</option>'+months.map(m=>`<option value="${m}">${m}</option>`).join('');
+    if(id==='listingMonthFilter'&&months.includes(currentMonthKey)){el.value=currentMonthKey;filterListing();}
   });
 }
 function monthKey(d){

@@ -2308,30 +2308,33 @@ function cogsProcess(){
       if(row.length<6)continue;
       const isBalance=(row[0]||'').trim().toLowerCase()==='balance line';
       const asin=(row[5]||'').trim().toUpperCase();
-      if(isBalance){if(lastKey&&asinMap[lastKey]){const pr=prepOverride!==null?prepOverride:cogsCleanNum(row[16]);const carton=(row[17]||'').toLowerCase().includes('carton')?2:0;asinMap[lastKey]._extraPrep=(asinMap[lastKey]._extraPrep||0)+Math.max(0,pr-carton);}continue;}
+      if(isBalance){if(lastKey&&asinMap[lastKey]){const rawPr=cogsCleanNum(row[16]);const pr=prepOverride!==null?prepOverride:(rawPr>0?rawPr:0.45);const carton=(row[17]||'').toLowerCase().includes('carton')?2:0;asinMap[lastKey]._extraPrep=(asinMap[lastKey]._extraPrep||0)+Math.max(0,pr-carton);}continue;}
       if(!asin||asin.length<5)continue;
       const sku=(row[6]||'').trim();
       const dm=sku.match(/^(\d{2})\/(\d{2})\/(\d{2})-/);
       const rowDate=dm?new Date(2000+parseInt(dm[3]),parseInt(dm[2])-1,parseInt(dm[1])):null;
       if(rowDate&&(rowDate<dateFrom||rowDate>dateTo))continue;
       const units=cogsCleanNum(row[8])||1,itemCost=cogsParseCost(sku)||0;
-      const pr=prepOverride!==null?prepOverride:cogsCleanNum(row[16]);
+      const rawPrep=cogsCleanNum(row[16]);
+      const prepHasValue=prepOverride!==null||(rawPrep>0);
+      const pr=prepOverride!==null?prepOverride:(rawPrep>0?rawPrep:0.45);
       const carton=(row[17]||'').toLowerCase().includes('carton')?2:0;
       const key=sku||asin; lastKey=key;
-      asinMap[key]={asin,sku,itemCost,_units:units,_totalPrep:Math.max(0,pr-carton),_extraPrep:0,date:rowDate};
+      asinMap[key]={asin,sku,itemCost,_units:units,_totalPrep:Math.max(0,pr-carton),_extraPrep:0,_prepHasValue:prepHasValue,date:rowDate};
     }
     Object.values(asinMap).forEach(r=>{r.units=r._units;r.prepPerUnit=r._units>0?(r._totalPrep+(r._extraPrep||0))/r._units:0;r.totalCOGS=r.itemCost+r.prepPerUnit;});
-    cogsParsedRows=Object.values(asinMap).map(r=>({asin:r.asin,sku:r.sku,itemCost:r.itemCost,prepPerUnit:r.prepPerUnit,totalCOGS:r.totalCOGS,units:r.units,date:r.date,isExported:false,selected:false}));
+    cogsParsedRows=Object.values(asinMap).map(r=>({asin:r.asin,sku:r.sku,itemCost:r.itemCost,prepPerUnit:r.prepPerUnit,totalCOGS:r.totalCOGS,units:r.units,date:r.date,prepHasValue:r._prepHasValue,isExported:false,selected:false}));
     if(!cogsParsedRows.length){const e=document.getElementById('cogs-error');e.textContent='No ASINs found.';e.style.display='block';return;}
     if(cogsStkFile&&stkText){
       const stk=cogsParseSTK(stkText);
       if(stk){
         const bySKU={},byASIN={};
-        cogsParsedRows.forEach(r=>{if(r.sku)bySKU[r.sku]=r;if(r.asin)byASIN[r.asin]=r;});
+        const normSku=s=>s.replace(/\s+/g,'').toLowerCase();
+        cogsParsedRows.forEach(r=>{if(r.sku)bySKU[normSku(r.sku)]=r;if(r.asin)byASIN[r.asin]=r;});
         let matched=0;
         const mergedRows=stk.rows.map(row=>{
           const sku=row['SKU']||'',asin=(row['ASIN']||'').toUpperCase();
-          const entry=bySKU[sku]||byASIN[asin]||null;
+          const entry=bySKU[normSku(sku)]||byASIN[asin]||null;
           const out={...row};
           if(entry){out['UNIT_COST_VAT_INCLUSIVE']=entry.itemCost.toFixed(2);out['PREP_COST_VAT_INCLUSIVE']=entry.prepPerUnit.toFixed(2);matched++;cogsExportedSKUs.add(entry.sku);entry.isExported=true;}
           return out;
@@ -2365,7 +2368,7 @@ function cogsRenderTable(){
   if(q)rows=rows.filter(r=>r.sku.toLowerCase().includes(q)||r.asin.toLowerCase().includes(q));
   const tbody=document.getElementById('cogs-tbody');
   if(!rows.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">No rows</div></td></tr>';return;}
-  tbody.innerHTML=rows.map(r=>`<tr><td><input type="checkbox" class="cogs-row-check" data-sku="${r.sku}" ${r.selected?'checked':''} onchange="cogsToggleRow(this)" style="cursor:pointer;accent-color:var(--green);width:14px;height:14px;"></td><td class="mono">${r.asin}</td><td class="mono" style="color:#666;font-size:10px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.sku}">${r.sku||'—'}</td><td class="num">£${r.itemCost.toFixed(2)}</td><td class="num">£${r.prepPerUnit.toFixed(2)}</td><td class="num" style="color:var(--green);font-weight:500;">£${r.totalCOGS.toFixed(2)}</td><td class="num" style="color:#555">${r.units}</td></tr>`).join('');
+  tbody.innerHTML=rows.map(r=>`<tr><td><input type="checkbox" class="cogs-row-check" data-sku="${r.sku}" ${r.selected?'checked':''} onchange="cogsToggleRow(this)" style="cursor:pointer;accent-color:var(--green);width:14px;height:14px;"></td><td class="mono">${r.asin}</td><td class="mono" style="color:#666;font-size:10px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.sku}">${r.sku||'—'}</td><td class="num">£${r.itemCost.toFixed(2)}</td><td class="num" style="${!r.prepHasValue?'color:var(--text-dim);font-style:italic;':''}" title="${!r.prepHasValue?'No prep cost found — defaulted to £0.45':''}">${r.prepHasValue?'£'+r.prepPerUnit.toFixed(2):'£0.45 *'}</td><td class="num" style="color:var(--green);font-weight:500;">£${r.totalCOGS.toFixed(2)}</td><td class="num" style="color:#555">${r.units}</td></tr>`).join('');
 }
 function cogsSetTab(t){cogsCurrentTab=t;document.querySelectorAll('.cogs-tab').forEach(el=>el.classList.remove('active'));document.getElementById('cogs-tab-'+t).classList.add('active');cogsRenderTable();}
 function cogsToggleRow(cb){const r=cogsParsedRows.find(r=>r.sku===cb.dataset.sku);if(r)r.selected=cb.checked;}
@@ -2373,12 +2376,13 @@ function cogsToggleAll(cb){document.querySelectorAll('.cogs-row-check').forEach(
 function cogsDownloadMergedSTK(){
   if(!cogsMergedSTKData)return;
   const bySKU={},byASIN={};
+  const normSku=s=>s.replace(/\s+/g,'').toLowerCase();
   const sel=cogsParsedRows.filter(r=>r.selected);
-  (sel.length?sel:cogsParsedRows).forEach(r=>{if(r.sku)bySKU[r.sku]=r;if(r.asin)byASIN[r.asin]=r;});
+  (sel.length?sel:cogsParsedRows).forEach(r=>{if(r.sku)bySKU[normSku(r.sku)]=r;if(r.asin)byASIN[r.asin]=r;});
   let matched=0;
   const finalRows=cogsMergedSTKData.rawRows.map(row=>{
     const sku=row['SKU']||'',asin=(row['ASIN']||'').toUpperCase();
-    const entry=bySKU[sku]||byASIN[asin]||null;
+    const entry=bySKU[normSku(sku)]||byASIN[asin]||null;
     const out={...row};
     if(entry){out['UNIT_COST_VAT_INCLUSIVE']=entry.itemCost.toFixed(2);out['PREP_COST_VAT_INCLUSIVE']=entry.prepPerUnit.toFixed(2);matched++;}
     return out;

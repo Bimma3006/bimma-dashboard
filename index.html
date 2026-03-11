@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════
-   BIMMA RETAIL  ·  FBA OPS  ·  v2.3
+   BIMMA RETAIL  ·  FBA OPS  ·  v2.5
 ═══════════════════════════════════════ */
 :root {
   --bg:          #07070a;
@@ -839,6 +839,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="refund" onclick="showPage('refund',this)"><span class="nav-icon">↩</span>Refund Monitor</div>
     <div class="nav-item" data-page="deals" onclick="showPage('deals',this)"><span class="nav-icon">⚡</span>Deal Analyser</div>
     <div class="nav-item" data-page="cogs" onclick="showPage('cogs',this)"><span class="nav-icon">∑</span>COGS Calculator</div>
+    <div class="nav-item" data-page="repricer" onclick="showPage('repricer',this)"><span class="nav-icon">⇅</span>Min Price Tool</div>
     <div class="nav-divider"></div>
     <div class="sidebar-section-label">Inventory</div>
     <div class="nav-item" data-page="listing" onclick="showPage('listing',this)"><span class="nav-icon">↑</span>Listing Uploader</div>
@@ -848,7 +849,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses',this)"><span class="nav-icon">£</span>Expenses</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v2.3 · 11 Mar 26</div>
+    <div class="sidebar-version">v2.5 · 11 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -1100,6 +1101,81 @@ input::placeholder { color: var(--text-4); }
     </div>
   </div>
 
+  <!-- ══ PAGE: MIN PRICE TOOL ══ -->
+  <div class="page" id="page-repricer">
+    <div class="page-header">
+      <div class="page-header-title">Min Price Tool</div>
+      <div class="page-header-sub">Calculate suggested repricer min prices from Keepa buy box history</div>
+    </div>
+
+    <!-- Settings row -->
+    <div class="cogs-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:20px;">
+      <div class="cogs-card">
+        <div class="cogs-card-label">Keepa API Key</div>
+        <input type="password" id="rp-apikey" placeholder="Paste your Keepa API key…" style="width:100%;box-sizing:border-box;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:8px;">Stored in browser only. Never sent anywhere except Keepa.</div>
+      </div>
+      <div class="cogs-card">
+        <div class="cogs-card-label">Settings</div>
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <div style="flex:1;">
+            <div class="field-label">Lookback (days)</div>
+            <select id="rp-lookback" style="width:100%;">
+              <option value="60">60 days</option>
+              <option value="90">90 days</option>
+              <option value="180" selected>180 days</option>
+              <option value="365">365 days</option>
+            </select>
+          </div>
+          <div style="flex:1;">
+            <div class="field-label">Percentile floor</div>
+            <select id="rp-percentile" style="width:100%;">
+              <option value="10">10th</option>
+              <option value="20" selected>20th</option>
+              <option value="30">30th</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-label">Buffer above floor</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="rp-buffer" value="5" min="0" max="30" step="1" style="width:70px;"> <span style="font-family:var(--mono);font-size:11px;color:var(--text-2);">%</span>
+        </div>
+      </div>
+      <div class="cogs-card">
+        <div class="cogs-card-label">ASIN Source</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-2);margin-bottom:12px;line-height:1.7;">Pulls all unique ASINs from your purchases data (Google Sheets). Connect Sheets first if not already done.</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);" id="rp-asin-count">—</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;">
+      <button class="btn-sm btn-green" onclick="rpRun()" id="rpRunBtn">⇅ Fetch &amp; Calculate</button>
+      <button class="btn-sm" id="rpDownloadBtn" style="display:none;background:#8866ff;color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:0.05em;font-weight:600;padding:6px 12px;border-radius:4px;border:none;cursor:pointer;" onclick="rpDownload()">↓ Download STK Repricer File</button>
+      <div id="rp-progress" style="font-family:var(--mono);font-size:11px;color:var(--text-2);"></div>
+    </div>
+
+    <div id="rp-error" class="cogs-error" style="display:none;"></div>
+    <div id="rp-info" class="cogs-info" style="display:none;"></div>
+
+    <div id="rp-results" style="display:none;">
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;" id="rp-stats-row"></div>
+      <input type="text" id="rp-search" placeholder="Search ASIN or SKU…" oninput="rpRenderTable()" style="width:240px;margin-bottom:12px;">
+      <table class="data-table">
+        <thead><tr>
+          <th>ASIN</th>
+          <th>SKU</th>
+          <th>Title</th>
+          <th style="text-align:right;">BB Floor (£)</th>
+          <th style="text-align:right;">20th %ile (£)</th>
+          <th style="text-align:right;">Suggested Min (£)</th>
+          <th style="text-align:right;">BB High (£)</th>
+          <th>Data pts</th>
+        </tr></thead>
+        <tbody id="rp-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- ══ PAGE: PURCHASES ══ -->
   <div class="page" id="page-purchases">
     <div class="page-inner">
@@ -1302,7 +1378,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', deals:'Deal Analyser', cogs:'COGS Calculator', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses' };
+  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', deals:'Deal Analyser', cogs:'COGS Calculator', repricer:'Min Price Tool', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
 }
 
@@ -2395,6 +2471,181 @@ function cogsDownloadMergedSTK(){
   const unmatch=cogsParsedRows.length-matched;
   info.innerHTML='✓ Downloaded — <strong>'+matched+'</strong> rows matched & written. '+(unmatch>0?'<span style="color:var(--red)">⚠ '+unmatch+' unmatched</span>':'<span style="color:var(--green)">All matched ✓</span>');
   info.style.display='block';
+}
+// ════════════════════════════════════════
+// MIN PRICE TOOL (Keepa)
+// ════════════════════════════════════════
+let rpResults = [];
+
+// Keepa time unit = minutes since 2011-01-01
+const KEEPA_EPOCH = new Date('2011-01-01T00:00:00Z').getTime();
+function keepaTimeToMs(kt) { return KEEPA_EPOCH + kt * 60000; }
+
+function rpGetASINs() {
+  // Pull unique ASINs from allRows (purchases data)
+  const asins = [...new Set(allRows.map(r => r.asin).filter(a => a && a.length > 5))];
+  document.getElementById('rp-asin-count').textContent = asins.length + ' ASINs loaded from purchases';
+  return asins;
+}
+
+function rpPercentile(arr, p) {
+  if (!arr.length) return 0;
+  const sorted = [...arr].sort((a, b) => a - b);
+  const idx = Math.floor((p / 100) * sorted.length);
+  return sorted[Math.max(0, idx)];
+}
+
+async function rpRun() {
+  const apiKey = document.getElementById('rp-apikey').value.trim();
+  if (!apiKey) { rpShowError('Please enter your Keepa API key.'); return; }
+
+  const asins = rpGetASINs();
+  if (!asins.length) { rpShowError('No ASINs found — make sure your purchases data is loaded (Connect Sheets).'); return; }
+
+  const lookbackDays = parseInt(document.getElementById('rp-lookback').value);
+  const percentile = parseInt(document.getElementById('rp-percentile').value);
+  const bufferPct = parseFloat(document.getElementById('rp-buffer').value) / 100;
+
+  document.getElementById('rp-error').style.display = 'none';
+  document.getElementById('rp-info').style.display = 'none';
+  document.getElementById('rp-results').style.display = 'none';
+  document.getElementById('rpDownloadBtn').style.display = 'none';
+  document.getElementById('rpRunBtn').disabled = true;
+
+  const prog = document.getElementById('rp-progress');
+  rpResults = [];
+
+  // Keepa allows up to 100 ASINs per request
+  const chunks = [];
+  for (let i = 0; i < asins.length; i += 100) chunks.push(asins.slice(i, i + 100));
+
+  const cutoffMs = Date.now() - lookbackDays * 86400000;
+
+  try {
+    for (let ci = 0; ci < chunks.length; ci++) {
+      const chunk = chunks[ci];
+      prog.textContent = `Fetching batch ${ci + 1} of ${chunks.length} (${chunk.length} ASINs)…`;
+
+      const url = `https://api.keepa.com/product?key=${apiKey}&domain=2&asin=${chunk.join(',')}&history=1&buybox=1`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(`Keepa API error: ${resp.status} ${resp.statusText}`);
+      const data = await resp.json();
+
+      if (data.error) throw new Error(`Keepa: ${data.error.message || JSON.stringify(data.error)}`);
+
+      for (const product of (data.products || [])) {
+        const asin = product.asin;
+        const title = (product.title || '').substring(0, 60);
+        // Find SKU from purchases
+        const matchRow = allRows.find(r => r.asin === asin);
+        const sku = matchRow ? matchRow.sku : '';
+
+        // csv[18] = BUY_BOX_SHIPPING (time, price pairs, price in cents)
+        const bbRaw = (product.csv || [])[18];
+        if (!bbRaw || bbRaw.length < 2) {
+          rpResults.push({ asin, sku, title, floor: null, pct: null, suggested: null, high: null, pts: 0, error: 'No buy box data' });
+          continue;
+        }
+
+        // Parse time/price pairs, filter to lookback window, convert from cents to £
+        const prices = [];
+        for (let i = 0; i < bbRaw.length - 1; i += 2) {
+          const t = keepaTimeToMs(bbRaw[i]);
+          const p = bbRaw[i + 1];
+          if (t >= cutoffMs && p > 0) prices.push(p / 100);
+        }
+
+        if (!prices.length) {
+          rpResults.push({ asin, sku, title, floor: null, pct: null, suggested: null, high: null, pts: 0, error: 'No data in window' });
+          continue;
+        }
+
+        const floor = Math.min(...prices);
+        const high = Math.max(...prices);
+        const pct = rpPercentile(prices, percentile);
+        const suggested = parseFloat((pct * (1 + bufferPct)).toFixed(2));
+
+        rpResults.push({ asin, sku, title, floor: floor.toFixed(2), pct: pct.toFixed(2), suggested, high: high.toFixed(2), pts: prices.length });
+      }
+
+      // Small delay between batches to be kind to the API
+      if (ci < chunks.length - 1) await new Promise(r => setTimeout(r, 500));
+    }
+
+    prog.textContent = '';
+    const good = rpResults.filter(r => r.suggested !== null).length;
+    const bad = rpResults.length - good;
+    const info = document.getElementById('rp-info');
+    info.innerHTML = `✓ Done — <strong>${good}</strong> ASINs priced${bad > 0 ? `, <span style="color:var(--red)">${bad} with no buy box data</span>` : ''}.`;
+    info.style.display = 'block';
+
+    const avg = good ? (rpResults.filter(r=>r.suggested).reduce((s,r)=>s+r.suggested,0)/good).toFixed(2) : 0;
+    document.getElementById('rp-stats-row').innerHTML =
+      `<div class="cogs-stat"><div class="cogs-stat-val">${rpResults.length}</div><div class="cogs-stat-lbl">ASINs</div></div>`+
+      `<div class="cogs-stat"><div class="cogs-stat-val">${good}</div><div class="cogs-stat-lbl">Priced</div></div>`+
+      `<div class="cogs-stat"><div class="cogs-stat-val">£${avg}</div><div class="cogs-stat-lbl">Avg Min</div></div>`+
+      `<div class="cogs-stat"><div class="cogs-stat-val">${bad}</div><div class="cogs-stat-lbl">No Data</div></div>`;
+
+    document.getElementById('rp-results').style.display = 'block';
+    document.getElementById('rpDownloadBtn').style.display = 'inline-block';
+    rpRenderTable();
+
+  } catch(err) {
+    prog.textContent = '';
+    rpShowError('Error: ' + err.message);
+  }
+
+  document.getElementById('rpRunBtn').disabled = false;
+}
+
+function rpRenderTable() {
+  const q = (document.getElementById('rp-search').value || '').toLowerCase();
+  let rows = rpResults;
+  if (q) rows = rows.filter(r => r.asin.toLowerCase().includes(q) || r.sku.toLowerCase().includes(q));
+  const tbody = document.getElementById('rp-tbody');
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No results</div></td></tr>'; return; }
+  tbody.innerHTML = rows.map(r => {
+    if (r.error) return `<tr>
+      <td class="mono">${r.asin}</td>
+      <td class="mono" style="font-size:10px;color:#666;">${r.sku||'—'}</td>
+      <td style="font-size:11px;color:#555;">${r.title||'—'}</td>
+      <td colspan="4" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:center;">${r.error}</td>
+      <td class="num" style="color:#555;">0</td>
+    </tr>`;
+    return `<tr>
+      <td class="mono">${r.asin}</td>
+      <td class="mono" style="font-size:10px;color:#666;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.sku}">${r.sku||'—'}</td>
+      <td style="font-size:11px;color:#999;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.title}">${r.title}</td>
+      <td class="num">£${r.floor}</td>
+      <td class="num">£${r.pct}</td>
+      <td class="num" style="color:var(--green);font-weight:600;">£${r.suggested}</td>
+      <td class="num" style="color:var(--text-2);">£${r.high}</td>
+      <td class="num" style="color:#555;">${r.pts}</td>
+    </tr>`;
+  }).join('');
+}
+
+function rpDownload() {
+  const rows = rpResults.filter(r => r.suggested !== null);
+  if (!rows.length) return;
+  // STK repricer format: SKU, Min Price, Max Price (we set max as BB high)
+  const headers = ['SKU','ASIN','MIN_PRICE','MAX_PRICE','SUGGESTED_BY'];
+  const lines = [headers.join('\t')];
+  rows.forEach(r => {
+    lines.push([r.sku||'', r.asin, r.suggested, r.high, 'BimmaMinPriceTool_Keepa180d'].join('\t'));
+  });
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/tab-separated-values' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Bimma_MinPrices_' + new Date().toISOString().split('T')[0] + '.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function rpShowError(msg) {
+  const e = document.getElementById('rp-error');
+  e.textContent = msg;
+  e.style.display = 'block';
 }
 </script>
 </body>

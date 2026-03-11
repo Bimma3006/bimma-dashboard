@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════
-   BIMMA RETAIL  ·  FBA OPS  ·  v2.0
+   BIMMA RETAIL  ·  FBA OPS  ·  v2.1
 ═══════════════════════════════════════ */
 :root {
   --bg:          #07070a;
@@ -848,7 +848,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses',this)"><span class="nav-icon">£</span>Expenses</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v2.0 · 10 Mar 26</div>
+    <div class="sidebar-version">v2.1 · 11 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -1553,11 +1553,10 @@ async function exportListingTSV() {
   else if(s==='uploaded')rows=rows.filter(r=>r.uploaded);
   if(!rows.length){toast('No rows to export','error');return;}
   // Inventory Loader flat file format — detected correctly by Amazon as FBA
-  const headers=['sku','product-id','product-id-type','item-condition','price','quantity','add-delete','fulfillment-center-id','maximum-order-quantity','batteries_required','supplier_declared_dg_hz_regulation1','supplier_declared_dg_hz_regulation2','supplier_declared_dg_hz_regulation3','supplier_declared_dg_hz_regulation4','supplier_declared_dg_hz_regulation5'];
+  const headers=['sku','product-id','product-id-type','item-condition','price','quantity','add-delete','fulfillment-center-id','batteries_required','supplier_declared_dg_hz_regulation1','supplier_declared_dg_hz_regulation2','supplier_declared_dg_hz_regulation3','supplier_declared_dg_hz_regulation4','supplier_declared_dg_hz_regulation5'];
   const tsvRows=rows.map(r=>{
     const price=(r.sell*1.25).toFixed(2);
-    const moq=parseFloat(price)>=200?2:3;
-    return [r.sku,r.asin,1,'New',price,r.qty,'a','AMAZON_EU',moq,'FALSE','not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'].join('\t');
+    return [r.sku,r.asin,1,'New',price,r.qty,'a','AMAZON_EU','FALSE','not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'].join('\t');
   });
   const tsv=[headers.join('\t'),...tsvRows].join('\n');
   const blob=new Blob([tsv],{type:'text/tab-separated-values'});

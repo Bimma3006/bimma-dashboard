@@ -1402,6 +1402,136 @@ input::placeholder { color: var(--text-4); }
 .a2a-slot.has-file { border-style: solid; border-color: var(--green); background: rgba(0,229,132,0.06); }
 .a2a-slot.has-file .a2a-slot-icon { color: var(--green); }
 
+/* ═══════════════════════════════════════════
+   DEAL SCOUT
+═══════════════════════════════════════════ */
+.scout-config-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.scout-source-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.scout-tab {
+  padding: 5px 14px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-xs);
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.scout-tab.active {
+  background: rgba(0,229,132,0.12);
+  border-color: var(--green);
+  color: var(--green);
+}
+.scout-tab:hover:not(.active) { border-color: var(--border3); color: var(--text-2); }
+
+.scout-dropzone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 22px 16px 18px;
+  background: var(--surface3);
+  border: 1px dashed var(--border2);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  min-height: 110px;
+}
+.scout-dropzone:hover { border-color: var(--green); background: rgba(0,229,132,0.04); }
+.scout-dropzone.loaded { border-style: solid; border-color: var(--green); background: rgba(0,229,132,0.06); }
+.scout-dropzone.drag-over { border-color: var(--green); background: rgba(0,229,132,0.1); }
+.scout-drop-icon { font-size: 22px; color: var(--text-3); transition: color 0.15s; }
+.scout-dropzone.loaded .scout-drop-icon { color: var(--green); }
+.scout-drop-label { font-family: var(--mono); font-size: 10.5px; color: var(--text-2); letter-spacing: 0.03em; }
+.scout-drop-sub { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
+.scout-drop-filename { font-family: var(--mono); font-size: 10px; color: var(--green); word-break: break-all; max-width: 100%; }
+
+.scout-paste-area {
+  width: 100%;
+  height: 110px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 10px 12px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.scout-paste-area:focus { border-color: var(--green); }
+.scout-asin-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.scout-market-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.scout-market-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.scout-market-btn input { display: none; }
+.scout-market-btn:hover { border-color: var(--border3); }
+.scout-market-btn.checked { border-color: var(--green); background: rgba(0,229,132,0.08); }
+.scout-market-flag { font-size: 16px; line-height: 1; }
+.scout-market-code { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--text-2); }
+.scout-market-btn.checked .scout-market-code { color: var(--green); }
+
+.scout-clear-btn {
+  padding: 9px 14px;
+  background: transparent;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.scout-clear-btn:hover { border-color: var(--red); color: var(--red); }
+
+.scout-progress-bar-wrap {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
 </style>
 </head>
 <body>
@@ -1426,6 +1556,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="cogs" onclick="showPage('cogs',this)"><span class="nav-icon">∑</span>COGS Calculator</div>
     <div class="nav-item" data-page="repricer" onclick="showPage('repricer',this)"><span class="nav-icon">⇅</span>Min Price Tool</div>
     <div class="nav-item" data-page="a2a" onclick="showPage('a2a',this)"><span class="nav-icon">⚡</span>Deal Analyser</div>
+    <div class="nav-item" data-page="scout" onclick="showPage('scout',this)"><span class="nav-icon">🔍</span>Deal Scout</div>
     <div class="nav-divider"></div>
     <div class="sidebar-section-label">Inventory</div>
     <div class="nav-item" data-page="listing" onclick="showPage('listing',this)"><span class="nav-icon">↑</span>Listing Uploader</div>
@@ -2016,9 +2147,173 @@ input::placeholder { color: var(--text-4); }
     </div>
   </div>
 
-</div><!-- /main -->
 
-<!-- GOOGLE SETUP MODAL -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- DEAL SCOUT PAGE                                          -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="page" id="page-scout">
+
+  <!-- HEADER BAR -->
+  <div class="rp-header-bar">
+    <div>
+      <div class="page-header-title">Deal Scout</div>
+      <div class="page-header-sub">Upload ASIN list → live Keepa fetch → EU vs UK 180d avg Buy Box</div>
+    </div>
+    <div class="rp-header-actions">
+      <button class="rp-dl-btn" id="scoutExportBtn" onclick="scoutExport()" disabled>↓ Export TSV</button>
+      <button class="scout-clear-btn" onclick="scoutClear()">✕ Clear</button>
+      <button class="rp-run-btn" onclick="scoutRun()" id="scoutRunBtn"><span class="rp-run-icon">🔍</span> Run Scout</button>
+    </div>
+  </div>
+
+  <!-- CONFIG PANELS -->
+  <div class="scout-config-grid">
+
+    <!-- CSV UPLOAD -->
+    <div class="rp-panel" style="grid-column:span 2;">
+      <div class="rp-panel-label"><span class="rp-panel-icon">📁</span> ASIN Source</div>
+      <div class="scout-source-tabs">
+        <button class="scout-tab active" id="scoutTabCsv" onclick="scoutSetTab('csv')">Upload CSV</button>
+        <button class="scout-tab" id="scoutTabPaste" onclick="scoutSetTab('paste')">Paste ASINs</button>
+      </div>
+
+      <!-- CSV slot -->
+      <div id="scoutCsvPane">
+        <div class="scout-dropzone" id="scoutDropzone"
+          ondragover="scoutDragOver(event)" ondragleave="scoutDragLeave(event)" ondrop="scoutDrop(event)"
+          onclick="document.getElementById('scoutCsvInput').click()">
+          <input type="file" id="scoutCsvInput" accept=".csv,.txt" style="display:none;" onchange="scoutFileChosen(this.files[0])">
+          <div class="scout-drop-icon" id="scoutDropIcon">↑</div>
+          <div class="scout-drop-label" id="scoutDropLabel">Drop CSV / TXT here or click to browse</div>
+          <div class="scout-drop-sub" id="scoutDropSub">Any file with ASINs — one per line, or comma-separated</div>
+          <div class="scout-drop-filename" id="scoutDropFilename"></div>
+          <button class="a2a-slot-clear" id="scoutClearFile" onclick="scoutClearFile(event)" style="display:none;">✕</button>
+        </div>
+      </div>
+
+      <!-- Paste pane -->
+      <div id="scoutPastePane" style="display:none;">
+        <textarea id="scoutAsinInput"
+          placeholder="Paste ASINs in any format — newline, comma, space or mixed&#10;B01N5IB20Q, B07ZPKBL9V&#10;B08KTZ8249"
+          class="scout-paste-area"
+          oninput="scoutCountASINs()"></textarea>
+      </div>
+
+      <div class="scout-asin-meta">
+        <span id="scoutAsinCount" style="color:var(--text-3);font-family:var(--mono);font-size:11px;">0 ASINs detected</span>
+        <span id="scoutAsinWarning" style="color:var(--amber);font-family:var(--mono);font-size:11px;display:none;">⚠ Max <span id="scoutMaxDisplay">20</span> — extras ignored</span>
+      </div>
+    </div>
+
+    <!-- API KEY -->
+    <div class="rp-panel">
+      <div class="rp-panel-label"><span class="rp-panel-icon">🔑</span> Keepa API Key</div>
+      <input type="password" id="scoutApiKey" class="rp-input" placeholder="Paste your Keepa API key…" oninput="scoutSyncApiKey()">
+      <div class="rp-panel-note">Synced with Min Price Tool. Stored in browser only.</div>
+    </div>
+
+    <!-- MARKETS -->
+    <div class="rp-panel">
+      <div class="rp-panel-label"><span class="rp-panel-icon">🌍</span> Source Markets</div>
+      <div class="scout-market-grid">
+        <label class="scout-market-btn" id="scoutLabelDE">
+          <input type="checkbox" id="scoutDE" checked onchange="scoutToggleMarket('DE',this)">
+          <span class="scout-market-flag">🇩🇪</span><span class="scout-market-code">DE</span>
+        </label>
+        <label class="scout-market-btn" id="scoutLabelFR">
+          <input type="checkbox" id="scoutFR" checked onchange="scoutToggleMarket('FR',this)">
+          <span class="scout-market-flag">🇫🇷</span><span class="scout-market-code">FR</span>
+        </label>
+        <label class="scout-market-btn" id="scoutLabelIT">
+          <input type="checkbox" id="scoutIT" checked onchange="scoutToggleMarket('IT',this)">
+          <span class="scout-market-flag">🇮🇹</span><span class="scout-market-code">IT</span>
+        </label>
+        <label class="scout-market-btn" id="scoutLabelES">
+          <input type="checkbox" id="scoutES" checked onchange="scoutToggleMarket('ES',this)">
+          <span class="scout-market-flag">🇪🇸</span><span class="scout-market-code">ES</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- FX + COSTS -->
+    <div class="rp-panel">
+      <div class="rp-panel-label"><span class="rp-panel-icon">⚙</span> Cost Settings</div>
+      <div class="rp-settings-grid">
+        <div>
+          <div class="rp-setting-label">EUR / GBP</div>
+          <input id="scoutEurGbp" type="number" value="0.86" step="0.01" min="0.5" max="1.5" class="rp-input">
+        </div>
+        <div>
+          <div class="rp-setting-label">Min ROI %</div>
+          <input id="scoutMinRoi" type="number" value="15" step="1" min="0" class="rp-input">
+        </div>
+        <div>
+          <div class="rp-setting-label">Shipping £</div>
+          <input id="scoutShipping" type="number" value="2.00" step="0.01" min="0" class="rp-input">
+        </div>
+        <div>
+          <div class="rp-setting-label">Prep £</div>
+          <input id="scoutPrep" type="number" value="0.45" step="0.01" min="0" class="rp-input">
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <div class="rp-setting-label">Max ASINs</div>
+        <input id="scoutMaxAsins" type="number" value="20" step="1" min="1" max="20" class="rp-input rp-input-sm" oninput="scoutCountASINs()">
+      </div>
+    </div>
+
+  </div><!-- /scout-config-grid -->
+
+  <!-- PROGRESS -->
+  <div id="scoutStatus" style="display:none;" class="scout-progress-bar-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span id="scoutStatusText" style="font-family:var(--mono);font-size:11px;color:var(--text-2);">Starting…</span>
+      <span id="scoutStatusPct" style="font-family:var(--mono);font-size:11px;color:var(--text-3);">0%</span>
+    </div>
+    <div style="height:3px;background:var(--border2);border-radius:2px;overflow:hidden;">
+      <div id="scoutProgressFill" style="height:100%;width:0%;background:var(--green);transition:width 0.3s;border-radius:2px;"></div>
+    </div>
+  </div>
+
+  <!-- RESULTS TABLE -->
+  <div class="rp-table-wrap" id="scoutTableWrap">
+    <div class="rp-table-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="rp-table-title">Results</span>
+        <span id="scoutResultCount" class="rp-table-badge"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:8px;">
+          <span><span style="color:var(--green);">■</span> ≥30% ROI</span>
+          <span><span style="color:var(--amber);">■</span> ≥min ROI</span>
+          <span><span style="color:var(--red);">■</span> below</span>
+        </div>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="rp-table" id="scoutTable">
+        <thead>
+          <tr>
+            <th>ASIN</th>
+            <th>Title</th>
+            <th style="text-align:center;">Src</th>
+            <th style="text-align:right;">EU Price</th>
+            <th style="text-align:right;">Landed £</th>
+            <th style="text-align:right;">UK BB 180d</th>
+            <th style="text-align:right;">Fees</th>
+            <th style="text-align:right;">Profit</th>
+            <th style="text-align:right;">ROI %</th>
+            <th style="text-align:center;">↗</th>
+          </tr>
+        </thead>
+        <tbody id="scoutTableBody">
+          <tr><td colspan="10" class="rp-table-empty">Upload an ASIN list and click Run Scout to begin</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /page-scout -->
 <div class="modal-overlay" id="setupModal">
   <div class="modal">
     <div class="modal-title">Connect Google Sheets</div>
@@ -2063,7 +2358,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', deals:'Deal Analyser', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses' };
+  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', deals:'Deal Analyser', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
 }
 
@@ -3700,6 +3995,349 @@ function rpDownload(){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Bimma_MinPrices_'+new Date().toISOString().split('T')[0]+'.txt';a.click();URL.revokeObjectURL(a.href);
 }
 function rpShowError(msg){const e=document.getElementById('rp-error');if(e){e.textContent=msg;e.style.display='block';}}
+
+// ════════════════════════════════════════
+// DEAL SCOUT
+// ════════════════════════════════════════
+const SCOUT_DOMAINS = { DE:{id:3,label:'DE'}, FR:{id:4,label:'FR'}, IT:{id:8,label:'IT'}, ES:{id:9,label:'ES'} };
+const SCOUT_UK_DOMAIN = 2;
+let scoutResults = [];
+let scoutCurrentTab = 'csv';
+let scoutLoadedAsins = []; // ASINs loaded from file
+
+// Sync API key from localStorage on load
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('bimma_keepa_key') || '';
+  if (saved) {
+    const el = document.getElementById('scoutApiKey');
+    if (el) el.value = saved;
+  }
+  // Init market button states
+  ['DE','FR','IT','ES'].forEach(m => scoutToggleMarket(m, document.getElementById('scout'+m)));
+});
+
+function scoutSyncApiKey() {
+  const key = (document.getElementById('scoutApiKey')?.value || '').trim();
+  if (key) localStorage.setItem('bimma_keepa_key', key);
+  const rpEl = document.getElementById('rp-apikey');
+  if (rpEl && key) rpEl.value = key;
+}
+
+function scoutSetTab(tab) {
+  scoutCurrentTab = tab;
+  document.getElementById('scoutTabCsv').classList.toggle('active', tab === 'csv');
+  document.getElementById('scoutTabPaste').classList.toggle('active', tab === 'paste');
+  document.getElementById('scoutCsvPane').style.display = tab === 'csv' ? '' : 'none';
+  document.getElementById('scoutPastePane').style.display = tab === 'paste' ? '' : 'none';
+  scoutCountASINs();
+}
+
+function scoutToggleMarket(market, el) {
+  const label = document.getElementById('scoutLabel'+market);
+  if (!label) return;
+  label.classList.toggle('checked', el.checked);
+}
+
+// ── CSV / File handling ──
+function scoutDragOver(e) {
+  e.preventDefault();
+  document.getElementById('scoutDropzone')?.classList.add('drag-over');
+}
+function scoutDragLeave(e) {
+  document.getElementById('scoutDropzone')?.classList.remove('drag-over');
+}
+function scoutDrop(e) {
+  e.preventDefault();
+  document.getElementById('scoutDropzone')?.classList.remove('drag-over');
+  const file = e.dataTransfer?.files[0];
+  if (file) scoutFileChosen(file);
+}
+function scoutFileChosen(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const text = ev.target.result;
+    scoutLoadedAsins = scoutExtractASINs(text);
+    const dz = document.getElementById('scoutDropzone');
+    dz?.classList.add('loaded');
+    const icon = document.getElementById('scoutDropIcon');
+    if (icon) icon.textContent = '✓';
+    const label = document.getElementById('scoutDropLabel');
+    if (label) label.textContent = file.name;
+    const sub = document.getElementById('scoutDropSub');
+    if (sub) sub.textContent = '';
+    const fname = document.getElementById('scoutDropFilename');
+    if (fname) fname.textContent = `${scoutLoadedAsins.length} ASINs extracted`;
+    const clr = document.getElementById('scoutClearFile');
+    if (clr) clr.style.display = 'block';
+    scoutCountASINs();
+  };
+  reader.readAsText(file);
+}
+function scoutClearFile(e) {
+  e?.stopPropagation();
+  scoutLoadedAsins = [];
+  const dz = document.getElementById('scoutDropzone');
+  dz?.classList.remove('loaded');
+  const icon = document.getElementById('scoutDropIcon');
+  if (icon) icon.textContent = '↑';
+  const label = document.getElementById('scoutDropLabel');
+  if (label) label.textContent = 'Drop CSV / TXT here or click to browse';
+  const sub = document.getElementById('scoutDropSub');
+  if (sub) sub.textContent = 'Any file with ASINs — one per line, or comma-separated';
+  const fname = document.getElementById('scoutDropFilename');
+  if (fname) fname.textContent = '';
+  const clr = document.getElementById('scoutClearFile');
+  if (clr) clr.style.display = 'none';
+  const inp = document.getElementById('scoutCsvInput');
+  if (inp) inp.value = '';
+  scoutCountASINs();
+}
+
+function scoutExtractASINs(text) {
+  const matches = text.match(/\b[A-Z0-9]{10}\b/g) || [];
+  return [...new Set(matches)];
+}
+
+function scoutGetActiveASINs() {
+  const max = parseInt(document.getElementById('scoutMaxAsins')?.value || '20');
+  if (scoutCurrentTab === 'csv') return scoutLoadedAsins.slice(0, max);
+  const raw = document.getElementById('scoutAsinInput')?.value || '';
+  return scoutExtractASINs(raw).slice(0, max);
+}
+
+function scoutCountASINs() {
+  const max = parseInt(document.getElementById('scoutMaxAsins')?.value || '20');
+  const asins = scoutCurrentTab === 'csv' ? scoutLoadedAsins : scoutExtractASINs(document.getElementById('scoutAsinInput')?.value || '');
+  const count = asins.length;
+  const el = document.getElementById('scoutAsinCount');
+  if (el) el.textContent = `${Math.min(count, max)} ASIN${Math.min(count,max) !== 1 ? 's' : ''} detected`;
+  const warn = document.getElementById('scoutAsinWarning');
+  const maxDisplay = document.getElementById('scoutMaxDisplay');
+  if (maxDisplay) maxDisplay.textContent = max;
+  if (warn) warn.style.display = count > max ? 'inline' : 'none';
+}
+
+// ── Fee calcs ──
+function scoutFbaFee(price) {
+  if (price <= 7)  return 1.94;
+  if (price <= 10) return 2.42;
+  if (price <= 15) return 2.86;
+  if (price <= 20) return 3.27;
+  if (price <= 25) return 3.74;
+  if (price <= 30) return 4.18;
+  if (price <= 40) return 4.62;
+  if (price <= 50) return 5.19;
+  return price * 0.112;
+}
+function scoutReferral(price) { return price <= 10 ? price * 0.08 : price * 0.15; }
+
+function scoutCalcProfit(euPriceEur, ukBB, eurGbp, shipping, prep) {
+  if (!ukBB || ukBB <= 0) return null;
+  const euGbp = euPriceEur * eurGbp;
+  const landed = euGbp + shipping + prep;
+  const referral = scoutReferral(ukBB);
+  const dsf = ukBB * 0.005;
+  const fba = scoutFbaFee(ukBB);
+  const totalFees = referral + dsf + fba;
+  const profit = ukBB - landed - totalFees;
+  const roi = (profit / landed) * 100;
+  return { euGbp, landed, fba: totalFees, profit, roi };
+}
+
+// ── Keepa fetch ──
+async function scoutFetchKeepa(asins, domainId, apiKey) {
+  const url = `https://api.keepa.com/product?key=${apiKey}&domain=${domainId}&asin=${asins.join(',')}&stats=180&buybox=1`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Keepa HTTP ${r.status}`);
+  const data = await r.json();
+  if (data.error) throw new Error(data.error.message || 'Keepa error');
+  return data.products || [];
+}
+function scoutGetBB180(product) {
+  const stats = product.stats;
+  if (!stats) return null;
+  const bb = stats.avg180?.[18];
+  if (bb && bb > 0) return bb / 100;
+  const cur = stats.current?.[18];
+  if (cur && cur > 0) return cur / 100;
+  return null;
+}
+function scoutGetCurrentBB(product) {
+  const stats = product.stats;
+  if (!stats) return null;
+  const cur = stats.current?.[18];
+  return (cur && cur > 0) ? cur / 100 : null;
+}
+
+// ── Progress ──
+function scoutSetStatus(text, pct) {
+  const s = document.getElementById('scoutStatus');
+  const t = document.getElementById('scoutStatusText');
+  const p = document.getElementById('scoutStatusPct');
+  const f = document.getElementById('scoutProgressFill');
+  if (s) s.style.display = 'block';
+  if (t) t.textContent = text;
+  if (p) p.textContent = Math.round(pct) + '%';
+  if (f) f.style.width = pct + '%';
+}
+function scoutHideStatus() {
+  const s = document.getElementById('scoutStatus');
+  if (s) s.style.display = 'none';
+}
+
+// ── Main run ──
+async function scoutRun() {
+  const apiKey = (document.getElementById('scoutApiKey')?.value || '').trim();
+  if (!apiKey) { toast('Enter a Keepa API key', 'error'); return; }
+
+  const asins = scoutGetActiveASINs();
+  if (!asins.length) { toast('No valid ASINs found', 'error'); return; }
+
+  const eurGbp   = parseFloat(document.getElementById('scoutEurGbp')?.value   || '0.86');
+  const shipping = parseFloat(document.getElementById('scoutShipping')?.value  || '2.00');
+  const prep     = parseFloat(document.getElementById('scoutPrep')?.value      || '0.45');
+  const minRoi   = parseFloat(document.getElementById('scoutMinRoi')?.value    || '15');
+  const markets  = Object.keys(SCOUT_DOMAINS).filter(k => document.getElementById('scout'+k)?.checked);
+
+  if (!markets.length) { toast('Select at least one source market', 'error'); return; }
+
+  document.getElementById('scoutRunBtn').disabled = true;
+  document.getElementById('scoutExportBtn').disabled = true;
+  scoutResults = [];
+
+  try {
+    scoutSetStatus(`Fetching UK data for ${asins.length} ASINs…`, 10);
+    const ukProducts = await scoutFetchKeepa(asins, SCOUT_UK_DOMAIN, apiKey);
+    const ukMap = {};
+    ukProducts.forEach(p => { if (p.asin) ukMap[p.asin] = p; });
+
+    const euData = {};
+    let step = 0;
+    for (const market of markets) {
+      step++;
+      scoutSetStatus(`Fetching ${market} prices…`, 10 + (step / markets.length) * 65);
+      try {
+        const euProducts = await scoutFetchKeepa(asins, SCOUT_DOMAINS[market].id, apiKey);
+        euProducts.forEach(p => {
+          if (!p.asin) return;
+          if (!euData[p.asin]) euData[p.asin] = {};
+          const bb = scoutGetCurrentBB(p);
+          if (bb && bb > 0) euData[p.asin][market] = bb;
+        });
+      } catch(e) { console.warn(`Scout ${market}:`, e.message); }
+      await new Promise(r => setTimeout(r, 300));
+    }
+
+    scoutSetStatus('Computing best deals…', 85);
+    scoutResults = asins.map(asin => {
+      const ukProd = ukMap[asin];
+      const ukBB   = ukProd ? scoutGetBB180(ukProd) : null;
+      const title  = ukProd?.title || '—';
+      let bestMarket = null, bestEuPrice = null, bestCalc = null;
+      const euForAsin = euData[asin] || {};
+      for (const market of markets) {
+        const euPrice = euForAsin[market];
+        if (!euPrice) continue;
+        const calc = ukBB ? scoutCalcProfit(euPrice, ukBB, eurGbp, shipping, prep) : null;
+        if (!bestCalc || (calc && calc.profit > bestCalc.profit)) {
+          bestMarket = market; bestEuPrice = euPrice; bestCalc = calc;
+        }
+      }
+      return { asin, title, bestMarket, bestEuPrice, ukBB, calc: bestCalc, minRoi };
+    });
+
+    scoutSetStatus('Complete', 100);
+    setTimeout(scoutHideStatus, 1500);
+    scoutRenderTable();
+    document.getElementById('scoutExportBtn').disabled = !scoutResults.length;
+
+  } catch(e) {
+    scoutHideStatus();
+    toast('Scout error: ' + e.message, 'error');
+  } finally {
+    document.getElementById('scoutRunBtn').disabled = false;
+  }
+}
+
+function scoutRenderTable() {
+  const tbody = document.getElementById('scoutTableBody');
+  const countEl = document.getElementById('scoutResultCount');
+  if (!tbody) return;
+
+  if (!scoutResults.length) {
+    tbody.innerHTML = '<tr><td colspan="10" class="rp-table-empty">No results</td></tr>';
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  const badge = scoutResults.length + ' ASIN' + (scoutResults.length !== 1 ? 's' : '');
+  if (countEl) { countEl.textContent = badge; countEl.className = 'rp-table-badge'; }
+
+  const f2  = v => v != null ? '£' + v.toFixed(2) : '—';
+  const fEu = v => v != null ? '€' + v.toFixed(2) : '—';
+  const fPct= v => v != null ? v.toFixed(1) + '%' : '—';
+
+  tbody.innerHTML = scoutResults.map(r => {
+    const roi = r.calc?.roi;
+    const minRoi = r.minRoi ?? 15;
+    let roiCol = 'var(--red)';
+    if (roi != null) {
+      if (roi >= 30) roiCol = 'var(--green)';
+      else if (roi >= minRoi) roiCol = 'var(--amber)';
+    }
+    const profitCol = r.calc?.profit >= 0 ? 'var(--green)' : 'var(--red)';
+    const srcFlag = { DE:'🇩🇪', FR:'🇫🇷', IT:'🇮🇹', ES:'🇪🇸' };
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text-2);">${r.asin}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(r.title||'').replace(/"/g,'&quot;')}">${r.title}</td>
+      <td style="text-align:center;">
+        ${r.bestMarket ? `<span class="rp-tag">${srcFlag[r.bestMarket]||''} ${r.bestMarket}</span>` : '<span style="color:var(--text-3)">—</span>'}
+      </td>
+      <td style="text-align:right;font-family:var(--mono);">${fEu(r.bestEuPrice)}</td>
+      <td style="text-align:right;font-family:var(--mono);">${f2(r.calc?.landed)}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:600;">${f2(r.ukBB)}</td>
+      <td style="text-align:right;font-family:var(--mono);color:var(--text-3);">${f2(r.calc?.fba)}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${profitCol};">${f2(r.calc?.profit)}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${roiCol};">${fPct(roi)}</td>
+      <td style="text-align:center;"><a href="https://keepa.com/#!product/2-${r.asin}" target="_blank" style="color:var(--green);text-decoration:none;font-size:14px;font-weight:700;">↗</a></td>
+    </tr>`;
+  }).join('');
+}
+
+function scoutExport() {
+  if (!scoutResults.length) return;
+  const header = ['ASIN','Title','Best Src','EU Price (EUR)','Landed (GBP)','UK BB 180d','Fees','Profit','ROI%'].join('\t');
+  const lines = scoutResults.map(r => [
+    r.asin,
+    (r.title||'').replace(/\t/g,' '),
+    r.bestMarket || '',
+    r.bestEuPrice != null ? r.bestEuPrice.toFixed(2) : '',
+    r.calc?.landed != null ? r.calc.landed.toFixed(2) : '',
+    r.ukBB != null ? r.ukBB.toFixed(2) : '',
+    r.calc?.fba != null ? r.calc.fba.toFixed(2) : '',
+    r.calc?.profit != null ? r.calc.profit.toFixed(2) : '',
+    r.calc?.roi != null ? r.calc.roi.toFixed(1) : ''
+  ].join('\t'));
+  const blob = new Blob([[header,...lines].join('\n')], {type:'text/tab-separated-values'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'deal-scout-' + new Date().toISOString().slice(0,10) + '.tsv';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+function scoutClear() {
+  scoutClearFile();
+  const inp = document.getElementById('scoutAsinInput');
+  if (inp) inp.value = '';
+  scoutResults = [];
+  scoutCountASINs();
+  const tbody = document.getElementById('scoutTableBody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="rp-table-empty">Upload an ASIN list and click Run Scout to begin</td></tr>';
+  const countEl = document.getElementById('scoutResultCount');
+  if (countEl) countEl.textContent = '';
+  document.getElementById('scoutExportBtn').disabled = true;
+}
 
 </script>
 </body>

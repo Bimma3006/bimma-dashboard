@@ -2616,7 +2616,6 @@ function daRunAnalysis() {
 
       // Filter out rows missing essential price data — no FBA fee = can't calculate P&L
       // These would all come back as NO DATA grey rows and are useless noise
-      const cfg = MODES[currentMode];
       const priceable = preFiltered.filter(row => {
         const buyRaw = daParseNum(row[cfg.buyCol]);
         const fbaFee = daParseNum(row['FBA Pick&Pack Fee']);

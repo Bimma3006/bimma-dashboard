@@ -943,6 +943,465 @@ input::placeholder { color: var(--text-4); }
   padding: 8px 14px; font-family: var(--mono); font-size: 10px; color: var(--text-3);
   background: var(--surface2); border-top: 1px solid var(--border);
 }
+
+/* ════════════════════════════════════════
+   A2A ANALYSER — REDESIGN
+════════════════════════════════════════ */
+
+/* Mode selector bar */
+.a2a-mode-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.a2a-mode-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 14px 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.a2a-mode-btn::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--border3);
+  transition: background 0.15s;
+}
+.a2a-mode-btn:hover { border-color: var(--border3); background: var(--surface3); }
+.a2a-mode-btn.active { border-color: var(--green); background: rgba(0,229,132,0.05); }
+.a2a-mode-btn.active::before { background: var(--green); }
+.a2a-mode-icon { font-size: 18px; line-height: 1; }
+.a2a-mode-label { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; }
+.a2a-mode-hint { font-family: var(--mono); font-size: 9px; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* Banner */
+.a2a-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  margin-bottom: 18px;
+}
+.a2a-banner-pill {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: rgba(0,229,132,0.15);
+  color: var(--green);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.a2a-banner-desc { font-size: 11.5px; color: var(--text-2); line-height: 1.5; }
+.a2a-banner-desc strong { color: var(--text); }
+
+/* Upload zone */
+.a2a-upload-zone {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  margin-bottom: 18px;
+}
+.a2a-upload-header { margin-bottom: 18px; }
+.a2a-upload-title { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--text); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+.a2a-upload-sub { font-size: 11px; color: var(--text-3); }
+
+.a2a-slots { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+
+.a2a-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 12px 16px;
+  background: var(--surface3);
+  border: 1px dashed var(--border2);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 110px;
+  text-align: center;
+}
+.a2a-slot input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.a2a-slot:hover { border-color: var(--green); background: rgba(0,229,132,0.04); }
+.a2a-slot.loaded { border-style: solid; border-color: var(--green); background: rgba(0,229,132,0.06); }
+.a2a-slot.drag-over { border-color: var(--green); background: rgba(0,229,132,0.1); }
+
+.a2a-slot-num { position: absolute; top: 8px; left: 10px; font-family: var(--mono); font-size: 9px; font-weight: 700; color: var(--text-3); letter-spacing: 0.1em; }
+.a2a-slot-icon { font-size: 20px; color: var(--text-3); transition: color 0.15s; }
+.a2a-slot.loaded .a2a-slot-icon { color: var(--green); }
+.a2a-slot-label { font-family: var(--mono); font-size: 9.5px; color: var(--text-2); letter-spacing: 0.04em; }
+.a2a-slot-sub { font-family: var(--mono); font-size: 8.5px; color: var(--blue); letter-spacing: 0.08em; text-transform: uppercase; }
+.a2a-slot-name { font-family: var(--mono); font-size: 9px; color: var(--green); word-break: break-all; max-width: 100%; }
+.a2a-slot-clear {
+  position: absolute; top: 6px; right: 8px;
+  background: none; border: none; color: var(--text-3); cursor: pointer;
+  font-size: 14px; line-height: 1; padding: 2px 4px; z-index: 2;
+  display: none;
+}
+.a2a-slot-clear:hover { color: var(--red); }
+.a2a-slot.loaded .a2a-slot-clear { display: block; }
+
+.a2a-go-btn {
+  width: 100%;
+  padding: 14px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #000;
+  background: var(--surface3);
+  color: var(--text-3);
+  pointer-events: none;
+}
+.a2a-go-btn.ready {
+  background: var(--green);
+  color: #000;
+  pointer-events: all;
+  box-shadow: 0 4px 20px rgba(0,229,132,0.3);
+}
+.a2a-go-btn.ready:hover { background: #00ff99; box-shadow: 0 4px 28px rgba(0,229,132,0.4); }
+.a2a-go-arrow { font-size: 16px; }
+
+/* Loading */
+.a2a-loading {
+  display: none;
+  padding: 32px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-2);
+  letter-spacing: 0.08em;
+}
+.a2a-loading.visible { display: block; }
+
+/* Filter bar */
+.a2a-filter-bar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.a2a-filter-bar.visible { display: flex; }
+
+.a2a-filter-pills { display: flex; gap: 6px; }
+.a2a-fpill {
+  padding: 5px 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-radius: 100px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.a2a-fpill:hover { border-color: var(--border3); color: var(--text); }
+.a2a-fpill.active { background: var(--surface3); border-color: var(--border3); color: var(--text); }
+.a2a-fpill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.a2a-fpill.fp-green .a2a-fpill-dot { background: var(--green); }
+.a2a-fpill.fp-green.active { border-color: rgba(0,229,132,0.4); color: var(--green); }
+.a2a-fpill.fp-amber .a2a-fpill-dot { background: var(--amber); }
+.a2a-fpill.fp-amber.active { border-color: rgba(240,165,0,0.4); color: var(--amber); }
+.a2a-fpill.fp-red .a2a-fpill-dot { background: var(--red); }
+.a2a-fpill.fp-red.active { border-color: rgba(240,59,80,0.4); color: var(--red); }
+
+.a2a-deal-counts { display: flex; gap: 14px; font-family: var(--mono); font-size: 10px; }
+.a2a-count { display: flex; align-items: center; gap: 4px; }
+.a2a-count-g { color: var(--green); }
+.a2a-count-a { color: var(--amber); }
+.a2a-count-r { color: var(--red); }
+.a2a-result-count { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.a2a-spike-notice { font-family: var(--mono); font-size: 10px; color: var(--amber); }
+
+.a2a-bar-actions { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+.a2a-veto-badge { font-family: var(--mono); font-size: 9px; color: var(--text-2); padding: 3px 8px; background: var(--surface3); border-radius: 4px; }
+.a2a-veto-red { color: var(--red); }
+.a2a-action-btn {
+  padding: 5px 12px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.a2a-action-btn:hover { border-color: var(--border3); color: var(--text); }
+.a2a-action-btn.a2a-action-green { background: var(--green); color: #000; border-color: var(--green); }
+.a2a-action-btn.a2a-action-green:hover { background: #00ff99; }
+
+.a2a-table-wrap {
+  display: none;
+  overflow-x: auto;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+}
+.a2a-table-wrap.visible { display: block; }
+
+/* ════════════════════════════════════════
+   MIN PRICE TOOL — REDESIGN
+════════════════════════════════════════ */
+
+.rp-header-bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+.rp-header-actions { display: flex; gap: 10px; align-items: center; }
+
+.rp-run-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: var(--green);
+  color: #000;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 2px 12px rgba(0,229,132,0.25);
+}
+.rp-run-btn:hover { background: #00ff99; box-shadow: 0 4px 20px rgba(0,229,132,0.35); }
+.rp-run-btn:disabled { background: var(--surface3); color: var(--text-3); box-shadow: none; pointer-events: none; }
+.rp-run-icon { font-size: 14px; }
+
+.rp-dl-btn {
+  padding: 10px 18px;
+  background: rgba(152,102,255,0.15);
+  color: #9b6dff;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  border: 1px solid rgba(152,102,255,0.3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.rp-dl-btn:hover { background: rgba(152,102,255,0.25); border-color: rgba(152,102,255,0.5); }
+
+.rp-config-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1.2fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.rp-panel {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 18px 20px;
+}
+.rp-panel-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.rp-panel-icon { font-size: 13px; }
+.rp-panel-note { font-size: 10.5px; color: var(--text-3); margin-top: 10px; line-height: 1.5; }
+
+.rp-input {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-xs);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.rp-input:focus { border-color: var(--green); }
+.rp-input-sm { width: 80px; }
+
+.rp-select {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-xs);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+}
+
+.rp-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.rp-setting-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.rp-dropzone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 18px 12px;
+  background: var(--surface3);
+  border: 1px dashed var(--border2);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  min-height: 90px;
+  margin-bottom: 10px;
+}
+.rp-dropzone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.rp-dropzone:hover { border-color: var(--green); background: rgba(0,229,132,0.04); }
+.rp-dropzone.loaded { border-style: solid; border-color: var(--green); background: rgba(0,229,132,0.06); }
+.rp-dropzone.drag-over { border-color: var(--green); background: rgba(0,229,132,0.1); }
+.rp-dz-icon { font-size: 22px; color: var(--text-3); }
+.rp-dropzone.loaded .rp-dz-icon { color: var(--green); }
+.rp-dz-text { font-size: 12px; color: var(--text-2); }
+.rp-dz-browse { color: var(--green); text-decoration: underline; }
+.rp-dz-hint { font-family: var(--mono); font-size: 9px; color: var(--text-3); letter-spacing: 0.08em; }
+.rp-dz-name { font-family: var(--mono); font-size: 10px; color: var(--green); word-break: break-all; }
+.rp-asin-count { font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+.rp-limit-note { font-family: var(--mono); font-size: 10px; color: var(--amber); margin-top: 4px; }
+
+.rp-progress { font-family: var(--mono); font-size: 11px; color: var(--text-2); padding: 8px 0; }
+.rp-alert { padding: 12px 16px; border-radius: var(--r-sm); font-size: 13px; margin-bottom: 14px; }
+.rp-alert-error { background: rgba(240,59,80,0.1); border: 1px solid rgba(240,59,80,0.25); color: var(--red); }
+.rp-alert-info { background: rgba(0,229,132,0.08); border: 1px solid rgba(0,229,132,0.2); color: var(--text-2); }
+
+.rp-stats-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.rp-table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.rp-search {
+  padding: 8px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  outline: none;
+  width: 260px;
+  transition: border-color 0.15s;
+}
+.rp-search:focus { border-color: var(--green); }
+
+.rp-table-wrap {
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+.rp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.rp-table thead th {
+  padding: 10px 14px;
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.rp-table thead th.rp-col-highlight { color: var(--green); }
+.rp-table .rp-num { text-align: right; }
+.rp-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+.rp-table tbody tr:last-child { border-bottom: none; }
+.rp-table tbody tr:hover { background: var(--surface2); }
+.rp-table tbody td { padding: 11px 14px; color: var(--text-2); vertical-align: middle; }
+.rp-table tbody td.rp-num { text-align: right; font-family: var(--mono); font-size: 12px; }
+.rp-table .rp-col-suggest { color: var(--green); font-weight: 700; font-size: 13px; }
+
+
+/* has-file is JS alias for loaded state on new a2a slots */
+.a2a-slot.has-file { border-style: solid; border-color: var(--green); background: rgba(0,229,132,0.06); }
+.a2a-slot.has-file .a2a-slot-icon { color: var(--green); }
+
 </style>
 </head>
 <body>
@@ -1178,89 +1637,115 @@ input::placeholder { color: var(--text-4); }
 
   <!-- ══ PAGE: MIN PRICE TOOL ══ -->
   <div class="page" id="page-repricer">
-    <div class="page-header">
-      <div class="page-header-title">Min Price Tool</div>
-      <div class="page-header-sub">Calculate suggested repricer min prices from Keepa buy box history</div>
+
+    <div class="rp-header-bar">
+      <div>
+        <div class="page-header-title">Min Price Tool</div>
+        <div class="page-header-sub">Keepa buy box history → repricer floor prices</div>
+      </div>
+      <div class="rp-header-actions">
+        <button class="rp-run-btn" onclick="rpRun()" id="rpRunBtn">
+          <span class="rp-run-icon">⇅</span> Fetch &amp; Calculate
+        </button>
+        <button class="rp-dl-btn" id="rpDownloadBtn" style="display:none;" onclick="rpDownload()">
+          ↓ Download STK File
+        </button>
+      </div>
     </div>
 
-    <div class="cogs-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:20px;">
-      <div class="cogs-card">
-        <div class="cogs-card-label">Keepa API Key</div>
-        <input type="password" id="rp-apikey" placeholder="Paste your Keepa API key…" style="width:100%;box-sizing:border-box;">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:8px;">Stored in browser only. Never sent anywhere except Keepa.</div>
+    <!-- CONFIG PANELS -->
+    <div class="rp-config-grid">
+
+      <!-- API KEY -->
+      <div class="rp-panel">
+        <div class="rp-panel-label">
+          <span class="rp-panel-icon">🔑</span> Keepa API Key
+        </div>
+        <input type="password" id="rp-apikey" class="rp-input" placeholder="Paste your Keepa API key…">
+        <div class="rp-panel-note">Stored in browser only. Never sent anywhere except Keepa.</div>
       </div>
-      <div class="cogs-card">
-        <div class="cogs-card-label">Settings</div>
-        <div style="display:flex;gap:10px;margin-bottom:10px;">
-          <div style="flex:1;">
-            <div class="field-label">Lookback (days)</div>
-            <select id="rp-lookback" style="width:100%;">
+
+      <!-- SETTINGS -->
+      <div class="rp-panel">
+        <div class="rp-panel-label">
+          <span class="rp-panel-icon">⚙</span> Settings
+        </div>
+        <div class="rp-settings-grid">
+          <div class="rp-setting">
+            <div class="rp-setting-label">Lookback</div>
+            <select id="rp-lookback" class="rp-select">
               <option value="60">60 days</option>
               <option value="90">90 days</option>
               <option value="180" selected>180 days</option>
               <option value="365">365 days</option>
             </select>
           </div>
-          <div style="flex:1;">
-            <div class="field-label">Percentile floor</div>
-            <select id="rp-percentile" style="width:100%;">
+          <div class="rp-setting">
+            <div class="rp-setting-label">Percentile</div>
+            <select id="rp-percentile" class="rp-select">
               <option value="10">10th</option>
               <option value="20" selected>20th</option>
               <option value="30">30th</option>
             </select>
           </div>
-        </div>
-        <div style="display:flex;gap:10px;">
-          <div style="flex:1;">
-            <div class="field-label">Buffer above floor</div>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input type="number" id="rp-buffer" value="5" min="0" max="30" step="1" style="width:70px;">
-              <span style="font-family:var(--mono);font-size:11px;color:var(--text-2);">%</span>
-            </div>
+          <div class="rp-setting">
+            <div class="rp-setting-label">Buffer %</div>
+            <input type="number" id="rp-buffer" value="5" min="0" max="30" step="1" class="rp-input rp-input-sm">
           </div>
-          <div style="flex:1;">
-            <div class="field-label">Max ASINs per run</div>
-            <input type="number" id="rp-limit" value="50" min="1" max="500" step="1" placeholder="e.g. 50" style="width:80px;">
+          <div class="rp-setting">
+            <div class="rp-setting-label">Max ASINs</div>
+            <input type="number" id="rp-limit" value="50" min="1" max="500" step="1" class="rp-input rp-input-sm">
           </div>
         </div>
       </div>
-      <div class="cogs-card">
-        <div class="cogs-card-label">Active Listings — STK Replenish Export</div>
-        <div class="drop-zone" id="rp-dz" style="margin-bottom:10px;">
+
+      <!-- FILE UPLOAD -->
+      <div class="rp-panel">
+        <div class="rp-panel-label">
+          <span class="rp-panel-icon">📋</span> STK Replenish Export
+        </div>
+        <div class="rp-dropzone" id="rp-dz">
           <input type="file" id="rp-inp" accept=".csv,.tsv,.txt">
-          <div class="drop-icon">↑</div>
-          <div class="drop-label">Drop Replenish file or click to browse</div>
-          <div class="drop-filename" id="rp-fn"></div>
+          <div class="rp-dz-icon">↑</div>
+          <div class="rp-dz-text">Drop file or <span class="rp-dz-browse">click to browse</span></div>
+          <div class="rp-dz-hint">.csv · .tsv · .txt</div>
+          <div class="rp-dz-name" id="rp-fn"></div>
         </div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);" id="rp-asin-count">—</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--amber);margin-top:6px;" id="rp-limit-note"></div>
+        <div class="rp-asin-count" id="rp-asin-count">No file loaded</div>
+        <div class="rp-limit-note" id="rp-limit-note"></div>
       </div>
     </div>
 
-    <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;">
-      <button class="btn-sm btn-green" onclick="rpRun()" id="rpRunBtn">⇅ Fetch &amp; Calculate</button>
-      <button class="btn-sm" id="rpDownloadBtn" style="display:none;background:#8866ff;color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:0.05em;font-weight:600;padding:6px 12px;border-radius:4px;border:none;cursor:pointer;" onclick="rpDownload()">↓ Download STK Repricer File</button>
-      <div id="rp-progress" style="font-family:var(--mono);font-size:11px;color:var(--text-2);"></div>
-    </div>
+    <!-- STATUS -->
+    <div id="rp-progress" class="rp-progress"></div>
+    <div id="rp-error" class="rp-alert rp-alert-error" style="display:none;"></div>
+    <div id="rp-info" class="rp-alert rp-alert-info" style="display:none;"></div>
 
-    <div id="rp-error" class="cogs-error" style="display:none;"></div>
-    <div id="rp-info" class="cogs-info" style="display:none;"></div>
-
+    <!-- RESULTS -->
     <div id="rp-results" style="display:none;">
-      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;" id="rp-stats-row"></div>
-      <input type="text" id="rp-search" placeholder="Search ASIN or SKU…" oninput="rpRenderTable()" style="width:240px;margin-bottom:12px;">
-      <table class="data-table">
-        <thead><tr>
-          <th>ASIN</th><th>SKU</th><th>Title</th>
-          <th style="text-align:right;">BB Floor (£)</th>
-          <th style="text-align:right;">20th %ile (£)</th>
-          <th style="text-align:right;">Suggested Min (£)</th>
-          <th style="text-align:right;">BB High (£)</th>
-          <th>Pts</th>
-        </tr></thead>
-        <tbody id="rp-tbody"></tbody>
-      </table>
+      <div class="rp-stats-row" id="rp-stats-row"></div>
+      <div class="rp-table-toolbar">
+        <input type="text" id="rp-search" class="rp-search" placeholder="Search ASIN or SKU…" oninput="rpRenderTable()">
+      </div>
+      <div class="rp-table-wrap">
+        <table class="rp-table">
+          <thead>
+            <tr>
+              <th>ASIN</th>
+              <th>SKU</th>
+              <th>Title</th>
+              <th class="rp-num">BB Floor</th>
+              <th class="rp-num">20th %ile</th>
+              <th class="rp-num rp-col-highlight">Suggested Min</th>
+              <th class="rp-num">BB High</th>
+              <th class="rp-num">Pts</th>
+            </tr>
+          </thead>
+          <tbody id="rp-tbody"></tbody>
+        </table>
+      </div>
     </div>
+
   </div>
 
   <!-- ══ PAGE: A2A ANALYSER ══ -->
@@ -1270,74 +1755,105 @@ input::placeholder { color: var(--text-4); }
       <div class="page-header-sub">Keepa CSV · 3-mode · EU→UK · UK→UK · Used LN</div>
     </div>
 
-    <div style="margin-bottom:20px;">
-      <div class="mode-tabs">
-        <button class="mode-tab eu active" onclick="setMode('eu',this)">🌍 EU → UK</button>
-        <button class="mode-tab" onclick="setMode('uk',this)">🇬🇧 UK → UK</button>
-        <button class="mode-tab uln" onclick="setMode('uln',this)">♻ Used LN → UK</button>
+    <!-- MODE SELECTOR -->
+    <div class="a2a-mode-bar">
+      <button class="a2a-mode-btn a2a-mode-eu active" onclick="setMode('eu',this)">
+        <span class="a2a-mode-icon">🌍</span>
+        <span class="a2a-mode-label">EU → UK</span>
+        <span class="a2a-mode-hint">Buy EU · Sell UK</span>
+      </button>
+      <button class="a2a-mode-btn a2a-mode-uk" onclick="setMode('uk',this)">
+        <span class="a2a-mode-icon">🇬🇧</span>
+        <span class="a2a-mode-label">UK → UK</span>
+        <span class="a2a-mode-hint">Buy UK · Sell UK</span>
+      </button>
+      <button class="a2a-mode-btn a2a-mode-uln" onclick="setMode('uln',this)">
+        <span class="a2a-mode-icon">♻</span>
+        <span class="a2a-mode-label">Used LN → UK</span>
+        <span class="a2a-mode-hint">Used · No strikethrough</span>
+      </button>
+    </div>
+
+    <!-- MODE BANNER -->
+    <div class="a2a-banner" id="modeBanner">
+      <div class="a2a-banner-pill" id="modePill">EU → UK</div>
+      <div class="a2a-banner-desc" id="modeDesc">Buy price: <strong>EU Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>+£2.00 shipping</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong></div>
+    </div>
+
+    <!-- FILE DROP ZONE -->
+    <div class="a2a-upload-zone" id="daDropzone">
+      <div class="a2a-upload-header">
+        <div class="a2a-upload-title">Keepa Product Finder CSV Export</div>
+        <div class="a2a-upload-sub">Drop up to 3 files — duplicate ASINs auto-removed</div>
       </div>
-    </div>
-
-    <div class="mode-banner" id="modeBanner" style="margin-bottom:20px;">
-      <span class="mode-pill eu" id="modePill">EU → UK</span>
-      <span class="mode-desc" id="modeDesc">Buy price: <strong>EU Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>+£2.00 shipping</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong></span>
-    </div>
-
-    <div class="da-dropzone" id="daDropzone">
-      <div class="da-dropzone-label">Keepa Product Finder CSV Export</div>
-      <div class="da-slots">
-        <div class="da-slot" id="daSlot1" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,1)">
+      <div class="a2a-slots">
+        <div class="a2a-slot" id="daSlot1" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,1)">
           <input type="file" id="daFileInput1" accept=".csv" onchange="daFileChosen(1,this.files[0])">
-          <div class="da-slot-icon" id="daSlot1Icon">⬆</div>
-          <div class="da-slot-label" id="daSlot1Label">File 1 — drop CSV here</div>
-          <div class="da-slot-sublabel" id="daSlot1Sub" style="font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:0.08em;margin-top:2px;display:none;"></div>
-          <div class="da-slot-name" id="daSlot1Name"></div>
-          <div class="da-slot-clear" id="daSlot1Clear" onclick="daClearSlot(event,1)">×</div>
+          <div class="a2a-slot-num">01</div>
+          <div class="a2a-slot-icon" id="daSlot1Icon">↑</div>
+          <div class="a2a-slot-label" id="daSlot1Label">File 1 — primary export</div>
+          <div class="a2a-slot-sub" id="daSlot1Sub" style="display:none;"></div>
+          <div class="a2a-slot-name" id="daSlot1Name"></div>
+          <button class="a2a-slot-clear" id="daSlot1Clear" onclick="daClearSlot(event,1)">✕</button>
         </div>
-        <div class="da-slot" id="daSlot2" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,2)">
+        <div class="a2a-slot" id="daSlot2" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,2)">
           <input type="file" id="daFileInput2" accept=".csv" onchange="daFileChosen(2,this.files[0])">
-          <div class="da-slot-icon" id="daSlot2Icon">⬆</div>
-          <div class="da-slot-label" id="daSlot2Label">File 2 — optional second export</div>
-          <div class="da-slot-sublabel" id="daSlot2Sub" style="font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:0.08em;margin-top:2px;display:none;"></div>
-          <div class="da-slot-name" id="daSlot2Name"></div>
-          <div class="da-slot-clear" id="daSlot2Clear" onclick="daClearSlot(event,2)">×</div>
+          <div class="a2a-slot-num">02</div>
+          <div class="a2a-slot-icon" id="daSlot2Icon">↑</div>
+          <div class="a2a-slot-label" id="daSlot2Label">File 2 — optional second export</div>
+          <div class="a2a-slot-sub" id="daSlot2Sub" style="display:none;"></div>
+          <div class="a2a-slot-name" id="daSlot2Name"></div>
+          <button class="a2a-slot-clear" id="daSlot2Clear" onclick="daClearSlot(event,2)">✕</button>
         </div>
-        <div class="da-slot" id="daSlot3" style="display:none;" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,3)">
+        <div class="a2a-slot" id="daSlot3" style="display:none;" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,3)">
           <input type="file" id="daFileInput3" accept=".csv" onchange="daFileChosen(3,this.files[0])">
-          <div class="da-slot-icon" id="daSlot3Icon">⬆</div>
-          <div class="da-slot-label" id="daSlot3Label">File 3 — UK Keepa export</div>
-          <div class="da-slot-sublabel" id="daSlot3Sub" style="font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:0.08em;margin-top:2px;">SELL PRICES (UK 180d/365d avg)</div>
-          <div class="da-slot-name" id="daSlot3Name"></div>
-          <div class="da-slot-clear" id="daSlot3Clear" onclick="daClearSlot(event,3)">×</div>
+          <div class="a2a-slot-num">03</div>
+          <div class="a2a-slot-icon" id="daSlot3Icon">↑</div>
+          <div class="a2a-slot-label" id="daSlot3Label">File 3 — UK Keepa export</div>
+          <div class="a2a-slot-sub" id="daSlot3Sub" style="display:none;">SELL PRICES</div>
+          <div class="a2a-slot-name" id="daSlot3Name"></div>
+          <button class="a2a-slot-clear" id="daSlot3Clear" onclick="daClearSlot(event,3)">✕</button>
         </div>
       </div>
-      <button class="da-go eu" id="daGoBtn" onclick="daRunAnalysis()">ANALYSE DEALS →</button>
+      <button class="a2a-go-btn a2a-go-eu" id="daGoBtn" onclick="daRunAnalysis()">
+        <span class="a2a-go-arrow">→</span> ANALYSE DEALS
+      </button>
     </div>
 
-    <div class="da-loading" id="daLoading"><span class="loading-dots">Analysing deals</span></div>
+    <!-- LOADING -->
+    <div class="a2a-loading" id="daLoading"><span class="loading-dots">Analysing deals</span></div>
 
-    <div class="da-filters" id="daFilters">
-      <button class="da-filter-btn active" onclick="daSetFilter('all',this)">All</button>
-      <button class="da-filter-btn f-green" onclick="daSetFilter('green',this)">● Strong</button>
-      <button class="da-filter-btn f-amber" onclick="daSetFilter('amber',this)">● Marginal</button>
-      <button class="da-filter-btn f-red" onclick="daSetFilter('red',this)">● Reject</button>
-      <div class="da-stats">
-        <span class="da-stat-g">● <span id="daCountGreen">0</span> strong</span>
-        <span style="color:var(--amber)">● <span id="daCountAmber">0</span> marginal</span>
-        <span class="da-stat-r">● <span id="daCountRed">0</span> reject</span>
-        <span id="daResultCount" style="color:var(--text-3);"></span>
+    <!-- FILTER BAR -->
+    <div class="a2a-filter-bar" id="daFilters">
+      <div class="a2a-filter-pills">
+        <button class="a2a-fpill active" onclick="daSetFilter('all',this)">All</button>
+        <button class="a2a-fpill fp-green" onclick="daSetFilter('green',this)">
+          <span class="a2a-fpill-dot"></span> Strong
+        </button>
+        <button class="a2a-fpill fp-amber" onclick="daSetFilter('amber',this)">
+          <span class="a2a-fpill-dot"></span> Marginal
+        </button>
+        <button class="a2a-fpill fp-red" onclick="daSetFilter('red',this)">
+          <span class="a2a-fpill-dot"></span> Reject
+        </button>
       </div>
-      <span class="spike-notice" id="spikeNotice" style="display:none;"></span>
-      <div class="da-actions">
-        <span class="veto-count" id="daVetoCount" style="display:none;"></span>
-        <span class="veto-count" id="daRejectedCount" style="display:none;color:var(--red);"></span>
-        <button class="btn-sm" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;font-size:9px;">Clear rejected</button>
-        <button class="btn-sm" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
-        <button class="btn-sm btn-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export</button>
+      <div class="a2a-deal-counts">
+        <span class="a2a-count a2a-count-g">● <span id="daCountGreen">0</span> strong</span>
+        <span class="a2a-count a2a-count-a">● <span id="daCountAmber">0</span> marginal</span>
+        <span class="a2a-count a2a-count-r">● <span id="daCountRed">0</span> reject</span>
+        <span id="daResultCount" class="a2a-result-count"></span>
+      </div>
+      <span class="a2a-spike-notice" id="spikeNotice" style="display:none;"></span>
+      <div class="a2a-bar-actions">
+        <span class="a2a-veto-badge" id="daVetoCount" style="display:none;"></span>
+        <span class="a2a-veto-badge a2a-veto-red" id="daRejectedCount" style="display:none;"></span>
+        <button class="a2a-action-btn" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;">Clear rejected</button>
+        <button class="a2a-action-btn" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
+        <button class="a2a-action-btn a2a-action-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export</button>
       </div>
     </div>
 
-    <div class="da-table-wrap" id="daTableWrap">
+    <div class="a2a-table-wrap" id="daTableWrap">
       <table class="da-table">
         <thead id="daTableHead"></thead>
         <tbody id="daTableBody"></tbody>
@@ -2494,14 +3010,9 @@ function daAnalyseRow(row) {
   //    (capped to avoid stale/inflated strikethroughs on permanently-dropped products)
   const spBase = (recoveries && recoveries >= 4 && avg365) ? avg365 : daParseNum(row[cfg.sellCol]);
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
-  // Strikethrough rules:
-  // 1. Must be within 125% of base SP (blocks stale RRPs that have permanently dropped)
-  // 2. Trust if product has an active Deals badge (known temp sale, price will recover)
-  //    OR if current BB is >= 75% of strikethrough (modest dip, not a permanent reprice)
-  const ST_CAP = 1.25;
-  const hasDealBadge = !!(row['Deals: Deal Type'] || '').trim();
-  const stAboveBase = stPrice && spBase && stPrice > spBase && stPrice <= spBase * ST_CAP;
-  const useStrikethrough = cfg.condition !== 'used' && stAboveBase && (hasDealBadge || (daParseNum(row[cfg.buyCol]) || 0) >= stPrice * 0.75);
+  // Strikethrough: use if above avg base but within 130% of it (filters stale RRPs)
+  const ST_CAP = 1.30;
+  const useStrikethrough = cfg.condition !== 'used' && stPrice && spBase && stPrice > spBase && stPrice <= spBase * ST_CAP;
   const spIncVat = useStrikethrough ? stPrice : spBase;
   const spSource = useStrikethrough ? 'ST' : (recoveries && recoveries >= 4 && avg365) ? '365d' : '180d';
   const sp = spIncVat ? spIncVat / (1 + vat) : null;
@@ -2798,7 +3309,7 @@ function daInitSort() {
 // ════════════════════════════════════════
 function daSetFilter(f, btn) {
   daFilter = f;
-  document.querySelectorAll('.da-filters .da-filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#daFilters .a2a-fpill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   daRenderTable();
 }
@@ -2898,8 +3409,298 @@ function daReset() {
   document.getElementById('daCountRed').textContent = '0';
   document.getElementById('daGoBtn').classList.remove('ready');
   document.getElementById('daTableBody').innerHTML = '';
-  document.querySelectorAll('.da-filters .da-filter-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.querySelectorAll('#daFilters .a2a-fpill').forEach((b, i) => b.classList.toggle('active', i === 0));
 }
+
+// ════════════════════════════════════════
+// COGS CALCULATOR — wiring & functions
+// ════════════════════════════════════════
+let cogsCsvFile=null, cogsStkFile=null, cogsParsedRows=[], cogsCurrentTab='all', cogsMergedSTKData=null;
+const cogsExportedSKUs=new Set();
+
+function cogsSetLast30(){const to=new Date(),fr=new Date();fr.setDate(fr.getDate()-30);document.getElementById('cogs-dateTo').value=to.toISOString().split('T')[0];document.getElementById('cogs-dateFrom').value=fr.toISOString().split('T')[0];}
+function cogsSetLast365(){const to=new Date(),fr=new Date();fr.setDate(fr.getDate()-365);document.getElementById('cogs-dateTo').value=to.toISOString().split('T')[0];document.getElementById('cogs-dateFrom').value=fr.toISOString().split('T')[0];}
+
+function cogsWireDZ(dzId,inpId,fnId,cb){
+  const dz=document.getElementById(dzId); if(!dz)return;
+  const inp=document.getElementById(inpId);
+  if(inp) inp.addEventListener('change',e=>{const f=e.target.files[0];if(f)cb(f,dz,fnId);});
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)cb(f,dz,fnId);});
+}
+cogsWireDZ('cogs-dz-csv','cogs-inp-csv','cogs-fn-csv',(f,dz,fn)=>{
+  cogsCsvFile=f;
+  document.getElementById(fn).textContent='\u2713 '+f.name;
+  dz.classList.add('loaded');
+  document.getElementById('cogsProcessBtn').disabled=false;
+});
+cogsWireDZ('cogs-dz-stk','cogs-inp-stk','cogs-fn-stk',(f,dz,fn)=>{
+  cogsStkFile=f;
+  document.getElementById(fn).textContent='\u2713 '+f.name;
+  dz.classList.add('loaded');
+});
+
+function cogsParseCSV(text,fn){
+  const tsv=fn.endsWith('.tsv')||fn.endsWith('.txt')||(text.indexOf('\t')!==-1&&text.split('\n')[0].split('\t').length>text.split('\n')[0].split(',').length);
+  const lines=text.split('\n').filter(l=>l.trim());
+  if(tsv)return lines.map(l=>l.split('\t').map(c=>c.replace(/^"|"$/g,'').trim()));
+  return lines.map(line=>{const cols=[];let cur='',inQ=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(c===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=c;}cols.push(cur.trim());return cols;});
+}
+function cogsParseCost(sku){
+  if(!sku)return null;
+  let m=sku.match(/^\d{2}\/\d{2}\/\d{2}-([\d]+\.[\d]+)/);if(m)return parseFloat(m[1]);
+  m=sku.match(/^\d{2}\/\d{2}\/\d{2}-([\d]+)/);if(m)return parseFloat(m[1]);
+  const n=sku.match(/\d+\.\d+/g);return n?parseFloat(n[0]):null;
+}
+function cogsCleanNum(s){return parseFloat((s||'').replace(/[^0-9.-]/g,''))||0;}
+function cogsParseSTK(text){
+  const lines=text.split('\n').filter(l=>l.trim());if(lines.length<2)return null;
+  const headers=lines[0].split('\t').map(h=>h.replace(/\r/g,'').replace(/^"|"$/g,'').trim());
+  const rows=lines.slice(1).map(line=>{const cols=line.split('\t').map(c=>c.replace(/\r/g,'').replace(/^"|"$/g,'').trim());const obj={};headers.forEach((h,i)=>{obj[h]=cols[i]||'';});return obj;});
+  return{headers,rows};
+}
+
+function cogsProcess(){
+  if(!cogsCsvFile)return;
+  ['cogs-error','cogs-info','cogs-debug'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const dateFrom=new Date(document.getElementById('cogs-dateFrom').value);
+  const dateTo=new Date(document.getElementById('cogs-dateTo').value); dateTo.setHours(23,59,59);
+  const prepOvr=document.getElementById('cogs-prepOverride').value.trim();
+  const prepOverride=prepOvr?parseFloat(prepOvr):null;
+  const read=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=()=>rej(new Error('Read failed'));r.readAsText(f);});
+  const jobs=[read(cogsCsvFile)]; if(cogsStkFile)jobs.push(read(cogsStkFile));
+  Promise.all(jobs).then(([prepText,stkText])=>{
+    const rows=cogsParseCSV(prepText,cogsCsvFile.name),dataRows=rows.slice(2);
+    if(dataRows.length>0){
+      const s=dataRows[0],skuVal=s[6]||'',pc=cogsParseCost(skuVal),prepNum=cogsCleanNum(s[16]),units=cogsCleanNum(s[8])||1,ppu=(prepNum/units).toFixed(2);
+      const db=document.getElementById('cogs-debug');
+      if(db){db.innerHTML='<strong>Sample row ('+s.length+' cols):</strong><br>[G] SKU: <strong>'+(skuVal||'\u2014')+'</strong> &nbsp; [F] ASIN: <strong>'+(s[5]||'EMPTY')+'</strong><br>[I] Units: <strong>'+units+'</strong> &nbsp; [Q] Prep: <strong>\u00a3'+prepNum.toFixed(2)+'</strong> \u2192 per unit: <strong style="color:var(--green)">\u00a3'+ppu+'</strong> &nbsp; Cost: <strong style="color:var(--amber)">'+(pc!==null?'\u00a3'+pc.toFixed(2):'NOT FOUND')+'</strong>';db.style.display='block';}
+    }
+    const asinMap={};let lastKey=null;
+    for(const row of dataRows){
+      if(row.length<6)continue;
+      const isBalance=(row[0]||'').trim().toLowerCase()==='balance line';
+      const asin=(row[5]||'').trim().toUpperCase();
+      if(isBalance){if(lastKey&&asinMap[lastKey]){const pr=prepOverride!==null?prepOverride:cogsCleanNum(row[16]);const carton=(row[17]||'').toLowerCase().includes('carton')?2:0;asinMap[lastKey]._extraPrep=(asinMap[lastKey]._extraPrep||0)+Math.max(0,pr-carton);}continue;}
+      if(!asin||asin.length<5)continue;
+      const sku=(row[6]||'').trim();
+      const dm=sku.match(/^(\d{2})\/(\d{2})\/(\d{2})-/);
+      const rowDate=dm?new Date(2000+parseInt(dm[3]),parseInt(dm[2])-1,parseInt(dm[1])):null;
+      if(rowDate&&(rowDate<dateFrom||rowDate>dateTo))continue;
+      const units=cogsCleanNum(row[8])||1,itemCost=cogsParseCost(sku)||0;
+      const pr=prepOverride!==null?prepOverride:cogsCleanNum(row[16]);
+      const carton=(row[17]||'').toLowerCase().includes('carton')?2:0;
+      const key=sku||asin; lastKey=key;
+      asinMap[key]={asin,sku,itemCost,_units:units,_totalPrep:Math.max(0,pr-carton),_extraPrep:0,date:rowDate};
+    }
+    Object.values(asinMap).forEach(r=>{r.units=r._units;r.prepPerUnit=r._units>0?(r._totalPrep+(r._extraPrep||0))/r._units:0;r.totalCOGS=r.itemCost+r.prepPerUnit;});
+    cogsParsedRows=Object.values(asinMap).map(r=>({asin:r.asin,sku:r.sku,itemCost:r.itemCost,prepPerUnit:r.prepPerUnit,totalCOGS:r.totalCOGS,units:r.units,date:r.date,isExported:false,selected:false}));
+    if(!cogsParsedRows.length){const e=document.getElementById('cogs-error');if(e){e.textContent='No ASINs found.';e.style.display='block';}return;}
+    if(cogsStkFile&&stkText){
+      const stk=cogsParseSTK(stkText);
+      if(stk){
+        const bySKU={},byASIN={};
+        cogsParsedRows.forEach(r=>{if(r.sku)bySKU[r.sku]=r;if(r.asin)byASIN[r.asin]=r;});
+        let matched=0;
+        stk.rows.forEach(row=>{
+          const sku=row['SKU']||'',asin=(row['ASIN']||'').toUpperCase();
+          const entry=bySKU[sku]||byASIN[asin]||null;
+          if(entry){matched++;cogsExportedSKUs.add(entry.sku);entry.isExported=true;}
+        });
+        cogsMergedSTKData={headers:stk.headers,rawRows:stk.rows};
+        const mb=document.getElementById('cogsMergeBtn');if(mb)mb.style.display='inline-block';
+        const info=document.getElementById('cogs-info');
+        if(info){info.innerHTML='\u21c4 STK merge ready \u2014 <strong>'+matched+'</strong> rows updated. Click <strong>Download Merged STK</strong> when ready.';info.style.display='block';}
+      }
+    }
+    cogsRenderResults();
+  }).catch(err=>{const e=document.getElementById('cogs-error');if(e){e.textContent='Error: '+err.message;e.style.display='block';}});
+}
+function cogsRenderResults(){
+  document.getElementById('cogs-badge-all').textContent=cogsParsedRows.length;
+  const avg=cogsParsedRows.reduce((s,r)=>s+r.totalCOGS,0)/cogsParsedRows.length;
+  const max=Math.max(...cogsParsedRows.map(r=>r.totalCOGS));
+  const uASINs=new Set(cogsParsedRows.map(r=>r.asin)).size;
+  document.getElementById('cogs-stats-row').innerHTML=
+    '<div class="cogs-stat"><div class="cogs-stat-val">'+cogsParsedRows.length+'</div><div class="cogs-stat-lbl">SKUs</div></div>'+
+    '<div class="cogs-stat"><div class="cogs-stat-val">'+uASINs+'</div><div class="cogs-stat-lbl">ASINs</div></div>'+
+    '<div class="cogs-stat"><div class="cogs-stat-val">\u00a3'+avg.toFixed(2)+'</div><div class="cogs-stat-lbl">Avg COGS</div></div>'+
+    '<div class="cogs-stat"><div class="cogs-stat-val">\u00a3'+max.toFixed(2)+'</div><div class="cogs-stat-lbl">Max COGS</div></div>';
+  cogsRenderTable();
+  document.getElementById('cogs-results').style.display='block';
+}
+function cogsRenderTable(){
+  let rows=cogsParsedRows;
+  const q=(document.getElementById('cogs-search').value||'').trim().toLowerCase();
+  if(q)rows=rows.filter(r=>(r.sku||'').toLowerCase().includes(q)||(r.asin||'').toLowerCase().includes(q));
+  const tbody=document.getElementById('cogs-tbody');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">No rows</div></td></tr>';return;}
+  tbody.innerHTML=rows.map(r=>'<tr><td><input type="checkbox" class="cogs-row-check" data-sku="'+r.sku+'" '+(r.selected?'checked':'')+' onchange="cogsToggleRow(this)" style="cursor:pointer;accent-color:var(--green);width:14px;height:14px;"></td><td class="mono">'+r.asin+'</td><td class="mono" style="color:#666;font-size:10px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.sku+'">'+(r.sku||'\u2014')+'</td><td class="num">\u00a3'+r.itemCost.toFixed(2)+'</td><td class="num">\u00a3'+r.prepPerUnit.toFixed(2)+'</td><td class="num" style="color:var(--green);font-weight:500;">\u00a3'+r.totalCOGS.toFixed(2)+'</td><td class="num" style="color:#555">'+r.units+'</td></tr>').join('');
+}
+function cogsSetTab(t){cogsCurrentTab=t;document.querySelectorAll('.cogs-tab').forEach(el=>el.classList.remove('active'));document.getElementById('cogs-tab-'+t).classList.add('active');cogsRenderTable();}
+function cogsToggleRow(cb){const r=cogsParsedRows.find(r=>r.sku===cb.dataset.sku);if(r)r.selected=cb.checked;}
+function cogsToggleAll(cb){document.querySelectorAll('.cogs-row-check').forEach(c=>{c.checked=cb.checked;const r=cogsParsedRows.find(r=>r.sku===c.dataset.sku);if(r)r.selected=cb.checked;});}
+function cogsDownloadMergedSTK(){
+  if(!cogsMergedSTKData)return;
+  const bySKU={},byASIN={};
+  const sel=cogsParsedRows.filter(r=>r.selected);
+  (sel.length?sel:cogsParsedRows).forEach(r=>{if(r.sku)bySKU[r.sku]=r;if(r.asin)byASIN[r.asin]=r;});
+  let matched=0;
+  const finalRows=cogsMergedSTKData.rawRows.map(row=>{
+    const sku=row['SKU']||'',asin=(row['ASIN']||'').toUpperCase();
+    const entry=bySKU[sku]||byASIN[asin]||null;
+    const out={...row};
+    if(entry){out['UNIT_COST_VAT_INCLUSIVE']=entry.itemCost.toFixed(2);out['PREP_COST_VAT_INCLUSIVE']=entry.prepPerUnit.toFixed(2);matched++;}
+    return out;
+  });
+  const lines=[cogsMergedSTKData.headers.join('\t')];
+  finalRows.forEach(row=>{lines.push(cogsMergedSTKData.headers.map(h=>{const v=row[h]||'';return(v.includes(',')||v.includes('\t'))?'"'+v+'"':v;}).join('\t'));});
+  const blob=new Blob([lines.join('\r\n')],{type:'text/tab-separated-values'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='SellerToolKit_COGS_Merged_'+new Date().toISOString().split('T')[0]+'.txt';a.click();URL.revokeObjectURL(a.href);
+  const info=document.getElementById('cogs-info');
+  const unmatch=cogsParsedRows.length-matched;
+  if(info){info.innerHTML='\u2713 Downloaded \u2014 <strong>'+matched+'</strong> rows matched & written. '+(unmatch>0?'<span style="color:var(--red)">\u26a0 '+unmatch+' unmatched</span>':'<span style="color:var(--green)">All matched \u2713</span>');info.style.display='block';}
+}
+
+// ════════════════════════════════════════
+// MIN PRICE TOOL (Keepa)
+// ════════════════════════════════════════
+let rpReplenishFile=null, rpReplenishASINs=[], rpResults=[];
+const KEEPA_EPOCH=new Date('2011-01-01T00:00:00Z').getTime();
+function keepaTimeToMs(kt){return KEEPA_EPOCH+kt*60000;}
+
+cogsWireDZ('rp-dz','rp-inp','rp-fn',(f,dz,fn)=>{
+  rpReplenishFile=f;
+  document.getElementById(fn).textContent='\u2713 '+f.name;
+  dz.classList.add('loaded');
+  rpParseReplenish(f);
+});
+
+function rpParseReplenish(file){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const lines=e.target.result.split('\n');
+    let headerIdx=-1,skuCol=-1,asinCol=-1,titleCol=-1;
+    for(let i=0;i<lines.length;i++){
+      const cols=lines[i].split('\t');
+      const si=cols.findIndex(c=>c.trim().replace(/"/g,'')==='SKU');
+      const ai=cols.findIndex(c=>c.trim().replace(/"/g,'')==='ASIN');
+      if(si>=0&&ai>=0){headerIdx=i;skuCol=si;asinCol=ai;titleCol=cols.findIndex(c=>c.trim().replace(/"/g,'').toUpperCase()==='TITLE');break;}
+    }
+    if(headerIdx<0){document.getElementById('rp-asin-count').textContent='\u26a0 Could not find SKU/ASIN columns';return;}
+    rpReplenishASINs=[];
+    const seen=new Set();
+    for(let i=headerIdx+1;i<lines.length;i++){
+      const cols=lines[i].split('\t');
+      if(cols.length<asinCol+1)continue;
+      const sku=(cols[skuCol]||'').replace(/^"|"$/g,'').trim();
+      const rawAsin=(cols[asinCol]||'').trim();
+      let asin='';
+      const hlMatch=rawAsin.match(/[A-Z0-9]{10}/g);
+      if(hlMatch)asin=hlMatch[hlMatch.length-1];
+      if(!asin||seen.has(asin))continue;
+      seen.add(asin);
+      const title=titleCol>=0?(cols[titleCol]||'').replace(/^"|"$/g,'').substring(0,60):'';
+      rpReplenishASINs.push({asin,sku,title});
+    }
+    document.getElementById('rp-asin-count').textContent=rpReplenishASINs.length+' active ASINs loaded';
+    rpUpdateLimitNote();
+  };
+  reader.readAsText(file);
+}
+function rpUpdateLimitNote(){
+  const limit=parseInt(document.getElementById('rp-limit').value)||50;
+  const total=rpReplenishASINs.length;
+  document.getElementById('rp-limit-note').textContent=total>limit?'\u26a0 Capped at '+limit+' \u2014 '+(total-limit)+' remaining for next run':'';
+}
+function rpGetASINs(){const limit=parseInt(document.getElementById('rp-limit').value)||50;rpUpdateLimitNote();return rpReplenishASINs.slice(0,limit);}
+function rpPercentile(arr,p){if(!arr.length)return 0;const sorted=[...arr].sort((a,b)=>a-b);const idx=Math.floor((p/100)*sorted.length);return sorted[Math.max(0,idx)];}
+
+async function rpRun(){
+  const apiKey=document.getElementById('rp-apikey').value.trim();
+  if(!apiKey){rpShowError('Please enter your Keepa API key.');return;}
+  if(!rpReplenishASINs.length){rpShowError('Please upload your STK Replenish export first.');return;}
+  const items=rpGetASINs();
+  const lookbackDays=parseInt(document.getElementById('rp-lookback').value);
+  const percentile=parseInt(document.getElementById('rp-percentile').value);
+  const bufferPct=parseFloat(document.getElementById('rp-buffer').value)/100;
+  ['rp-error','rp-info','rp-results'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('rpDownloadBtn').style.display='none';
+  document.getElementById('rpRunBtn').disabled=true;
+  rpResults=[];
+  const prog=document.getElementById('rp-progress');
+  const cutoffMs=Date.now()-lookbackDays*86400000;
+  const chunks=[];
+  for(let i=0;i<items.length;i+=100)chunks.push(items.slice(i,i+100));
+  const itemMap={};items.forEach(it=>itemMap[it.asin]=it);
+  try{
+    for(let ci=0;ci<chunks.length;ci++){
+      const chunk=chunks[ci];
+      prog.textContent='Fetching batch '+(ci+1)+' of '+chunks.length+' ('+chunk.length+' ASINs)\u2026';
+      const asinList=chunk.map(it=>it.asin).join(',');
+      const url='https://api.keepa.com/product?key='+apiKey+'&domain=2&asin='+asinList+'&history=1&buybox=1';
+      const resp=await fetch(url);
+      if(!resp.ok)throw new Error('Keepa API error: '+resp.status+' '+resp.statusText);
+      const data=await resp.json();
+      if(data.error)throw new Error('Keepa: '+(data.error.message||JSON.stringify(data.error)));
+      for(const product of(data.products||[])){
+        const asin=product.asin;
+        const item=itemMap[asin]||{asin,sku:'',title:''};
+        const title=item.title||(product.title||'').substring(0,60);
+        const sku=item.sku;
+        const bbRaw=(product.csv||[])[18];
+        if(!bbRaw||bbRaw.length<2){rpResults.push({asin,sku,title,floor:null,pct:null,suggested:null,high:null,pts:0,error:'No buy box data'});continue;}
+        const prices=[];
+        for(let i=0;i<bbRaw.length-1;i+=2){const t=keepaTimeToMs(bbRaw[i]);const p=bbRaw[i+1];if(t>=cutoffMs&&p>0)prices.push(p/100);}
+        if(!prices.length){rpResults.push({asin,sku,title,floor:null,pct:null,suggested:null,high:null,pts:0,error:'No data in window'});continue;}
+        const floor=Math.min(...prices),high=Math.max(...prices);
+        const pct=rpPercentile(prices,percentile);
+        const suggested=parseFloat((pct*(1+bufferPct)).toFixed(2));
+        rpResults.push({asin,sku,title,floor:floor.toFixed(2),pct:pct.toFixed(2),suggested,high:high.toFixed(2),pts:prices.length});
+      }
+      if(ci<chunks.length-1)await new Promise(r=>setTimeout(r,600));
+    }
+    prog.textContent='';
+    const good=rpResults.filter(r=>r.suggested!==null).length;
+    const bad=rpResults.length-good;
+    const info=document.getElementById('rp-info');
+    info.innerHTML='\u2713 Done \u2014 <strong>'+good+'</strong> ASINs priced'+(bad>0?', <span style="color:var(--red)">'+bad+' with no buy box data</span>':'')+'.';
+    info.style.display='block';
+    const avg=good?(rpResults.filter(r=>r.suggested).reduce((s,r)=>s+r.suggested,0)/good).toFixed(2):'0.00';
+    document.getElementById('rp-stats-row').innerHTML=
+      '<div class="cogs-stat"><div class="cogs-stat-val">'+rpResults.length+'</div><div class="cogs-stat-lbl">ASINs</div></div>'+
+      '<div class="cogs-stat"><div class="cogs-stat-val">'+good+'</div><div class="cogs-stat-lbl">Priced</div></div>'+
+      '<div class="cogs-stat"><div class="cogs-stat-val">\u00a3'+avg+'</div><div class="cogs-stat-lbl">Avg Min</div></div>'+
+      '<div class="cogs-stat"><div class="cogs-stat-val">'+bad+'</div><div class="cogs-stat-lbl">No Data</div></div>';
+    document.getElementById('rp-results').style.display='block';
+    document.getElementById('rpDownloadBtn').style.display='inline-block';
+    rpRenderTable();
+  }catch(err){prog.textContent='';rpShowError('Error: '+err.message);}
+  document.getElementById('rpRunBtn').disabled=false;
+}
+function rpRenderTable(){
+  const q=(document.getElementById('rp-search').value||'').toLowerCase();
+  let rows=rpResults;
+  if(q)rows=rows.filter(r=>r.asin.toLowerCase().includes(q)||r.sku.toLowerCase().includes(q));
+  const tbody=document.getElementById('rp-tbody');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state">No results</div></td></tr>';return;}
+  tbody.innerHTML=rows.map(r=>{
+    if(r.error)return '<tr><td class="mono">'+r.asin+'</td><td class="mono" style="font-size:10px;color:#666;">'+(r.sku||'\u2014')+'</td><td style="font-size:11px;color:#555;">'+(r.title||'\u2014')+'</td><td colspan="4" style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-align:center;">'+r.error+'</td><td class="rp-num" style="color:#555;">0</td></tr>';
+    return '<tr><td class="mono" style="font-size:11px;">'+r.asin+'</td><td class="mono" style="font-size:10px;color:#666;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.sku+'">'+(r.sku||'\u2014')+'</td><td style="font-size:11px;color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.title+'">'+r.title+'</td><td class="rp-num">\u00a3'+r.floor+'</td><td class="rp-num">\u00a3'+r.pct+'</td><td class="rp-num rp-col-suggest">\u00a3'+r.suggested+'</td><td class="rp-num" style="color:var(--text-2);">\u00a3'+r.high+'</td><td class="rp-num" style="color:#555;">'+r.pts+'</td></tr>';
+  }).join('');
+}
+function rpDownload(){
+  const rows=rpResults.filter(r=>r.suggested!==null);
+  if(!rows.length)return;
+  const headers=['SKU','ASIN','MIN_PRICE','MAX_PRICE','SUGGESTED_BY'];
+  const lines=[headers.join('\t')];
+  rows.forEach(r=>lines.push([r.sku||'',r.asin,r.suggested,r.high,'BimmaMinPriceTool_Keepa180d'].join('\t')));
+  const blob=new Blob([lines.join('\r\n')],{type:'text/tab-separated-values'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Bimma_MinPrices_'+new Date().toISOString().split('T')[0]+'.txt';a.click();URL.revokeObjectURL(a.href);
+}
+function rpShowError(msg){const e=document.getElementById('rp-error');if(e){e.textContent=msg;e.style.display='block';}}
+
 </script>
 </body>
 </html>

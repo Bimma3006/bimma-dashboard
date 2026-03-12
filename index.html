@@ -845,52 +845,57 @@ input::placeholder { color: var(--text-4); }
 .da-table-wrap.visible { display: block; }
 .da-table { width: 100%; border-collapse: collapse; table-layout: auto; }
 .da-table thead th {
-  font-family: var(--mono); font-size: 9px; font-weight: 600;
-  letter-spacing: 0.1em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 8.5px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--text-3); text-align: right;
-  padding: 10px 14px; border-bottom: 2px solid var(--border);
+  padding: 11px 14px; border-bottom: 1px solid var(--border2);
   cursor: pointer; user-select: none; white-space: nowrap;
-  background: var(--bg); position: sticky; top: 0; z-index: 5;
+  background: var(--surface2); position: sticky; top: 0; z-index: 5;
 }
 .da-table thead th.th-left { text-align: left; }
 .da-table thead th:hover:not(.no-sort) { color: var(--text-2); }
 .da-table thead th.sort-asc::after { content: ' ↑'; color: var(--green); }
 .da-table thead th.sort-desc::after { content: ' ↓'; color: var(--green); }
-.da-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
-.da-table tbody tr:hover { background: var(--surface2); }
-.da-table tbody tr.vetoed { opacity: 0.3; }
-.da-table tbody tr.approved { border-left: 3px solid var(--green); }
-.da-table tbody tr.rejected { border-left: 3px solid var(--red); opacity: 0.5; }
-.da-table td { padding: 14px; vertical-align: middle; }
+.da-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+.da-table tbody tr:last-child { border-bottom: none; }
+.da-table tbody tr:hover { background: rgba(255,255,255,0.015); }
+.da-table tbody tr.vetoed { opacity: 0.25; }
+.da-table tbody tr.approved { border-left: 2px solid var(--green); }
+.da-table tbody tr.rejected { border-left: 2px solid var(--red); opacity: 0.4; }
+.da-table td { padding: 13px 14px; vertical-align: middle; }
 
 /* Product cell */
-.td-product { max-width: 300px; min-width: 200px; }
+.td-product { max-width: 280px; min-width: 190px; }
 .td-product-title {
   font-size: 12px; font-weight: 500; color: var(--text);
-  line-height: 1.45; margin-bottom: 6px;
+  line-height: 1.45; margin-bottom: 5px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.td-asin-row { font-family: var(--mono); font-size: 9px; color: var(--text-3); display: flex; gap: 10px; align-items: center; }
-.td-asin-row a { color: var(--text-3); text-decoration: none; }
+.td-asin-row {
+  font-family: var(--mono); font-size: 9px; color: var(--text-3);
+  display: flex; gap: 8px; align-items: center;
+}
+.td-asin-row a { color: var(--text-3); text-decoration: none; transition: color 0.12s; }
 .td-asin-row a:hover { color: var(--green); }
 .keepa-link { color: var(--blue) !important; }
 .keepa-link:hover { color: var(--green) !important; }
 .ss-badge {
   font-family: var(--mono); font-size: 8px; font-weight: 700;
-  padding: 1px 6px; border-radius: 3px;
-  background: rgba(155,109,255,0.15); color: var(--purple); letter-spacing: 0.05em;
+  padding: 1px 5px; border-radius: 3px;
+  background: rgba(155,109,255,0.12); color: var(--purple);
+  letter-spacing: 0.05em; border: 1px solid rgba(155,109,255,0.2);
 }
 
 /* Number cells */
-.td-num { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--text-2); white-space: nowrap; padding: 14px 10px; }
+.td-num { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--text-2); white-space: nowrap; padding: 13px 10px; }
 .td-center { text-align: center !important; }
 .td-profit { color: var(--green) !important; font-weight: 600; }
 
 /* ROI cell */
-.td-roi { text-align: right; font-family: var(--mono); font-size: 15px; font-weight: 700; white-space: nowrap; padding: 14px 10px; }
+.td-roi { text-align: right; font-family: var(--mono); font-size: 14px; font-weight: 700; white-space: nowrap; padding: 13px 14px; }
 .td-roi.green { color: var(--green); }
 .td-roi.amber { color: var(--amber); }
-.td-roi.red { color: var(--red); opacity: 0.5; }
+.td-roi.red { color: var(--red); opacity: 0.55; }
 .td-roi.grey { color: var(--text-3); }
 
 /* SP source tag */
@@ -898,30 +903,30 @@ input::placeholder { color: var(--text-4); }
   display: inline-block; margin-left: 4px;
   font-family: var(--mono); font-size: 7px; font-weight: 700; letter-spacing: 0.08em;
   padding: 1px 4px; border-radius: 3px; vertical-align: middle;
-  background: rgba(0,229,132,0.1); color: var(--green); border: 1px solid rgba(0,229,132,0.2);
+  background: rgba(0,229,132,0.08); color: var(--green); border: 1px solid rgba(0,229,132,0.18);
 }
-.sp-tag.st { background: rgba(240,165,0,0.1); color: var(--amber); border-color: rgba(240,165,0,0.3); }
+.sp-tag.st { background: rgba(240,165,0,0.08); color: var(--amber); border-color: rgba(240,165,0,0.25); }
 
 /* Rating cell */
-.td-rating { min-width: 180px; max-width: 240px; padding: 14px 10px; }
+.td-rating { min-width: 170px; max-width: 230px; padding: 13px 10px; }
 .rating-strength {
-  font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-  margin-bottom: 3px;
+  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; margin-bottom: 3px;
 }
 .rating-strength.green { color: var(--green); }
 .rating-strength.amber { color: var(--amber); }
 .rating-strength.red { color: var(--red); }
 .rating-strength.grey { color: var(--text-3); }
-.rating-reason { font-family: var(--mono); font-size: 10px; color: var(--text-2); line-height: 1.5; }
-.rating-bar { height: 2px; border-radius: 1px; max-width: 120px; margin-top: 6px; }
-.rating-bar.green { background: var(--green); }
-.rating-bar.amber { background: var(--amber); }
-.rating-bar.red { background: rgba(240,59,80,0.4); }
+.rating-reason { font-family: var(--mono); font-size: 9.5px; color: var(--text-2); line-height: 1.55; }
+.rating-bar { height: 2px; border-radius: 1px; max-width: 100px; margin-top: 5px; }
+.rating-bar.green { background: linear-gradient(90deg, var(--green), rgba(0,229,132,0.3)); }
+.rating-bar.amber { background: linear-gradient(90deg, var(--amber), rgba(240,165,0,0.3)); }
+.rating-bar.red { background: rgba(240,59,80,0.3); }
 .row-warn { font-family: var(--mono); font-size: 9px; color: var(--red); margin-top: 4px; }
 .row-warn.spike { color: var(--amber); }
 
 /* Action buttons */
-.td-actions { white-space: nowrap; padding: 14px 10px; }
+.td-actions { white-space: nowrap; padding: 13px 10px; }
 .action-btns { display: flex; flex-direction: column; gap: 5px; }
 .btn-approve, .btn-reject, .btn-veto, .btn-unveto {
   font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
@@ -949,18 +954,39 @@ input::placeholder { color: var(--text-4); }
 ════════════════════════════════════════ */
 
 /* Mode selector bar */
-.a2a-mode-bar {
+/* ════════════════════════════════════════
+   A2A ANALYSER — FULL REDESIGN
+════════════════════════════════════════ */
+
+/* Page wrapper — consistent outer padding */
+.a2a-wrap {
+  padding: 32px 40px 40px;
+  max-width: 1440px;
+}
+
+/* Page header */
+.a2a-page-header {
   display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+.a2a-page-header-left {}
+
+/* Mode selector */
+.a2a-mode-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 .a2a-mode-btn {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
-  padding: 14px 18px;
+  gap: 6px;
+  padding: 16px 20px;
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: var(--r);
@@ -968,21 +994,335 @@ input::placeholder { color: var(--text-4); }
   transition: all 0.15s;
   position: relative;
   overflow: hidden;
+  text-align: left;
 }
-.a2a-mode-btn::before {
+.a2a-mode-btn::after {
   content: '';
   position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 3px;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
   background: var(--border3);
-  transition: background 0.15s;
+  transition: background 0.15s, opacity 0.15s;
 }
 .a2a-mode-btn:hover { border-color: var(--border3); background: var(--surface3); }
-.a2a-mode-btn.active { border-color: var(--green); background: rgba(0,229,132,0.05); }
-.a2a-mode-btn.active::before { background: var(--green); }
+.a2a-mode-btn.active { border-color: rgba(0,229,132,0.35); background: rgba(0,229,132,0.04); }
+.a2a-mode-btn.active::after { background: var(--green); }
+
+.a2a-mode-top { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
 .a2a-mode-icon { font-size: 18px; line-height: 1; }
-.a2a-mode-label { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; }
-.a2a-mode-hint { font-family: var(--mono); font-size: 9px; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; }
+.a2a-mode-badge {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+.a2a-mode-btn.active .a2a-mode-badge { color: var(--green); }
+.a2a-mode-desc {
+  font-size: 11px;
+  color: var(--text-3);
+  line-height: 1.4;
+}
+.a2a-mode-tags {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.a2a-mtag {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  color: var(--text-3);
+}
+.a2a-mode-btn.active .a2a-mtag { background: rgba(0,229,132,0.08); border-color: rgba(0,229,132,0.2); color: var(--green); }
+
+/* Info strip */
+.a2a-info-strip {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.a2a-info-mode {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  background: rgba(0,229,132,0.1);
+  color: var(--green);
+  white-space: nowrap;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(0,229,132,0.15);
+}
+.a2a-info-divider { width: 1px; background: var(--border2); align-self: stretch; flex-shrink: 0; }
+.a2a-info-desc {
+  font-size: 11px;
+  color: var(--text-3);
+  padding: 9px 16px;
+  line-height: 1.5;
+}
+.a2a-info-desc strong { color: var(--text-2); font-weight: 600; }
+
+/* Upload zone */
+.a2a-upload-zone {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-lg);
+  padding: 20px 22px 18px;
+  margin-bottom: 12px;
+}
+.a2a-upload-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.a2a-upload-header-left {}
+.a2a-upload-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.a2a-upload-sub { font-size: 11px; color: var(--text-3); }
+.a2a-upload-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
+  opacity: 0.6;
+}
+.a2a-upload-hint-icon { font-size: 13px; }
+
+.a2a-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.a2a-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 22px 12px 18px;
+  background: var(--surface3);
+  border: 1px dashed var(--border2);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 118px;
+  text-align: center;
+}
+.a2a-slot input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.a2a-slot:hover { border-color: rgba(0,229,132,0.4); background: rgba(0,229,132,0.03); }
+.a2a-slot.loaded { border-style: solid; border-color: rgba(0,229,132,0.4); background: rgba(0,229,132,0.05); }
+.a2a-slot.drag-over { border-color: var(--green); background: rgba(0,229,132,0.1); box-shadow: inset 0 0 0 1px rgba(0,229,132,0.3); }
+.a2a-slot-num {
+  position: absolute;
+  top: 9px; left: 11px;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--text-3);
+  letter-spacing: 0.12em;
+  opacity: 0.5;
+}
+.a2a-slot-icon { font-size: 22px; color: var(--text-3); transition: color 0.15s; margin-bottom: 2px; }
+.a2a-slot.loaded .a2a-slot-icon { color: var(--green); }
+.a2a-slot-label { font-family: var(--mono); font-size: 10px; color: var(--text-2); letter-spacing: 0.03em; }
+.a2a-slot.loaded .a2a-slot-label { color: var(--text); }
+.a2a-slot-sub { font-family: var(--mono); font-size: 8px; color: var(--blue); letter-spacing: 0.1em; text-transform: uppercase; }
+.a2a-slot-name { font-family: var(--mono); font-size: 9px; color: var(--green); word-break: break-all; max-width: 90%; margin-top: 2px; }
+.a2a-slot-clear {
+  position: absolute; top: 7px; right: 9px;
+  background: none; border: none; color: var(--text-3); cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 3px 5px; z-index: 2;
+  display: none; border-radius: 3px; transition: all 0.12s;
+}
+.a2a-slot-clear:hover { color: var(--red); background: rgba(240,59,80,0.1); }
+.a2a-slot.loaded .a2a-slot-clear { display: block; }
+
+/* Go button */
+.a2a-go-btn {
+  width: 100%;
+  padding: 13px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--surface3);
+  color: var(--text-3);
+  pointer-events: none;
+  border: 1px solid var(--border2);
+}
+.a2a-go-btn.ready {
+  background: var(--green);
+  color: #000;
+  pointer-events: all;
+  border-color: transparent;
+  box-shadow: 0 4px 24px rgba(0,229,132,0.28);
+}
+.a2a-go-btn.ready:hover {
+  background: #00ff99;
+  box-shadow: 0 6px 32px rgba(0,229,132,0.4);
+  transform: translateY(-1px);
+}
+.a2a-go-btn.ready:active { transform: translateY(0); }
+.a2a-go-arrow { font-size: 15px; }
+
+/* Loading */
+.a2a-loading {
+  display: none;
+  padding: 40px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-2);
+  letter-spacing: 0.08em;
+}
+.a2a-loading.visible { display: block; }
+
+/* Results header / filter bar */
+.a2a-results-header {
+  display: none;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  margin-bottom: 8px;
+}
+.a2a-results-header.visible { display: flex; }
+
+.a2a-results-left { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.a2a-result-total {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.a2a-filter-pills { display: flex; gap: 5px; }
+.a2a-fpill {
+  padding: 5px 13px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-radius: 100px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.a2a-fpill:hover { border-color: var(--border3); color: var(--text-2); }
+.a2a-fpill.active { background: var(--surface3); border-color: var(--border3); color: var(--text); }
+.a2a-fpill-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.fp-green-dot { background: var(--green); }
+.fp-amber-dot { background: var(--amber); }
+.fp-red-dot { background: var(--red); }
+.a2a-fpill.fp-green.active { border-color: rgba(0,229,132,0.35); color: var(--green); background: rgba(0,229,132,0.06); }
+.a2a-fpill.fp-amber.active { border-color: rgba(240,165,0,0.35); color: var(--amber); background: rgba(240,165,0,0.06); }
+.a2a-fpill.fp-red.active { border-color: rgba(240,59,80,0.35); color: var(--red); background: rgba(240,59,80,0.06); }
+
+.a2a-results-mid {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+.a2a-tally {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
+}
+.a2a-tally-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.a2a-tally-g { color: var(--green); }
+.a2a-tally-a { color: var(--amber); }
+.a2a-tally-r { color: var(--red); }
+.a2a-spike-notice { font-family: var(--mono); font-size: 10px; color: var(--amber); }
+
+.a2a-results-right { display: flex; gap: 6px; align-items: center; margin-left: auto; flex-shrink: 0; }
+.a2a-veto-badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-2);
+  padding: 3px 8px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+}
+.a2a-veto-red { color: var(--red); border-color: rgba(240,59,80,0.2); background: rgba(240,59,80,0.06); }
+.a2a-action-btn {
+  padding: 5px 12px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.a2a-action-btn:hover { border-color: var(--border3); color: var(--text); background: var(--surface3); }
+.a2a-action-btn.a2a-action-green {
+  background: var(--green);
+  color: #000;
+  border-color: transparent;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(0,229,132,0.2);
+}
+.a2a-action-btn.a2a-action-green:hover { background: #00ff99; box-shadow: 0 3px 16px rgba(0,229,132,0.3); }
+
+/* Table wrapper */
+.a2a-table-wrap {
+  display: none;
+  overflow-x: auto;
+  border-radius: var(--r);
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+}
+.a2a-table-wrap.visible { display: block; }
 
 /* Banner */
 .a2a-banner {
@@ -1010,100 +1350,7 @@ input::placeholder { color: var(--text-4); }
 }
 .a2a-banner-desc { font-size: 11.5px; color: var(--text-2); line-height: 1.5; }
 .a2a-banner-desc strong { color: var(--text); }
-
-/* Upload zone */
-.a2a-upload-zone {
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: var(--r-lg);
-  padding: 24px;
-  margin-bottom: 18px;
-}
-.a2a-upload-header { margin-bottom: 18px; }
-.a2a-upload-title { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--text); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
-.a2a-upload-sub { font-size: 11px; color: var(--text-3); }
-
-.a2a-slots { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; }
-
-.a2a-slot {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 20px 12px 16px;
-  background: var(--surface3);
-  border: 1px dashed var(--border2);
-  border-radius: var(--r);
-  cursor: pointer;
-  transition: all 0.15s;
-  min-height: 110px;
-  text-align: center;
-}
-.a2a-slot input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-.a2a-slot:hover { border-color: var(--green); background: rgba(0,229,132,0.04); }
-.a2a-slot.loaded { border-style: solid; border-color: var(--green); background: rgba(0,229,132,0.06); }
-.a2a-slot.drag-over { border-color: var(--green); background: rgba(0,229,132,0.1); }
-
-.a2a-slot-num { position: absolute; top: 8px; left: 10px; font-family: var(--mono); font-size: 9px; font-weight: 700; color: var(--text-3); letter-spacing: 0.1em; }
-.a2a-slot-icon { font-size: 20px; color: var(--text-3); transition: color 0.15s; }
-.a2a-slot.loaded .a2a-slot-icon { color: var(--green); }
-.a2a-slot-label { font-family: var(--mono); font-size: 9.5px; color: var(--text-2); letter-spacing: 0.04em; }
-.a2a-slot-sub { font-family: var(--mono); font-size: 8.5px; color: var(--blue); letter-spacing: 0.08em; text-transform: uppercase; }
-.a2a-slot-name { font-family: var(--mono); font-size: 9px; color: var(--green); word-break: break-all; max-width: 100%; }
-.a2a-slot-clear {
-  position: absolute; top: 6px; right: 8px;
-  background: none; border: none; color: var(--text-3); cursor: pointer;
-  font-size: 14px; line-height: 1; padding: 2px 4px; z-index: 2;
-  display: none;
-}
-.a2a-slot-clear:hover { color: var(--red); }
-.a2a-slot.loaded .a2a-slot-clear { display: block; }
-
-.a2a-go-btn {
-  width: 100%;
-  padding: 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border: none;
-  border-radius: var(--r);
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: #000;
-  background: var(--surface3);
-  color: var(--text-3);
-  pointer-events: none;
-}
-.a2a-go-btn.ready {
-  background: var(--green);
-  color: #000;
-  pointer-events: all;
-  box-shadow: 0 4px 20px rgba(0,229,132,0.3);
-}
-.a2a-go-btn.ready:hover { background: #00ff99; box-shadow: 0 4px 28px rgba(0,229,132,0.4); }
-.a2a-go-arrow { font-size: 16px; }
-
-/* Loading */
-.a2a-loading {
-  display: none;
-  padding: 32px;
-  text-align: center;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--text-2);
-  letter-spacing: 0.08em;
-}
-.a2a-loading.visible { display: block; }
-
-/* Filter bar */
+/* legacy filter bar */
 .a2a-filter-bar {
   display: none;
   align-items: center;
@@ -1116,69 +1363,13 @@ input::placeholder { color: var(--text-4); }
   flex-wrap: wrap;
 }
 .a2a-filter-bar.visible { display: flex; }
-
-.a2a-filter-pills { display: flex; gap: 6px; }
-.a2a-fpill {
-  padding: 5px 14px;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  border-radius: 100px;
-  border: 1px solid var(--border2);
-  background: transparent;
-  color: var(--text-2);
-  cursor: pointer;
-  transition: all 0.12s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.a2a-fpill:hover { border-color: var(--border3); color: var(--text); }
-.a2a-fpill.active { background: var(--surface3); border-color: var(--border3); color: var(--text); }
-.a2a-fpill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.a2a-fpill.fp-green .a2a-fpill-dot { background: var(--green); }
-.a2a-fpill.fp-green.active { border-color: rgba(0,229,132,0.4); color: var(--green); }
-.a2a-fpill.fp-amber .a2a-fpill-dot { background: var(--amber); }
-.a2a-fpill.fp-amber.active { border-color: rgba(240,165,0,0.4); color: var(--amber); }
-.a2a-fpill.fp-red .a2a-fpill-dot { background: var(--red); }
-.a2a-fpill.fp-red.active { border-color: rgba(240,59,80,0.4); color: var(--red); }
-
 .a2a-deal-counts { display: flex; gap: 14px; font-family: var(--mono); font-size: 10px; }
 .a2a-count { display: flex; align-items: center; gap: 4px; }
 .a2a-count-g { color: var(--green); }
 .a2a-count-a { color: var(--amber); }
 .a2a-count-r { color: var(--red); }
 .a2a-result-count { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
-.a2a-spike-notice { font-family: var(--mono); font-size: 10px; color: var(--amber); }
-
 .a2a-bar-actions { display: flex; gap: 6px; align-items: center; margin-left: auto; }
-.a2a-veto-badge { font-family: var(--mono); font-size: 9px; color: var(--text-2); padding: 3px 8px; background: var(--surface3); border-radius: 4px; }
-.a2a-veto-red { color: var(--red); }
-.a2a-action-btn {
-  padding: 5px 12px;
-  font-family: var(--mono);
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  border-radius: var(--r-xs);
-  border: 1px solid var(--border2);
-  background: transparent;
-  color: var(--text-2);
-  cursor: pointer;
-  transition: all 0.12s;
-}
-.a2a-action-btn:hover { border-color: var(--border3); color: var(--text); }
-.a2a-action-btn.a2a-action-green { background: var(--green); color: #000; border-color: var(--green); }
-.a2a-action-btn.a2a-action-green:hover { background: #00ff99; }
-
-.a2a-table-wrap {
-  display: none;
-  overflow-x: auto;
-  border-radius: var(--r);
-  border: 1px solid var(--border);
-}
-.a2a-table-wrap.visible { display: block; }
 
 /* ════════════════════════════════════════
    MIN PRICE TOOL — REDESIGN
@@ -1881,48 +2072,79 @@ input::placeholder { color: var(--text-4); }
 
   <!-- ══ PAGE: A2A ANALYSER ══ -->
   <div class="page" id="page-a2a">
-    <div class="page-header">
-      <div class="page-header-title">A2A Analyser</div>
-      <div class="page-header-sub">Keepa CSV · 3-mode · EU→UK · UK→UK · Used LN</div>
+  <div class="a2a-wrap">
+    <!-- PAGE HEADER -->
+    <div class="a2a-page-header">
+      <div class="a2a-page-header-left">
+        <div class="page-header-title">A2A Analyser</div>
+        <div class="page-header-sub">Keepa Product Finder CSV · EU→UK · UK→UK · Used LN</div>
+      </div>
     </div>
 
     <!-- MODE SELECTOR -->
     <div class="a2a-mode-bar">
       <button class="a2a-mode-btn a2a-mode-eu active" onclick="setMode('eu',this)">
-        <span class="a2a-mode-icon">🌍</span>
-        <span class="a2a-mode-label">EU → UK</span>
-        <span class="a2a-mode-hint">Buy EU · Sell UK</span>
+        <div class="a2a-mode-top">
+          <span class="a2a-mode-icon">🌍</span>
+          <span class="a2a-mode-badge">EU → UK</span>
+        </div>
+        <span class="a2a-mode-desc">Source from EU marketplace, sell on UK</span>
+        <div class="a2a-mode-tags">
+          <span class="a2a-mtag">EU Buy Box</span>
+          <span class="a2a-mtag">+£2 ship</span>
+          <span class="a2a-mtag">New</span>
+        </div>
       </button>
       <button class="a2a-mode-btn a2a-mode-uk" onclick="setMode('uk',this)">
-        <span class="a2a-mode-icon">🇬🇧</span>
-        <span class="a2a-mode-label">UK → UK</span>
-        <span class="a2a-mode-hint">Buy UK · Sell UK</span>
+        <div class="a2a-mode-top">
+          <span class="a2a-mode-icon">🇬🇧</span>
+          <span class="a2a-mode-badge">UK → UK</span>
+        </div>
+        <span class="a2a-mode-desc">Buy and sell within UK Amazon</span>
+        <div class="a2a-mode-tags">
+          <span class="a2a-mtag">UK Buy Box</span>
+          <span class="a2a-mtag">Used LN</span>
+          <span class="a2a-mtag">New</span>
+        </div>
       </button>
       <button class="a2a-mode-btn a2a-mode-uln" onclick="setMode('uln',this)">
-        <span class="a2a-mode-icon">♻</span>
-        <span class="a2a-mode-label">Used LN → UK</span>
-        <span class="a2a-mode-hint">Used · No strikethrough</span>
+        <div class="a2a-mode-top">
+          <span class="a2a-mode-icon">♻</span>
+          <span class="a2a-mode-badge">Used LN</span>
+        </div>
+        <span class="a2a-mode-desc">Used Like New — no strikethrough required</span>
+        <div class="a2a-mode-tags">
+          <span class="a2a-mtag">Used LN price</span>
+          <span class="a2a-mtag">No ST cap</span>
+        </div>
       </button>
     </div>
 
-    <!-- MODE BANNER -->
-    <div class="a2a-banner" id="modeBanner">
-      <div class="a2a-banner-pill" id="modePill">EU → UK</div>
-      <div class="a2a-banner-desc" id="modeDesc">Buy price: <strong>EU Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>+£2.00 shipping</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong></div>
+    <!-- MODE INFO STRIP -->
+    <div class="a2a-info-strip" id="modeBanner">
+      <div class="a2a-info-mode" id="modePill">EU → UK</div>
+      <div class="a2a-info-divider"></div>
+      <div class="a2a-info-desc" id="modeDesc">Buy price: <strong>EU Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>+£2.00 shipping</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong></div>
     </div>
 
     <!-- FILE DROP ZONE -->
     <div class="a2a-upload-zone" id="daDropzone">
       <div class="a2a-upload-header">
-        <div class="a2a-upload-title">Keepa Product Finder CSV Export</div>
-        <div class="a2a-upload-sub">Drop up to 3 files — duplicate ASINs auto-removed</div>
+        <div class="a2a-upload-header-left">
+          <div class="a2a-upload-title">Keepa Product Finder Export</div>
+          <div class="a2a-upload-sub">Drop up to 3 CSV files — duplicate ASINs removed automatically</div>
+        </div>
+        <div class="a2a-upload-header-right" id="daSlotHint">
+          <span class="a2a-upload-hint-icon">⌘</span>
+          <span class="a2a-upload-hint-text">Drop anywhere or click a slot</span>
+        </div>
       </div>
       <div class="a2a-slots">
         <div class="a2a-slot" id="daSlot1" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,1)">
           <input type="file" id="daFileInput1" accept=".csv" onchange="daFileChosen(1,this.files[0])">
           <div class="a2a-slot-num">01</div>
           <div class="a2a-slot-icon" id="daSlot1Icon">↑</div>
-          <div class="a2a-slot-label" id="daSlot1Label">File 1 — primary export</div>
+          <div class="a2a-slot-label" id="daSlot1Label">Primary export</div>
           <div class="a2a-slot-sub" id="daSlot1Sub" style="display:none;"></div>
           <div class="a2a-slot-name" id="daSlot1Name"></div>
           <button class="a2a-slot-clear" id="daSlot1Clear" onclick="daClearSlot(event,1)">✕</button>
@@ -1931,7 +2153,7 @@ input::placeholder { color: var(--text-4); }
           <input type="file" id="daFileInput2" accept=".csv" onchange="daFileChosen(2,this.files[0])">
           <div class="a2a-slot-num">02</div>
           <div class="a2a-slot-icon" id="daSlot2Icon">↑</div>
-          <div class="a2a-slot-label" id="daSlot2Label">File 2 — optional second export</div>
+          <div class="a2a-slot-label" id="daSlot2Label">Second export</div>
           <div class="a2a-slot-sub" id="daSlot2Sub" style="display:none;"></div>
           <div class="a2a-slot-name" id="daSlot2Name"></div>
           <button class="a2a-slot-clear" id="daSlot2Clear" onclick="daClearSlot(event,2)">✕</button>
@@ -1940,7 +2162,7 @@ input::placeholder { color: var(--text-4); }
           <input type="file" id="daFileInput3" accept=".csv" onchange="daFileChosen(3,this.files[0])">
           <div class="a2a-slot-num">03</div>
           <div class="a2a-slot-icon" id="daSlot3Icon">↑</div>
-          <div class="a2a-slot-label" id="daSlot3Label">File 3 — UK Keepa export</div>
+          <div class="a2a-slot-label" id="daSlot3Label">UK sell prices</div>
           <div class="a2a-slot-sub" id="daSlot3Sub" style="display:none;">SELL PRICES</div>
           <div class="a2a-slot-name" id="daSlot3Name"></div>
           <button class="a2a-slot-clear" id="daSlot3Clear" onclick="daClearSlot(event,3)">✕</button>
@@ -1954,33 +2176,35 @@ input::placeholder { color: var(--text-4); }
     <!-- LOADING -->
     <div class="a2a-loading" id="daLoading"><span class="loading-dots">Analysing deals</span></div>
 
-    <!-- FILTER BAR -->
-    <div class="a2a-filter-bar" id="daFilters">
-      <div class="a2a-filter-pills">
-        <button class="a2a-fpill active" onclick="daSetFilter('all',this)">All</button>
-        <button class="a2a-fpill fp-green" onclick="daSetFilter('green',this)">
-          <span class="a2a-fpill-dot"></span> Strong
-        </button>
-        <button class="a2a-fpill fp-amber" onclick="daSetFilter('amber',this)">
-          <span class="a2a-fpill-dot"></span> Marginal
-        </button>
-        <button class="a2a-fpill fp-red" onclick="daSetFilter('red',this)">
-          <span class="a2a-fpill-dot"></span> Reject
-        </button>
+    <!-- RESULTS HEADER + FILTER BAR -->
+    <div class="a2a-results-header" id="daFilters">
+      <div class="a2a-results-left">
+        <span id="daResultCount" class="a2a-result-total"></span>
+        <div class="a2a-filter-pills">
+          <button class="a2a-fpill active" onclick="daSetFilter('all',this)">All</button>
+          <button class="a2a-fpill fp-green" onclick="daSetFilter('green',this)">
+            <span class="a2a-fpill-dot fp-green-dot"></span>Strong
+          </button>
+          <button class="a2a-fpill fp-amber" onclick="daSetFilter('amber',this)">
+            <span class="a2a-fpill-dot fp-amber-dot"></span>Marginal
+          </button>
+          <button class="a2a-fpill fp-red" onclick="daSetFilter('red',this)">
+            <span class="a2a-fpill-dot fp-red-dot"></span>Reject
+          </button>
+        </div>
       </div>
-      <div class="a2a-deal-counts">
-        <span class="a2a-count a2a-count-g">● <span id="daCountGreen">0</span> strong</span>
-        <span class="a2a-count a2a-count-a">● <span id="daCountAmber">0</span> marginal</span>
-        <span class="a2a-count a2a-count-r">● <span id="daCountRed">0</span> reject</span>
-        <span id="daResultCount" class="a2a-result-count"></span>
+      <div class="a2a-results-mid">
+        <span class="a2a-tally a2a-tally-g"><span class="a2a-tally-dot"></span><span id="daCountGreen">0</span> strong</span>
+        <span class="a2a-tally a2a-tally-a"><span class="a2a-tally-dot"></span><span id="daCountAmber">0</span> marginal</span>
+        <span class="a2a-tally a2a-tally-r"><span class="a2a-tally-dot"></span><span id="daCountRed">0</span> reject</span>
+        <span class="a2a-spike-notice" id="spikeNotice" style="display:none;"></span>
       </div>
-      <span class="a2a-spike-notice" id="spikeNotice" style="display:none;"></span>
-      <div class="a2a-bar-actions">
+      <div class="a2a-results-right">
         <span class="a2a-veto-badge" id="daVetoCount" style="display:none;"></span>
         <span class="a2a-veto-badge a2a-veto-red" id="daRejectedCount" style="display:none;"></span>
         <button class="a2a-action-btn" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;">Clear rejected</button>
         <button class="a2a-action-btn" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
-        <button class="a2a-action-btn a2a-action-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export</button>
+        <button class="a2a-action-btn a2a-action-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export CSV</button>
       </div>
     </div>
 
@@ -1991,6 +2215,7 @@ input::placeholder { color: var(--text-4); }
       </table>
     </div>
   </div>
+  </div><!-- /a2a-wrap -->
 
   <!-- ══ PAGE: PURCHASES ══ -->
   <div class="page" id="page-purchases">
@@ -3193,7 +3418,7 @@ function setMode(mode, btn) {
   currentMode = mode;
   const cfg = MODES[mode];
   // tabs
-  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.a2a-mode-btn').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   // banner
   document.getElementById('modePill').textContent = cfg.label;
@@ -4212,21 +4437,32 @@ async function scoutRun() {
     const ukMap = {};
     ukProducts.forEach(p => { if (p.asin) ukMap[p.asin] = p; });
 
+    // Only fetch EU data for ASINs that have a valid UK 180d BB — no point burning
+    // Keepa tokens on ASINs we can't sell on UK anyway
+    const qualifiedAsins = asins.filter(asin => {
+      const p = ukMap[asin];
+      return p && scoutGetBB180(p) != null;
+    });
+    const skipped = asins.length - qualifiedAsins.length;
+    if (skipped > 0) scoutSetStatus(`${qualifiedAsins.length} ASINs have UK BB — skipping ${skipped} with no UK data…`, 18);
+
     const euData = {};
-    let step = 0;
-    for (const market of markets) {
-      step++;
-      scoutSetStatus(`Fetching ${market} prices…`, 10 + (step / markets.length) * 65);
-      try {
-        const euProducts = await scoutFetchKeepa(asins, SCOUT_DOMAINS[market].id, apiKey);
-        euProducts.forEach(p => {
-          if (!p.asin) return;
-          if (!euData[p.asin]) euData[p.asin] = {};
-          const bb = scoutGetCurrentBB(p);
-          if (bb && bb > 0) euData[p.asin][market] = bb;
-        });
-      } catch(e) { console.warn(`Scout ${market}:`, e.message); }
-      await new Promise(r => setTimeout(r, 300));
+    if (qualifiedAsins.length > 0) {
+      let step = 0;
+      for (const market of markets) {
+        step++;
+        scoutSetStatus(`Fetching ${market} prices for ${qualifiedAsins.length} qualified ASINs…`, 20 + (step / markets.length) * 60);
+        try {
+          const euProducts = await scoutFetchKeepa(qualifiedAsins, SCOUT_DOMAINS[market].id, apiKey);
+          euProducts.forEach(p => {
+            if (!p.asin) return;
+            if (!euData[p.asin]) euData[p.asin] = {};
+            const bb = scoutGetCurrentBB(p);
+            if (bb && bb > 0) euData[p.asin][market] = bb;
+          });
+        } catch(e) { console.warn(`Scout ${market}:`, e.message); }
+        await new Promise(r => setTimeout(r, 300));
+      }
     }
 
     scoutSetStatus('Computing best deals…', 85);

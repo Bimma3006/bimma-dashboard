@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════
-   BIMMA RETAIL  ·  FBA OPS  ·  v2.7
+   BIMMA RETAIL  ·  FBA OPS  ·  v2.8
 ═══════════════════════════════════════ */
 :root {
   --bg:          #07070a;
@@ -849,7 +849,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses',this)"><span class="nav-icon">£</span>Expenses</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v2.7 · 12 Mar 26</div>
+    <div class="sidebar-version">v2.8 · 12 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -2490,6 +2490,9 @@ function cogsDownloadMergedSTK(){
 // ════════════════════════════════════════
 let rpReplenishFile = null;
 let rpReplenishASINs = []; // [{asin, sku, title}]
+let rpResults = [];
+const KEEPA_EPOCH = new Date('2011-01-01T00:00:00Z').getTime();
+function keepaTimeToMs(kt) { return KEEPA_EPOCH + kt * 60000; }
 
 cogsWireDZ('rp-dz','rp-inp','rp-fn',(f,dz,fn)=>{
   rpReplenishFile=f;

@@ -614,47 +614,7 @@ input::placeholder { color: var(--text-4); }
 .rm-banner-urgent { color: var(--amber); }
 .rm-meta { display: flex; gap: 14px; font-family: var(--mono); font-size: 11px; color: var(--text-3); flex-wrap: wrap; }
 
-/* ═══════════════════════════════════════
-   DEAL ANALYSER
-═══════════════════════════════════════ */
-.da-dropzone { max-width: 640px; margin: 0 auto; padding: 56px 32px; text-align: center; }
-.da-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
-.da-slot {
-  border: 1.5px dashed var(--border2); border-radius: var(--r);
-  padding: 28px 20px; text-align: center; cursor: pointer;
-  transition: all 0.22s; position: relative; background: var(--surface);
-}
-.da-slot:hover, .da-slot.drag-over { border-color: var(--green); background: rgba(0,229,132,0.04); }
-.da-slot.has-file { border-color: var(--green-dim); border-style: solid; background: rgba(0,229,132,0.05); }
-.da-slot input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-.da-slot-icon { font-size: 22px; margin-bottom: 8px; opacity: 0.35; transition: opacity 0.2s; }
-.da-slot.has-file .da-slot-icon { opacity: 1; }
-.da-slot-label { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
-.da-slot-name { font-family: var(--mono); font-size: 11px; color: var(--green); display: none; font-weight: 600; }
-.da-slot-clear { position: absolute; top: 8px; right: 10px; font-size: 16px; color: var(--text-3); cursor: pointer; display: none; line-height: 1; z-index: 2; }
-.da-slot-clear:hover { color: var(--red); }
-.da-go {
-  width: 100%; padding: 14px;
-  font-family: var(--mono); font-size: 11px; font-weight: 700;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  border: 1.5px solid var(--border2); border-radius: var(--r-sm);
-  background: transparent; color: var(--text-3); cursor: not-allowed; transition: all 0.22s;
-}
-.da-go.ready { border-color: var(--green); color: var(--green); cursor: pointer; background: rgba(0,229,132,0.06); }
-.da-go.ready:hover { background: rgba(0,229,132,0.1); box-shadow: 0 0 24px rgba(0,229,132,0.18); transform: translateY(-1px); }
-.da-loading { display: none; text-align: center; padding: 56px; font-family: var(--mono); font-size: 12px; color: var(--text-3); }
-.da-loading.visible { display: block; }
-.da-filters {
-  display: none; padding: 11px 28px;
-  border-bottom: 1px solid var(--border);
-  background: rgba(7,7,10,0.9);
-  backdrop-filter: blur(10px);
-  position: sticky; top: var(--topbar-h); z-index: 50;
-  flex-wrap: wrap; gap: 10px; align-items: center;
-}
-.da-filters.visible { display: flex; }
-.da-table-wrap { display: none; overflow-x: auto; }
-.da-table-wrap.visible { display: block; }
+/* Deal Analyser CSS → see A2A ANALYSER section */
 .da-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .da-table thead th {
   background: var(--surface); padding: 10px 12px; text-align: left;
@@ -1011,10 +971,9 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-divider"></div>
     <div class="sidebar-section-label">Tools</div>
     <div class="nav-item" data-page="refund" onclick="showPage('refund',this)"><span class="nav-icon">↩</span>Refund Monitor</div>
-    <div class="nav-item" data-page="deals" onclick="showPage('deals',this)"><span class="nav-icon">⚡</span>Deal Analyser</div>
     <div class="nav-item" data-page="cogs" onclick="showPage('cogs',this)"><span class="nav-icon">∑</span>COGS Calculator</div>
     <div class="nav-item" data-page="repricer" onclick="showPage('repricer',this)"><span class="nav-icon">⇅</span>Min Price Tool</div>
-    <div class="nav-item" data-page="a2a" onclick="showPage('a2a',this)"><span class="nav-icon">⟳</span>A2A Analyser</div>
+    <div class="nav-item" data-page="a2a" onclick="showPage('a2a',this)"><span class="nav-icon">⚡</span>Deal Analyser</div>
     <div class="nav-divider"></div>
     <div class="sidebar-section-label">Inventory</div>
     <div class="nav-item" data-page="listing" onclick="showPage('listing',this)"><span class="nav-icon">↑</span>Listing Uploader</div>
@@ -1071,7 +1030,7 @@ input::placeholder { color: var(--text-4); }
           </div>
           <div class="qa-arrow">→</div>
         </div>
-        <div class="quick-action-card" onclick="showPage('deals', document.querySelector('[data-page=deals]'))">
+        <div class="quick-action-card" onclick="showPage('a2a', document.querySelector('[data-page=a2a]'))">
           <div class="qa-icon" style="font-size:18px;">⚡</div>
           <div class="qa-body">
             <div class="qa-title">Deal Analyser</div>
@@ -1143,60 +1102,8 @@ input::placeholder { color: var(--text-4); }
 
   <!-- ══ PAGE: DEAL ANALYSER ══ -->
   <div class="page" id="page-deals">
-    <div id="da-dropzone" class="da-dropzone">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:24px;">Keepa Product Finder CSV Export</div>
-      <div class="da-slots">
-        <div class="da-slot" id="daSlot1" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,1)">
-          <input type="file" id="daFileInput1" accept=".csv" onchange="daFileChosen(1,this.files[0])">
-          <div class="da-slot-icon" id="daSlot1Icon">⬆</div>
-          <div class="da-slot-label" id="daSlot1Label">File 1 — drop CSV here</div>
-          <div class="da-slot-name" id="daSlot1Name"></div>
-          <div class="da-slot-clear" id="daSlot1Clear" onclick="daClearSlot(event,1)">×</div>
-        </div>
-        <div class="da-slot" id="daSlot2" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,2)">
-          <input type="file" id="daFileInput2" accept=".csv" onchange="daFileChosen(2,this.files[0])">
-          <div class="da-slot-icon" id="daSlot2Icon">⬆</div>
-          <div class="da-slot-label" id="daSlot2Label">File 2 — optional second export</div>
-          <div class="da-slot-name" id="daSlot2Name"></div>
-          <div class="da-slot-clear" id="daSlot2Clear" onclick="daClearSlot(event,2)">×</div>
-        </div>
-      </div>
-      <button class="da-go" id="daGoBtn" onclick="daRunAnalysis()">ANALYSE DEALS →</button>
-    </div>
-    <div class="da-loading" id="da-loading"><span class="loading-dots">Analysing deals</span></div>
-    <div class="da-filters" id="da-filters">
-      <button class="filter-btn all active" onclick="daSetFilter('all',this)">All</button>
-      <button class="filter-btn" onclick="daSetFilter('green',this)" style="color:var(--green);border-color:rgba(0,255,136,0.3);">● Strong</button>
-      <button class="filter-btn" onclick="daSetFilter('red',this)" style="color:var(--red);border-color:rgba(255,68,85,0.3);">● Reject</button>
-      <div id="daStatsBar" style="display:none;font-family:var(--mono);font-size:11px;display:flex;gap:16px;align-items:center;">
-        <span style="color:var(--green)">● <span id="daCountGreen">0</span> strong</span>
-        <span style="color:var(--red)">● <span id="daCountRed">0</span> reject</span>
-      </div>
-      <span class="result-count" id="daResultCount"></span>
-      <span class="veto-count" id="daVetoCount" style="display:none;"></span>
-      <button class="btn-sm btn-ghost" id="daResetBtn" onclick="daReset()" style="display:none;">Reset</button>
-      <button class="btn-sm btn-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export Approved</button>
-    </div>
-    <div class="da-table-wrap" id="da-table-wrap">
-      <table class="da-table">
-        <thead>
-          <tr>
-            <th class="no-sort">Product</th>
-            <th data-col="buyIncVat" data-type="num">Used LN<br>inc-VAT</th>
-            <th data-col="spIncVat" data-type="num">SP 180d<br>inc-VAT</th>
-            <th data-col="dip" data-type="num">Dip</th>
-            <th data-col="recoveries" data-type="num">Recoveries<br>/yr</th>
-            <th data-col="profit" data-type="num">Profit</th>
-            <th data-col="roi" data-type="num">ROI</th>
-            <th data-col="rankDrops" data-type="num">Rank<br>Drops 30d</th>
-            <th data-col="boughtPerMonth" data-type="num">Bought<br>/mo</th>
-            <th data-col="ss" data-type="bool">S&amp;S</th>
-            <th data-col="sortOrder" data-type="num" style="min-width:260px;">Rating</th>
-            <th class="no-sort">Decision</th>
-          </tr>
-        </thead>
-        <tbody id="daTableBody"></tbody>
-      </table>
+    <div style="padding:40px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-3);">
+      Deal Analyser has moved to <a href="#" onclick="showPage('a2a',document.querySelector('[data-page=a2a]'));return false;" style="color:var(--green);">A2A Analyser ↗</a>
     </div>
   </div>
 

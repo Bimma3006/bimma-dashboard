@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════
-   BIMMA RETAIL  ·  FBA OPS  ·  v2.8
+   BIMMA RETAIL  ·  FBA OPS  ·  v2.9
 ═══════════════════════════════════════ */
 :root {
   --bg:          #07070a;
@@ -840,6 +840,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="deals" onclick="showPage('deals',this)"><span class="nav-icon">⚡</span>Deal Analyser</div>
     <div class="nav-item" data-page="cogs" onclick="showPage('cogs',this)"><span class="nav-icon">∑</span>COGS Calculator</div>
     <div class="nav-item" data-page="repricer" onclick="showPage('repricer',this)"><span class="nav-icon">⇅</span>Min Price Tool</div>
+    <div class="nav-item" data-page="a2a" onclick="showPage('a2a',this)"><span class="nav-icon">⟳</span>A2A Analyser</div>
     <div class="nav-divider"></div>
     <div class="sidebar-section-label">Inventory</div>
     <div class="nav-item" data-page="listing" onclick="showPage('listing',this)"><span class="nav-icon">↑</span>Listing Uploader</div>
@@ -849,7 +850,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses',this)"><span class="nav-icon">£</span>Expenses</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v2.8 · 12 Mar 26</div>
+    <div class="sidebar-version">v2.9 · 12 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -1188,6 +1189,114 @@ input::placeholder { color: var(--text-4); }
     </div>
   </div>
 
+  <!-- ══ PAGE: A2A ANALYSER ══ -->
+  <div class="page" id="page-a2a">
+    <div class="page-header">
+      <div class="page-header-title">A2A Analyser</div>
+      <div class="page-header-sub">Find EU→UK arbitrage opportunities from Keepa Product Finder exports</div>
+    </div>
+
+    <div class="cogs-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:20px;">
+      <div class="cogs-card">
+        <div class="cogs-card-label">Keepa Product Finder CSV</div>
+        <div class="drop-zone" id="a2a-dz">
+          <input type="file" id="a2a-inp" accept=".csv,.tsv,.txt">
+          <div class="drop-icon">↑</div>
+          <div class="drop-label">Drop Keepa export or click to browse</div>
+          <div class="drop-filename" id="a2a-fn"></div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:8px;" id="a2a-asin-count">—</div>
+      </div>
+
+      <div class="cogs-card">
+        <div class="cogs-card-label">Settings</div>
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <div style="flex:1;">
+            <div class="field-label">Keepa API Key</div>
+            <input type="password" id="a2a-apikey" placeholder="API key…" style="width:100%;box-sizing:border-box;">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <div style="flex:1;">
+            <div class="field-label">Source Markets</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+              <label style="font-family:var(--mono);font-size:10px;color:var(--text-2);display:flex;align-items:center;gap:4px;"><input type="checkbox" id="a2a-de" checked> DE</label>
+              <label style="font-family:var(--mono);font-size:10px;color:var(--text-2);display:flex;align-items:center;gap:4px;"><input type="checkbox" id="a2a-fr" checked> FR</label>
+              <label style="font-family:var(--mono);font-size:10px;color:var(--text-2);display:flex;align-items:center;gap:4px;"><input type="checkbox" id="a2a-it" checked> IT</label>
+              <label style="font-family:var(--mono);font-size:10px;color:var(--text-2);display:flex;align-items:center;gap:4px;"><input type="checkbox" id="a2a-es" checked> ES</label>
+            </div>
+          </div>
+          <div style="flex:1;">
+            <div class="field-label">Min ROI %</div>
+            <input type="number" id="a2a-roi" value="20" min="1" max="100" style="width:70px;">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <div style="flex:1;">
+            <div class="field-label">Shipping per unit (£)</div>
+            <input type="number" id="a2a-shipping" value="3.00" min="0" step="0.01" style="width:80px;">
+          </div>
+          <div style="flex:1;">
+            <div class="field-label">Prep per unit (£)</div>
+            <input type="number" id="a2a-prep" value="0.45" min="0" step="0.01" style="width:80px;">
+          </div>
+        </div>
+      </div>
+
+      <div class="cogs-card">
+        <div class="cogs-card-label">Batch Settings</div>
+        <div style="margin-bottom:10px;">
+          <div class="field-label">Max ASINs per run</div>
+          <input type="number" id="a2a-limit" value="50" min="1" max="500" style="width:80px;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:6px;" id="a2a-limit-note"></div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.8;">
+          Fee logic:<br>
+          Referral: 8% if BB ≤ £10, else 15%<br>
+          DSF: 0.5%<br>
+          FBA: estimated by weight band<br>
+          Prep: £0.45 · Shipping: £3.00
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;">
+      <button class="btn-sm btn-green" onclick="a2aRun()" id="a2aRunBtn">⟳ Analyse Deals</button>
+      <button class="btn-sm" id="a2aDownloadBtn" style="display:none;background:#8866ff;color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:0.05em;font-weight:600;padding:6px 12px;border-radius:4px;border:none;cursor:pointer;" onclick="a2aDownload()">↓ Export Deal List</button>
+      <div id="a2a-progress" style="font-family:var(--mono);font-size:11px;color:var(--text-2);"></div>
+    </div>
+
+    <div id="a2a-error" class="cogs-error" style="display:none;"></div>
+    <div id="a2a-info" class="cogs-info" style="display:none;"></div>
+
+    <div id="a2a-results" style="display:none;">
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;" id="a2a-stats-row"></div>
+      <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center;">
+        <input type="text" id="a2a-search" placeholder="Search ASIN or title…" oninput="a2aRenderTable()" style="width:220px;">
+        <label style="font-family:var(--mono);font-size:10px;color:var(--text-2);display:flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="a2a-viable-only" onchange="a2aRenderTable()" checked> Viable deals only (≥ min ROI)
+        </label>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" style="min-width:1100px;">
+          <thead><tr>
+            <th>ASIN</th>
+            <th>Title</th>
+            <th>Best Source</th>
+            <th style="text-align:right;">EU Price (£)</th>
+            <th style="text-align:right;">Landed (£)</th>
+            <th style="text-align:right;">UK BB 180d (£)</th>
+            <th style="text-align:right;">Referral</th>
+            <th style="text-align:right;">FBA Fee (£)</th>
+            <th style="text-align:right;">Profit (£)</th>
+            <th style="text-align:right;">ROI %</th>
+          </tr></thead>
+          <tbody id="a2a-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ PAGE: PURCHASES ══ -->
   <div class="page" id="page-purchases">
     <div class="page-inner">
@@ -1390,7 +1499,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', deals:'Deal Analyser', cogs:'COGS Calculator', repricer:'Min Price Tool', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses' };
+  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', deals:'Deal Analyser', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
 }
 
@@ -2670,6 +2779,234 @@ function rpDownload() {
 function rpShowError(msg) {
   const e = document.getElementById('rp-error'); e.textContent=msg; e.style.display='block';
 }
+// ════════════════════════════════════════
+// A2A ANALYSER
+// ════════════════════════════════════════
+let a2aASINs = [];
+let a2aResults = [];
+
+// Keepa domain codes
+const A2A_DOMAINS = { de:3, fr:4, it:8, es:9, uk:2 };
+
+// EUR/GBP exchange rate — approximate, user can see it in output
+const EUR_GBP = 0.86;
+
+cogsWireDZ('a2a-dz','a2a-inp','a2a-fn',(f,dz,fn)=>{
+  document.getElementById(fn).textContent='✓ '+f.name;
+  dz.classList.add('loaded');
+  a2aParseCSV(f);
+});
+
+function a2aParseCSV(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split('\n').filter(l=>l.trim());
+    if (!lines.length) return;
+    // Find ASIN column
+    const headers = lines[0].split(',').map(h=>h.replace(/"/g,'').trim().toUpperCase());
+    const asinIdx = headers.findIndex(h=>h==='ASIN'||h==='ASIN NUMBER');
+    if (asinIdx<0) { document.getElementById('a2a-asin-count').textContent='⚠ No ASIN column found'; return; }
+    const seen = new Set();
+    a2aASINs = [];
+    for (let i=1; i<lines.length; i++) {
+      const cols = lines[i].split(',').map(c=>c.replace(/"/g,'').trim());
+      const asin = (cols[asinIdx]||'').trim().toUpperCase();
+      if (asin && asin.length===10 && !seen.has(asin)) { seen.add(asin); a2aASINs.push(asin); }
+    }
+    document.getElementById('a2a-asin-count').textContent = a2aASINs.length + ' ASINs loaded';
+    a2aUpdateLimitNote();
+  };
+  reader.readAsText(file);
+}
+
+function a2aUpdateLimitNote() {
+  const limit = parseInt(document.getElementById('a2a-limit').value)||50;
+  const total = a2aASINs.length;
+  document.getElementById('a2a-limit-note').textContent = total>limit ? `Capped at ${limit} — ${total-limit} remaining` : '';
+}
+
+// Estimate FBA fulfilment fee by weight (grams) — UK standard rates approx
+function a2aFBAFee(weightG, priceGBP) {
+  const w = weightG || 500;
+  if (w <= 100) return 2.35;
+  if (w <= 200) return 2.56;
+  if (w <= 300) return 2.73;
+  if (w <= 400) return 2.87;
+  if (w <= 500) return 3.00;
+  if (w <= 700) return 3.14;
+  if (w <= 1000) return 3.54;
+  if (w <= 1500) return 3.99;
+  if (w <= 2000) return 4.47;
+  if (w <= 3000) return 5.40;
+  if (w <= 5000) return 7.19;
+  return 9.50;
+}
+
+function a2aReferralFee(priceGBP) {
+  return priceGBP <= 10 ? 0.08 : 0.15;
+}
+
+async function a2aFetchDomain(apiKey, asins, domainCode) {
+  const url = `https://api.keepa.com/product?key=${apiKey}&domain=${domainCode}&asin=${asins.join(',')}&history=1&buybox=1&stats=180`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Keepa API error: ${resp.status}`);
+  const data = await resp.json();
+  if (data.error) throw new Error(`Keepa: ${data.error.message||JSON.stringify(data.error)}`);
+  return data.products || [];
+}
+
+async function a2aRun() {
+  const apiKey = document.getElementById('a2a-apikey').value.trim();
+  if (!apiKey) { a2aShowError('Please enter your Keepa API key.'); return; }
+  if (!a2aASINs.length) { a2aShowError('Please upload a Keepa Product Finder CSV first.'); return; }
+
+  const limit = parseInt(document.getElementById('a2a-limit').value)||50;
+  const shipping = parseFloat(document.getElementById('a2a-shipping').value)||3.00;
+  const prep = parseFloat(document.getElementById('a2a-prep').value)||0.45;
+  const minROI = parseFloat(document.getElementById('a2a-roi').value)/100;
+  const activeDomains = ['de','fr','it','es'].filter(d=>document.getElementById('a2a-'+d).checked);
+
+  if (!activeDomains.length) { a2aShowError('Please select at least one source marketplace.'); return; }
+
+  ['a2a-error','a2a-info','a2a-results'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('a2aDownloadBtn').style.display='none';
+  document.getElementById('a2aRunBtn').disabled=true;
+  a2aResults=[];
+
+  const prog = document.getElementById('a2a-progress');
+  const batch = a2aASINs.slice(0, limit);
+  a2aUpdateLimitNote();
+
+  // Chunk into 100s
+  const chunks=[];
+  for (let i=0;i<batch.length;i+=100) chunks.push(batch.slice(i,i+100));
+
+  try {
+    // Build UK BB map first
+    const ukMap = {}; // asin -> {bb180, weightG, title}
+    for (let ci=0;ci<chunks.length;ci++) {
+      prog.textContent=`Fetching UK data — batch ${ci+1}/${chunks.length}…`;
+      const products = await a2aFetchDomain(apiKey, chunks[ci], 2);
+      for (const p of products) {
+        const bb = p.stats?.buyBoxPrice;
+        const bbGBP = bb && bb>0 ? bb/100 : null;
+        // 180d avg buy box from stats
+        const bb180raw = p.stats?.avg?.[18];
+        const bb180 = bb180raw && bb180raw>0 ? bb180raw/100 : bbGBP;
+        const weightG = p.packageWeight || p.itemWeight || null;
+        ukMap[p.asin] = { bb180, weightG, title:(p.title||'').substring(0,60), category:p.categoryTree?.[0]?.name||'' };
+      }
+      if (ci<chunks.length-1) await new Promise(r=>setTimeout(r,600));
+    }
+
+    // Now fetch each EU domain
+    for (const domain of activeDomains) {
+      const domainCode = A2A_DOMAINS[domain];
+      for (let ci=0;ci<chunks.length;ci++) {
+        prog.textContent=`Fetching ${domain.toUpperCase()} data — batch ${ci+1}/${chunks.length}…`;
+        const products = await a2aFetchDomain(apiKey, chunks[ci], domainCode);
+        for (const p of products) {
+          const uk = ukMap[p.asin];
+          if (!uk || !uk.bb180) continue;
+          // Current EU buy box price in EUR, convert to GBP
+          const euBBraw = p.stats?.buyBoxPrice;
+          if (!euBBraw || euBBraw<=0) continue;
+          const euPriceGBP = (euBBraw/100) * EUR_GBP;
+          const landed = euPriceGBP + shipping + prep;
+          const ukBB = uk.bb180;
+          const referralRate = a2aReferralFee(ukBB);
+          const referralFee = ukBB * referralRate;
+          const dsfFee = ukBB * 0.005;
+          const fbaFee = a2aFBAFee(uk.weightG, ukBB);
+          const totalFees = referralFee + dsfFee + fbaFee;
+          const profit = ukBB - landed - totalFees;
+          const roi = landed>0 ? profit/landed : 0;
+
+          // Only keep best deal per ASIN (highest ROI across domains)
+          const existing = a2aResults.find(r=>r.asin===p.asin);
+          const dealObj = {
+            asin:p.asin, title:uk.title, domain:domain.toUpperCase(),
+            euPriceGBP:euPriceGBP.toFixed(2), landed:landed.toFixed(2),
+            ukBB:ukBB.toFixed(2), referralPct:(referralRate*100).toFixed(0),
+            referralFee:referralFee.toFixed(2), fbaFee:fbaFee.toFixed(2),
+            dsfFee:dsfFee.toFixed(2), profit:profit.toFixed(2), roi:(roi*100).toFixed(1),
+            weightG:uk.weightG
+          };
+          if (!existing) { a2aResults.push(dealObj); }
+          else if (roi > parseFloat(existing.roi)/100) { Object.assign(existing, dealObj); }
+        }
+        if (ci<chunks.length-1) await new Promise(r=>setTimeout(r,600));
+      }
+    }
+
+    // Sort by ROI desc
+    a2aResults.sort((a,b)=>parseFloat(b.roi)-parseFloat(a.roi));
+
+    prog.textContent='';
+    const viable = a2aResults.filter(r=>parseFloat(r.roi)>=minROI*100).length;
+    const info = document.getElementById('a2a-info');
+    info.innerHTML=`✓ Done — <strong>${a2aResults.length}</strong> ASINs analysed, <strong style="color:var(--green)">${viable}</strong> viable deals at ≥${minROI*100}% ROI.`;
+    info.style.display='block';
+
+    const avgROI = a2aResults.length ? (a2aResults.reduce((s,r)=>s+parseFloat(r.roi),0)/a2aResults.length).toFixed(1) : 0;
+    const bestProfit = a2aResults.length ? a2aResults[0].profit : '0.00';
+    document.getElementById('a2a-stats-row').innerHTML=
+      `<div class="cogs-stat"><div class="cogs-stat-val">${a2aResults.length}</div><div class="cogs-stat-lbl">ASINs</div></div>`+
+      `<div class="cogs-stat"><div class="cogs-stat-val" style="color:var(--green)">${viable}</div><div class="cogs-stat-lbl">Viable Deals</div></div>`+
+      `<div class="cogs-stat"><div class="cogs-stat-val">${avgROI}%</div><div class="cogs-stat-lbl">Avg ROI</div></div>`+
+      `<div class="cogs-stat"><div class="cogs-stat-val">£${bestProfit}</div><div class="cogs-stat-lbl">Best Profit</div></div>`;
+
+    document.getElementById('a2a-results').style.display='block';
+    document.getElementById('a2aDownloadBtn').style.display='inline-block';
+    a2aRenderTable();
+
+  } catch(err) {
+    prog.textContent='';
+    a2aShowError('Error: '+err.message);
+  }
+  document.getElementById('a2aRunBtn').disabled=false;
+}
+
+function a2aRenderTable() {
+  const q=(document.getElementById('a2a-search').value||'').toLowerCase();
+  const viableOnly=document.getElementById('a2a-viable-only').checked;
+  const minROI=parseFloat(document.getElementById('a2a-roi').value)||20;
+  let rows=a2aResults;
+  if (viableOnly) rows=rows.filter(r=>parseFloat(r.roi)>=minROI);
+  if (q) rows=rows.filter(r=>r.asin.toLowerCase().includes(q)||r.title.toLowerCase().includes(q));
+  const tbody=document.getElementById('a2a-tbody');
+  if (!rows.length){tbody.innerHTML='<tr><td colspan="10"><div class="empty-state">No deals found</div></td></tr>';return;}
+  tbody.innerHTML=rows.map(r=>{
+    const roiNum=parseFloat(r.roi);
+    const roiCol=roiNum>=30?'var(--green)':roiNum>=20?'var(--amber)':'var(--red)';
+    const profitNum=parseFloat(r.profit);
+    return `<tr>
+      <td class="mono">${r.asin}</td>
+      <td style="font-size:11px;color:#999;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.title}">${r.title}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--purple);font-weight:600;">${r.domain}</td>
+      <td class="num">£${r.euPriceGBP}</td>
+      <td class="num">£${r.landed}</td>
+      <td class="num" style="color:var(--text-2);">£${r.ukBB}</td>
+      <td class="num" style="font-size:10px;color:#666;">${r.referralPct}%</td>
+      <td class="num" style="font-size:10px;color:#666;">£${r.fbaFee}</td>
+      <td class="num" style="${profitNum>0?'color:var(--green)':'color:var(--red)'};">£${r.profit}</td>
+      <td class="num" style="font-weight:700;color:${roiCol};">${r.roi}%</td>
+    </tr>`;
+  }).join('');
+}
+
+function a2aDownload() {
+  const minROI=parseFloat(document.getElementById('a2a-roi').value)||20;
+  const rows=a2aResults.filter(r=>parseFloat(r.roi)>=minROI);
+  if (!rows.length) return;
+  const headers=['ASIN','Title','Best Source','EU Price (£)','Landed (£)','UK BB 180d (£)','Referral %','FBA Fee (£)','DSF Fee (£)','Profit (£)','ROI %'];
+  const lines=[headers.join('\t')];
+  rows.forEach(r=>lines.push([r.asin,r.title,r.domain,r.euPriceGBP,r.landed,r.ukBB,r.referralPct+'%',r.fbaFee,r.dsfFee,r.profit,r.roi+'%'].join('\t')));
+  const blob=new Blob([lines.join('\r\n')],{type:'text/tab-separated-values'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Bimma_A2A_Deals_'+new Date().toISOString().split('T')[0]+'.txt';a.click();URL.revokeObjectURL(a.href);
+}
+
+function a2aShowError(msg){const e=document.getElementById('a2a-error');e.textContent=msg;e.style.display='block';}
 </script>
 </body>
 </html>

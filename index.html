@@ -2103,7 +2103,6 @@ input::placeholder { color: var(--text-4); }
         <span class="a2a-mode-desc">Buy and sell within UK Amazon</span>
         <div class="a2a-mode-tags">
           <span class="a2a-mtag">UK Buy Box</span>
-          <span class="a2a-mtag">Used LN</span>
           <span class="a2a-mtag">New</span>
         </div>
       </button>
@@ -2112,9 +2111,9 @@ input::placeholder { color: var(--text-4); }
           <span class="a2a-mode-icon">♻</span>
           <span class="a2a-mode-badge">Used LN</span>
         </div>
-        <span class="a2a-mode-desc">Used Like New — no strikethrough required</span>
+        <span class="a2a-mode-desc">Buy Used Like New, list as Used LN on UK</span>
         <div class="a2a-mode-tags">
-          <span class="a2a-mtag">Used LN price</span>
+          <span class="a2a-mtag">Used LN buy</span>
           <span class="a2a-mtag">No ST cap</span>
         </div>
       </button>
@@ -3420,9 +3419,8 @@ function setMode(mode, btn) {
   // tabs
   document.querySelectorAll('.a2a-mode-btn').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-  // banner
+  // info strip
   document.getElementById('modePill').textContent = cfg.label;
-  document.getElementById('modePill').className = 'mode-pill ' + cfg.pillClass;
   document.getElementById('modeDesc').innerHTML = cfg.desc;
   // Update slot labels based on mode
   const slot1Label = document.getElementById('daSlot1Label');
@@ -3451,7 +3449,7 @@ function setMode(mode, btn) {
   // EU requires slots 1 + 3 (slot 2 is optional); others only need slot 1
   const goBtn = document.getElementById('daGoBtn');
   const ready = mode === 'eu' ? (!!daSlotFiles[1] && !!daSlotFiles[3]) : !!daSlotFiles[1];
-  goBtn.className = 'da-go ' + mode + (ready ? ' ready' : '');
+  goBtn.className = 'a2a-go-btn a2a-go-' + mode + (ready ? ' ready' : '');
   // reset if results showing
   if (document.getElementById('daTableWrap').classList.contains('visible')) daReset();
 }

@@ -614,61 +614,8 @@ input::placeholder { color: var(--text-4); }
 .rm-banner-urgent { color: var(--amber); }
 .rm-meta { display: flex; gap: 14px; font-family: var(--mono); font-size: 11px; color: var(--text-3); flex-wrap: wrap; }
 
-/* Deal Analyser CSS → see A2A ANALYSER section */
-.da-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.da-table thead th {
-  background: var(--surface); padding: 10px 12px; text-align: left;
-  font-family: var(--mono); font-size: 9px; color: var(--text-3);
-  letter-spacing: 0.12em; text-transform: uppercase;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap; cursor: pointer; user-select: none;
-}
-.da-table thead th:hover { color: var(--text-2); }
-.da-table thead th.sort-asc::after { content: ' ↑'; color: var(--green); }
-.da-table thead th.sort-desc::after { content: ' ↓'; color: var(--green); }
-.da-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
-.da-table tbody tr:hover { background: var(--surface2); }
-.da-table tbody td { padding: 9px 12px; vertical-align: middle; }
-.da-table tbody tr.vetoed { opacity: 0.35; }
-.da-table tbody tr.approved { background: rgba(0,229,132,0.04); }
-.da-table tbody tr.rejected { background: rgba(240,59,80,0.03); }
-.td-title-wrap { max-width: 220px; }
-.td-product-title { font-size: 12px; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.td-asin-row { display: flex; gap: 8px; margin-top: 4px; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
-.td-asin-row a { color: var(--text-3); text-decoration: none; }
-.td-asin-row a:hover { color: var(--green); }
-.td-num { text-align: right; font-family: var(--mono); }
-.rating-cell { border-left: 2px solid var(--border2); padding-left: 10px; }
-.rating-cell.green { border-left-color: var(--green); }
-.rating-cell.amber { border-left-color: var(--amber); }
-.rating-cell.red   { border-left-color: var(--red); }
-.rating-cell.grey  { border-left-color: var(--border2); }
-.rating-strength { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.05em; }
-.rating-strength.green { color: var(--green); }
-.rating-strength.amber { color: var(--amber); }
-.rating-strength.red   { color: var(--red); }
-.rating-strength.grey  { color: var(--text-3); }
-.rating-bar { height: 2px; margin-top: 6px; border-radius: 1px; background: var(--border); }
-.rating-bar.green { background: var(--green); width: 80%; }
-.rating-bar.amber { background: var(--amber); width: 50%; }
-.rating-bar.red   { background: var(--red); width: 20%; }
-.rating-sp { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 4px; }
-.ss-badge { display: inline-block; margin-left: 6px; background: rgba(240,165,0,0.1); color: var(--amber); font-family: var(--mono); font-size: 9px; padding: 1px 6px; border-radius: 3px; vertical-align: middle; }
-.btn-approve, .btn-reject, .unveto-btn {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.05em; font-weight: 700;
-  padding: 4px 10px; border-radius: 4px; border: 1px solid;
-  cursor: pointer; transition: all 0.15s; background: transparent; text-transform: uppercase;
-}
-.btn-approve { color: var(--text-3); border-color: var(--border2); }
-.btn-approve:hover, .btn-approve.active { color: var(--green); border-color: var(--green); background: rgba(0,229,132,0.08); }
-.btn-reject { color: var(--text-3); border-color: var(--border2); margin-top: 4px; }
-.btn-reject:hover, .btn-reject.active { color: var(--red); border-color: var(--red); background: rgba(240,59,80,0.08); }
-.unveto-btn { color: var(--amber); border-color: rgba(240,165,0,0.3); }
-.veto-divider td { font-family: var(--mono); font-size: 10px; color: var(--text-3); padding: 8px 12px; background: rgba(255,255,255,0.015); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.veto-count { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
-.result-count { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-left: auto; }
 .loading-dots::after { content: '...'; animation: ldots 1.2s steps(4,end) infinite; }
-@keyframes ldots { 0%,100%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+@keyframes ldots { 0%,100%{content:'.'} 33%{content:'..' } 66%{content:'...'} }
 
 /* ═══════════════════════════════════════
    COGS CALCULATOR
@@ -778,177 +725,198 @@ input::placeholder { color: var(--text-4); }
 }
 
 /* ═══ A2A ANALYSER (3-mode) ═══ */
-.mode-tabs {
-  display: flex; gap: 4px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: var(--r);
-  padding: 4px;
-}
+
+/* Mode tabs */
+.mode-tabs { display: flex; gap: 6px; margin-bottom: 0; }
 .mode-tab {
-  font-family: var(--mono);
-  font-size: 10px; font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 7px 14px;
-  border-radius: var(--r-sm);
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s;
-  background: transparent;
-  color: var(--text-2);
-  white-space: nowrap;
-}
-.mode-tab:hover { color: var(--text); background: var(--surface3); }
-.mode-tab.active {
-  color: var(--bg);
-  background: var(--green);
-  box-shadow: 0 0 12px rgba(0,229,132,0.3);
-}
-.mode-tab.active.eu { background: var(--blue); box-shadow: 0 0 12px rgba(77,142,245,0.3); color: #fff; }
-.mode-tab.active.uln { background: var(--amber); box-shadow: 0 0 12px rgba(240,165,0,0.3); color: var(--bg); }
-.mode-pill {
   font-family: var(--mono); font-size: 10px; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  padding: 4px 10px; border-radius: 20px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 7px 18px; border-radius: var(--r-xs);
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text-3); cursor: pointer; transition: all 0.18s;
+}
+.mode-tab:hover { color: var(--text-2); border-color: var(--border3); }
+.mode-tab.active { background: var(--green); color: var(--bg); border-color: var(--green); }
+.mode-tab.active.eu { background: var(--blue); border-color: var(--blue); color: #fff; }
+.mode-tab.active.uln { background: var(--amber); border-color: var(--amber); color: var(--bg); }
+
+/* Mode banner */
+.mode-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-family: var(--mono); font-size: 11px; color: var(--text-3);
+}
+.mode-pill {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 20px; white-space: nowrap;
   background: var(--green); color: var(--bg);
 }
 .mode-pill.eu { background: var(--blue); color: #fff; }
 .mode-pill.uln { background: var(--amber); color: var(--bg); }
+.mode-desc strong { color: var(--text-2); }
+
+/* Drop zone */
 .da-dropzone {
-  background: var(--surface);
-  border: 1px solid var(--border2);
+  max-width: 820px; margin: 0 auto;
+  padding: 36px 32px;
+  background: var(--surface2); border: 1px solid var(--border);
   border-radius: var(--r);
-  padding: 32px;
 }
-.da-slots { display: flex; gap: 16px; margin-bottom: 20px; }
+.da-dropzone-label {
+  font-family: var(--mono); font-size: 10px; color: var(--text-3);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 20px; text-align: center;
+}
+.da-slots { display: flex; gap: 12px; margin-bottom: 16px; }
 .da-slot {
   flex: 1; position: relative;
-  background: var(--surface2);
-  border: 1.5px dashed var(--border3);
-  border-radius: var(--r);
-  padding: 28px 20px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-  min-height: 110px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-}
-.da-slot:hover, .da-slot.drag-over {
-  border-color: var(--green);
-  background: rgba(0,229,132,0.04);
-}
-.da-slot input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-.da-slot-icon { font-size: 22px; opacity: 0.4; font-family: var(--mono); }
-.da-slot-label { font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.1em; text-transform: uppercase; }
-.da-slot-name { font-family: var(--mono); font-size: 11px; color: var(--green); display: none; word-break: break-all; padding: 0 8px; }
-.da-slot-clear { display: none; position: absolute; top: 8px; right: 10px; font-size: 18px; color: var(--text-3); cursor: pointer; line-height: 1; z-index: 2; }
-.da-slot-clear:hover { color: var(--red); }
-.da-slot.has-file { border-style: solid; border-color: var(--border2); }
-.da-go {
-  width: 100%;
-  font-family: var(--mono); font-size: 12px; font-weight: 700;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  padding: 14px;
+  background: var(--bg);
+  border: 1.5px dashed var(--border2);
   border-radius: var(--r-sm);
-  border: 1.5px solid var(--border3);
-  background: var(--surface3);
-  color: var(--text-3);
-  cursor: not-allowed;
-  transition: all 0.2s;
+  padding: 24px 16px;
+  cursor: pointer; transition: all 0.2s; text-align: center;
+  min-height: 100px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
 }
-.da-go.ready {
-  background: var(--surface2);
-  border-color: var(--green);
-  color: var(--green);
-  cursor: pointer;
-  box-shadow: 0 0 20px rgba(0,229,132,0.1);
+.da-slot:hover, .da-slot.drag-over { border-color: var(--green); background: rgba(0,229,132,0.03); }
+.da-slot.has-file { border-style: solid; border-color: rgba(0,229,132,0.4); background: rgba(0,229,132,0.04); }
+.da-slot input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 1; }
+.da-slot-icon { font-size: 18px; opacity: 0.3; font-family: var(--mono); transition: opacity 0.2s; }
+.da-slot.has-file .da-slot-icon { opacity: 1; color: var(--green); }
+.da-slot-label { font-family: var(--mono); font-size: 9px; color: var(--text-3); letter-spacing: 0.1em; text-transform: uppercase; }
+.da-slot-name { font-family: var(--mono); font-size: 10px; color: var(--green); display: none; word-break: break-all; padding: 0 6px; font-weight: 600; }
+.da-slot-clear { display: none; position: absolute; top: 7px; right: 9px; font-size: 16px; color: var(--text-3); cursor: pointer; line-height: 1; z-index: 2; }
+.da-slot-clear:hover { color: var(--red); }
+
+/* Analyse button */
+.da-go {
+  width: 100%; padding: 13px;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  border-radius: var(--r-sm); border: 1.5px solid var(--border2);
+  background: transparent; color: var(--text-3);
+  cursor: not-allowed; transition: all 0.2s; margin-top: 4px;
 }
-.da-go.ready:hover { background: var(--green); color: var(--bg); box-shadow: 0 0 28px rgba(0,229,132,0.3); }
-.da-go.ready.eu { border-color: var(--blue); color: var(--blue); }
+.da-go.ready { border-color: var(--green); color: var(--green); cursor: pointer; background: rgba(0,229,132,0.05); }
+.da-go.ready:hover { background: var(--green); color: var(--bg); }
+.da-go.ready.eu { border-color: var(--blue); color: var(--blue); background: rgba(59,130,246,0.05); }
 .da-go.ready.eu:hover { background: var(--blue); color: #fff; }
-.da-go.ready.uln { border-color: var(--amber); color: var(--amber); }
+.da-go.ready.uln { border-color: var(--amber); color: var(--amber); background: rgba(240,165,0,0.05); }
 .da-go.ready.uln:hover { background: var(--amber); color: var(--bg); }
-.da-loading { display: none; padding: 40px; text-align: center; font-family: var(--mono); font-size: 12px; color: var(--text-3); letter-spacing: 0.1em; }
+
+/* Loading */
+.da-loading { display: none; padding: 40px; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.1em; }
 .da-loading.visible { display: block; }
+
+/* Filter bar */
 .da-filters {
   display: none; align-items: center; gap: 8px;
-  margin-bottom: 16px; flex-wrap: wrap;
+  padding: 10px 0; margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 .da-filters.visible { display: flex; }
+.da-filter-btn {
+  font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+  padding: 5px 12px; border-radius: var(--r-xs);
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text-3); cursor: pointer; transition: all 0.15s; text-transform: uppercase;
+}
+.da-filter-btn:hover { border-color: var(--border2); color: var(--text-2); }
+.da-filter-btn.active { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+.da-filter-btn.f-green.active { background: rgba(0,229,132,0.12); color: var(--green); border-color: rgba(0,229,132,0.4); }
+.da-filter-btn.f-amber.active { background: rgba(240,165,0,0.12); color: var(--amber); border-color: rgba(240,165,0,0.4); }
+.da-filter-btn.f-red.active { background: rgba(240,59,80,0.12); color: var(--red); border-color: rgba(240,59,80,0.4); }
+.da-stats { font-family: var(--mono); font-size: 10px; color: var(--text-3); display: flex; gap: 14px; margin-left: 8px; }
+.da-stat-g { color: var(--green); }
+.da-stat-r { color: var(--red); }
+.da-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.spike-notice {
+  font-family: var(--mono); font-size: 10px; color: var(--amber);
+  padding: 4px 10px; background: rgba(240,165,0,0.06);
+  border: 1px solid rgba(240,165,0,0.2); border-radius: 4px;
+}
 .veto-count { font-family: var(--mono); font-size: 10px; color: var(--amber); }
-.da-table-wrap { display: none; overflow-x: auto; }
+
+/* Table */
+.da-table-wrap { display: none; }
 .da-table-wrap.visible { display: block; }
-.da-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.da-table { width: 100%; border-collapse: collapse; }
 .da-table thead th {
   font-family: var(--mono); font-size: 9px; font-weight: 600;
-  letter-spacing: 0.1em; text-transform: uppercase;
+  letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--text-3); text-align: right;
-  padding: 10px 12px; border-bottom: 1px solid var(--border);
-  cursor: pointer; user-select: none; white-space: nowrap;
+  padding: 8px 10px; border-bottom: 1px solid var(--border);
+  cursor: pointer; user-select: none; white-space: nowrap; background: var(--bg);
+  position: sticky; top: 0; z-index: 5;
 }
-.da-table thead th.no-sort { cursor: default; text-align: left; }
+.da-table thead th.th-left { text-align: left; }
 .da-table thead th:hover:not(.no-sort) { color: var(--text-2); }
 .da-table thead th.sort-asc::after { content: ' ↑'; color: var(--green); }
 .da-table thead th.sort-desc::after { content: ' ↓'; color: var(--green); }
-.da-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+.da-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.1s; }
 .da-table tbody tr:hover { background: var(--surface2); }
-.da-table tbody tr.vetoed { opacity: 0.4; }
-.da-table tbody tr.approved td:first-child { border-left: 3px solid var(--green); }
-.da-table tbody tr.rejected td:first-child { border-left: 3px solid var(--red); }
-.da-table td { padding: 10px 12px; vertical-align: middle; }
-.td-num { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--text-2); white-space: nowrap; }
-.td-title-wrap { max-width: 280px; }
-.td-product-title { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
-.td-asin-row { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.da-table tbody tr.vetoed { opacity: 0.35; }
+.da-table tbody tr.approved { background: rgba(0,229,132,0.03); }
+.da-table tbody tr.rejected { background: rgba(240,59,80,0.03); }
+.da-table td { padding: 11px 10px; vertical-align: middle; font-size: 12px; }
+.td-num { text-align: right; font-family: var(--mono); font-size: 11px; color: var(--text-2); white-space: nowrap; }
+.td-roi { text-align: right; font-family: var(--mono); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.td-roi.green { color: var(--green); }
+.td-roi.amber { color: var(--amber); }
+.td-roi.red { color: var(--red); }
+.td-title-wrap { max-width: 260px; min-width: 180px; }
+.td-product-title { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.4; margin-bottom: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.td-asin-row { font-family: var(--mono); font-size: 9px; color: var(--text-3); display: flex; gap: 8px; align-items: center; }
 .td-asin-row a { color: var(--text-3); text-decoration: none; }
 .td-asin-row a:hover { color: var(--green); }
 .ss-badge {
   font-family: var(--mono); font-size: 8px; font-weight: 700;
-  padding: 2px 5px; border-radius: 3px;
-  background: rgba(155,109,255,0.2); color: var(--purple);
-  margin-left: 6px; vertical-align: middle; letter-spacing: 0.05em;
+  padding: 1px 5px; border-radius: 3px;
+  background: rgba(155,109,255,0.15); color: var(--purple); letter-spacing: 0.05em;
 }
-.rating-cell { min-width: 180px; }
+
+/* Rating cell */
+.rating-cell { min-width: 220px; max-width: 260px; }
+.rating-row1 { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
 .rating-strength {
-  font-family: var(--mono); font-size: 10px; font-weight: 600;
-  letter-spacing: 0.06em;
+  font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
 }
 .rating-strength.green { color: var(--green); }
 .rating-strength.amber { color: var(--amber); }
 .rating-strength.red { color: var(--red); }
 .rating-strength.grey { color: var(--text-3); }
-.rating-bar { height: 2px; border-radius: 1px; margin-top: 6px; background: var(--border2); max-width: 120px; }
+.rating-reason { font-family: var(--mono); font-size: 9px; color: var(--text-3); line-height: 1.5; }
+.rating-bar-wrap { margin: 5px 0 3px; }
+.rating-bar { height: 2px; border-radius: 1px; max-width: 140px; }
 .rating-bar.green { background: var(--green); }
 .rating-bar.amber { background: var(--amber); }
 .rating-bar.red { background: var(--red); }
-.rating-sp { font-family: var(--mono); font-size: 9px; color: var(--text-3); margin-top: 4px; }
-.btn-approve, .btn-reject, .unveto-btn {
-  font-family: var(--mono); font-size: 9px; font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 5px 10px; border-radius: 5px;
-  border: 1px solid var(--border2);
-  background: transparent; cursor: pointer; transition: all 0.15s;
-  white-space: nowrap;
+.rating-sp { font-family: var(--mono); font-size: 9px; color: var(--text-3); opacity: 0.7; }
+
+/* Decision buttons */
+.td-decision { white-space: nowrap; min-width: 180px; }
+.btn-approve, .btn-reject, .btn-veto, .unveto-btn {
+  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+  padding: 4px 10px; border-radius: 4px; border: 1px solid;
+  background: transparent; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  display: inline-block; margin: 2px 2px 2px 0;
 }
-.btn-approve { color: var(--green); border-color: rgba(0,229,132,0.3); }
-.btn-approve:hover, .btn-approve.active { background: var(--green); color: var(--bg); border-color: var(--green); }
-.btn-reject { color: var(--red); border-color: rgba(240,59,80,0.3); }
-.btn-reject:hover, .btn-reject.active { background: var(--red); color: #fff; border-color: var(--red); }
-.unveto-btn { color: var(--text-2); }
+.btn-approve { color: var(--green); border-color: rgba(0,229,132,0.25); }
+.btn-approve:hover { background: rgba(0,229,132,0.1); border-color: var(--green); }
+.btn-approve.active { background: var(--green); color: var(--bg); border-color: var(--green); }
+.btn-reject { color: var(--red); border-color: rgba(240,59,80,0.25); }
+.btn-reject:hover { background: rgba(240,59,80,0.1); border-color: var(--red); }
+.btn-reject.active { background: var(--red); color: #fff; border-color: var(--red); }
+.btn-veto { color: var(--text-3); border-color: var(--border); font-size: 8px; }
+.btn-veto:hover { color: var(--red); border-color: rgba(240,59,80,0.4); }
+.unveto-btn { color: var(--text-2); border-color: var(--border); }
 .unveto-btn:hover { color: var(--text); border-color: var(--border3); }
 .veto-divider td {
-  padding: 8px 12px;
-  font-family: var(--mono); font-size: 10px; color: var(--text-3);
+  padding: 6px 10px; font-family: var(--mono); font-size: 10px; color: var(--text-3);
   background: var(--surface2); border-top: 1px solid var(--border);
-}
-.spike-notice {
-  font-family: var(--mono); font-size: 10px; color: var(--amber);
-  padding: 6px 12px;
-  background: rgba(240,165,0,0.06);
-  border: 1px solid rgba(240,165,0,0.2);
-  border-radius: 6px;
-  margin-left: auto;
 }
 </style>
 </head>
@@ -1287,11 +1255,11 @@ input::placeholder { color: var(--text-4); }
 
     <div class="mode-banner" id="modeBanner" style="margin-bottom:20px;">
       <span class="mode-pill eu" id="modePill">EU → UK</span>
-      <span class="mode-desc" id="modeDesc">Buy price: <strong>EU Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK Buy Box 180d/365d avg</strong> &nbsp;·&nbsp; Extra cost: <strong>+£2.00 shipping</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong></span>
+      <span class="mode-desc" id="modeDesc">Buy price: <strong>EU Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>+£2.00 shipping</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong></span>
     </div>
 
     <div class="da-dropzone" id="daDropzone">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:20px;">Keepa Product Finder CSV Export</div>
+      <div class="da-dropzone-label">Keepa Product Finder CSV Export</div>
       <div class="da-slots">
         <div class="da-slot" id="daSlot1" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,1)">
           <input type="file" id="daFileInput1" accept=".csv" onchange="daFileChosen(1,this.files[0])">
@@ -1324,20 +1292,24 @@ input::placeholder { color: var(--text-4); }
     <div class="da-loading" id="daLoading"><span class="loading-dots">Analysing deals</span></div>
 
     <div class="da-filters" id="daFilters">
-      <button class="filter-btn active" onclick="daSetFilter('all',this)">All</button>
-      <button class="filter-btn" onclick="daSetFilter('green',this)" style="color:var(--green);border-color:rgba(0,229,132,0.3);">● Strong</button>
-      <button class="filter-btn" onclick="daSetFilter('red',this)" style="color:var(--red);border-color:rgba(255,68,85,0.3);">● Reject</button>
-      <span class="result-count" id="daResultCount"></span>
-      <span class="veto-count" id="daVetoCount" style="display:none;"></span>
-      <span class="veto-count" id="daRejectedCount" style="display:none;color:var(--red);"></span>
-      <button class="btn-sm" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;font-size:9px;">Clear rejected history</button>
-      <span class="spike-notice" id="spikeNotice" style="display:none;"></span>
-      <div class="stats-bar">
-        <span style="color:var(--green)">● <span id="daCountGreen">0</span> strong</span>
-        <span style="color:var(--red)">● <span id="daCountRed">0</span> reject</span>
+      <button class="da-filter-btn active" onclick="daSetFilter('all',this)">All</button>
+      <button class="da-filter-btn f-green" onclick="daSetFilter('green',this)">● Strong</button>
+      <button class="da-filter-btn f-amber" onclick="daSetFilter('amber',this)">● Marginal</button>
+      <button class="da-filter-btn f-red" onclick="daSetFilter('red',this)">● Reject</button>
+      <div class="da-stats">
+        <span class="da-stat-g">● <span id="daCountGreen">0</span> strong</span>
+        <span style="color:var(--amber)">● <span id="daCountAmber">0</span> marginal</span>
+        <span class="da-stat-r">● <span id="daCountRed">0</span> reject</span>
+        <span id="daResultCount" style="color:var(--text-3);"></span>
       </div>
-      <button class="btn-sm" id="daResetBtn" onclick="daReset()" style="display:none;">Reset</button>
-      <button class="btn-sm green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export Approved</button>
+      <span class="spike-notice" id="spikeNotice" style="display:none;"></span>
+      <div class="da-actions">
+        <span class="veto-count" id="daVetoCount" style="display:none;"></span>
+        <span class="veto-count" id="daRejectedCount" style="display:none;color:var(--red);"></span>
+        <button class="btn-sm" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;font-size:9px;">Clear rejected</button>
+        <button class="btn-sm" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
+        <button class="btn-sm btn-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export</button>
+      </div>
     </div>
 
     <div class="da-table-wrap" id="daTableWrap">
@@ -2341,8 +2313,8 @@ const MODES = {
   uk: {
     label: 'UK → UK',
     pillClass: '',
-    desc: 'Buy price: <strong>Used, like new: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK Buy Box 180d avg</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong> &nbsp;·&nbsp; Slots: <strong>2× UK exports (deduped)</strong>',
-    buyCol: 'Used, like new: Current',
+    desc: 'Buy price: <strong>Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong> &nbsp;·&nbsp; Slots: <strong>2× UK exports (deduped)</strong>',
+    buyCol: 'Buy Box: Current',
     sellCol: 'Buy Box: 180 days avg.',
     extraCost: 0,
     condition: 'new',
@@ -2488,10 +2460,16 @@ function daAnalyseRow(row) {
     if (rankDrops && rankDrops >= 20) recoveries = Math.min(12, recoveries + 2);
   }
 
-  // Sell price: if recoveries >= 4 use 365d avg (product reliably cycles back to full price)
-  // otherwise use 180d avg (conservative — fewer data points to trust)
-  const spIncVat = (recoveries && recoveries >= 4 && avg365) ? avg365 : daParseNum(row[cfg.sellCol]);
-  const spSource = (recoveries && recoveries >= 4 && avg365) ? '365d' : '180d';
+  // Sell price selection:
+  // 1. Base: 365d avg if recoveries >= 4, else 180d avg
+  // 2. Strikethrough override: if strikethrough exists and is within 130% of base SP
+  //    (capped to avoid stale/inflated strikethroughs on permanently-dropped products)
+  const spBase = (recoveries && recoveries >= 4 && avg365) ? avg365 : daParseNum(row[cfg.sellCol]);
+  const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
+  const ST_CAP = 1.30; // only trust strikethrough up to 30% above base avg
+  const useStrikethrough = cfg.condition !== 'used' && stPrice && spBase && stPrice > spBase && stPrice <= spBase * ST_CAP;
+  const spIncVat = useStrikethrough ? stPrice : spBase;
+  const spSource = useStrikethrough ? 'ST' : (recoveries && recoveries >= 4 && avg365) ? '365d' : '180d';
   const sp = spIncVat ? spIncVat / (1 + vat) : null;
 
   // Dip vs buy
@@ -2635,14 +2613,28 @@ function daRunAnalysis() {
         return !daRejectedList.has(asin);
       });
       const rejectedCount = merged.length - preFiltered.length;
-      daDeals = preFiltered.map(daAnalyseRow).sort((a, b) => a.sortOrder - b.sortOrder);
+
+      // Filter out rows missing essential price data — no FBA fee = can't calculate P&L
+      // These would all come back as NO DATA grey rows and are useless noise
+      const cfg = MODES[currentMode];
+      const priceable = preFiltered.filter(row => {
+        const buyRaw = daParseNum(row[cfg.buyCol]);
+        const fbaFee = daParseNum(row['FBA Pick&Pack Fee']);
+        const sellPrice = daParseNum(row['Buy Box: 180 days avg.']) || daParseNum(row[cfg.sellCol]);
+        return buyRaw !== null && fbaFee !== null && sellPrice !== null;
+      });
+      const noDataCount = preFiltered.length - priceable.length;
+
+      daDeals = priceable.map(daAnalyseRow).sort((a, b) => a.sortOrder - b.sortOrder);
       document.getElementById('daCountGreen').textContent = daDeals.filter(d => d.colour === 'green').length;
+      const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
       document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
 
       const softSpiked = daDeals.filter(d => d.spikeFlag).length;
       const notices = [];
-      if (rejectedCount > 0) notices.push(`🚫 ${rejectedCount} previously rejected — hidden`);
-      if (softSpiked > 0)    notices.push(`⚡ ${softSpiked} spiked — rated red`);
+      if (rejectedCount > 0)  notices.push(`🚫 ${rejectedCount} previously rejected`);
+      if (noDataCount > 0)    notices.push(`⬜ ${noDataCount} skipped — missing price/FBA data`);
+      if (softSpiked > 0)     notices.push(`⚡ ${softSpiked} spiked`);
       const noticeEl = document.getElementById('spikeNotice');
       if (notices.length) { noticeEl.textContent = notices.join('  ·  '); noticeEl.style.display = ''; }
 
@@ -2684,7 +2676,7 @@ function daRenderHeaders() {
 // ════════════════════════════════════════
 function daRenderTable() {
   const tbody = document.getElementById('daTableBody'); tbody.innerHTML = '';
-  let filtered = daFilter === 'all' ? daDeals : daFilter === 'green' ? daDeals.filter(d => d.colour === 'green' || d.colour === 'amber') : daDeals.filter(d => d.colour === 'red');
+  let filtered = daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter);
   if (daSort.col) {
     filtered = [...filtered].sort((a, b) => {
       let av = a[daSort.col], bv = b[daSort.col];
@@ -2693,7 +2685,7 @@ function daRenderTable() {
       return (av - bv) * daSort.dir;
     });
   }
-  document.getElementById('daResultCount').textContent = filtered.length + ' deals';
+  document.getElementById('daResultCount').textContent = `${filtered.length} shown · ${daDeals.length} total`;
 
   const normal = filtered.filter(d => !daVetoList.has(d.asin));
   const vetoed = filtered.filter(d => daVetoList.has(d.asin));
@@ -2733,8 +2725,9 @@ function daRenderTable() {
       <td><div style="display:flex;flex-direction:column;gap:4px;">
         ${isVetoed
           ? `<button class="unveto-btn" onclick="daRemoveVeto('${deal.asin}')">↩ UNVETO</button>`
-          : `<button class="btn-approve ${deal.decision==='approved'?'active':''}" onclick="daSetDecision(${daDeals.indexOf(deal)},'approved',this)">✓ APPROVE</button>
-             <button class="btn-reject ${deal.decision==='rejected'?'active':''}" onclick="daSetDecision(${daDeals.indexOf(deal)},'rejected',this)">✕ REJECT</button>
+          : `<button class="btn-approve ${deal.decision==='approved'?'active':''}" onclick="daSetDecision(${daDeals.indexOf(deal)},'approved',this)">✓ Approve</button>
+             <button class="btn-reject ${deal.decision==='rejected'?'active':''}" onclick="daSetDecision(${daDeals.indexOf(deal)},'rejected',this)">✕ Reject</button>
+             <button class="btn-veto" onclick="daAddVeto('${deal.asin}')">⊘ Veto</button>
              <button class="btn-sm" style="font-size:9px;padding:4px 8px;" onclick="daAddVeto('${deal.asin}')">⛔ VETO</button>`
         }
       </div></td>`;
@@ -2775,7 +2768,7 @@ function daInitSort() {
 // ════════════════════════════════════════
 function daSetFilter(f, btn) {
   daFilter = f;
-  document.querySelectorAll('.da-filters .filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.da-filters .da-filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   daRenderTable();
 }
@@ -2875,7 +2868,7 @@ function daReset() {
   document.getElementById('daCountRed').textContent = '0';
   document.getElementById('daGoBtn').classList.remove('ready');
   document.getElementById('daTableBody').innerHTML = '';
-  document.querySelectorAll('.da-filters .filter-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.querySelectorAll('.da-filters .da-filter-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
 }
 </script>
 </body>

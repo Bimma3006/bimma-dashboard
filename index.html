@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════
-   BIMMA RETAIL  ·  FBA OPS  ·  v2.5
+   BIMMA RETAIL  ·  FBA OPS  ·  v2.7
 ═══════════════════════════════════════ */
 :root {
   --bg:          #07070a;
@@ -849,7 +849,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses',this)"><span class="nav-icon">£</span>Expenses</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v2.5 · 11 Mar 26</div>
+    <div class="sidebar-version">v2.7 · 12 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -1108,7 +1108,6 @@ input::placeholder { color: var(--text-4); }
       <div class="page-header-sub">Calculate suggested repricer min prices from Keepa buy box history</div>
     </div>
 
-    <!-- Settings row -->
     <div class="cogs-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:20px;">
       <div class="cogs-card">
         <div class="cogs-card-label">Keepa API Key</div>
@@ -1136,15 +1135,30 @@ input::placeholder { color: var(--text-4); }
             </select>
           </div>
         </div>
-        <div class="field-label">Buffer above floor</div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input type="number" id="rp-buffer" value="5" min="0" max="30" step="1" style="width:70px;"> <span style="font-family:var(--mono);font-size:11px;color:var(--text-2);">%</span>
+        <div style="display:flex;gap:10px;">
+          <div style="flex:1;">
+            <div class="field-label">Buffer above floor</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="number" id="rp-buffer" value="5" min="0" max="30" step="1" style="width:70px;">
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text-2);">%</span>
+            </div>
+          </div>
+          <div style="flex:1;">
+            <div class="field-label">Max ASINs per run</div>
+            <input type="number" id="rp-limit" value="50" min="1" max="500" step="1" placeholder="e.g. 50" style="width:80px;">
+          </div>
         </div>
       </div>
       <div class="cogs-card">
-        <div class="cogs-card-label">ASIN Source</div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--text-2);margin-bottom:12px;line-height:1.7;">Pulls all unique ASINs from your purchases data (Google Sheets). Connect Sheets first if not already done.</div>
+        <div class="cogs-card-label">Active Listings — STK Replenish Export</div>
+        <div class="drop-zone" id="rp-dz" style="margin-bottom:10px;">
+          <input type="file" id="rp-inp" accept=".csv,.tsv,.txt">
+          <div class="drop-icon">↑</div>
+          <div class="drop-label">Drop Replenish file or click to browse</div>
+          <div class="drop-filename" id="rp-fn"></div>
+        </div>
         <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);" id="rp-asin-count">—</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--amber);margin-top:6px;" id="rp-limit-note"></div>
       </div>
     </div>
 
@@ -1162,14 +1176,12 @@ input::placeholder { color: var(--text-4); }
       <input type="text" id="rp-search" placeholder="Search ASIN or SKU…" oninput="rpRenderTable()" style="width:240px;margin-bottom:12px;">
       <table class="data-table">
         <thead><tr>
-          <th>ASIN</th>
-          <th>SKU</th>
-          <th>Title</th>
+          <th>ASIN</th><th>SKU</th><th>Title</th>
           <th style="text-align:right;">BB Floor (£)</th>
           <th style="text-align:right;">20th %ile (£)</th>
           <th style="text-align:right;">Suggested Min (£)</th>
           <th style="text-align:right;">BB High (£)</th>
-          <th>Data pts</th>
+          <th>Pts</th>
         </tr></thead>
         <tbody id="rp-tbody"></tbody>
       </table>
@@ -2468,24 +2480,72 @@ function cogsDownloadMergedSTK(){
   const blob=new Blob([lines.join('\r\n')],{type:'text/tab-separated-values'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='SellerToolKit_COGS_Merged_'+new Date().toISOString().split('T')[0]+'.txt'; a.click(); URL.revokeObjectURL(a.href);
   const info=document.getElementById('cogs-info');
-  const unmatch=cogsParsedRows.length-matched;
-  info.innerHTML='✓ Downloaded — <strong>'+matched+'</strong> rows matched & written. '+(unmatch>0?'<span style="color:var(--red)">⚠ '+unmatch+' unmatched</span>':'<span style="color:var(--green)">All matched ✓</span>');
+  const totalSTK=cogsMergedSTKData.rawRows.length;
+  const unmatch=totalSTK-matched;
+  info.innerHTML='✓ Downloaded — <strong>'+matched+'</strong> of <strong>'+totalSTK+'</strong> STK rows matched & written. '+(unmatch>0?'<span style="color:var(--red)">⚠ '+unmatch+' unmatched (no prep entry found)</span>':'<span style="color:var(--green)">All matched ✓</span>');
   info.style.display='block';
 }
 // ════════════════════════════════════════
 // MIN PRICE TOOL (Keepa)
 // ════════════════════════════════════════
-let rpResults = [];
+let rpReplenishFile = null;
+let rpReplenishASINs = []; // [{asin, sku, title}]
 
-// Keepa time unit = minutes since 2011-01-01
-const KEEPA_EPOCH = new Date('2011-01-01T00:00:00Z').getTime();
-function keepaTimeToMs(kt) { return KEEPA_EPOCH + kt * 60000; }
+cogsWireDZ('rp-dz','rp-inp','rp-fn',(f,dz,fn)=>{
+  rpReplenishFile=f;
+  document.getElementById(fn).textContent='✓ '+f.name;
+  dz.classList.add('loaded');
+  rpParseReplenish(f);
+});
+
+function rpParseReplenish(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split('\n');
+    // Find header row (contains SKU and ASIN)
+    let headerIdx = -1;
+    let skuCol = -1, asinCol = -1, titleCol = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const cols = lines[i].split('\t');
+      const si = cols.findIndex(c => c.trim().replace(/"/g,'') === 'SKU');
+      const ai = cols.findIndex(c => c.trim().replace(/"/g,'') === 'ASIN');
+      if (si >= 0 && ai >= 0) { headerIdx=i; skuCol=si; asinCol=ai; titleCol=cols.findIndex(c=>c.trim().replace(/"/g,'').toUpperCase()==='TITLE'); break; }
+    }
+    if (headerIdx < 0) { document.getElementById('rp-asin-count').textContent='⚠ Could not find SKU/ASIN columns'; return; }
+    rpReplenishASINs = [];
+    const seen = new Set();
+    for (let i = headerIdx+1; i < lines.length; i++) {
+      const cols = lines[i].split('\t');
+      if (cols.length < asinCol+1) continue;
+      const sku = (cols[skuCol]||'').replace(/^"|"$/g,'').trim();
+      const rawAsin = (cols[asinCol]||'').trim();
+      // Parse ASIN from =HYPERLINK("...dp/ASINHERE","ASINHERE") or plain ASIN
+      let asin = '';
+      const hlMatch = rawAsin.match(/[A-Z0-9]{10}/g);
+      if (hlMatch) asin = hlMatch[hlMatch.length-1]; // last match is the ASIN label
+      if (!asin || seen.has(asin)) continue;
+      seen.add(asin);
+      const title = titleCol>=0 ? (cols[titleCol]||'').replace(/^"|"$/g,'').substring(0,60) : '';
+      rpReplenishASINs.push({asin, sku, title});
+    }
+    document.getElementById('rp-asin-count').textContent = rpReplenishASINs.length + ' active ASINs loaded';
+    rpUpdateLimitNote();
+  };
+  reader.readAsText(file);
+}
+
+function rpUpdateLimitNote() {
+  const limit = parseInt(document.getElementById('rp-limit').value) || 50;
+  const total = rpReplenishASINs.length;
+  document.getElementById('rp-limit-note').textContent = total > limit
+    ? `⚠ Capped at ${limit} — ${total-limit} remaining for next run`
+    : '';
+}
 
 function rpGetASINs() {
-  // Pull unique ASINs from allRows (purchases data)
-  const asins = [...new Set(allRows.map(r => r.asin).filter(a => a && a.length > 5))];
-  document.getElementById('rp-asin-count').textContent = asins.length + ' ASINs loaded from purchases';
-  return asins;
+  const limit = parseInt(document.getElementById('rp-limit').value) || 50;
+  rpUpdateLimitNote();
+  return rpReplenishASINs.slice(0, limit);
 }
 
 function rpPercentile(arr, p) {
@@ -2498,78 +2558,66 @@ function rpPercentile(arr, p) {
 async function rpRun() {
   const apiKey = document.getElementById('rp-apikey').value.trim();
   if (!apiKey) { rpShowError('Please enter your Keepa API key.'); return; }
+  if (!rpReplenishASINs.length) { rpShowError('Please upload your STK Replenish export first.'); return; }
 
-  const asins = rpGetASINs();
-  if (!asins.length) { rpShowError('No ASINs found — make sure your purchases data is loaded (Connect Sheets).'); return; }
-
+  const items = rpGetASINs(); // [{asin, sku, title}]
   const lookbackDays = parseInt(document.getElementById('rp-lookback').value);
   const percentile = parseInt(document.getElementById('rp-percentile').value);
   const bufferPct = parseFloat(document.getElementById('rp-buffer').value) / 100;
 
-  document.getElementById('rp-error').style.display = 'none';
-  document.getElementById('rp-info').style.display = 'none';
-  document.getElementById('rp-results').style.display = 'none';
+  ['rp-error','rp-info','rp-results'].forEach(id => document.getElementById(id).style.display='none');
   document.getElementById('rpDownloadBtn').style.display = 'none';
   document.getElementById('rpRunBtn').disabled = true;
-
-  const prog = document.getElementById('rp-progress');
   rpResults = [];
 
-  // Keepa allows up to 100 ASINs per request
-  const chunks = [];
-  for (let i = 0; i < asins.length; i += 100) chunks.push(asins.slice(i, i + 100));
-
+  const prog = document.getElementById('rp-progress');
   const cutoffMs = Date.now() - lookbackDays * 86400000;
+
+  // Chunk into batches of 100
+  const chunks = [];
+  for (let i = 0; i < items.length; i += 100) chunks.push(items.slice(i, i + 100));
+  // Build asin->item lookup
+  const itemMap = {};
+  items.forEach(it => itemMap[it.asin] = it);
 
   try {
     for (let ci = 0; ci < chunks.length; ci++) {
       const chunk = chunks[ci];
-      prog.textContent = `Fetching batch ${ci + 1} of ${chunks.length} (${chunk.length} ASINs)…`;
-
-      const url = `https://api.keepa.com/product?key=${apiKey}&domain=2&asin=${chunk.join(',')}&history=1&buybox=1`;
+      prog.textContent = `Fetching batch ${ci+1} of ${chunks.length} (${chunk.length} ASINs)…`;
+      const asinList = chunk.map(it => it.asin).join(',');
+      const url = `https://api.keepa.com/product?key=${apiKey}&domain=2&asin=${asinList}&history=1&buybox=1`;
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(`Keepa API error: ${resp.status} ${resp.statusText}`);
       const data = await resp.json();
-
       if (data.error) throw new Error(`Keepa: ${data.error.message || JSON.stringify(data.error)}`);
 
       for (const product of (data.products || [])) {
         const asin = product.asin;
-        const title = (product.title || '').substring(0, 60);
-        // Find SKU from purchases
-        const matchRow = allRows.find(r => r.asin === asin);
-        const sku = matchRow ? matchRow.sku : '';
-
-        // csv[18] = BUY_BOX_SHIPPING (time, price pairs, price in cents)
+        const item = itemMap[asin] || {asin, sku:'', title:''};
+        const title = item.title || (product.title||'').substring(0,60);
+        const sku = item.sku;
         const bbRaw = (product.csv || [])[18];
         if (!bbRaw || bbRaw.length < 2) {
-          rpResults.push({ asin, sku, title, floor: null, pct: null, suggested: null, high: null, pts: 0, error: 'No buy box data' });
+          rpResults.push({ asin, sku, title, floor:null, pct:null, suggested:null, high:null, pts:0, error:'No buy box data' });
           continue;
         }
-
-        // Parse time/price pairs, filter to lookback window, convert from cents to £
         const prices = [];
         for (let i = 0; i < bbRaw.length - 1; i += 2) {
           const t = keepaTimeToMs(bbRaw[i]);
-          const p = bbRaw[i + 1];
+          const p = bbRaw[i+1];
           if (t >= cutoffMs && p > 0) prices.push(p / 100);
         }
-
         if (!prices.length) {
-          rpResults.push({ asin, sku, title, floor: null, pct: null, suggested: null, high: null, pts: 0, error: 'No data in window' });
+          rpResults.push({ asin, sku, title, floor:null, pct:null, suggested:null, high:null, pts:0, error:'No data in window' });
           continue;
         }
-
         const floor = Math.min(...prices);
         const high = Math.max(...prices);
         const pct = rpPercentile(prices, percentile);
         const suggested = parseFloat((pct * (1 + bufferPct)).toFixed(2));
-
-        rpResults.push({ asin, sku, title, floor: floor.toFixed(2), pct: pct.toFixed(2), suggested, high: high.toFixed(2), pts: prices.length });
+        rpResults.push({ asin, sku, title, floor:floor.toFixed(2), pct:pct.toFixed(2), suggested, high:high.toFixed(2), pts:prices.length });
       }
-
-      // Small delay between batches to be kind to the API
-      if (ci < chunks.length - 1) await new Promise(r => setTimeout(r, 500));
+      if (ci < chunks.length - 1) await new Promise(r => setTimeout(r, 600));
     }
 
     prog.textContent = '';
@@ -2578,74 +2626,46 @@ async function rpRun() {
     const info = document.getElementById('rp-info');
     info.innerHTML = `✓ Done — <strong>${good}</strong> ASINs priced${bad > 0 ? `, <span style="color:var(--red)">${bad} with no buy box data</span>` : ''}.`;
     info.style.display = 'block';
-
-    const avg = good ? (rpResults.filter(r=>r.suggested).reduce((s,r)=>s+r.suggested,0)/good).toFixed(2) : 0;
+    const avg = good ? (rpResults.filter(r=>r.suggested).reduce((s,r)=>s+r.suggested,0)/good).toFixed(2) : '0.00';
     document.getElementById('rp-stats-row').innerHTML =
       `<div class="cogs-stat"><div class="cogs-stat-val">${rpResults.length}</div><div class="cogs-stat-lbl">ASINs</div></div>`+
       `<div class="cogs-stat"><div class="cogs-stat-val">${good}</div><div class="cogs-stat-lbl">Priced</div></div>`+
       `<div class="cogs-stat"><div class="cogs-stat-val">£${avg}</div><div class="cogs-stat-lbl">Avg Min</div></div>`+
       `<div class="cogs-stat"><div class="cogs-stat-val">${bad}</div><div class="cogs-stat-lbl">No Data</div></div>`;
-
     document.getElementById('rp-results').style.display = 'block';
     document.getElementById('rpDownloadBtn').style.display = 'inline-block';
     rpRenderTable();
-
   } catch(err) {
     prog.textContent = '';
     rpShowError('Error: ' + err.message);
   }
-
   document.getElementById('rpRunBtn').disabled = false;
 }
 
 function rpRenderTable() {
-  const q = (document.getElementById('rp-search').value || '').toLowerCase();
+  const q = (document.getElementById('rp-search').value||'').toLowerCase();
   let rows = rpResults;
   if (q) rows = rows.filter(r => r.asin.toLowerCase().includes(q) || r.sku.toLowerCase().includes(q));
   const tbody = document.getElementById('rp-tbody');
-  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No results</div></td></tr>'; return; }
+  if (!rows.length) { tbody.innerHTML='<tr><td colspan="8"><div class="empty-state">No results</div></td></tr>'; return; }
   tbody.innerHTML = rows.map(r => {
-    if (r.error) return `<tr>
-      <td class="mono">${r.asin}</td>
-      <td class="mono" style="font-size:10px;color:#666;">${r.sku||'—'}</td>
-      <td style="font-size:11px;color:#555;">${r.title||'—'}</td>
-      <td colspan="4" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:center;">${r.error}</td>
-      <td class="num" style="color:#555;">0</td>
-    </tr>`;
-    return `<tr>
-      <td class="mono">${r.asin}</td>
-      <td class="mono" style="font-size:10px;color:#666;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.sku}">${r.sku||'—'}</td>
-      <td style="font-size:11px;color:#999;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.title}">${r.title}</td>
-      <td class="num">£${r.floor}</td>
-      <td class="num">£${r.pct}</td>
-      <td class="num" style="color:var(--green);font-weight:600;">£${r.suggested}</td>
-      <td class="num" style="color:var(--text-2);">£${r.high}</td>
-      <td class="num" style="color:#555;">${r.pts}</td>
-    </tr>`;
+    if (r.error) return `<tr><td class="mono">${r.asin}</td><td class="mono" style="font-size:10px;color:#666;">${r.sku||'—'}</td><td style="font-size:11px;color:#555;">${r.title||'—'}</td><td colspan="4" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:center;">${r.error}</td><td class="num" style="color:#555;">0</td></tr>`;
+    return `<tr><td class="mono">${r.asin}</td><td class="mono" style="font-size:10px;color:#666;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.sku}">${r.sku||'—'}</td><td style="font-size:11px;color:#999;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.title}">${r.title}</td><td class="num">£${r.floor}</td><td class="num">£${r.pct}</td><td class="num" style="color:var(--green);font-weight:600;">£${r.suggested}</td><td class="num" style="color:var(--text-2);">£${r.high}</td><td class="num" style="color:#555;">${r.pts}</td></tr>`;
   }).join('');
 }
 
 function rpDownload() {
   const rows = rpResults.filter(r => r.suggested !== null);
   if (!rows.length) return;
-  // STK repricer format: SKU, Min Price, Max Price (we set max as BB high)
   const headers = ['SKU','ASIN','MIN_PRICE','MAX_PRICE','SUGGESTED_BY'];
   const lines = [headers.join('\t')];
-  rows.forEach(r => {
-    lines.push([r.sku||'', r.asin, r.suggested, r.high, 'BimmaMinPriceTool_Keepa180d'].join('\t'));
-  });
-  const blob = new Blob([lines.join('\r\n')], { type: 'text/tab-separated-values' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'Bimma_MinPrices_' + new Date().toISOString().split('T')[0] + '.txt';
-  a.click();
-  URL.revokeObjectURL(a.href);
+  rows.forEach(r => lines.push([r.sku||'', r.asin, r.suggested, r.high, 'BimmaMinPriceTool_Keepa180d'].join('\t')));
+  const blob = new Blob([lines.join('\r\n')], {type:'text/tab-separated-values'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='Bimma_MinPrices_'+new Date().toISOString().split('T')[0]+'.txt'; a.click(); URL.revokeObjectURL(a.href);
 }
 
 function rpShowError(msg) {
-  const e = document.getElementById('rp-error');
-  e.textContent = msg;
-  e.style.display = 'block';
+  const e = document.getElementById('rp-error'); e.textContent=msg; e.style.display='block';
 }
 </script>
 </body>

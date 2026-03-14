@@ -885,6 +885,18 @@ input::placeholder { color: var(--text-4); }
   background: rgba(155,109,255,0.12); color: var(--purple);
   letter-spacing: 0.05em; border: 1px solid rgba(155,109,255,0.2);
 }
+.inv-badge {
+  font-family: var(--mono); font-size: 8px; font-weight: 700;
+  padding: 1px 6px; border-radius: 3px;
+  background: rgba(251,191,36,0.12); color: #fbbf24;
+  letter-spacing: 0.05em; border: 1px solid rgba(251,191,36,0.25);
+}
+.pc-badge {
+  font-family: var(--mono); font-size: 8px; font-weight: 700;
+  padding: 1px 6px; border-radius: 3px;
+  background: rgba(99,179,237,0.12); color: #63b3ed;
+  letter-spacing: 0.05em; border: 1px solid rgba(99,179,237,0.25);
+}
 
 /* Number cells */
 .td-num { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--text-2); white-space: nowrap; padding: 13px 10px; }
@@ -3406,8 +3418,19 @@ let currentMode = 'eu';
 let daDeals = [], daFilter = 'all', daSort = { col: null, dir: 1 };
 let daSlotFiles = { 1: null, 2: null, 3: null };
 let daVetoList     = (() => { try { return new Set(JSON.parse(localStorage.getItem('bimma-a2a-veto')     || '[]')); } catch { return new Set(); } })();
-let daRejectedList = (() => { try { return new Set(JSON.parse(localStorage.getItem('bimma-a2a-rejected') || '[]')); } catch { return new Set(); } })();
-function daSaveRejected() { try { localStorage.setItem('bimma-a2a-rejected', JSON.stringify([...daRejectedList])); } catch {} }
+// daRejectedList: Map of asin → { price, date } — price at time of rejection so we can un-reject if price changes
+let daRejectedList = (() => {
+  try {
+    const raw = JSON.parse(localStorage.getItem('bimma-a2a-rejected') || 'null');
+    if (!raw) return new Map();
+    // Migrate old format (array of strings) to new Map format
+    if (Array.isArray(raw)) return new Map(raw.map(asin => [asin, { price: null, date: null }]));
+    return new Map(Object.entries(raw));
+  } catch { return new Map(); }
+})();
+function daSaveRejected() {
+  try { localStorage.setItem('bimma-a2a-rejected', JSON.stringify(Object.fromEntries(daRejectedList))); } catch {}
+}
 
 
 // ════════════════════════════════════════
@@ -3491,6 +3514,19 @@ function daParseCSV(text) {
 // ════════════════════════════════════════
 // ANALYSE ROW
 // ════════════════════════════════════════
+function daFbaFee(price) {
+  if (!price || price <= 0) return 2.42; // safe default
+  if (price <= 7)  return 1.94;
+  if (price <= 10) return 2.42;
+  if (price <= 15) return 2.86;
+  if (price <= 20) return 3.27;
+  if (price <= 25) return 3.74;
+  if (price <= 30) return 4.18;
+  if (price <= 40) return 4.62;
+  if (price <= 50) return 5.19;
+  return price * 0.112;
+}
+
 function daAnalyseRow(row) {
   const cfg = MODES[currentMode];
   const { vat, referralPct, prepFee, dsFeeRate } = FEES;
@@ -3500,7 +3536,9 @@ function daAnalyseRow(row) {
   const avg180   = daParseNum(row['Buy Box: 180 days avg.']);
   const avg365   = daParseNum(row['Buy Box: 365 days avg.']);
   const sd365    = daParseNum(row['Buy Box: Standard Deviation 365 days']);
-  const fbaFee   = daParseNum(row['FBA Pick&Pack Fee']);
+  const fbaFeeRaw = daParseNum(row['FBA Pick&Pack Fee']);
+  const fbaFeeEst = fbaFeeRaw === null; // flag that we estimated
+  const fbaFee    = fbaFeeRaw !== null ? fbaFeeRaw : (spIncVat ? daFbaFee(spIncVat) * (1 + vat) : null);
   const rankDrops = daParseNum(row['Sales Rank: Drops last 30 days']);
   const boughtPerMonth = daParseNum(row['Bought in past month']);
   const ss = (row['Buy Box: Subscribe & Save'] || '').toLowerCase() === 'yes';
@@ -3582,10 +3620,10 @@ function daAnalyseRow(row) {
     reason = `ROI ${(roi*100).toFixed(1)}% — below minimum`;
   }
 
-  // Spiked rows sort after normal reds so clean results show first
+  if (fbaFeeEst && reason && colour !== 'grey') reason += ' · FBA est.';
   const sortOrder = colour === 'green' ? 0 : colour === 'amber' ? 1 : spikeFlag ? 4 : colour === 'red' ? 2 : 3;
 
-  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, decision: null };
+  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, decision: null };
 }
 
 // ════════════════════════════════════════
@@ -3670,32 +3708,61 @@ function daRunAnalysis() {
         });
       }
 
-      // Filter out ASINs previously rejected — they're dead leads
+      // Build inventory set — ASINs purchased in last 30 days from Google Sheets data
+      const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const recentInventoryAsins = new Set(
+        (typeof allRows !== 'undefined' ? allRows : [])
+          .filter(r => { try { return new Date(r.date) >= thirtyDaysAgo; } catch { return false; } })
+          .map(r => (r.asin || '').trim().toUpperCase())
+          .filter(Boolean)
+      );
+
+      // Filter out ASINs previously rejected — unless price has moved >5% since rejection
+      const priceChangedAsins = new Set();
       const preFiltered = merged.filter(row => {
         const asin = (row['ASIN'] || '').trim();
-        return !daRejectedList.has(asin);
+        if (!daRejectedList.has(asin)) return true;
+        const rejection = daRejectedList.get(asin);
+        if (!rejection || rejection.price == null) return false; // no price stored — keep rejected
+        const currentPrice = daParseNum(row[cfg.buyCol]);
+        if (currentPrice == null) return false;
+        const priceDiff = Math.abs(currentPrice - rejection.price) / rejection.price;
+        if (priceDiff > 0.05) {
+          // Price moved >5% — un-reject and bring back with flag
+          daRejectedList.delete(asin);
+          daSaveRejected();
+          priceChangedAsins.add(asin);
+          return true;
+        }
+        return false;
       });
-      const rejectedCount = merged.length - preFiltered.length;
+      const rejectedCount = merged.length - preFiltered.length - priceChangedAsins.size;
 
       // Filter out rows missing essential price data — no FBA fee = can't calculate P&L
       // These would all come back as NO DATA grey rows and are useless noise
       const priceable = preFiltered.filter(row => {
         const buyRaw = daParseNum(row[cfg.buyCol]);
-        const fbaFee = daParseNum(row['FBA Pick&Pack Fee']);
         const sellPrice = daParseNum(row['Buy Box: 180 days avg.']) || daParseNum(row[cfg.sellCol]);
-        return buyRaw !== null && fbaFee !== null && sellPrice !== null;
+        return buyRaw !== null && sellPrice !== null;
       });
       const noDataCount = preFiltered.length - priceable.length;
 
-      daDeals = priceable.map(daAnalyseRow).sort((a, b) => a.sortOrder - b.sortOrder);
+      daDeals = priceable.map(row => {
+        const asin = (row['ASIN'] || '').trim();
+        const deal = daAnalyseRow(row);
+        if (priceChangedAsins.has(asin)) deal.priceChanged = true;
+        if (recentInventoryAsins.has(asin.toUpperCase())) deal.inInventory = true;
+        return deal;
+      }).sort((a, b) => a.sortOrder - b.sortOrder);
       document.getElementById('daCountGreen').textContent = daDeals.filter(d => d.colour === 'green').length;
       const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
       document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
 
       const softSpiked = daDeals.filter(d => d.spikeFlag).length;
       const notices = [];
-      if (rejectedCount > 0)  notices.push(`🚫 ${rejectedCount} previously rejected`);
-      if (noDataCount > 0)    notices.push(`⬜ ${noDataCount} skipped — missing price/FBA data`);
+      if (rejectedCount > 0)          notices.push(`🚫 ${rejectedCount} previously rejected`);
+      if (priceChangedAsins.size > 0) notices.push(`🔄 ${priceChangedAsins.size} price-changed — re-surfaced`);
+      if (noDataCount > 0)            notices.push(`⬜ ${noDataCount} skipped — missing buy/sell price`);
       if (softSpiked > 0)     notices.push(`⚡ ${softSpiked} spiked`);
       const noticeEl = document.getElementById('spikeNotice');
       if (notices.length) { noticeEl.textContent = notices.join('  ·  '); noticeEl.style.display = ''; }
@@ -3763,7 +3830,7 @@ function daRenderTable() {
       ? `<div class="row-warn spike">⚡ price outlier</div>` : '';
     tr.innerHTML = `
       <td class="td-product">
-        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}</div>
+        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.inInventory ? ' <span class="inv-badge">📦 bought &lt;30d</span>' : ''}${deal.priceChanged ? ' <span class="pc-badge">🔄 price changed</span>' : ''}</div>
         <div class="td-asin-row">
           <a href="https://www.amazon.co.uk/dp/${deal.asin}" target="_blank">${deal.asin}</a>
           <a href="https://www.keepa.com/#product/2-${deal.asin}" target="_blank" class="keepa-link">Keepa ↗</a>
@@ -3839,7 +3906,7 @@ function daSetDecision(idx, decision, btn) {
   // Persist rejections to localStorage so they don't resurface on next import
   if (decision === 'rejected') {
     if (toggling) { daRejectedList.delete(deal.asin); }
-    else          { daRejectedList.add(deal.asin); }
+    else          { daRejectedList.set(deal.asin, { price: deal.buyIncVat, date: new Date().toISOString().split('T')[0] }); }
     daSaveRejected();
   }
   daRenderTable();
@@ -4000,7 +4067,7 @@ function cogsProcess(){
       if(row.length<6)continue;
       const isBalance=(row[0]||'').trim().toLowerCase()==='balance line';
       const asin=(row[5]||'').trim().toUpperCase();
-      if(isBalance){if(lastKey&&asinMap[lastKey]){const pr=prepOverride!==null?prepOverride:cogsCleanNum(row[16]);const carton=(row[17]||'').toLowerCase().includes('carton')?2:0;asinMap[lastKey]._extraPrep=(asinMap[lastKey]._extraPrep||0)+Math.max(0,pr-carton);}continue;}
+      if(isBalance){continue;}
       if(!asin||asin.length<5)continue;
       const sku=(row[6]||'').trim();
       const dm=sku.match(/^(\d{2})\/(\d{2})\/(\d{2})-/);

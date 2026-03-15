@@ -4,22 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bimma Retail — FBA Ops</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════
    BIMMA RETAIL  ·  FBA OPS  ·  v2.9
 ═══════════════════════════════════════ */
 :root {
-  --bg:          #07070a;
-  --surface:     #0c0c10;
-  --surface2:    #111118;
-  --surface3:    #17171f;
+  --bg:          #060608;
+  --surface:     #0d0d12;
+  --surface2:    #121219;
+  --surface3:    #18181f;
   --surface4:    #1d1d28;
-  --border:      #1a1a26;
-  --border2:     #242434;
-  --border3:     #2e2e44;
+  --border:      #1e1e2a;
+  --border2:     #28283a;
+  --border3:     #32324a;
 
-  --green:       #00e584;
+  --green:       #00e88a;
   --green-glow:  rgba(0,229,132,0.18);
   --green-dim:   #00b868;
   --amber:       #f0a500;
@@ -29,21 +29,21 @@
   --purple:      #9b6dff;
   --blue:        #4d8ef5;
 
-  --text:        #eeeef5;
-  --text-2:      #8888a0;
-  --text-3:      #44445a;
+  --text:        #f0f0f8;
+  --text-2:      #a0a0c0;
+  --text-3:      #70708a;
   --text-4:      #22222e;
 
-  --sans:        'Outfit', system-ui, sans-serif;
-  --mono:        'JetBrains Mono', monospace;
+  --sans:        'DM Sans', system-ui, sans-serif;
+  --mono:        'DM Mono', monospace;
 
-  --sidebar-w:   224px;
-  --topbar-h:    52px;
+  --sidebar-w:   240px;
+  --topbar-h:    56px;
   --r-xs:        5px;
   --r-sm:        8px;
-  --r:           12px;
-  --r-lg:        16px;
-  --r-xl:        20px;
+  --r:           14px;
+  --r-lg:        18px;
+  --r-xl:        22px;
 }
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -52,8 +52,8 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 15.5px;
+  line-height: 1.65;
   min-height: 100vh;
   display: flex;
   -webkit-font-smoothing: antialiased;
@@ -84,7 +84,7 @@ body::before {
   position: fixed;
   top: 0; left: 0; bottom: 0;
   z-index: 200;
-  overflow: hidden;
+  overflow: visible;
 }
 /* subtle left accent line */
 #sidebar::before {
@@ -115,7 +115,7 @@ body::before {
 }
 .logo-text { min-width: 0; }
 .logo-title {
-  font-family: var(--sans); font-size: 15px; font-weight: 700;
+  font-family: var(--sans); font-size: 16px; font-weight: 700; letter-spacing: -0.02em;
   color: var(--text); letter-spacing: -0.01em; line-height: 1.15;
 }
 .logo-sub {
@@ -124,16 +124,16 @@ body::before {
 }
 
 .sidebar-section-label {
-  font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--text-4);
   padding: 18px 20px 5px;
 }
-.sidebar-nav { flex:1; padding: 6px 0 0; overflow-y: auto; }
+.sidebar-nav { flex:1; padding: 6px 0 0; overflow-y: auto; overflow-x: hidden; }
 .sidebar-nav::-webkit-scrollbar { width: 0; }
 .nav-item {
   display: flex; align-items: center; gap: 10px;
   padding: 8px 20px 8px 22px;
-  font-family: var(--sans); font-size: 13.5px; font-weight: 500;
+  font-family: var(--sans); font-size: 14.5px; font-weight: 500; letter-spacing: -0.01em;
   color: var(--text-3); cursor: pointer;
   border-left: 2px solid transparent;
   transition: color 0.15s, background 0.15s, border-color 0.15s;
@@ -157,7 +157,7 @@ body::before {
   border-top: 1px solid var(--border);
 }
 .sidebar-version {
-  font-family: var(--mono); font-size: 9px; color: var(--text-4);
+  font-family: var(--mono); font-size: 10px; color: var(--text-3);
   letter-spacing: 0.08em; margin-bottom: 10px;
 }
 .auth-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
@@ -206,7 +206,7 @@ body::before {
   -webkit-backdrop-filter: blur(14px);
 }
 .topbar-title {
-  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  font-family: var(--sans); font-size: 15px; font-weight: 600;
   color: var(--text); letter-spacing: -0.01em;
 }
 .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
@@ -242,19 +242,19 @@ body::before {
 ═══════════════════════════════════════ */
 .page { display: none; flex: 1; overflow-y: auto; }
 .page.active { display: block; }
-.page-inner { padding: 40px 44px; max-width: 1440px; }
+.page-inner { padding: 48px 52px; max-width: 1440px; }
 
 /* ═══════════════════════════════════════
    PAGE HEADER
 ═══════════════════════════════════════ */
 .page-header { margin-bottom: 32px; }
 .page-header-title {
-  font-family: var(--sans); font-size: 24px; font-weight: 700;
+  font-family: var(--sans); font-size: 28px; font-weight: 700; letter-spacing: -0.03em;
   color: var(--text); letter-spacing: -0.03em; line-height: 1.15;
   margin-bottom: 5px;
 }
 .page-header-sub {
-  font-size: 13.5px; color: var(--text-3); font-weight: 400; letter-spacing: 0;
+  font-size: 14.5px; color: var(--text-3); font-weight: 400; letter-spacing: 0;
 }
 
 /* ═══════════════════════════════════════
@@ -290,13 +290,13 @@ body::before {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
 }
-.stat-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.stat-card:hover { border-color: var(--border3); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
 .stat-label {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--text-3); margin-bottom: 10px;
 }
 .stat-value {
-  font-family: var(--mono); font-size: 28px; font-weight: 600;
+  font-family: var(--mono); font-size: 32px; font-weight: 700; letter-spacing: -0.03em;
   color: var(--green); line-height: 1; letter-spacing: -0.03em;
 }
 .stat-sub { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 6px; }
@@ -309,12 +309,12 @@ body::before {
   border-radius: var(--r);
   overflow: hidden; overflow-x: auto;
 }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
 thead th {
   background: var(--surface);
   padding: 11px 16px;
   text-align: left;
-  font-family: var(--mono); font-size: 9px; color: var(--text-3);
+  font-family: var(--mono); font-size: 10px; color: var(--text-3);
   letter-spacing: 0.14em; text-transform: uppercase;
   border-bottom: 1px solid var(--border); white-space: nowrap;
 }
@@ -322,7 +322,7 @@ tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; 
 tbody tr:hover { background: var(--surface2); }
 tbody tr:last-child { border-bottom: none; }
 tbody td { padding: 12px 16px; vertical-align: middle; }
-.mono { font-family: var(--mono); font-size: 11px; }
+.mono { font-family: var(--mono); font-size: 12.5px; }
 .num { text-align: right; font-family: var(--mono); }
 .empty-state {
   text-align: center; padding: 72px 48px;
@@ -345,7 +345,7 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.4); curso
 select option { background: var(--surface2); }
 input::placeholder { color: var(--text-4); }
 .field-label {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--text-3); margin-bottom: 7px;
 }
 
@@ -525,6 +525,7 @@ input::placeholder { color: var(--text-4); }
   position: absolute; inset: 0;
   background: linear-gradient(135deg, rgba(0,229,132,0.05) 0%, transparent 60%);
   opacity: 0; transition: opacity 0.2s;
+  pointer-events: none;
 }
 .quick-action-card:hover {
   border-color: rgba(0,229,132,0.25);
@@ -713,16 +714,20 @@ input::placeholder { color: var(--text-4); }
 /* ═══════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════ */
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   :root { --sidebar-w: 0px; }
   #sidebar { transform: translateX(-224px); transition: transform 0.25s; width: 224px; }
-  #sidebar.open { transform: translateX(0); }
+  #sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.4); }
+  #menuToggle { display: flex !important; }
   .page-inner { padding: 24px 20px; }
   .stat-grid-4 { grid-template-columns: repeat(2,1fr); }
   .exp-stat-grid { grid-template-columns: repeat(2,1fr); }
   .cogs-grid { grid-template-columns: 1fr; }
   .rm-mini-stats { grid-template-columns: 1fr; }
 }
+#menuToggle { display: none; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-2); cursor: pointer; padding: 5px 9px; font-size: 16px; line-height: 1; }
+#sidebarOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; pointer-events: none; }
+#sidebarOverlay.visible { display: block; pointer-events: all; }
 
 /* ═══ A2A ANALYSER (3-mode) ═══ */
 
@@ -1610,9 +1615,9 @@ input::placeholder { color: var(--text-4); }
 ═══════════════════════════════════════════ */
 .scout-config-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 .scout-source-tabs {
   display: flex;
@@ -1620,13 +1625,13 @@ input::placeholder { color: var(--text-4); }
   margin-bottom: 12px;
 }
 .scout-tab {
-  padding: 5px 14px;
+  padding: 7px 16px;
   background: var(--surface3);
   border: 1px solid var(--border2);
   border-radius: var(--r-xs);
   color: var(--text-3);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1654,15 +1659,15 @@ input::placeholder { color: var(--text-4); }
   cursor: pointer;
   transition: all 0.15s;
   text-align: center;
-  min-height: 110px;
+  min-height: 120px;
 }
 .scout-dropzone:hover { border-color: var(--green); background: rgba(0,229,132,0.04); }
 .scout-dropzone.loaded { border-style: solid; border-color: var(--green); background: rgba(0,229,132,0.06); }
 .scout-dropzone.drag-over { border-color: var(--green); background: rgba(0,229,132,0.1); }
 .scout-drop-icon { font-size: 22px; color: var(--text-3); transition: color 0.15s; }
 .scout-dropzone.loaded .scout-drop-icon { color: var(--green); }
-.scout-drop-label { font-family: var(--mono); font-size: 10.5px; color: var(--text-2); letter-spacing: 0.03em; }
-.scout-drop-sub { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
+.scout-drop-label { font-family: var(--mono); font-size: 12px; color: var(--text-2); letter-spacing: 0.02em; }
+.scout-drop-sub { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
 .scout-drop-filename { font-family: var(--mono); font-size: 10px; color: var(--green); word-break: break-all; max-width: 100%; }
 
 .scout-paste-area {
@@ -1673,8 +1678,8 @@ input::placeholder { color: var(--text-4); }
   border-radius: var(--r);
   color: var(--text);
   font-family: var(--mono);
-  font-size: 11px;
-  padding: 10px 12px;
+  font-size: 13px;
+  padding: 12px 14px;
   resize: vertical;
   outline: none;
   transition: border-color 0.15s;
@@ -1691,13 +1696,13 @@ input::placeholder { color: var(--text-4); }
 .scout-market-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 7px;
+  gap: 10px;
 }
 .scout-market-btn {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding: 10px 12px;
   background: var(--surface3);
   border: 1px solid var(--border2);
   border-radius: var(--r-sm);
@@ -1708,8 +1713,8 @@ input::placeholder { color: var(--text-4); }
 .scout-market-btn input { display: none; }
 .scout-market-btn:hover { border-color: var(--border3); }
 .scout-market-btn.checked { border-color: var(--green); background: rgba(0,229,132,0.08); }
-.scout-market-flag { font-size: 16px; line-height: 1; }
-.scout-market-code { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--text-2); }
+.scout-market-flag { font-size: 18px; line-height: 1; }
+.scout-market-code { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text-2); }
 .scout-market-btn.checked .scout-market-code { color: var(--green); }
 
 .scout-clear-btn {
@@ -1735,10 +1740,145 @@ input::placeholder { color: var(--text-4); }
   margin-bottom: 16px;
 }
 
+
+
+
+/* ── STOREFRONT STALKER ─────────────────── */
+.stalker-page { display:flex; flex-direction:column; gap:0; }
+.stalker-top { display:grid; grid-template-columns:380px 1fr; gap:20px; margin-bottom:16px; }
+.stalker-panel { background:var(--surface); border:1px solid var(--border2); border-radius:var(--r-lg); padding:22px 24px; }
+.stalker-panel-title { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-3); margin-bottom:16px; }
+.stalker-input { width:100%; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-sm); padding:11px 14px; color:var(--text); font-family:var(--mono); font-size:13px; outline:none; box-sizing:border-box; transition:border-color 0.15s; }
+.stalker-input:focus { border-color:var(--green); }
+.stalker-input::placeholder { color:var(--text-3); }
+.stalker-row { display:flex; gap:10px; margin-top:10px; }
+.stalker-select { flex:1; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-sm); padding:11px 12px; color:var(--text); font-family:var(--mono); font-size:13px; outline:none; cursor:pointer; }
+.stalker-add-btn { background:var(--green); color:#000; border:none; border-radius:var(--r-sm); padding:11px 20px; font-family:var(--mono); font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; transition:opacity 0.15s; }
+.stalker-add-btn:hover { opacity:0.88; }
+/* seller cards */
+.stalker-sellers-grid { display:flex; flex-direction:column; gap:10px; }
+.stalker-card { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r); padding:14px 16px; transition:border-color 0.2s; }
+.stalker-card.has-new { border-color:var(--green); background:rgba(0,232,138,0.04); }
+.stalker-card.checking { border-color:var(--amber); }
+.stalker-card.error { border-color:var(--red); }
+.stalker-card.baseline { border-color:var(--blue); }
+.stalker-card-top { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.stalker-card-flag { font-size:18px; flex-shrink:0; }
+.stalker-card-name { font-size:15px; font-weight:700; color:var(--text); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.stalker-card-badge { background:var(--green); color:#000; font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; flex-shrink:0; }
+.stalker-card-actions { display:flex; gap:6px; flex-shrink:0; }
+.stalker-btn { background:none; border:1px solid var(--border2); border-radius:var(--r-xs); color:var(--text-3); font-family:var(--mono); font-size:11px; font-weight:600; cursor:pointer; padding:4px 10px; transition:all 0.15s; white-space:nowrap; }
+.stalker-btn:hover { border-color:var(--green); color:var(--green); }
+.stalker-btn.del:hover { border-color:var(--red); color:var(--red); }
+.stalker-btn.refresh { border-color:var(--border3); color:var(--text-2); }
+.stalker-btn.refresh:hover { border-color:var(--green); color:var(--green); }
+.stalker-card-meta { display:flex; gap:14px; flex-wrap:wrap; }
+.stalker-card-meta-item { font-family:var(--mono); font-size:11.5px; color:var(--text-3); }
+.stalker-card-meta-item strong { color:var(--text-2); font-weight:500; }
+.stalker-card-status { font-family:var(--mono); font-size:11px; margin-top:6px; }
+/* feed */
+.stalker-feed-wrap { background:var(--surface); border:1px solid var(--border2); border-radius:var(--r-lg); display:flex; flex-direction:column; min-height:400px; margin-bottom:24px; }
+.stalker-feed-header { display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.stalker-feed-title { font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text); }
+.stalker-feed-meta { display:flex; align-items:center; gap:14px; }
+.stalker-token-info { font-family:var(--mono); font-size:12px; color:var(--text-3); }
+.stalker-feed-actions { display:flex; gap:8px; align-items:center; }
+.stalker-clear-btn { background:none; border:1px solid var(--border2); border-radius:var(--r-xs); color:var(--text-3); font-family:var(--mono); font-size:11px; cursor:pointer; padding:5px 12px; transition:all 0.15s; }
+.stalker-clear-btn:hover { border-color:var(--red); color:var(--red); }
+.stalker-check-all-btn { background:var(--green); color:#000; border:none; border-radius:var(--r-xs); font-family:var(--mono); font-size:12px; font-weight:700; cursor:pointer; padding:6px 16px; transition:opacity 0.15s; }
+.stalker-check-all-btn:hover { opacity:0.88; }
+.stalker-feed-body { flex:1; }
+.stalker-feed-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:12px; color:var(--text-3); font-family:var(--mono); font-size:13px; padding:60px 0; }
+.stalker-feed-empty-icon { font-size:44px; opacity:0.2; }
+/* feed items */
+.stalker-feed-date-header { padding:10px 22px 6px; font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-3); border-bottom:1px solid var(--border); background:var(--surface2); position:sticky; top:0; z-index:2; }
+.stalker-item { display:grid; grid-template-columns:auto 1fr auto; gap:16px; align-items:center; padding:14px 22px; border-bottom:1px solid var(--border); transition:background 0.15s; }
+.stalker-item:hover { background:rgba(255,255,255,0.02); }
+.stalker-item:last-child { border-bottom:none; }
+.stalker-item-dot { width:9px; height:9px; border-radius:50%; background:var(--green); flex-shrink:0; }
+.stalker-item-info { min-width:0; }
+.stalker-item-asin { font-family:var(--mono); font-size:14px; font-weight:700; color:var(--green); margin-bottom:3px; }
+.stalker-item-seller { font-family:var(--mono); font-size:12px; color:var(--text-3); }
+.stalker-item-time { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+.stalker-item-links { display:flex; gap:8px; margin-top:4px; justify-content:flex-end; }
+.stalker-item-link { font-family:var(--mono); font-size:11px; color:var(--blue); text-decoration:none; padding:3px 8px; border:1px solid var(--border2); border-radius:4px; transition:all 0.15s; }
+.stalker-item-link:hover { border-color:var(--blue); color:#fff; }
+.stalker-new-badge { background:var(--green); color:#000; font-family:var(--mono); font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; }
+
+.stalker-asin-section { margin-top:10px; border-top:1px solid var(--border); padding-top:10px; }
+.stalker-asin-toggle { font-family:var(--mono); font-size:11px; color:var(--text-3); cursor:pointer; background:none; border:none; padding:0; display:flex; align-items:center; gap:5px; transition:color 0.15s; }
+.stalker-asin-toggle:hover { color:var(--text-2); }
+.stalker-asin-table { display:none; margin-top:8px; max-height:240px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--r-sm); }
+.stalker-asin-table.open { display:block; }
+.stalker-asin-row { display:flex; align-items:center; justify-content:space-between; padding:7px 12px; border-bottom:1px solid var(--border); }
+.stalker-asin-row:last-child { border-bottom:none; }
+.stalker-asin-row:hover { background:rgba(255,255,255,0.02); }
+.stalker-asin-code { font-family:var(--mono); font-size:12px; color:var(--green); text-decoration:none; font-weight:600; }
+.stalker-asin-code:hover { text-decoration:underline; }
+.stalker-asin-seller { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+
+
+/* ── STALKER PRODUCT FEED ───────────────── */
+.stalker-product-header { padding:10px 22px 8px; font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-3); border-bottom:1px solid var(--border); background:var(--surface2); position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; }
+.stalker-product-count { color:var(--text-2); }
+.stalker-product-row { display:grid; grid-template-columns:52px 1fr 160px 100px 160px; gap:14px; align-items:center; padding:12px 20px; border-bottom:1px solid var(--border); transition:background 0.15s; }
+.stalker-product-row:hover { background:rgba(255,255,255,0.02); }
+.stalker-product-row:last-child { border-bottom:none; }
+.stalker-product-img { width:48px; height:48px; object-fit:contain; border-radius:6px; background:var(--surface2); border:1px solid var(--border); }
+.stalker-product-img-placeholder { width:48px; height:48px; border-radius:6px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--text-3); font-size:18px; }
+.stalker-product-title { font-size:13px; color:var(--text); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:3px; }
+.stalker-product-asin { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+.stalker-product-seller { font-family:var(--mono); font-size:12px; color:var(--text-2); }
+.stalker-product-seller-mkt { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:2px; }
+.stalker-product-price { font-family:var(--mono); font-size:14px; font-weight:700; color:var(--green); }
+.stalker-product-price-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:2px; }
+.stalker-product-links { display:flex; gap:6px; justify-content:flex-end; }
+.stalker-product-link { font-family:var(--mono); font-size:11px; color:var(--blue); text-decoration:none; padding:4px 10px; border:1px solid var(--border2); border-radius:4px; transition:all 0.15s; white-space:nowrap; }
+.stalker-product-link:hover { border-color:var(--blue); }
+.stalker-product-link.green { color:var(--green); border-color:rgba(0,232,138,0.3); }
+.stalker-product-link.green:hover { border-color:var(--green); }
+.stalker-fetch-progress { padding:16px 22px; font-family:var(--mono); font-size:12px; color:var(--text-3); }
+.stalker-fetch-bar-wrap { height:4px; background:var(--border); border-radius:2px; margin-top:8px; overflow:hidden; }
+.stalker-fetch-bar { height:4px; background:var(--green); border-radius:2px; transition:width 0.3s; }
+.stalker-new-dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 6px rgba(0,232,138,0.5); flex-shrink:0; display:inline-block; margin-right:4px; }
+
+
+/* ── STALKER STATS + TABLE ──────────────── */
+.stalker-stats-bar { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+.stalker-stat-card { background:var(--surface); border:1px solid var(--border2); border-radius:var(--r); padding:18px 20px; display:flex; align-items:center; justify-content:space-between; }
+.stalker-stat-card-left {}
+.stalker-stat-card-label { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); margin-bottom:6px; }
+.stalker-stat-card-value { font-family:var(--mono); font-size:28px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
+.stalker-stat-card-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:4px; }
+.stalker-stat-card-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.stalker-stat-card-icon.blue { background:rgba(77,142,245,0.12); }
+.stalker-stat-card-icon.green { background:rgba(0,232,138,0.1); }
+.stalker-stat-card-icon.amber { background:rgba(240,165,0,0.1); }
+.stalker-stat-card-icon.purple { background:rgba(155,109,255,0.12); }
+/* seller table */
+.stalker-sellers-table { width:100%; border-collapse:collapse; }
+.stalker-sellers-table th { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); padding:8px 14px; text-align:left; border-bottom:1px solid var(--border); }
+.stalker-sellers-table td { padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.stalker-sellers-table tr:last-child td { border-bottom:none; }
+.stalker-sellers-table tr:hover td { background:rgba(255,255,255,0.02); }
+.stalker-seller-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; font-family:var(--sans); flex-shrink:0; }
+.stalker-status-dot { width:7px; height:7px; border-radius:50%; background:var(--green); display:inline-block; margin-right:5px; }
+.stalker-status-dot.checking { background:var(--amber); }
+.stalker-status-dot.error { background:var(--red); }
+/* product rows - compact like Seller Fuse */
+.stalker-product-row { display:grid; grid-template-columns:44px minmax(0,1fr) 140px 100px 160px; gap:14px; align-items:center; padding:10px 20px; border-bottom:1px solid var(--border); transition:background 0.15s; }
+.stalker-product-row:hover { background:rgba(255,255,255,0.015); }
+.stalker-product-title { font-size:13px; color:var(--text); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; margin-bottom:2px; }
+.stalker-product-fees { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:2px; }
+/* ── END STALKER STATS ───────────────────── */
+
+/* ── END STALKER ────────────────────────── */
+
 </style>
 </head>
 <body>
 
+<div id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <!-- SIDEBAR -->
 <nav id="sidebar">
   <div class="sidebar-logo">
@@ -1767,6 +1907,9 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-divider"></div>
     <div class="sidebar-section-label">Finance</div>
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses',this)"><span class="nav-icon">£</span>Expenses</div>
+    <div class="nav-divider"></div>
+    <div class="sidebar-section-label">Intelligence</div>
+    <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
   </div>
   <div class="sidebar-footer">
     <div class="sidebar-version">v2.9 · 12 Mar 26</div>
@@ -1785,6 +1928,7 @@ input::placeholder { color: var(--text-4); }
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:8px;"><div style="width:5px;height:5px;border-radius:50%;background:var(--green);opacity:0.7;flex-shrink:0;"></div><div class="topbar-title" id="topbarTitle">Dashboard</div></div>
     <div class="topbar-right">
+      <button id="menuToggle" onclick="toggleSidebar()">☰</button>
       <button class="btn-sm btn-ghost" id="refreshBtn" onclick="refreshData()" disabled style="gap:6px;display:flex;align-items:center;">↻ Refresh</button>
     </div>
   </div>
@@ -2169,12 +2313,12 @@ input::placeholder { color: var(--text-4); }
           <div class="a2a-slot-name" id="daSlot2Name"></div>
           <button class="a2a-slot-clear" id="daSlot2Clear" onclick="daClearSlot(event,2)">✕</button>
         </div>
-        <div class="a2a-slot" id="daSlot3" style="display:none;" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,3)">
+        <div class="a2a-slot" id="daSlot3" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,3)">
           <input type="file" id="daFileInput3" accept=".csv" onchange="daFileChosen(3,this.files[0])">
           <div class="a2a-slot-num">03</div>
           <div class="a2a-slot-icon" id="daSlot3Icon">↑</div>
           <div class="a2a-slot-label" id="daSlot3Label">🇬🇧 UK Sell Prices</div>
-          <div class="a2a-slot-sub" id="daSlot3Sub" style="display:none;">UK SELL PRICES · REQUIRED</div>
+          <div class="a2a-slot-sub" id="daSlot3Sub">UK SELL PRICES · REQUIRED</div>
           <div class="a2a-slot-name" id="daSlot3Name"></div>
           <button class="a2a-slot-clear" id="daSlot3Clear" onclick="daClearSlot(event,3)">✕</button>
         </div>
@@ -2550,6 +2694,119 @@ input::placeholder { color: var(--text-4); }
   </div>
 
 </div><!-- /page-scout -->
+
+<div class="page" id="page-stalker">
+  <div class="page-header" style="margin-bottom:20px;">
+    <div class="page-header-title">👁 Storefront Stalker</div>
+    <div class="page-header-sub">Monitor competitor storefronts — new ASINs appear in the feed instantly</div>
+  </div>
+  <div class="stalker-page">
+
+    <!-- STATS BAR -->
+    <div class="stalker-stats-bar" id="stalkerStatsBar">
+      <div class="stalker-stat-card">
+        <div class="stalker-stat-card-left">
+          <div class="stalker-stat-card-label">Sellers Monitored</div>
+          <div class="stalker-stat-card-value" id="stalkerStatSellers">0</div>
+          <div class="stalker-stat-card-sub" id="stalkerStatSellersub">No sellers added</div>
+        </div>
+        <div class="stalker-stat-card-icon blue">👤</div>
+      </div>
+      <div class="stalker-stat-card">
+        <div class="stalker-stat-card-left">
+          <div class="stalker-stat-card-label">Total ASINs Tracked</div>
+          <div class="stalker-stat-card-value" id="stalkerStatAsins">0</div>
+          <div class="stalker-stat-card-sub">Across all sellers</div>
+        </div>
+        <div class="stalker-stat-card-icon purple">📦</div>
+      </div>
+      <div class="stalker-stat-card">
+        <div class="stalker-stat-card-left">
+          <div class="stalker-stat-card-label">New ASINs Today</div>
+          <div class="stalker-stat-card-value" id="stalkerStatNew">+0</div>
+          <div class="stalker-stat-card-sub" id="stalkerStatNewSub">vs yesterday</div>
+        </div>
+        <div class="stalker-stat-card-icon green">✚</div>
+      </div>
+      <div class="stalker-stat-card">
+        <div class="stalker-stat-card-left">
+          <div class="stalker-stat-card-label">Keepa Tokens</div>
+          <div class="stalker-stat-card-value" id="stalkerStatTokens">—</div>
+          <div class="stalker-stat-card-sub" id="stalkerStatTokenSub">Enter API key</div>
+        </div>
+        <div class="stalker-stat-card-icon amber">🔑</div>
+      </div>
+    </div>
+
+    <!-- SETUP + SELLERS ROW -->
+    <div class="stalker-top">
+      <!-- Setup panel -->
+      <div class="stalker-panel">
+        <div class="stalker-panel-title">Setup</div>
+        <input type="password" id="stalkerApiKey" class="stalker-input" placeholder="Keepa API key…" oninput="stalkerSaveKey()" style="margin-bottom:4px;">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-bottom:16px;">Stored locally · never shared</div>
+        <input type="text" id="stalkerSellerId" class="stalker-input" placeholder="Seller ID (e.g. A2L77EE7U53NWQ)" style="margin-bottom:10px;">
+        <div class="stalker-row">
+          <select id="stalkerMarket" class="stalker-select">
+            <option value="2">🇬🇧 amazon.co.uk</option>
+            <option value="3">🇩🇪 amazon.de</option>
+            <option value="4">🇫🇷 amazon.fr</option>
+            <option value="8">🇮🇹 amazon.it</option>
+            <option value="9">🇪🇸 amazon.es</option>
+            <option value="1">🇺🇸 amazon.com</option>
+          </select>
+          <button class="stalker-add-btn" onclick="stalkerAddSeller()">+ Track</button>
+        </div>
+      </div>
+
+      <!-- Sellers table panel -->
+      <div class="stalker-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div class="stalker-panel-title" style="margin-bottom:0;">Monitored Sellers</div>
+          <button class="stalker-check-all-btn" onclick="stalkerCheckAll()">↻ Check All</button>
+        </div>
+        <table class="stalker-sellers-table" id="stalkerSellerList">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Seller</th>
+              <th>Marketplace</th>
+              <th>ASINs</th>
+              <th>New Today</th>
+              <th>Last Checked</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="stalkerSellerTableBody">
+            <tr><td colspan="7" style="font-family:var(--mono);font-size:12px;color:var(--text-3);text-align:center;padding:24px 0;">No sellers added yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FEED -->
+    <div class="stalker-feed-wrap">
+      <div class="stalker-feed-header">
+        <div class="stalker-feed-title">New ASIN Feed</div>
+        <div class="stalker-feed-meta">
+          <span class="stalker-token-info" id="stalkerTokenInfo"></span>
+          <div class="stalker-feed-actions">
+            <button class="stalker-clear-btn" onclick="stalkerClearFeed()">Clear feed</button>
+          </div>
+        </div>
+      </div>
+      <div class="stalker-feed-body" id="stalkerFeed">
+        <div class="stalker-feed-empty" id="stalkerFeedEmpty">
+          <div class="stalker-feed-empty-icon">👁</div>
+          <div>Add a storefront and hit Check All</div>
+          <div style="font-size:12px;color:var(--text-3);">New ASINs and fetched products appear here</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /page-stalker -->
+
+
 <div class="modal-overlay" id="setupModal">
   <div class="modal">
     <div class="modal-title">Connect Google Sheets</div>
@@ -2594,8 +2851,9 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', deals:'Deal Analyser', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses' };
+  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', deals:'Deal Analyser', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
+  document.dispatchEvent(new CustomEvent('bimma:pagechange', { detail: name }));
 }
 
 // ════════════════════════════════════════
@@ -3489,24 +3747,19 @@ function daParseNum(val) {
 }
 
 function daParseCSV(text) {
-  const tokens = []; let cur = '', inQ = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === '"') { if (inQ && text[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
-    else if (ch === ',' && !inQ) { tokens.push(cur); cur = ''; }
-    else if ((ch === '\n' || ch === '\r') && !inQ) { if (ch === '\r' && text[i+1] === '\n') i++; tokens.push(cur); cur = ''; tokens.push('\n'); }
-    else cur += ch;
+  function splitLine(line) {
+    const f=[]; let c='',q=false;
+    for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){c+='"';i++;}else q=!q;}else if(ch===','&&!q){f.push(c);c='';}else c+=ch;}
+    f.push(c); return f.map(x=>x.trim());
   }
-  tokens.push(cur);
-  const allRows = []; let row = [];
-  for (const t of tokens) { if (t === '\n') { if (row.length) allRows.push(row); row = []; } else row.push(t.trim()); }
-  if (row.length) allRows.push(row);
-  if (allRows.length < 2) return [];
-  const headers = allRows[0].map(h => h.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim());
-  const rows = [];
-  for (let i = 1; i < allRows.length; i++) {
-    if (!allRows[i].length || (allRows[i].length === 1 && !allRows[i][0])) continue;
-    const obj = {}; headers.forEach((h, idx) => obj[h] = (allRows[i][idx] || '').trim()); rows.push(obj);
+  const lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  if(lines.length<2)return[];
+  const headers=splitLine(lines[0]).map(h=>h.replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim());
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    const line=lines[i].trim(); if(!line)continue;
+    const fields=splitLine(line); if(fields.length<2)continue;
+    const obj={}; headers.forEach((h,idx)=>{obj[h]=(fields[idx]||'').trim();}); rows.push(obj);
   }
   return rows;
 }
@@ -3540,7 +3793,7 @@ function daAnalyseRow(row) {
   const sd365    = daParseNum(row['Buy Box: Standard Deviation 365 days']);
   const fbaFeeRaw = daParseNum(row['FBA Pick&Pack Fee']);
   const fbaFeeEst = fbaFeeRaw === null; // flag that we estimated
-  const fbaFee    = fbaFeeRaw !== null ? fbaFeeRaw : (spIncVat ? daFbaFee(spIncVat) * (1 + vat) : null);
+  // fbaFee assigned below after spIncVat is calculated
   const rankDrops = daParseNum(row['Sales Rank: Drops last 30 days']);
   const boughtPerMonth = daParseNum(row['Bought in past month']);
   const ss = (row['Buy Box: Subscribe & Save'] || '').toLowerCase() === 'yes';
@@ -3574,6 +3827,9 @@ function daAnalyseRow(row) {
   const spIncVat = useStrikethrough ? stPrice : spBase;
   const spSource = useStrikethrough ? 'ST' : (recoveries && recoveries >= 4 && avg365) ? '365d' : '180d';
   const sp = spIncVat ? spIncVat / (1 + vat) : null;
+
+  // FBA fee: use actual if present, otherwise estimate from sell price
+  const fbaFee = fbaFeeRaw !== null ? fbaFeeRaw : (spIncVat ? daFbaFee(spIncVat) * (1 + vat) : null);
 
   // Dip vs buy
   const dip = (sp && buyExVat && sp > 0) ? (sp - buyExVat) / sp : null;
@@ -3675,7 +3931,7 @@ function daRunAnalysis() {
   document.getElementById('daDropzone').style.display = 'none';
   document.getElementById('daLoading').classList.add('visible');
   Promise.all(files.map(f => new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsText(f); }))).then(results => {
-    setTimeout(() => {
+    setTimeout(() => { try {
       const cfg = MODES[currentMode];
       let merged = [];
 
@@ -3775,6 +4031,12 @@ function daRunAnalysis() {
       document.getElementById('daResetBtn').style.display = '';
       document.getElementById('daStatsBarWrap') && (document.getElementById('daStatsBarWrap').style.display = 'flex');
       daUpdateVetoCount(); daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable();
+    } catch(err) {
+      document.getElementById('daLoading').classList.remove('visible');
+      document.getElementById('daDropzone').style.display = '';
+      console.error('Analysis error:', err);
+      alert('Analysis error: ' + err.message + '\n\nCheck browser console for details.');
+    }
     }, 200);
   });
 }
@@ -4640,6 +4902,664 @@ function scoutClear() {
   const countEl = document.getElementById('scoutResultCount');
   if (countEl) countEl.textContent = '';
   document.getElementById('scoutExportBtn').disabled = true;
+}
+
+
+// ════════════════════════════════════════
+// STOREFRONT STALKER
+// ════════════════════════════════════════
+let stalkerSellers   = JSON.parse(localStorage.getItem('bimma_stalker_sellers') || '[]');
+let stalkerSnapshots = JSON.parse(localStorage.getItem('bimma_stalker_snaps')   || '{}');
+let stalkerFeedItems = JSON.parse(localStorage.getItem('bimma_stalker_feed')    || '[]');
+
+const STALKER_MARKETS = { '1':'com','2':'co.uk','3':'de','4':'fr','8':'it','9':'es' };
+const STALKER_FLAGS   = { '1':'🇺🇸','2':'🇬🇧','3':'🇩🇪','4':'🇫🇷','8':'🇮🇹','9':'🇪🇸' };
+
+// Keepa epoch: minutes since Jan 1 2011
+function keepaMinToDate(keepaMin) {
+  return new Date((keepaMin + 21564000) * 60000);
+}
+
+function stalkerSave() {
+  localStorage.setItem('bimma_stalker_sellers', JSON.stringify(stalkerSellers));
+  localStorage.setItem('bimma_stalker_snaps',   JSON.stringify(stalkerSnapshots));
+  localStorage.setItem('bimma_stalker_feed',    JSON.stringify(stalkerFeedItems.slice(0, 500)));
+}
+
+function stalkerSaveKey() {
+  const k = document.getElementById('stalkerApiKey').value.trim();
+  if (k) { localStorage.setItem('bimma_stalker_key', k); stalkerFetchTokens(k); }
+}
+
+function stalkerGetKey() {
+  return document.getElementById('stalkerApiKey')?.value.trim() || localStorage.getItem('bimma_stalker_key') || '';
+}
+
+function stalkerInit() {
+  const saved = localStorage.getItem('bimma_stalker_key');
+  if (saved) { const el = document.getElementById('stalkerApiKey'); if(el) el.value = saved; }
+  stalkerRenderSellers();
+  stalkerRenderFeed();
+  // Fetch token count on load if key exists
+  if (saved) stalkerFetchTokens(saved);
+}
+
+async function stalkerFetchTokens(key) {
+  try {
+    const res  = await fetch(`https://api.keepa.com/token?key=${key}`);
+    const data = await res.json();
+    const tokens = data.tokensLeft ?? data.refillRate ?? null;
+    if (tokens !== null) {
+      const infoEl = document.getElementById('stalkerTokenInfo');
+      if (infoEl) infoEl.textContent = Number(tokens).toLocaleString() + ' tokens left';
+      const statEl = document.getElementById('stalkerStatTokens');
+      if (statEl) statEl.textContent = Number(tokens).toLocaleString();
+      const subEl = document.getElementById('stalkerStatTokenSub');
+      if (subEl) subEl.textContent = 'Refills every minute';
+    }
+  } catch(e) { console.log('Token fetch error:', e); }
+}
+
+function stalkerAddSeller() {
+  const sellerId = document.getElementById('stalkerSellerId').value.trim().toUpperCase();
+  const market   = document.getElementById('stalkerMarket').value;
+  if (!sellerId) { alert('Please enter a seller ID.'); return; }
+  if (stalkerSellers.find(s => s.id === sellerId && s.market === market)) { alert('Already tracking this seller on this marketplace.'); return; }
+  const seller = { uid: Date.now().toString(), id: sellerId, name: sellerId, market, lastCheck: null, asinCount: null, lastSeen: null, status: 'idle' };
+  stalkerSellers.push(seller);
+  stalkerSave();
+  stalkerRenderSellers();
+  document.getElementById('stalkerSellerId').value = '';
+  // Immediately fetch — resolves real seller name + baseline snapshot
+  stalkerCheckSeller(seller);
+}
+
+function stalkerRemoveSeller(uid) {
+  if (!confirm('Remove this storefront?')) return;
+  const seller = stalkerSellers.find(s => s.uid === uid);
+  if (seller) delete stalkerSnapshots[uid];
+  stalkerSellers = stalkerSellers.filter(s => s.uid !== uid);
+  stalkerSave();
+  stalkerRenderSellers();
+}
+
+async function stalkerCheckAll() {
+  for (const s of stalkerSellers) {
+    await stalkerCheckSeller(s);
+  }
+}
+
+async function stalkerCheckSeller(seller) {
+  const key = stalkerGetKey();
+  if (!key) { alert('Enter your Keepa API key first.'); return; }
+
+  seller.status = 'checking';
+  stalkerRenderSellers();
+
+  // Use Product Finder endpoint — searches Keepa's database for all ASINs
+  // where this seller has an active offer. Uses exact format from Keepa's own UI.
+  // Cost: 1 token per page of results
+  // Fetch seller name
+  try {
+    const nameRes = await fetch(`https://api.keepa.com/seller?key=${key}&domain=${seller.market}&seller=${seller.id}`);
+    const nameData = await nameRes.json();
+    const nameObj = nameData.sellers && nameData.sellers[seller.id];
+    if (nameObj && nameObj.sellerName && nameObj.sellerName !== seller.id) {
+      seller.name = nameObj.sellerName;
+    }
+  } catch(_) {}
+
+  // Use sellerIds array format — paginate through all results
+  const allAsins = [];
+  let page = 0;
+  let totalExpected = null;
+
+  try {
+    while (true) {
+      const fmt = {
+        sellerIds: [seller.id],
+        asinsOnly: 1,
+        perPage: 100,
+        page
+      };
+      const res = await fetch(`https://api.keepa.com/query?key=${key}&domain=${seller.market}&selection=${encodeURIComponent(JSON.stringify(fmt))}`);
+      const data = await res.json();
+
+      if (data.tokensLeft !== undefined) {
+        const el = document.getElementById('stalkerTokenInfo');
+        if (el) el.textContent = Number(data.tokensLeft).toLocaleString() + ' tokens left'; const st = document.getElementById('stalkerStatTokens'); if(st) st.textContent = Number(data.tokensLeft).toLocaleString();
+      }
+      if (data.error) throw new Error(data.error.message || 'Keepa API error');
+
+      const pageAsins = data.asinList || [];
+      console.log(`Page ${page}: got ${pageAsins.length} ASINs, totalResults: ${data.totalResults}`);
+      allAsins.push(...pageAsins);
+
+      if (totalExpected === null) totalExpected = data.totalResults || 0;
+      if (pageAsins.length < 100 || allAsins.length >= totalExpected) break;
+      page++;
+    }
+
+    // If sellerIds returned nothing, it means Keepa hasn't indexed offers for this seller
+    // Fall back to seller storefront endpoint
+    if (allAsins.length === 0) {
+      const sfRes = await fetch(`https://api.keepa.com/seller?key=${key}&domain=${seller.market}&seller=${seller.id}&storefront=1&update=0`);
+      const sfData = await sfRes.json();
+      if (sfData.tokensLeft !== undefined) {
+        const el = document.getElementById('stalkerTokenInfo');
+        if (el) el.textContent = Number(sfData.tokensLeft).toLocaleString() + ' tokens left';
+      }
+      const sfObj = sfData.sellers && sfData.sellers[seller.id];
+      if (sfObj) {
+        if (sfObj.sellerName && sfObj.sellerName !== seller.id) seller.name = sfObj.sellerName;
+        allAsins.push(...(sfObj.asinList || []));
+        // Log full raw response so we can see what fields exist
+        console.log('FULL sellerObj:', JSON.stringify(sfObj));
+        console.log('asinList length:', (sfObj.asinList||[]).length);
+        console.log('All sfData keys:', Object.keys(sfData));
+      } else {
+        console.log('sellerObj not found. sfData keys:', Object.keys(sfData||{}));
+        console.log('sellers keys:', Object.keys(sfData?.sellers||{}));
+        console.log('Full raw response:', JSON.stringify(sfData).substring(0, 2000));
+      }
+    }
+
+    const currentAsinList = allAsins;
+    const currentAsins    = new Set(currentAsinList);
+    const lastSeenDate    = null;
+
+    seller.asinCount = currentAsins.size;
+    seller.asinListEmpty = currentAsinList.length === 0;
+    seller.lastCheck = Date.now();
+    seller.lastSeen  = lastSeenDate ? lastSeenDate.toISOString() : null;
+    seller.status    = 'ok';
+
+    const prevSnap = stalkerSnapshots[seller.uid];
+
+    if (!prevSnap) {
+      // First scan — baseline only, no alerts
+      stalkerSnapshots[seller.uid] = { asins: currentAsinList, ts: Date.now() };
+      seller.status = 'baseline';
+      stalkerSave();
+      stalkerRenderSellers();
+      return;
+    }
+
+    const prevAsins = new Set(prevSnap.asins);
+    const newAsins  = currentAsinList.filter(a => !prevAsins.has(a));
+
+    // Always update snapshot to latest
+    stalkerSnapshots[seller.uid] = { asins: currentAsinList, ts: Date.now() };
+
+    if (newAsins.length > 0) {
+      seller.status = 'has-new';
+      stalkerSave();
+      stalkerRenderSellers();
+      stalkerUpdateBadge();
+
+      // Fetch full product data for new ASINs and prepend to feed
+      await stalkerFetchAndPrependNewAsins(newAsins, seller);
+    } else {
+      stalkerSave();
+      stalkerRenderSellers();
+    }
+
+  } catch(e) {
+    seller.status = 'error';
+    seller.errorMsg = e.message;
+    seller.lastCheck = Date.now();
+    stalkerSave();
+    stalkerRenderSellers();
+  }
+}
+
+function stalkerUpdateBadge() {
+  const total = stalkerFeedItems.filter(f => f.type === 'new').length;
+  const badge = document.getElementById('stalkerBadge');
+  if (!badge) return;
+  if (total > 0) { badge.textContent = total; badge.style.display = 'inline'; }
+  else badge.style.display = 'none';
+}
+
+function stalkerRenderSellers() {
+  const tbody = document.getElementById('stalkerSellerTableBody');
+  if (!tbody) return;
+
+  // Update stats bar
+  const totalAsins = stalkerSellers.reduce((a,s) => a + (s.asinCount||0), 0);
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const newToday   = stalkerFeedItems.filter(f => f.detectedAt >= todayStart.getTime() && f.type==='new').length;
+  const el = id => document.getElementById(id);
+  if (el('stalkerStatSellers'))  el('stalkerStatSellers').textContent  = stalkerSellers.length;
+  if (el('stalkerStatSellersub')) el('stalkerStatSellersub').textContent = stalkerSellers.length === 1 ? '1 active' : stalkerSellers.length + ' active';
+  if (el('stalkerStatAsins'))    el('stalkerStatAsins').textContent    = totalAsins.toLocaleString();
+  if (el('stalkerStatNew'))      el('stalkerStatNew').textContent      = '+' + newToday;
+
+  if (!stalkerSellers.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="font-family:var(--mono);font-size:12px;color:var(--text-3);text-align:center;padding:24px 0;">No sellers added yet</td></tr>';
+    return;
+  }
+
+  const AVATARCOLORS = ['#4d8ef5','#9b6dff','#00e88a','#f0a500','#f03b50','#00c9ff'];
+
+  tbody.innerHTML = stalkerSellers.map((s, i) => {
+    const flag     = STALKER_FLAGS[s.market] || '🌐';
+    const tld      = STALKER_MARKETS[s.market] || 'co.uk';
+    const snap     = stalkerSnapshots[s.uid];
+    const newCount = stalkerFeedItems.filter(f => f.sellerId === s.id && f.type==='new' && f.detectedAt >= new Date().setHours(0,0,0,0)).length;
+    const isChecking = s.status === 'checking';
+    const dotClass = isChecking ? 'checking' : s.status==='error' ? 'error' : '';
+    const lastCheckStr = s.lastCheck ? stalkerFmtTime(s.lastCheck) : '—';
+    const avatarColor  = AVATARCOLORS[i % AVATARCOLORS.length];
+    const initial      = (s.name||'?')[0].toUpperCase();
+
+    return `<tr id="stalkerCard_${s.uid}">
+      <td><span class="stalker-status-dot ${dotClass}"></span><span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${isChecking?'Checking':'Active'}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="stalker-seller-avatar" style="background:${avatarColor}22;color:${avatarColor};">${initial}</div>
+          <div>
+            <div style="font-size:13.5px;font-weight:600;color:var(--text);">${s.name}</div>
+            <a href="https://keepa.com/#!seller/${s.market}-${s.id}" target="_blank" style="font-family:var(--mono);font-size:10.5px;color:var(--blue);text-decoration:none;">${s.id}</a>
+          </div>
+        </div>
+      </td>
+      <td style="font-family:var(--mono);font-size:12px;color:var(--text-2);">${flag} ${tld}</td>
+      <td style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);">${s.asinCount !== null ? s.asinCount.toLocaleString() : '—'}</td>
+      <td style="font-family:var(--mono);font-size:13px;color:${newCount>0?'var(--green)':'var(--text-3)'};">${newCount > 0 ? '+'+newCount : '0'}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${lastCheckStr}</td>
+      <td>
+        <input type="file" id="stalkerCSVInput_${s.uid}" accept=".csv" style="display:none" onchange="stalkerHandleCSV('${s.uid}',this)">
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${snap && snap.asins && snap.asins.length ? `<button class="stalker-btn" style="color:var(--text-2);font-size:11px;" onclick="stalkerFetchProducts('${s.uid}')">↓ Fetch</button>` : ''}
+          <button class="stalker-btn refresh" onclick="stalkerCheckSeller(stalkerSellers.find(x=>x.uid==='${s.uid}'))" ${isChecking?'disabled':''} title="Refresh">↻</button>
+          <button class="stalker-btn" onclick="stalkerImportCSV('${s.uid}')" title="Import CSV">↑</button>
+          <button class="stalker-btn" onclick="stalkerRename('${s.uid}')" title="Rename">✎</button>
+          <button class="stalker-btn del" onclick="stalkerRemoveSeller('${s.uid}')">✕</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+
+
+function stalkerRenderFeed() {
+  const feedEl  = document.getElementById('stalkerFeed');
+  const emptyEl = document.getElementById('stalkerFeedEmpty');
+  if (!feedEl) return;
+
+  if (!stalkerFeedItems.length) {
+    if (emptyEl) emptyEl.style.display = 'flex';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  // Group items by date
+  const today = new Date(); today.setHours(0,0,0,0);
+  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate()-1);
+
+  const groups = {};
+  stalkerFeedItems.forEach(item => {
+    const d = new Date(item.detectedAt); d.setHours(0,0,0,0);
+    const key = d.getTime();
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+
+  const sortedKeys = Object.keys(groups).sort((a,b) => b-a);
+
+  feedEl.innerHTML = sortedKeys.map(key => {
+    const d = new Date(parseInt(key));
+    const isToday = d.getTime() === today.getTime();
+    const isYesterday = d.getTime() === yesterday.getTime();
+    const label = isToday ? `Today — ${groups[key].length} new ASINs` : isYesterday ? `Yesterday — ${groups[key].length} new ASINs` : `${d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} — ${groups[key].length} new ASINs`;
+
+    const items = groups[key].map(item => {
+      const flag     = STALKER_FLAGS[item.market] || '🌐';
+      const tld      = STALKER_MARKETS[item.market] || 'co.uk';
+      const amzUrl   = `https://www.amazon.${tld}/dp/${item.asin}`;
+      const keepaUrl = `https://keepa.com/#!product/${item.market}-${item.asin}`;
+      const detectedStr = stalkerFmtTime(item.detectedAt);
+      return `<div class="stalker-item">
+        <div class="stalker-item-dot"></div>
+        <div class="stalker-item-info">
+          <div class="stalker-item-asin">${item.asin}</div>
+          <div class="stalker-item-seller">${flag} ${item.sellerName} · amazon.${tld} · detected ${detectedStr}</div>
+        </div>
+        <div>
+          <div class="stalker-item-links">
+            <a href="${amzUrl}" target="_blank" class="stalker-item-link">Amazon ↗</a>
+            <a href="${keepaUrl}" target="_blank" class="stalker-item-link">Keepa ↗</a>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="stalker-feed-date-header">${label}</div>${items}`;
+  }).join('');
+}
+
+function stalkerClearFeed() {
+  if (!confirm('Clear all feed items?')) return;
+  stalkerFeedItems = [];
+  stalkerSellers.forEach(s => { if (s.status === 'has-new') s.status = 'ok'; });
+  stalkerSave();
+  stalkerRenderSellers();
+  stalkerUpdateBadge();
+  const feedEl  = document.getElementById('stalkerFeed');
+  const emptyEl = document.getElementById('stalkerFeedEmpty');
+  if (feedEl)  feedEl.innerHTML = '';
+  if (emptyEl) { feedEl.appendChild(emptyEl); emptyEl.style.display = 'flex'; }
+}
+
+function stalkerFmtTime(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  const pad = n => String(n).padStart(2,'0');
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// Auto-init when stalker page is shown — patch via event, not function override
+document.addEventListener('bimma:pagechange', e => {
+  if (e.detail === 'stalker') stalkerInit();
+});
+// ════════════════════════════════════════
+
+
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  sb.classList.toggle('open');
+  if (ov) ov.classList.toggle('visible');
+}
+
+function stalkerRename(uid) {
+  const seller = stalkerSellers.find(s => s.uid === uid);
+  if (!seller) return;
+  const newName = prompt('Rename seller:', seller.name);
+  if (newName && newName.trim()) {
+    seller.name = newName.trim();
+    stalkerSave();
+    stalkerRenderSellers();
+  }
+}
+
+
+function stalkerImportCSV(uid) {
+  const input = document.getElementById('stalkerCSVInput_' + uid);
+  if (input) input.click();
+}
+
+function stalkerHandleCSV(uid, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    const lines = text.replace(/\r/g, '').split('\n').filter(Boolean);
+    // Skip header row, extract ASINs
+    const asins = [];
+    for (let i = 1; i < lines.length; i++) {
+      // Handle quoted values
+      const asin = lines[i].replace(/"/g, '').split(',')[0].trim();
+      if (asin && asin.length === 10 && asin.startsWith('B')) asins.push(asin);
+    }
+    if (!asins.length) { alert('No ASINs found in CSV. Make sure it has an ASIN column.'); return; }
+    const seller = stalkerSellers.find(s => s.uid === uid);
+    if (!seller) return;
+    stalkerSnapshots[uid] = { asins, ts: Date.now() };
+    seller.asinCount = asins.length;
+    seller.status = 'baseline';
+    seller.lastCheck = Date.now();
+    stalkerSave();
+    stalkerRenderSellers();
+    alert(`✓ Baseline set: ${asins.length} ASINs imported from ${file.name}`);
+  };
+  reader.readAsText(file);
+  input.value = ''; // reset so same file can be re-imported
+}
+
+
+function stalkerToggleAsins(uid) {
+  const list  = document.getElementById('stalkerAsinList_' + uid);
+  const arrow = document.getElementById('stalkerAsinArrow_' + uid);
+  if (!list) return;
+  const open = list.classList.toggle('open');
+  if (arrow) arrow.textContent = open ? '▼' : '▶';
+}
+
+
+async function stalkerFetchProducts(uid) {
+  const seller = stalkerSellers.find(s => s.uid === uid);
+  if (!seller) return;
+  const snap = stalkerSnapshots[uid];
+  if (!snap || !snap.asins || !snap.asins.length) return;
+  const key = stalkerGetKey();
+  if (!key) { alert('Enter your Keepa API key first.'); return; }
+
+  const asins = snap.asins;
+  const batchSize = 100;
+  const totalBatches = Math.ceil(asins.length / batchSize);
+  const feedEl = document.getElementById('stalkerFeed');
+  const emptyEl = document.getElementById('stalkerFeedEmpty');
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  // Show progress in feed
+  feedEl.innerHTML = `<div class="stalker-fetch-progress" id="stalkerFetchProgress">
+    <span id="stalkerFetchStatus">Fetching products for ${seller.name}… 0 / ${asins.length}</span>
+    <div class="stalker-fetch-bar-wrap"><div class="stalker-fetch-bar" id="stalkerFetchBar" style="width:0%"></div></div>
+  </div>`;
+
+  const products = [];
+  for (let b = 0; b < totalBatches; b++) {
+    const batch = asins.slice(b * batchSize, (b + 1) * batchSize);
+    try {
+      const url = `https://api.keepa.com/product?key=${key}&domain=${seller.market}&asin=${batch.join(',')}&history=1&stats=180&update=1`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.tokensLeft !== undefined) {
+        const el = document.getElementById('stalkerTokenInfo');
+        if (el) el.textContent = Number(data.tokensLeft).toLocaleString() + ' tokens left'; const st = document.getElementById('stalkerStatTokens'); if(st) st.textContent = Number(data.tokensLeft).toLocaleString();
+      }
+      if (data.products) products.push(...data.products);
+    } catch(e) { console.error('Batch error:', e); }
+
+    const done = Math.min((b + 1) * batchSize, asins.length);
+    const pct  = Math.round(done / asins.length * 100);
+    const statusEl = document.getElementById('stalkerFetchStatus');
+    const barEl    = document.getElementById('stalkerFetchBar');
+    if (statusEl) statusEl.textContent = `Fetching products for ${seller.name}… ${done} / ${asins.length}`;
+    if (barEl)    barEl.style.width = pct + '%';
+  }
+
+  // Render product cards
+  stalkerRenderProductFeed(products, seller);
+}
+
+function stalkerRenderProductFeed(products, seller) {
+  const feedEl = document.getElementById('stalkerFeed');
+  if (!feedEl) return;
+  const flag = STALKER_FLAGS[seller.market] || '🌐';
+  const tld  = STALKER_MARKETS[seller.market] || 'co.uk';
+
+  const header = `<div class="stalker-product-header">
+    <span>${flag} ${seller.name} — <span class="stalker-product-count">${products.length} products</span></span>
+    <span style="display:grid;grid-template-columns:44px minmax(0,1fr) 140px 100px 160px;gap:14px;width:100%;margin-top:10px;padding:0 20px;box-sizing:border-box;">
+      <span></span>
+      <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);">Product</span>
+      <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);">Seller</span>
+      <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);">Price</span>
+      <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);text-align:right;">Actions</span>
+    </span>
+  </div>`;
+
+  const rows = products.map(p => {
+    const asin   = p.asin || '';
+    const title  = p.title || asin;
+    const imgKey = p.imagesCSV ? p.imagesCSV.split(',')[0] : null;
+    const imgUrl = imgKey ? `https://m.media-amazon.com/images/I/${imgKey}` : null;
+    // Price extraction from Keepa csv arrays
+    // Each csv field = [keepaTime, price, keepaTime, price, ...]
+    // Values are in pence/cents × 100, -1 = out of stock
+    // Try: buy box (18), new (1), used (7), amazon (0)
+    let price = null;
+    let priceLabel = 'Buy Box';
+    try {
+      const csv = p.csv;
+      const tryFields = [[18,'Buy Box'],[1,'New'],[0,'Amazon'],[7,'Used']];
+      for (const [f, label] of tryFields) {
+        if (csv && csv[f] && csv[f].length >= 2) {
+          // Walk backwards through pairs to find last valid price
+          for (let i = csv[f].length - 1; i >= 1; i -= 2) {
+            const raw = csv[f][i];
+            if (raw > 0) { price = (raw / 100).toFixed(2); priceLabel = label; break; }
+          }
+          if (price) break;
+        }
+      }
+      // Also try stats object
+      if (!price && p.stats) {
+        const s = p.stats;
+        const candidates = [s.buyBoxPrice, s.current && s.current[1], s.current && s.current[18]];
+        for (const c of candidates) {
+          if (c && c > 0) { price = (c / 100).toFixed(2); priceLabel = 'Current'; break; }
+        }
+      }
+    } catch(e) { console.log('Price err:', e, p.asin); }
+
+    const keepaUrl = `https://keepa.com/#!product/${seller.market}-${asin}`;
+    const amzUrl   = `https://www.amazon.${tld}/dp/${asin}`;
+
+    // Estimate FBA fee ~15% of price as placeholder if not available
+    const feeEstimate = price ? (parseFloat(price) * 0.15).toFixed(2) : null;
+
+    return `<div class="stalker-product-row">
+      ${imgUrl
+        ? `<img src="${imgUrl}" class="stalker-product-img" onerror="this.style.display='none'">`
+        : `<div class="stalker-product-img-placeholder">📦</div>`}
+      <div style="min-width:0;">
+        <div class="stalker-product-title" title="${title}">${title}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--blue);">${asin}</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--green);background:rgba(0,232,138,0.08);padding:1px 6px;border-radius:3px;">● In Stock</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);">${seller.name}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px;">${flag} ${tld}</div>
+      </div>
+      <div>
+        ${price
+          ? `<div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);">£${price}</div>
+             <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px;">Fees: £${feeEstimate}</div>`
+          : `<div style="font-family:var(--mono);font-size:12px;color:var(--text-3);">—</div>`}
+      </div>
+      <div style="display:flex;gap:7px;justify-content:flex-end;align-items:center;">
+        <a href="${keepaUrl}" target="_blank" class="stalker-product-link">Keepa ↗</a>
+        <a href="${amzUrl}" target="_blank" class="stalker-product-link green">Amazon ↗</a>
+      </div>
+    </div>`;
+  }).join('');
+
+  feedEl.innerHTML = header + rows;
+}
+
+
+async function stalkerFetchAndPrependNewAsins(newAsins, seller) {
+  const key  = stalkerGetKey();
+  const flag = STALKER_FLAGS[seller.market] || '🌐';
+  const tld  = STALKER_MARKETS[seller.market] || 'co.uk';
+
+  // Fetch product data for new ASINs in batches of 100
+  const products = [];
+  for (let i = 0; i < newAsins.length; i += 100) {
+    const batch = newAsins.slice(i, i + 100);
+    try {
+      const url = `https://api.keepa.com/product?key=${key}&domain=${seller.market}&asin=${batch.join(',')}&history=1&stats=180&update=1`;
+      const res  = await fetch(url);
+      const data = await res.json();
+      if (data.tokensLeft !== undefined) {
+        const el = document.getElementById('stalkerTokenInfo');
+        if (el) el.textContent = Number(data.tokensLeft).toLocaleString() + ' tokens left';
+        const st = document.getElementById('stalkerStatTokens');
+        if (st) st.textContent = Number(data.tokensLeft).toLocaleString();
+      }
+      if (data.products) products.push(...data.products);
+    } catch(e) { console.error('Fetch error:', e); }
+  }
+
+  // Build product map
+  const productMap = {};
+  products.forEach(p => { if (p.asin) productMap[p.asin] = p; });
+
+  // Get existing feed content element
+  const feedEl  = document.getElementById('stalkerFeed');
+  const emptyEl = document.getElementById('stalkerFeedEmpty');
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  // Build new ASIN rows HTML
+  const detectedAt = Date.now();
+  const newRows = newAsins.map(asin => {
+    const p       = productMap[asin] || {};
+    const title   = p.title || asin;
+    const imgKey  = p.imagesCSV ? p.imagesCSV.split(',')[0] : null;
+    const imgUrl  = imgKey ? `https://m.media-amazon.com/images/I/${imgKey}` : null;
+    let price = null, priceLabel = 'New';
+    try {
+      const csv = p.csv;
+      const tryFields = [[18,'Buy Box'],[1,'New'],[0,'Amazon'],[7,'Used']];
+      for (const [f, label] of tryFields) {
+        if (csv && csv[f] && csv[f].length >= 2) {
+          for (let i = csv[f].length - 1; i >= 1; i -= 2) {
+            const raw = csv[f][i];
+            if (raw > 0) { price = (raw / 100).toFixed(2); priceLabel = label; break; }
+          }
+          if (price) break;
+        }
+      }
+    } catch(_) {}
+    const feeEstimate = price ? (parseFloat(price) * 0.15).toFixed(2) : null;
+    const keepaUrl = `https://keepa.com/#!product/${seller.market}-${asin}`;
+    const amzUrl   = `https://www.amazon.${tld}/dp/${asin}`;
+    const timeStr  = new Date(detectedAt).toLocaleString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',','');
+
+    return `<div class="stalker-product-row" style="border-left:3px solid var(--green);background:rgba(0,232,138,0.04);">
+      ${imgUrl
+        ? `<img src="${imgUrl}" class="stalker-product-img" onerror="this.style.display='none'">`
+        : `<div class="stalker-product-img-placeholder">📦</div>`}
+      <div style="min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+          <span style="background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;">NEW</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text-3);">detected ${timeStr}</span>
+        </div>
+        <div class="stalker-product-title" title="${title}">${title}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--blue);margin-top:2px;">${asin}</div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);">${seller.name}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px;">${flag} ${tld}</div>
+      </div>
+      <div>
+        ${price
+          ? `<div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);">£${price}</div>
+             <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px;">Fees: £${feeEstimate}</div>`
+          : `<div style="font-family:var(--mono);font-size:12px;color:var(--text-3);">—</div>`}
+      </div>
+      <div style="display:flex;gap:7px;justify-content:flex-end;align-items:center;">
+        <a href="${keepaUrl}" target="_blank" class="stalker-product-link">Keepa ↗</a>
+        <a href="${amzUrl}" target="_blank" class="stalker-product-link green">Amazon ↗</a>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Date header for new items
+  const dateHeader = `<div class="stalker-product-header" style="border-left:3px solid var(--green);">
+    <span style="color:var(--green);">🆕 ${newAsins.length} NEW ASIN${newAsins.length>1?'S':''} DETECTED — ${new Date(detectedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+  </div>`;
+
+  // Prepend to existing feed content
+  feedEl.innerHTML = dateHeader + newRows + feedEl.innerHTML;
 }
 
 </script>

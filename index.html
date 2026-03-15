@@ -2173,8 +2173,8 @@ input::placeholder { color: var(--text-4); }
           <input type="file" id="daFileInput3" accept=".csv" onchange="daFileChosen(3,this.files[0])">
           <div class="a2a-slot-num">03</div>
           <div class="a2a-slot-icon" id="daSlot3Icon">↑</div>
-          <div class="a2a-slot-label" id="daSlot3Label">UK sell prices</div>
-          <div class="a2a-slot-sub" id="daSlot3Sub" style="display:none;">SELL PRICES</div>
+          <div class="a2a-slot-label" id="daSlot3Label">🇬🇧 UK Sell Prices</div>
+          <div class="a2a-slot-sub" id="daSlot3Sub" style="display:none;">UK SELL PRICES · REQUIRED</div>
           <div class="a2a-slot-name" id="daSlot3Name"></div>
           <button class="a2a-slot-clear" id="daSlot3Clear" onclick="daClearSlot(event,3)">✕</button>
         </div>
@@ -3451,11 +3451,13 @@ function setMode(mode, btn) {
   const slot1Sub   = document.getElementById('daSlot1Sub');
   const slot2Sub   = document.getElementById('daSlot2Sub');
   const slot3 = document.getElementById('daSlot3');
+  const slot3Sub = document.getElementById('daSlot3Sub');
   if (mode === 'eu') {
-    slot1Label.textContent = 'File 1 — EU export (1–5k)';
-    slot2Label.textContent = 'File 2 — EU export (5k–10k)';
-    slot1Sub.textContent = 'BUY PRICES (EU Buy Box)'; slot1Sub.style.display = '';
-    slot2Sub.textContent = 'BUY PRICES — optional 2nd batch'; slot2Sub.style.display = '';
+    slot1Label.textContent = '🇪🇺 EU Source — export 1';
+    slot2Label.textContent = '🇪🇺 EU Source — export 2';
+    slot1Sub.textContent = 'EU BUY PRICES · REQUIRED'; slot1Sub.style.display = '';
+    slot2Sub.textContent = 'EU BUY PRICES · OPTIONAL 2nd batch'; slot2Sub.style.display = '';
+    slot3Sub.style.display = '';
     slot3.style.display = ''; // show slot 3
   } else if (mode === 'uk') {
     slot1Label.textContent = 'File 1 — UK Keepa export (1–5k)';

@@ -3702,6 +3702,7 @@ let currentMode = 'eu';
 let daDeals = [], daFilter = 'all', daSort = { col: null, dir: 1 };
 let daSlotFiles = { 1: null, 2: null, 3: null };
 let daVetoList     = (() => { try { return new Set(JSON.parse(localStorage.getItem('bimma-a2a-veto')     || '[]')); } catch { return new Set(); } })();
+let daViewedList   = (() => { try { return new Set(JSON.parse(localStorage.getItem('bimma-a2a-viewed')   || '[]')); } catch { return new Set(); } })();
 // daRejectedList: Map of asin → { price, date } — price at time of rejection so we can un-reject if price changes
 let daRejectedList = (() => {
   try {
@@ -3994,9 +3995,16 @@ function daRunAnalysis() {
 
       // Build inventory set — ASINs purchased in last 30 days from Google Sheets data
       const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      // Parse DD/MM/YYYY date format from purchases
+      function parseUKDate(str) {
+        if (!str) return null;
+        const m = String(str).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        if (m) return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+        return new Date(str); // fallback
+      }
       const recentInventoryAsins = new Set(
         (typeof allRows !== 'undefined' ? allRows : [])
-          .filter(r => { try { return new Date(r.date) >= thirtyDaysAgo; } catch { return false; } })
+          .filter(r => { try { const d = parseUKDate(r.date); return d && d >= thirtyDaysAgo; } catch { return false; } })
           .map(r => (r.asin || '').trim().toUpperCase())
           .filter(Boolean)
       );
@@ -4120,10 +4128,10 @@ function daRenderTable() {
       ? `<div class="row-warn spike">⚡ price outlier</div>` : '';
     tr.innerHTML = `
       <td class="td-product">
-        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.inInventory ? ' <span class="inv-badge">📦 bought &lt;30d</span>' : ''}${deal.priceChanged ? ' <span class="pc-badge">🔄 price changed</span>' : ''}</div>
+        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.inInventory ? ' <span class="inv-badge">📦 bought &lt;30d</span>' : ''}${deal.priceChanged ? ' <span class="pc-badge">🔄 price changed</span>' : ''}${daViewedList.has(deal.asin) ? ' <span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;">👁 viewed</span>' : ''}</div>
         <div class="td-asin-row">
-          <a href="https://www.amazon.co.uk/dp/${deal.asin}" target="_blank">${deal.asin}</a>
-          <a href="https://www.keepa.com/#product/2-${deal.asin}" target="_blank" class="keepa-link">Keepa ↗</a>
+          <a href="https://www.amazon.co.uk/dp/${deal.asin}" target="_blank" onclick="daMarkViewed('${deal.asin}')">${deal.asin}</a>
+          <a href="https://www.keepa.com/#product/2-${deal.asin}" target="_blank" class="keepa-link" onclick="daMarkViewed('${deal.asin}')">Keepa ↗</a>
         </div>
       </td>
       <td class="td-num">${fmtN(deal.buyIncVat)}</td>
@@ -4622,7 +4630,7 @@ function rpRenderTable(){
     return '<tr>' +
       '<td class="mono" style="font-size:12px;color:var(--text-2);">'+r.asin+'</td>' +
       '<td class="mono" style="font-size:11px;color:var(--text-3);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.sku+'">'+(r.sku||'—')+'</td>' +
-      '<td style="font-size:13px;color:var(--text);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.title+'">'+r.title+'</td>' +
+      '<td style="font-size:13px;color:var(--text);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.title+'">'+r.title+(scoutViewedAsins.has(r.asin)?'<span id="sv_'+r.asin+'" style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:5px;">👁 viewed</span>':'<span id="sv_'+r.asin+'"></span>')+'</td>' +
       '<td class="rp-num" style="color:var(--green);font-size:14px;font-weight:700;">'+minPriceDisplay+'</td>' +
       '<td class="rp-num" style="color:var(--text-2);font-size:13px;">£'+(r.high||'—')+'</td>' +
       '<td class="rp-num" style="color:var(--text-3);font-size:11px;">'+r.pts+'</td>' +
@@ -4943,6 +4951,9 @@ async function scoutFetchKeepa(asins, domainId, apiKey, isUK = false) {
 // ── Token throttle ──
 let scoutLastTokenCount = null;
 let scoutShouldStop = false;
+let scoutViewedAsins   = new Set(JSON.parse(localStorage.getItem('bimma_scout_viewed') || '[]'));
+let scoutDiscoveryOrder = {}; // asin → order found (lower = found earlier)
+let scoutDiscoveryCounter = 0;
 let scoutIsRunning = false;
 const scoutRefillRate = 70; // tokens per minute
 
@@ -5039,11 +5050,17 @@ async function scoutRun() {
 
   try {
     // UK 180d BB — use CSV values if available (saves all UK Keepa tokens)
+    // Re-merge slot maps in case they got out of sync
+    scoutCsvBBMap       = Object.assign({}, scoutCsvBBMap1, scoutCsvBBMap2);
+    scoutCsvBBSourceMap = Object.assign({}, scoutCsvBBSourceMap1, scoutCsvBBSourceMap2);
+    scoutCsvTitleMap    = Object.assign({}, scoutCsvTitleMap1, scoutCsvTitleMap2);
+    scoutCsvImageMap    = Object.assign({}, scoutCsvImageMap1, scoutCsvImageMap2);
+
     const csvHasBB = Object.keys(scoutCsvBBMap).length > 0;
     let ukMap = {};
 
     if (csvHasBB) {
-      scoutSetStatus(`Using UK 180d BB from CSV (${Object.keys(scoutCsvBBMap).length} ASINs) — no Keepa tokens needed for UK ✓`, 10);
+      scoutSetStatus(`Using UK BB from CSV (${Object.keys(scoutCsvBBMap).length} ASINs) — no Keepa tokens needed for UK ✓`, 10);
       await new Promise(r => setTimeout(r, 600));
     } else {
       scoutSetStatus(`Fetching UK 180d BB from Keepa for ${asins.length} ASINs…`, 10);
@@ -5193,11 +5210,19 @@ function scoutRenderTable() {
     return cls === scoutCurrentFilter;
   });
 
-  // Sort: strong first, then moderate, then reject, by ROI desc
+  // Sort: strong first, then moderate, then reject
+  // During run: newest finds at top (discovery order desc)
+  // After run: by ROI desc
   const order = { strong:0, moderate:1, reject:2, noprice:3 };
   filtered.sort((a,b) => {
     const oa = order[scoutClassify(a)], ob = order[scoutClassify(b)];
     if (oa !== ob) return oa - ob;
+    if (scoutIsRunning) {
+      // Newest first — higher counter = found later = top
+      const da = scoutDiscoveryOrder[a.asin] ?? -1;
+      const db = scoutDiscoveryOrder[b.asin] ?? -1;
+      return db - da;
+    }
     return (b.calc?.roi ?? -999) - (a.calc?.roi ?? -999);
   });
 
@@ -5274,16 +5299,52 @@ function scoutExport() {
 }
 
 function scoutClear() {
-  scoutClearSlot(null,1); scoutClearSlot(null,2);
+  // Clear both CSV slots fully
+  scoutClearSlot(null, 1);
+  scoutClearSlot(null, 2);
+
+  // Clear all ASIN and BB maps completely
+  scoutLoadedAsins = [];
+  scoutLoadedAsins1 = [];
+  scoutLoadedAsins2 = [];
+  scoutCsvBBMap = {};
+  scoutCsvBBMap1 = {};
+  scoutCsvBBMap2 = {};
+  scoutCsvBBSourceMap = {};
+  scoutCsvBBSourceMap1 = {};
+  scoutCsvBBSourceMap2 = {};
+  scoutCsvTitleMap = {};
+  scoutCsvTitleMap1 = {};
+  scoutCsvTitleMap2 = {};
+  scoutCsvImageMap = {};
+  scoutCsvImageMap1 = {};
+  scoutCsvImageMap2 = {};
+
+  // Clear paste input
   const inp = document.getElementById('scoutAsinInput');
   if (inp) inp.value = '';
+
+  // Clear results
   scoutResults = [];
+  scoutLastTokenCount = null;
+  scoutIsRunning = false;
+  scoutShouldStop = false;
+  scoutDiscoveryOrder = {};
+  scoutDiscoveryCounter = 0;
+
+  // Reset UI
   scoutCountASINs();
   const tbody = document.getElementById('scoutTableBody');
   if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="rp-table-empty">Upload an ASIN list and click Run Scout to begin</td></tr>';
   const countEl = document.getElementById('scoutResultCount');
   if (countEl) countEl.textContent = '';
+  const statusEl = document.getElementById('scoutStatus');
+  if (statusEl) statusEl.style.display = 'none';
+  const tokenEl = document.getElementById('scoutTokenDisplay');
+  if (tokenEl) tokenEl.textContent = '';
   document.getElementById('scoutExportBtn').disabled = true;
+  document.getElementById('scoutRunBtn').disabled = false;
+  document.getElementById('scoutStopBtn').style.display = 'none';
 }
 
 
@@ -5838,8 +5899,8 @@ function stalkerRenderProductFeed(products, seller) {
           : `<div style="font-family:var(--mono);font-size:12px;color:var(--text-3);">—</div>`}
       </div>
       <div style="display:flex;gap:7px;justify-content:flex-end;align-items:center;">
-        <a href="${keepaUrl}" target="_blank" class="stalker-product-link">Keepa ↗</a>
-        <a href="${amzUrl}" target="_blank" class="stalker-product-link green">Amazon ↗</a>
+        <a href="${keepaUrl}" target="_blank" class="stalker-product-link" onclick="scoutMarkViewed('${r.asin}',this)">Keepa ↗</a>
+        <a href="${amzUrl}" target="_blank" class="stalker-product-link green" onclick="scoutMarkViewed('${r.asin}',this)">Amazon ↗</a>
       </div>
     </div>`;
   }).join('');
@@ -5929,8 +5990,8 @@ async function stalkerFetchAndPrependNewAsins(newAsins, seller) {
           : `<div style="font-family:var(--mono);font-size:12px;color:var(--text-3);">—</div>`}
       </div>
       <div style="display:flex;gap:7px;justify-content:flex-end;align-items:center;">
-        <a href="${keepaUrl}" target="_blank" class="stalker-product-link">Keepa ↗</a>
-        <a href="${amzUrl}" target="_blank" class="stalker-product-link green">Amazon ↗</a>
+        <a href="${keepaUrl}" target="_blank" class="stalker-product-link" onclick="scoutMarkViewed('${r.asin}',this)">Keepa ↗</a>
+        <a href="${amzUrl}" target="_blank" class="stalker-product-link green" onclick="scoutMarkViewed('${r.asin}',this)">Amazon ↗</a>
       </div>
     </div>`;
   }).join('');
@@ -5967,7 +6028,13 @@ function scoutRenderPartial(asins, ukMap, euData, markets, eurGbp, shipping, pre
         bestMarket = market; bestEuPrice = euPrice; bestCalc = calc;
       }
     }
-    return { asin, title, bestMarket, bestEuPrice, ukBB, ukBBSource, calc: bestCalc, minRoi };
+    const result = { asin, title, bestMarket, bestEuPrice, ukBB, ukBBSource, calc: bestCalc, minRoi };
+    // Record discovery order when first found as strong/moderate
+    const cls = scoutClassify(result);
+    if ((cls === 'strong' || cls === 'moderate') && scoutDiscoveryOrder[asin] === undefined) {
+      scoutDiscoveryOrder[asin] = scoutDiscoveryCounter++;
+    }
+    return result;
   });
   scoutResults = partial;
   scoutRenderTable();
@@ -6079,6 +6146,33 @@ function rpSetTab(tab) {
   document.getElementById('rpTabMatched').classList.toggle('active', tab === 'matched');
   document.getElementById('rpTabUnmatched').classList.toggle('active', tab === 'unmatched');
   rpRenderTable();
+}
+
+
+function daMarkViewed(asin) {
+  daViewedList.add(asin);
+  try { localStorage.setItem('bimma-a2a-viewed', JSON.stringify([...daViewedList])); } catch {}
+  // Update badge in DOM without full re-render
+  const rows = document.querySelectorAll('#daTableBody tr');
+  rows.forEach(tr => {
+    if (tr.innerHTML.includes(asin)) {
+      const titleDiv = tr.querySelector('.td-product-title');
+      if (titleDiv && !titleDiv.querySelector('.viewed-badge')) {
+        titleDiv.insertAdjacentHTML('beforeend', ' <span class="viewed-badge" style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;">👁 viewed</span>');
+      }
+    }
+  });
+}
+
+
+function scoutMarkViewed(asin, el) {
+  scoutViewedAsins.add(asin);
+  localStorage.setItem('bimma_scout_viewed', JSON.stringify([...scoutViewedAsins]));
+  const badge = document.getElementById('sv_' + asin);
+  if (badge) {
+    badge.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:5px;';
+    badge.textContent = '👁 viewed';
+  }
 }
 
 </script>

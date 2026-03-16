@@ -1872,6 +1872,11 @@ input::placeholder { color: var(--text-4); }
 .stalker-product-fees { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:2px; }
 /* ── END STALKER STATS ───────────────────── */
 
+
+.scout-filter-btn { background:none; border:1px solid var(--border2); border-radius:var(--r-xs); color:var(--text-3); font-family:var(--mono); font-size:10px; font-weight:600; cursor:pointer; padding:3px 10px; transition:all 0.15s; }
+.scout-filter-btn:hover { border-color:var(--border3); color:var(--text-2); }
+.scout-filter-btn.active { border-color:var(--green); color:var(--green); background:rgba(0,232,138,0.08); }
+
 /* ── END STALKER ────────────────────────── */
 
 </style>
@@ -2537,7 +2542,7 @@ input::placeholder { color: var(--text-4); }
   <div class="rp-header-bar">
     <div>
       <div class="page-header-title">Deal Scout</div>
-      <div class="page-header-sub">Upload ASIN list → live Keepa fetch → EU vs UK 180d avg Buy Box</div>
+      <div class="page-header-sub">Upload ASIN list → live Keepa fetch → EU current BB vs UK 180d avg · <span id="scoutTokenDisplay" style="font-family:var(--mono);color:var(--green);font-size:13px;"></span></div>
     </div>
     <div class="rp-header-actions">
       <button class="rp-dl-btn" id="scoutExportBtn" onclick="scoutExport()" disabled>↓ Export TSV</button>
@@ -2667,6 +2672,13 @@ input::placeholder { color: var(--text-4); }
           <span><span style="color:var(--green);">■</span> ≥30% ROI</span>
           <span><span style="color:var(--amber);">■</span> ≥min ROI</span>
           <span><span style="color:var(--red);">■</span> below</span>
+          <span style="margin-left:12px;display:flex;gap:6px;">
+            <button onclick="scoutSetFilter('all')"     id="scoutFilterAll"      class="scout-filter-btn active">All</button>
+            <button onclick="scoutSetFilter('strong')"  id="scoutFilterStrong"   class="scout-filter-btn">💚 Strong</button>
+            <button onclick="scoutSetFilter('moderate')" id="scoutFilterModerate" class="scout-filter-btn">🟡 Moderate</button>
+            <button onclick="scoutSetFilter('reject')"  id="scoutFilterReject"   class="scout-filter-btn">🔴 Reject</button>
+            <button onclick="scoutSetFilter('noprice')" id="scoutFilterNoprice"  class="scout-filter-btn">— No EU Price</button>
+          </span>
         </div>
       </div>
     </div>
@@ -4558,6 +4570,10 @@ const SCOUT_UK_DOMAIN = 2;
 let scoutResults = [];
 let scoutCurrentTab = 'csv';
 let scoutLoadedAsins = []; // ASINs loaded from file
+let scoutCsvBBMap      = {}; // ASIN → best UK sell price from CSV
+let scoutCsvBBSourceMap = {}; // ASIN → source label (180d/ST/365d etc)
+let scoutCsvTitleMap   = {}; // ASIN → title from CSV
+let scoutCsvImageMap   = {}; // ASIN → image URL from CSV
 
 // Sync API key from localStorage on load
 document.addEventListener('DOMContentLoaded', () => {
@@ -4612,6 +4628,77 @@ function scoutFileChosen(file) {
   reader.onload = ev => {
     const text = ev.target.result;
     scoutLoadedAsins = scoutExtractASINs(text);
+    // Also parse UK 180d BB + title from CSV if it's a Keepa export
+    scoutCsvBBMap   = {};
+    scoutCsvTitleMap = {};
+    scoutCsvImageMap = {};
+    try {
+      // Proper CSV parser that handles quoted fields with commas inside
+      function parseCSVLine(line) {
+        const result = [];
+        let cur = '', inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const c = line[i];
+          if (c === '"') { inQ = !inQ; }
+          else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+          else { cur += c; }
+        }
+        result.push(cur.trim());
+        return result;
+      }
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length > 1) {
+        const headers = parseCSVLine(lines[0]);
+        const asinIdx  = headers.findIndex(h => h === 'ASIN');
+        const bb180Idx = headers.findIndex(h => h === 'Buy Box: 180 days avg.');
+        const bb90Idx  = headers.findIndex(h => h === 'Buy Box: 90 days avg.');
+        const bb365Idx = headers.findIndex(h => h === 'Buy Box: 365 days avg.');
+        const bbCurIdx = headers.findIndex(h => h === 'Buy Box: Current');
+        const bbStIdx  = headers.findIndex(h => h === 'Buy Box: Strikethrough Price');
+        const titleIdx = headers.findIndex(h => h === 'Title');
+        const imageIdx = headers.findIndex(h => h === 'Image');
+        if (asinIdx >= 0) {
+          for (let i = 1; i < lines.length; i++) {
+            const cols  = parseCSVLine(lines[i]);
+            const asin  = (cols[asinIdx]||'').replace(/"/g,'').trim();
+            if (!asin || !asin.startsWith('B0')) continue;
+            const getNum = idx => idx >= 0 ? parseFloat((cols[idx]||'').replace(/"/g,'').trim()) : NaN;
+            const bb180  = getNum(bb180Idx);
+            const bb90   = getNum(bb90Idx);
+            const bb365  = getNum(bb365Idx);
+            const bbCur  = getNum(bbCurIdx);
+            const bbSt   = getNum(bbStIdx);
+            const title  = (cols[titleIdx]||'').replace(/"/g,'').trim();
+            const image  = (cols[imageIdx]||'').replace(/"/g,'').split(';')[0].trim();
+            // Best sell price — same logic as A2A analyser
+            // ST_CAP: strikethrough only used if > base but <= 130% of base (filters stale RRPs)
+            const ST_CAP = 1.30;
+            const valid = v => !isNaN(v) && v > 0;
+            let bestSell = null, sellSource = '';
+            // Base: use 365d if higher than 180d, else 180d
+            const base = (valid(bb365) && valid(bb180) && bb365 > bb180) ? bb365 : (valid(bb180) ? bb180 : null);
+            const baseSource = (valid(bb365) && valid(bb180) && bb365 > bb180) ? '365d' : '180d';
+            // Strikethrough: use if above base AND within 130% cap
+            if (valid(bbSt) && base && bbSt > base && bbSt <= base * ST_CAP) {
+              bestSell = bbSt; sellSource = 'ST';
+            } else if (base) {
+              bestSell = base; sellSource = baseSource;
+            } else if (valid(bb90)) {
+              bestSell = bb90; sellSource = '90d';
+            } else if (valid(bbCur)) {
+              bestSell = bbCur; sellSource = 'cur';
+            }
+            if (asin && bestSell) {
+              scoutCsvBBMap[asin]      = bestSell;
+              scoutCsvBBSourceMap[asin] = sellSource;
+              scoutCsvTitleMap[asin]   = title;
+              scoutCsvImageMap[asin]   = image;
+            }
+          }
+        }
+      }
+      console.log('CSV parsed:', Object.keys(scoutCsvBBMap).length, 'ASINs with UK BB');
+    } catch(e) { console.error('CSV parse error:', e); }
     const dz = document.getElementById('scoutDropzone');
     dz?.classList.add('loaded');
     const icon = document.getElementById('scoutDropIcon');
@@ -4631,6 +4718,10 @@ function scoutFileChosen(file) {
 function scoutClearFile(e) {
   e?.stopPropagation();
   scoutLoadedAsins = [];
+  scoutCsvBBMap = {};
+  scoutCsvBBSourceMap = {};
+  scoutCsvTitleMap = {};
+  scoutCsvImageMap = {};
   const dz = document.getElementById('scoutDropzone');
   dz?.classList.remove('loaded');
   const icon = document.getElementById('scoutDropIcon');
@@ -4649,7 +4740,7 @@ function scoutClearFile(e) {
 }
 
 function scoutExtractASINs(text) {
-  const matches = text.match(/\b[A-Z0-9]{10}\b/g) || [];
+  const matches = text.match(/\bB0[A-Z0-9]{8}\b/g) || [];
   return [...new Set(matches)];
 }
 
@@ -4700,13 +4791,48 @@ function scoutCalcProfit(euPriceEur, ukBB, eurGbp, shipping, prep) {
 }
 
 // ── Keepa fetch ──
-async function scoutFetchKeepa(asins, domainId, apiKey) {
-  const url = `https://api.keepa.com/product?key=${apiKey}&domain=${domainId}&asin=${asins.join(',')}&stats=180&buybox=1`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`Keepa HTTP ${r.status}`);
-  const data = await r.json();
-  if (data.error) throw new Error(data.error.message || 'Keepa error');
-  return data.products || [];
+// isUK=true  → stats=180 only (1 token) — only used if CSV doesn't have BB
+// isUK=false → stats=1 + history=0 (1 token) — EU current buy box price
+async function scoutFetchKeepa(asins, domainId, apiKey, isUK = false) {
+  const params = isUK ? 'stats=180&history=0' : 'stats=90&history=1';
+  const batchSize = 100;
+  const results = [];
+  for (let i = 0; i < asins.length; i += batchSize) {
+    const batch = asins.slice(i, i + batchSize);
+    // Throttle check — pause if tokens low
+    if (scoutLastTokenCount !== null && scoutLastTokenCount < batch.length + 20) {
+      await scoutWaitForTokens(batch.length + 20);
+    }
+    const url = `https://api.keepa.com/product?key=${apiKey}&domain=${domainId}&asin=${batch.join(',')}&${params}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`Keepa HTTP ${r.status}`);
+    const data = await r.json();
+    if (data.error) throw new Error(data.error.message || 'Keepa error');
+    if (data.tokensLeft !== undefined) {
+      scoutLastTokenCount = data.tokensLeft;
+      const el = document.getElementById('scoutTokenDisplay');
+      if (el) el.textContent = Number(data.tokensLeft).toLocaleString() + ' tokens';
+    }
+    results.push(...(data.products || []));
+  }
+  return results;
+}
+
+// ── Token throttle ──
+let scoutLastTokenCount = null;
+const scoutRefillRate = 70; // tokens per minute
+
+async function scoutWaitForTokens(needed) {
+  if (scoutLastTokenCount === null || scoutLastTokenCount >= needed) return;
+  const deficit  = needed - scoutLastTokenCount;
+  const waitMs   = Math.ceil(deficit / scoutRefillRate) * 60 * 1000;
+  const resumeAt = new Date(Date.now() + waitMs);
+  for (let remaining = waitMs; remaining > 0; remaining -= 5000) {
+    const secs = Math.ceil(remaining / 1000);
+    scoutSetStatus(`⏸ Tokens low (${Math.floor(scoutLastTokenCount)} left) — resuming in ${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')} · refilling at ${scoutRefillRate}/min`, -1);
+    await new Promise(r => setTimeout(r, Math.min(5000, remaining)));
+    scoutLastTokenCount = Math.min((scoutLastTokenCount || 0) + (scoutRefillRate * 5 / 60), 600);
+  }
 }
 function scoutGetBB180(product) {
   const stats = product.stats;
@@ -4718,10 +4844,31 @@ function scoutGetBB180(product) {
   return null;
 }
 function scoutGetCurrentBB(product) {
+  // Try stats.current first (buy box = index 18)
   const stats = product.stats;
-  if (!stats) return null;
-  const cur = stats.current?.[18];
-  return (cur && cur > 0) ? cur / 100 : null;
+  if (stats) {
+    const cur = stats.current?.[18];
+    if (cur && cur > 0) return cur / 100;
+    // Try buy box avg
+    const avg = stats.avg?.[18];
+    if (avg && avg > 0) return avg / 100;
+  }
+  // Fall back to csv arrays
+  try {
+    const csv = product.csv;
+    if (csv) {
+      const tryFields = [18, 1, 0]; // buy box, new, amazon
+      for (const f of tryFields) {
+        if (csv[f] && csv[f].length >= 2) {
+          for (let i = csv[f].length - 1; i >= 1; i -= 2) {
+            const raw = csv[f][i];
+            if (raw > 0) return raw / 100;
+          }
+        }
+      }
+    }
+  } catch(_) {}
+  return null;
 }
 
 // ── Progress ──
@@ -4732,8 +4879,10 @@ function scoutSetStatus(text, pct) {
   const f = document.getElementById('scoutProgressFill');
   if (s) s.style.display = 'block';
   if (t) t.textContent = text;
-  if (p) p.textContent = Math.round(pct) + '%';
-  if (f) f.style.width = pct + '%';
+  if (pct >= 0) {
+    if (p) p.textContent = Math.round(pct) + '%';
+    if (f) f.style.width = pct + '%';
+  }
 }
 function scoutHideStatus() {
   const s = document.getElementById('scoutStatus');
@@ -4761,19 +4910,27 @@ async function scoutRun() {
   scoutResults = [];
 
   try {
-    scoutSetStatus(`Fetching UK data for ${asins.length} ASINs…`, 10);
-    const ukProducts = await scoutFetchKeepa(asins, SCOUT_UK_DOMAIN, apiKey);
-    const ukMap = {};
-    ukProducts.forEach(p => { if (p.asin) ukMap[p.asin] = p; });
+    // UK 180d BB — use CSV values if available (saves all UK Keepa tokens)
+    const csvHasBB = Object.keys(scoutCsvBBMap).length > 0;
+    let ukMap = {};
 
-    // Only fetch EU data for ASINs that have a valid UK 180d BB — no point burning
-    // Keepa tokens on ASINs we can't sell on UK anyway
+    if (csvHasBB) {
+      scoutSetStatus(`Using UK 180d BB from CSV (${Object.keys(scoutCsvBBMap).length} ASINs) — no Keepa tokens needed for UK ✓`, 10);
+      await new Promise(r => setTimeout(r, 600));
+    } else {
+      scoutSetStatus(`Fetching UK 180d BB from Keepa for ${asins.length} ASINs…`, 10);
+      const ukProducts = await scoutFetchKeepa(asins, SCOUT_UK_DOMAIN, apiKey, true);
+      ukProducts.forEach(p => { if (p.asin) ukMap[p.asin] = p; });
+    }
+
+    // Qualify ASINs — must have a UK 180d BB
     const qualifiedAsins = asins.filter(asin => {
+      if (csvHasBB) return scoutCsvBBMap[asin] > 0;
       const p = ukMap[asin];
       return p && scoutGetBB180(p) != null;
     });
     const skipped = asins.length - qualifiedAsins.length;
-    if (skipped > 0) scoutSetStatus(`${qualifiedAsins.length} ASINs have UK BB — skipping ${skipped} with no UK data…`, 18);
+    if (skipped > 0) scoutSetStatus(`${qualifiedAsins.length} ASINs have UK BB — skipping ${skipped} with no data…`, 18);
 
     const euData = {};
     if (qualifiedAsins.length > 0) {
@@ -4782,7 +4939,7 @@ async function scoutRun() {
         step++;
         scoutSetStatus(`Fetching ${market} prices for ${qualifiedAsins.length} qualified ASINs…`, 20 + (step / markets.length) * 60);
         try {
-          const euProducts = await scoutFetchKeepa(qualifiedAsins, SCOUT_DOMAINS[market].id, apiKey);
+          const euProducts = await scoutFetchKeepa(qualifiedAsins, SCOUT_DOMAINS[market].id, apiKey, false);
           euProducts.forEach(p => {
             if (!p.asin) return;
             if (!euData[p.asin]) euData[p.asin] = {};
@@ -4797,8 +4954,9 @@ async function scoutRun() {
     scoutSetStatus('Computing best deals…', 85);
     scoutResults = asins.map(asin => {
       const ukProd = ukMap[asin];
-      const ukBB   = ukProd ? scoutGetBB180(ukProd) : null;
-      const title  = ukProd?.title || '—';
+      const ukBB       = csvHasBB ? (scoutCsvBBMap[asin] || null) : (ukProd ? scoutGetBB180(ukProd) : null);
+      const ukBBSource = csvHasBB ? (scoutCsvBBSourceMap[asin] || '180d') : '180d';
+      const title      = (csvHasBB ? scoutCsvTitleMap[asin] : null) || ukProd?.title || '—';
       let bestMarket = null, bestEuPrice = null, bestCalc = null;
       const euForAsin = euData[asin] || {};
       for (const market of markets) {
@@ -4809,7 +4967,7 @@ async function scoutRun() {
           bestMarket = market; bestEuPrice = euPrice; bestCalc = calc;
         }
       }
-      return { asin, title, bestMarket, bestEuPrice, ukBB, calc: bestCalc, minRoi };
+      return { asin, title, bestMarket, bestEuPrice, ukBB, ukBBSource, calc: bestCalc, minRoi };
     });
 
     scoutSetStatus('Complete', 100);
@@ -4825,6 +4983,27 @@ async function scoutRun() {
   }
 }
 
+let scoutCurrentFilter = 'all';
+
+function scoutSetFilter(f) {
+  scoutCurrentFilter = f;
+  ['all','strong','moderate','reject','noprice'].forEach(id => {
+    const el = document.getElementById('scoutFilter' + id.charAt(0).toUpperCase() + id.slice(1));
+    if (el) el.classList.toggle('active', id === f);
+  });
+  scoutRenderTable();
+}
+
+function scoutClassify(r) {
+  if (!r.bestEuPrice) return 'noprice';
+  const roi = r.calc?.roi;
+  const minRoi = r.minRoi ?? 15;
+  if (roi == null) return 'reject';
+  if (roi >= 20) return 'strong';
+  if (roi >= 15) return 'moderate';
+  return 'reject';
+}
+
 function scoutRenderTable() {
   const tbody = document.getElementById('scoutTableBody');
   const countEl = document.getElementById('scoutResultCount');
@@ -4836,32 +5015,63 @@ function scoutRenderTable() {
     return;
   }
 
-  const badge = scoutResults.length + ' ASIN' + (scoutResults.length !== 1 ? 's' : '');
+  // Filter — exclude no-price from all view
+  let filtered = scoutResults.filter(r => {
+    const cls = scoutClassify(r);
+    if (scoutCurrentFilter === 'all') return cls !== 'noprice';
+    return cls === scoutCurrentFilter;
+  });
+
+  // Sort: strong first, then moderate, then reject, by ROI desc
+  const order = { strong:0, moderate:1, reject:2, noprice:3 };
+  filtered.sort((a,b) => {
+    const oa = order[scoutClassify(a)], ob = order[scoutClassify(b)];
+    if (oa !== ob) return oa - ob;
+    return (b.calc?.roi ?? -999) - (a.calc?.roi ?? -999);
+  });
+
+  const strong   = scoutResults.filter(r => scoutClassify(r) === 'strong').length;
+  const moderate = scoutResults.filter(r => scoutClassify(r) === 'moderate').length;
+  const reject   = scoutResults.filter(r => scoutClassify(r) === 'reject').length;
+  const noprice  = scoutResults.filter(r => scoutClassify(r) === 'noprice').length;
+
+  const badge = `${filtered.length} shown · 💚 ${strong} strong · 🟡 ${moderate} moderate · 🔴 ${reject} reject · — ${noprice} no EU price`;
   if (countEl) { countEl.textContent = badge; countEl.className = 'rp-table-badge'; }
 
   const f2  = v => v != null ? '£' + v.toFixed(2) : '—';
   const fEu = v => v != null ? '€' + v.toFixed(2) : '—';
   const fPct= v => v != null ? v.toFixed(1) + '%' : '—';
+  const srcFlag = { DE:'🇩🇪', FR:'🇫🇷', IT:'🇮🇹', ES:'🇪🇸' };
 
-  tbody.innerHTML = scoutResults.map(r => {
-    const roi = r.calc?.roi;
+  let lastGroup = null;
+  tbody.innerHTML = filtered.map(r => {
+    const cls    = scoutClassify(r);
+    const roi    = r.calc?.roi;
     const minRoi = r.minRoi ?? 15;
     let roiCol = 'var(--red)';
     if (roi != null) {
-      if (roi >= 30) roiCol = 'var(--green)';
-      else if (roi >= minRoi) roiCol = 'var(--amber)';
+      if (roi >= 20) roiCol = 'var(--green)';
+      else if (roi >= 15) roiCol = 'var(--amber)';
     }
-    const profitCol = r.calc?.profit >= 0 ? 'var(--green)' : 'var(--red)';
-    const srcFlag = { DE:'🇩🇪', FR:'🇫🇷', IT:'🇮🇹', ES:'🇪🇸' };
-    return `<tr>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--text-2);">${r.asin}</td>
+    const profitCol = (r.calc?.profit ?? -1) >= 0 ? 'var(--green)' : 'var(--red)';
+    const groupLabel = { strong:'💚 Strong Deals', moderate:'🟡 Moderate Deals', reject:'🔴 Reject', noprice:'— No EU Price' };
+    let groupRow = '';
+    if (scoutCurrentFilter === 'all' && cls !== lastGroup) {
+      lastGroup = cls;
+      groupRow = `<tr><td colspan="10" style="padding:10px 12px 6px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);background:var(--surface2);border-bottom:1px solid var(--border);">${groupLabel[cls]}</td></tr>`;
+    }
+    return groupRow + `<tr style="border-left:3px solid ${cls==='strong'?'var(--green)':cls==='moderate'?'var(--amber)':'transparent'};">
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text-2);">
+        ${r.asin}
+        ${(typeof allRows !== 'undefined' && allRows.some(p => p.asin === r.asin)) ? `<div style="font-family:var(--mono);font-size:9px;background:rgba(240,165,0,0.15);color:var(--amber);border:1px solid rgba(240,165,0,0.3);border-radius:3px;padding:1px 5px;margin-top:2px;display:inline-block;">🛒 Bought</div>` : ''}
+      </td>
       <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(r.title||'').replace(/"/g,'&quot;')}">${r.title}</td>
       <td style="text-align:center;">
         ${r.bestMarket ? `<span class="rp-tag">${srcFlag[r.bestMarket]||''} ${r.bestMarket}</span>` : '<span style="color:var(--text-3)">—</span>'}
       </td>
       <td style="text-align:right;font-family:var(--mono);">${fEu(r.bestEuPrice)}</td>
       <td style="text-align:right;font-family:var(--mono);">${f2(r.calc?.landed)}</td>
-      <td style="text-align:right;font-family:var(--mono);font-weight:600;">${f2(r.ukBB)}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:600;">${f2(r.ukBB)}<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);">${r.ukBBSource||''}</div></td>
       <td style="text-align:right;font-family:var(--mono);color:var(--text-3);">${f2(r.calc?.fba)}</td>
       <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${profitCol};">${f2(r.calc?.profit)}</td>
       <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${roiCol};">${fPct(roi)}</td>

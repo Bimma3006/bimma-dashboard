@@ -2121,42 +2121,27 @@ input::placeholder { color: var(--text-4); }
   <!-- ══ PAGE: MIN PRICE TOOL ══ -->
   <div class="page" id="page-repricer">
 
-    <div class="rp-header-bar">
+    <div class="page-header" style="margin-bottom:24px;">
       <div>
-        <div class="page-header-title">Min Price Tool</div>
-        <div class="page-header-sub">Keepa buy box history → repricer floor prices</div>
+        <div class="page-header-title">⚖ Min Price Tool</div>
+        <div class="page-header-sub">Uses your purchase sell prices as repricer floor · Keepa BB history for context</div>
       </div>
       <div class="rp-header-actions">
-        <button class="rp-run-btn" onclick="rpRun()" id="rpRunBtn">
-          <span class="rp-run-icon">⇅</span> Fetch &amp; Calculate
-        </button>
-        <button class="rp-dl-btn" id="rpDownloadBtn" style="display:none;" onclick="rpDownload()">
-          ↓ Download STK File
-        </button>
+        <button class="rp-dl-btn" id="rpDownloadBtn" style="display:none;" onclick="rpDownload()">↓ Download STK File</button>
+        <button class="rp-run-btn" onclick="rpRun()" id="rpRunBtn"><span class="rp-run-icon">⇅</span> Calculate</button>
       </div>
     </div>
 
-    <!-- CONFIG PANELS -->
-    <div class="rp-config-grid">
-
-      <!-- API KEY -->
-      <div class="rp-panel">
-        <div class="rp-panel-label">
-          <span class="rp-panel-icon">🔑</span> Keepa API Key
-        </div>
-        <input type="password" id="rp-apikey" class="rp-input" placeholder="Paste your Keepa API key…">
-        <div class="rp-panel-note">Stored in browser only. Never sent anywhere except Keepa.</div>
-      </div>
+    <!-- CONFIG ROW -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
 
       <!-- SETTINGS -->
-      <div class="rp-panel">
-        <div class="rp-panel-label">
-          <span class="rp-panel-icon">⚙</span> Settings
-        </div>
+      <div class="stalker-panel">
+        <div class="stalker-panel-title">Settings</div>
         <div class="rp-settings-grid">
           <div class="rp-setting">
             <div class="rp-setting-label">Lookback</div>
-            <select id="rp-lookback" class="rp-select">
+            <select id="rp-lookback" class="stalker-select">
               <option value="60">60 days</option>
               <option value="90">90 days</option>
               <option value="180" selected>180 days</option>
@@ -2165,7 +2150,7 @@ input::placeholder { color: var(--text-4); }
           </div>
           <div class="rp-setting">
             <div class="rp-setting-label">Percentile</div>
-            <select id="rp-percentile" class="rp-select">
+            <select id="rp-percentile" class="stalker-select">
               <option value="10">10th</option>
               <option value="20" selected>20th</option>
               <option value="30">30th</option>
@@ -2173,29 +2158,48 @@ input::placeholder { color: var(--text-4); }
           </div>
           <div class="rp-setting">
             <div class="rp-setting-label">Buffer %</div>
-            <input type="number" id="rp-buffer" value="5" min="0" max="30" step="1" class="rp-input rp-input-sm">
+            <input type="number" id="rp-buffer" value="5" min="0" max="30" step="1" class="stalker-input" style="padding:8px 12px;">
           </div>
           <div class="rp-setting">
             <div class="rp-setting-label">Max ASINs</div>
-            <input type="number" id="rp-limit" value="50" min="1" max="500" step="1" class="rp-input rp-input-sm">
+            <input type="number" id="rp-limit" value="50" min="1" max="500" step="1" class="stalker-input" style="padding:8px 12px;">
           </div>
         </div>
+        <!-- Hidden API key still needed for Keepa fetch but not shown -->
+        <input type="hidden" id="rp-apikey">
       </div>
 
       <!-- FILE UPLOAD -->
-      <div class="rp-panel">
-        <div class="rp-panel-label">
-          <span class="rp-panel-icon">📋</span> STK Replenish Export
-        </div>
-        <div class="rp-dropzone" id="rp-dz">
+      <div class="stalker-panel">
+        <div class="stalker-panel-title">STK Replenish Export</div>
+        <div class="rp-dropzone" id="rp-dz" style="min-height:100px;">
           <input type="file" id="rp-inp" accept=".csv,.tsv,.txt">
           <div class="rp-dz-icon">↑</div>
           <div class="rp-dz-text">Drop file or <span class="rp-dz-browse">click to browse</span></div>
           <div class="rp-dz-hint">.csv · .tsv · .txt</div>
           <div class="rp-dz-name" id="rp-fn"></div>
         </div>
-        <div class="rp-asin-count" id="rp-asin-count">No file loaded</div>
+        <div class="rp-asin-count" id="rp-asin-count" style="margin-top:8px;font-family:var(--mono);font-size:12px;color:var(--text-3);">No file loaded</div>
         <div class="rp-limit-note" id="rp-limit-note"></div>
+        <div id="rpSheetsWarning" style="font-family:var(--mono);font-size:11px;margin-top:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--r-sm);border:1px solid var(--border);">
+          💡 Min prices are taken from your <strong style="color:var(--text-2);">Purchases sheet</strong> sell price.<br>
+          <span id="rpSheetsStatus" style="color:var(--text-3);">Connect Google Sheets above to enable min price matching.</span>
+        </div>
+        <script>
+          document.addEventListener('DOMContentLoaded', () => {
+            setInterval(() => {
+              const el = document.getElementById('rpSheetsStatus');
+              if (!el) return;
+              if (typeof allRows !== 'undefined' && allRows.length > 0) {
+                el.style.color = 'var(--green)';
+                el.textContent = '✓ ' + allRows.length + ' purchases loaded — min prices ready';
+              } else {
+                el.style.color = 'var(--amber)';
+                el.textContent = '⚠ Not connected — connect Google Sheets to enable min prices';
+              }
+            }, 1000);
+          });
+        </script>
       </div>
     </div>
 
@@ -2218,8 +2222,9 @@ input::placeholder { color: var(--text-4); }
               <th>SKU</th>
               <th>Title</th>
               <th class="rp-num">BB Floor</th>
-              <th class="rp-num">20th %ile</th>
-              <th class="rp-num rp-col-highlight">Suggested Min</th>
+              <th class="rp-num">BB %ile</th>
+              <th class="rp-num rp-col-highlight">Suggested</th>
+              <th class="rp-num" style="color:var(--green);">Min Price</th>
               <th class="rp-num">BB High</th>
               <th class="rp-num">Pts</th>
             </tr>
@@ -2782,13 +2787,23 @@ input::placeholder { color: var(--text-4); }
           </select>
           <button class="stalker-add-btn" onclick="stalkerAddSeller()">+ Track</button>
         </div>
+        <div class="stalker-row" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+          <button class="stalker-btn" style="flex:1;font-size:11px;padding:7px;" onclick="stalkerExportBackup()">↓ Backup sellers</button>
+          <button class="stalker-btn" style="flex:1;font-size:11px;padding:7px;" onclick="document.getElementById('stalkerImportFile').click()">↑ Restore backup</button>
+          <input type="file" id="stalkerImportFile" accept=".json" style="display:none" onchange="stalkerImportBackup(this)">
+        </div>
       </div>
 
       <!-- Sellers table panel -->
       <div class="stalker-panel">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
           <div class="stalker-panel-title" style="margin-bottom:0;">Monitored Sellers</div>
-          <button class="stalker-check-all-btn" onclick="stalkerCheckAll()">↻ Check All</button>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="stalker-btn" onclick="stalkerExportBackup()" title="Export sellers to file">↓ Backup</button>
+            <button class="stalker-btn" onclick="document.getElementById('stalkerImportFile').click()" title="Import sellers from file">↑ Restore</button>
+            <input type="file" id="stalkerImportFile" accept=".json" style="display:none" onchange="stalkerImportBackup(this)">
+            <button class="stalker-check-all-btn" onclick="stalkerCheckAll()">↻ Check All</button>
+          </div>
         </div>
         <table class="stalker-sellers-table" id="stalkerSellerList">
           <thead>
@@ -4492,8 +4507,9 @@ function rpGetASINs(){const limit=parseInt(document.getElementById('rp-limit').v
 function rpPercentile(arr,p){if(!arr.length)return 0;const sorted=[...arr].sort((a,b)=>a-b);const idx=Math.floor((p/100)*sorted.length);return sorted[Math.max(0,idx)];}
 
 async function rpRun(){
-  const apiKey=document.getElementById('rp-apikey').value.trim();
-  if(!apiKey){rpShowError('Please enter your Keepa API key.');return;}
+  // Auto-pull API key from scout/stalker key storage
+  const apiKey=(localStorage.getItem('bimma_keepa_key')||localStorage.getItem('bimma_stalker_key')||'').trim();
+  if(!apiKey){rpShowError('No Keepa API key found — add your key in Deal Scout or Storefront Stalker first.');return;}
   if(!rpReplenishASINs.length){rpShowError('Please upload your STK Replenish export first.');return;}
   const items=rpGetASINs();
   const lookbackDays=parseInt(document.getElementById('rp-lookback').value);
@@ -4561,7 +4577,13 @@ function rpRenderTable(){
   if(!rows.length){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state">No results</div></td></tr>';return;}
   tbody.innerHTML=rows.map(r=>{
     if(r.error)return '<tr><td class="mono">'+r.asin+'</td><td class="mono" style="font-size:10px;color:#666;">'+(r.sku||'\u2014')+'</td><td style="font-size:11px;color:#555;">'+(r.title||'\u2014')+'</td><td colspan="4" style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-align:center;">'+r.error+'</td><td class="rp-num" style="color:#555;">0</td></tr>';
-    return '<tr><td class="mono" style="font-size:11px;">'+r.asin+'</td><td class="mono" style="font-size:10px;color:#666;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.sku+'">'+(r.sku||'\u2014')+'</td><td style="font-size:11px;color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.title+'">'+r.title+'</td><td class="rp-num">\u00a3'+r.floor+'</td><td class="rp-num">\u00a3'+r.pct+'</td><td class="rp-num rp-col-suggest">\u00a3'+r.suggested+'</td><td class="rp-num" style="color:var(--text-2);">\u00a3'+r.high+'</td><td class="rp-num" style="color:#555;">'+r.pts+'</td></tr>';
+    const sellMap2 = {};
+    if (typeof allRows !== 'undefined' && allRows.length) {
+      allRows.forEach(p => { if (p.asin && p.sell > 0) sellMap2[p.asin] = p.sell; });
+    }
+    const minSell = sellMap2[r.asin] || null;
+    const minPriceDisplay = minSell ? '£'+minSell.toFixed(2) : '<span style="color:var(--amber);font-size:10px;">⚠ connect sheets</span>';
+    return '<tr><td class="mono" style="font-size:11px;">'+r.asin+'</td><td class="mono" style="font-size:10px;color:#666;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.sku+'">'+(r.sku||'\u2014')+'</td><td style="font-size:11px;color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.title+'">'+r.title+'</td><td class="rp-num">\u00a3'+r.floor+'</td><td class="rp-num">\u00a3'+r.pct+'</td><td class="rp-num rp-col-suggest">\u00a3'+r.suggested+'</td><td class="rp-num" style="color:var(--green);">'+minPriceDisplay+'</td><td class="rp-num" style="color:var(--text-2);">\u00a3'+r.high+'</td><td class="rp-num" style="color:#555;">'+r.pts+'</td></tr>';
   }).join('');
 }
 function rpDownload(){
@@ -4569,7 +4591,15 @@ function rpDownload(){
   if(!rows.length)return;
   const headers=['SKU','ASIN','MIN_PRICE','MAX_PRICE','SUGGESTED_BY'];
   const lines=[headers.join('\t')];
-  rows.forEach(r=>lines.push([r.sku||'',r.asin,r.suggested,r.high,'BimmaMinPriceTool_Keepa180d'].join('\t')));
+  const sellMap = {};
+  if (typeof allRows !== 'undefined' && allRows.length) {
+    allRows.forEach(p => { if (p.asin && p.sell > 0) sellMap[p.asin] = p.sell; });
+  }
+  rows.forEach(r => {
+    // Use purchase sell price as min — falls back to suggested if sheets not connected
+    const minPrice = sellMap[r.asin] ? sellMap[r.asin].toFixed(2) : r.suggested;
+    lines.push([r.sku||'', r.asin, minPrice, r.high, 'BimmaMinPriceTool_Keepa180d'].join('\t'));
+  });
   const blob=new Blob([lines.join('\r\n')],{type:'text/tab-separated-values'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Bimma_MinPrices_'+new Date().toISOString().split('T')[0]+'.txt';a.click();URL.revokeObjectURL(a.href);
 }
@@ -5894,6 +5924,104 @@ function scoutRenderPartial(asins, ukMap, euData, markets, eurGbp, shipping, pre
   scoutResults = partial;
   scoutRenderTable();
   document.getElementById('scoutExportBtn').disabled = !partial.some(r => r.bestEuPrice);
+}
+
+
+function stalkerExportBackup() {
+  const backup = {
+    version: 1,
+    exported: new Date().toISOString(),
+    sellers: stalkerSellers,
+    snapshots: stalkerSnapshots,
+    apiKey: localStorage.getItem('bimma_stalker_key') || ''
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `bimma-stalker-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Stalker backup downloaded', 'success');
+}
+
+function stalkerImportBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const backup = JSON.parse(e.target.result);
+      if (!backup.sellers) throw new Error('Invalid backup file');
+      if (!confirm(`Restore ${backup.sellers.length} sellers from backup dated ${backup.exported?.slice(0,10)}? This will overwrite your current sellers.`)) return;
+      stalkerSellers   = backup.sellers;
+      stalkerSnapshots = backup.snapshots || {};
+      if (backup.apiKey) {
+        localStorage.setItem('bimma_stalker_key', backup.apiKey);
+        const el = document.getElementById('stalkerApiKey');
+        if (el) el.value = backup.apiKey;
+      }
+      stalkerSave();
+      stalkerRenderSellers();
+      stalkerRenderFeed();
+      toast(`Restored ${backup.sellers.length} sellers from backup`, 'success');
+    } catch(err) {
+      alert('Failed to restore: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+
+function stalkerExportBackup() {
+  const backup = {
+    sellers:   stalkerSellers,
+    snapshots: stalkerSnapshots,
+    exported:  new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `bimma-stalker-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Stalker backup downloaded', 'success');
+}
+
+function stalkerImportBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const backup = JSON.parse(e.target.result);
+      if (!backup.sellers || !Array.isArray(backup.sellers)) {
+        toast('Invalid backup file', 'error'); return;
+      }
+      if (!confirm(`Restore ${backup.sellers.length} sellers from backup dated ${backup.exported?.slice(0,10) || 'unknown'}? This will merge with existing sellers.`)) return;
+      // Merge — add sellers not already tracked
+      let added = 0;
+      backup.sellers.forEach(s => {
+        if (!stalkerSellers.find(x => x.id === s.id && x.market === s.market)) {
+          stalkerSellers.push(s);
+          added++;
+        }
+      });
+      // Restore snapshots
+      if (backup.snapshots) {
+        Object.assign(stalkerSnapshots, backup.snapshots);
+      }
+      stalkerSave();
+      stalkerRenderSellers();
+      toast(`Restored ${added} sellers from backup`, 'success');
+    } catch(e) {
+      toast('Failed to parse backup file', 'error');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
 }
 
 </script>

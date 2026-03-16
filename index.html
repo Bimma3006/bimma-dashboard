@@ -2548,6 +2548,7 @@ input::placeholder { color: var(--text-4); }
       <button class="rp-dl-btn" id="scoutExportBtn" onclick="scoutExport()" disabled>↓ Export TSV</button>
       <button class="scout-clear-btn" onclick="scoutClear()">✕ Clear</button>
       <button class="rp-run-btn" onclick="scoutRun()" id="scoutRunBtn"><span class="rp-run-icon">🔍</span> Run Scout</button>
+      <button class="scout-clear-btn" onclick="scoutStop()" id="scoutStopBtn" style="display:none;background:rgba(240,59,80,0.15);border-color:var(--red);color:var(--red);">⏹ Stop</button>
     </div>
   </div>
 
@@ -4836,10 +4837,11 @@ function scoutCalcProfit(euPriceEur, ukBB, eurGbp, shipping, prep) {
 // isUK=true  → stats=180 only (1 token) — only used if CSV doesn't have BB
 // isUK=false → stats=1 + history=0 (1 token) — EU current buy box price
 async function scoutFetchKeepa(asins, domainId, apiKey, isUK = false) {
-  const params = isUK ? 'stats=180&history=0' : 'stats=90&history=1';
+  const params = isUK ? 'stats=180&history=0' : 'stats=180&buybox=1';
   const batchSize = 100;
   const results = [];
   for (let i = 0; i < asins.length; i += batchSize) {
+    if (scoutShouldStop) { console.log('Scout stopped by user at', i, 'ASINs'); break; }
     const batch = asins.slice(i, i + batchSize);
     // Throttle check — pause if tokens low
     if (scoutLastTokenCount !== null && scoutLastTokenCount < batch.length + 20) {
@@ -4862,6 +4864,7 @@ async function scoutFetchKeepa(asins, domainId, apiKey, isUK = false) {
 
 // ── Token throttle ──
 let scoutLastTokenCount = null;
+let scoutShouldStop = false;
 const scoutRefillRate = 70; // tokens per minute
 
 async function scoutWaitForTokens(needed) {
@@ -4949,6 +4952,9 @@ async function scoutRun() {
 
   document.getElementById('scoutRunBtn').disabled = true;
   document.getElementById('scoutExportBtn').disabled = true;
+  document.getElementById('scoutStopBtn').style.display = 'inline-flex';
+  document.getElementById('scoutStopBtn').textContent = '⏹ Stop';
+  scoutShouldStop = false;
   scoutResults = [];
 
   try {
@@ -4975,24 +4981,51 @@ async function scoutRun() {
     if (skipped > 0) scoutSetStatus(`${qualifiedAsins.length} ASINs have UK BB — skipping ${skipped} with no data…`, 18);
 
     const euData = {};
+    let totalScraped = 0;
     if (qualifiedAsins.length > 0) {
       let step = 0;
       for (const market of markets) {
+        if (scoutShouldStop) break;
         step++;
-        scoutSetStatus(`Fetching ${market} prices for ${qualifiedAsins.length} qualified ASINs…`, 20 + (step / markets.length) * 60);
-        try {
-          const euProducts = await scoutFetchKeepa(qualifiedAsins, SCOUT_DOMAINS[market].id, apiKey, false);
-          let found = 0;
-          euProducts.forEach(p => {
-            if (!p.asin) return;
-            if (!euData[p.asin]) euData[p.asin] = {};
-            const bb = scoutGetCurrentBB(p);
-            if (bb && bb > 0) { euData[p.asin][market] = bb; found++; }
-          });
-          console.log(`${market}: ${euProducts.length} products returned, ${found} with prices`);
-          if (euProducts.length > 0) console.log('Sample product keys:', Object.keys(euProducts[0]), 'stats:', euProducts[0].stats);
-        } catch(e) { console.warn(`Scout ${market}:`, e.message); }
-        await new Promise(r => setTimeout(r, 300));
+        const batchSize = 100;
+        let marketScraped = 0;
+        for (let i = 0; i < qualifiedAsins.length; i += batchSize) {
+          if (scoutShouldStop) break;
+          const batch = qualifiedAsins.slice(i, i + batchSize);
+          const pct = 20 + ((step - 1) / markets.length + (i / qualifiedAsins.length) / markets.length) * 70;
+          const asinsLeft = qualifiedAsins.length - i;
+          const tokensEst = asinsLeft * markets.length * 3;
+          const minsEst = Math.ceil(tokensEst / scoutRefillRate);
+          scoutSetStatus(
+            `${market}: fetching batch ${Math.floor(i/batchSize)+1}/${Math.ceil(qualifiedAsins.length/batchSize)} · ${i + batch.length}/${qualifiedAsins.length} ASINs · ~${minsEst} min remaining`,
+            pct
+          );
+          if (scoutLastTokenCount !== null && scoutLastTokenCount < batch.length * 3 + 20) {
+            await scoutWaitForTokens(batch.length * 3 + 20);
+          }
+          try {
+            const url = `https://api.keepa.com/product?key=${apiKey}&domain=${SCOUT_DOMAINS[market].id}&asin=${batch.join(',')}&stats=180&buybox=1`;
+            const r = await fetch(url);
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            const data = await r.json();
+            if (data.tokensLeft !== undefined) {
+              scoutLastTokenCount = data.tokensLeft;
+              const el = document.getElementById('scoutTokenDisplay');
+              if (el) el.textContent = Number(data.tokensLeft).toLocaleString() + ' tokens';
+            }
+            if (data.error) throw new Error(data.error.message || 'Keepa error');
+            (data.products || []).forEach(p => {
+              if (!p.asin) return;
+              if (!euData[p.asin]) euData[p.asin] = {};
+              const bb = scoutGetCurrentBB(p);
+              if (bb && bb > 0) { euData[p.asin][market] = bb; marketScraped++; }
+            });
+          } catch(e) { console.warn(`${market} batch ${i}:`, e.message); }
+          // Render partial results after each batch
+          scoutRenderPartial(asins, ukMap, euData, markets, eurGbp, shipping, prep, minRoi, csvHasBB);
+        }
+        totalScraped += marketScraped;
+        await new Promise(r => setTimeout(r, 200));
       }
     }
 
@@ -5025,6 +5058,8 @@ async function scoutRun() {
     toast('Scout error: ' + e.message, 'error');
   } finally {
     document.getElementById('scoutRunBtn').disabled = false;
+    document.getElementById('scoutStopBtn').style.display = 'none';
+    scoutShouldStop = false;
   }
 }
 
@@ -5815,6 +5850,36 @@ async function stalkerFetchAndPrependNewAsins(newAsins, seller) {
 
   // Prepend to existing feed content
   feedEl.innerHTML = dateHeader + newRows + feedEl.innerHTML;
+}
+
+
+function scoutStop() {
+  scoutShouldStop = true;
+  document.getElementById('scoutStopBtn').textContent = '⏹ Stopping…';
+}
+
+
+function scoutRenderPartial(asins, ukMap, euData, markets, eurGbp, shipping, prep, minRoi, csvHasBB) {
+  // Build results from whatever EU data we have so far
+  const partial = asins.map(asin => {
+    const ukProd     = ukMap[asin];
+    const ukBB       = csvHasBB ? (scoutCsvBBMap[asin] || null) : (ukProd ? scoutGetBB180(ukProd) : null);
+    const ukBBSource = csvHasBB ? (scoutCsvBBSourceMap[asin] || '180d') : '180d';
+    const title      = (csvHasBB ? scoutCsvTitleMap[asin] : null) || ukProd?.title || '—';
+    let bestMarket = null, bestEuPrice = null, bestCalc = null;
+    for (const market of markets) {
+      const euPrice = euData[asin]?.[market];
+      if (!euPrice) continue;
+      const calc = ukBB ? scoutCalcProfit(euPrice, ukBB, eurGbp, shipping, prep) : null;
+      if (!bestCalc || (calc && calc.profit > bestCalc.profit)) {
+        bestMarket = market; bestEuPrice = euPrice; bestCalc = calc;
+      }
+    }
+    return { asin, title, bestMarket, bestEuPrice, ukBB, ukBBSource, calc: bestCalc, minRoi };
+  });
+  scoutResults = partial;
+  scoutRenderTable();
+  document.getElementById('scoutExportBtn').disabled = !partial.some(r => r.bestEuPrice);
 }
 
 </script>

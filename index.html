@@ -2196,8 +2196,12 @@ input::placeholder { color: var(--text-4); }
     <!-- RESULTS -->
     <div id="rp-results" style="display:none;">
       <div class="rp-stats-row" id="rp-stats-row"></div>
-      <div class="rp-table-toolbar">
-        <input type="text" id="rp-search" class="rp-search" placeholder="Search ASIN or SKU…" oninput="rpRenderTable()">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;">
+        <div style="display:flex;gap:6px;">
+          <button class="scout-filter-btn active" id="rpTabMatched" onclick="rpSetTab('matched')">✓ In Purchases</button>
+          <button class="scout-filter-btn" id="rpTabUnmatched" onclick="rpSetTab('unmatched')">⚠ Not in Purchases</button>
+        </div>
+        <input type="text" id="rp-search" class="rp-search" placeholder="Search ASIN or SKU…" oninput="rpRenderTable()" style="flex:1;max-width:300px;">
       </div>
       <div class="rp-table-wrap">
         <table class="rp-table">
@@ -4573,25 +4577,42 @@ async function rpRun(){
   document.getElementById('rpRunBtn').disabled=false;
 }
 function rpRenderTable(){
-  const q=(document.getElementById('rp-search').value||'').toLowerCase();
-  let rows=rpResults;
-  if(q)rows=rows.filter(r=>r.asin.toLowerCase().includes(q)||r.sku.toLowerCase().includes(q));
+  const q=(document.getElementById('rp-search')?.value||'').toLowerCase();
   const tbody=document.getElementById('rp-tbody');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state">No results</div></td></tr>';return;}
+  if(!tbody)return;
+
+  // Build sell map
+  const rpSellMap = {};
+  if (typeof allRows !== 'undefined' && allRows.length) {
+    allRows.forEach(p => { if (p.asin && p.sell > 0) rpSellMap[p.asin] = p.sell; });
+  }
+
+  // Update tab counts
+  const matchedCount = rpResults.filter(r => rpSellMap[r.asin]).length;
+  const unmatchedCount = rpResults.filter(r => !rpSellMap[r.asin]).length;
+  const tabM = document.getElementById('rpTabMatched');
+  const tabU = document.getElementById('rpTabUnmatched');
+  if(tabM) tabM.textContent = '✓ In Purchases (' + matchedCount + ')';
+  if(tabU) tabU.textContent = '⚠ Not in Purchases (' + unmatchedCount + ')';
+
+  // Filter by tab and search
+  let rows = rpResults.filter(r => {
+    const hasMin = !!rpSellMap[r.asin];
+    if(rpCurrentTab === 'matched' && !hasMin) return false;
+    if(rpCurrentTab === 'unmatched' && hasMin) return false;
+    return q === '' || (r.asin+r.sku+r.title).toLowerCase().includes(q);
+  });
+
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No results</div></td></tr>';return;}
   tbody.innerHTML=rows.map(r=>{
-    if(r.error)return '<tr><td class="mono">'+r.asin+'</td><td class="mono" style="font-size:10px;color:#666;">'+(r.sku||'\u2014')+'</td><td style="font-size:11px;color:#555;">'+(r.title||'\u2014')+'</td><td colspan="4" style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-align:center;">'+r.error+'</td><td class="rp-num" style="color:#555;">0</td></tr>';
-    const sellMap2 = {};
-    if (typeof allRows !== 'undefined' && allRows.length) {
-      allRows.forEach(p => { if (p.asin && p.sell > 0) sellMap2[p.asin] = p.sell; });
-    }
-    const minSell = sellMap2[r.asin] || null;
+    const minSell = rpSellMap[r.asin] || null;
     const minPriceDisplay = minSell ? '£'+minSell.toFixed(2) : '<span style="color:var(--amber);font-size:10px;">⚠ not in purchases</span>';
     return '<tr>' +
       '<td class="mono" style="font-size:12px;color:var(--text-2);">'+r.asin+'</td>' +
       '<td class="mono" style="font-size:11px;color:var(--text-3);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.sku+'">'+(r.sku||'—')+'</td>' +
       '<td style="font-size:13px;color:var(--text);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.title+'">'+r.title+'</td>' +
       '<td class="rp-num" style="color:var(--green);font-size:14px;font-weight:700;">'+minPriceDisplay+'</td>' +
-      '<td class="rp-num" style="color:var(--text-2);font-size:13px;">£'+r.high+'</td>' +
+      '<td class="rp-num" style="color:var(--text-2);font-size:13px;">£'+(r.high||'—')+'</td>' +
       '<td class="rp-num" style="color:var(--text-3);font-size:11px;">'+r.pts+'</td>' +
     '</tr>';
   }).join('');
@@ -4605,9 +4626,9 @@ function rpDownload(){
   if (typeof allRows !== 'undefined' && allRows.length) {
     allRows.forEach(p => { if (p.asin && p.sell > 0) sellMap[p.asin] = p.sell; });
   }
-  rows.forEach(r => {
-    // Use purchase sell price as min — falls back to suggested if sheets not connected
-    const minPrice = sellMap[r.asin] ? sellMap[r.asin].toFixed(2) : r.suggested;
+  // Only export rows that have a matched sell price from purchases
+  rows.filter(r => sellMap[r.asin]).forEach(r => {
+    const minPrice = sellMap[r.asin].toFixed(2);
     lines.push([r.sku||'', r.asin, minPrice, r.high, 'BimmaMinPriceTool_Keepa180d'].join('\t'));
   });
   const blob=new Blob([lines.join('\r\n')],{type:'text/tab-separated-values'});
@@ -6032,6 +6053,15 @@ function stalkerImportBackup(input) {
   };
   reader.readAsText(file);
   input.value = '';
+}
+
+
+let rpCurrentTab = 'matched';
+function rpSetTab(tab) {
+  rpCurrentTab = tab;
+  document.getElementById('rpTabMatched').classList.toggle('active', tab === 'matched');
+  document.getElementById('rpTabUnmatched').classList.toggle('active', tab === 'unmatched');
+  rpRenderTable();
 }
 
 </script>

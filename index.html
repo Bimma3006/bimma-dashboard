@@ -5018,7 +5018,12 @@ async function scoutRun() {
               if (!p.asin) return;
               if (!euData[p.asin]) euData[p.asin] = {};
               const bb = scoutGetCurrentBB(p);
-              if (bb && bb > 0) { euData[p.asin][market] = bb; marketScraped++; }
+              // Sanity checks:
+              // 1. EU price must be between £0.50 and £3,000
+              // 2. EU price must be LESS than UK BB (buying EU cheaper to sell UK)
+              const ukBBForCheck = scoutCsvBBMap[p.asin] || null;
+              const euBelowUkBB = !ukBBForCheck || (bb < ukBBForCheck);
+              if (bb && bb > 0.5 && bb < 3000 && euBelowUkBB) { euData[p.asin][market] = bb; marketScraped++; }
             });
           } catch(e) { console.warn(`${market} batch ${i}:`, e.message); }
           // Render partial results after each batch
@@ -5095,9 +5100,11 @@ function scoutRenderTable() {
     return;
   }
 
-  // Filter — exclude no-price from all view
+  // During run: only show strong/moderate (reject/noprice are incomplete)
+  const isRunning = document.getElementById('scoutStopBtn')?.style.display !== 'none';
   let filtered = scoutResults.filter(r => {
     const cls = scoutClassify(r);
+    if (isRunning && scoutCurrentFilter === 'all') return cls === 'strong' || cls === 'moderate';
     if (scoutCurrentFilter === 'all') return cls !== 'noprice';
     return cls === scoutCurrentFilter;
   });
@@ -5114,8 +5121,10 @@ function scoutRenderTable() {
   const moderate = scoutResults.filter(r => scoutClassify(r) === 'moderate').length;
   const reject   = scoutResults.filter(r => scoutClassify(r) === 'reject').length;
   const noprice  = scoutResults.filter(r => scoutClassify(r) === 'noprice').length;
-
-  const badge = `${filtered.length} shown · 💚 ${strong} strong · 🟡 ${moderate} moderate · 🔴 ${reject} reject · — ${noprice} no EU price`;
+  const isRunning = document.getElementById('scoutStopBtn')?.style.display !== 'none';
+  const rejectLabel = isRunning ? '⏳ pending' : '🔴 reject';
+  const nopriceLabel = isRunning ? '— not yet checked' : '— no EU price';
+  const badge = `${filtered.length} shown · 💚 ${strong} strong · 🟡 ${moderate} moderate · ${rejectLabel}: ${reject} · ${nopriceLabel}: ${noprice}`;
   if (countEl) { countEl.textContent = badge; countEl.className = 'rp-table-badge'; }
 
   const f2  = v => v != null ? '£' + v.toFixed(2) : '—';
@@ -5134,7 +5143,8 @@ function scoutRenderTable() {
       else if (roi >= 15) roiCol = 'var(--amber)';
     }
     const profitCol = (r.calc?.profit ?? -1) >= 0 ? 'var(--green)' : 'var(--red)';
-    const groupLabel = { strong:'💚 Strong Deals', moderate:'🟡 Moderate Deals', reject:'🔴 Reject', noprice:'— No EU Price' };
+    const isRunning2 = document.getElementById('scoutStopBtn')?.style.display !== 'none';
+    const groupLabel = { strong:'💚 Strong Deals', moderate:'🟡 Moderate Deals', reject: isRunning2 ? '⏳ Pending — more markets still scanning' : '🔴 Reject', noprice: isRunning2 ? '— Not yet checked' : '— No EU Price' };
     let groupRow = '';
     if (scoutCurrentFilter === 'all' && cls !== lastGroup) {
       lastGroup = cls;

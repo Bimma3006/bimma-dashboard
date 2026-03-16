@@ -2562,17 +2562,29 @@ input::placeholder { color: var(--text-4); }
         <button class="scout-tab" id="scoutTabPaste" onclick="scoutSetTab('paste')">Paste ASINs</button>
       </div>
 
-      <!-- CSV slot -->
-      <div id="scoutCsvPane">
-        <div class="scout-dropzone" id="scoutDropzone"
-          ondragover="scoutDragOver(event)" ondragleave="scoutDragLeave(event)" ondrop="scoutDrop(event)"
-          onclick="document.getElementById('scoutCsvInput').click()">
-          <input type="file" id="scoutCsvInput" accept=".csv,.txt" style="display:none;" onchange="scoutFileChosen(this.files[0])">
-          <div class="scout-drop-icon" id="scoutDropIcon">↑</div>
-          <div class="scout-drop-label" id="scoutDropLabel">Drop CSV / TXT here or click to browse</div>
-          <div class="scout-drop-sub" id="scoutDropSub">Any file with ASINs — one per line, or comma-separated</div>
-          <div class="scout-drop-filename" id="scoutDropFilename"></div>
-          <button class="a2a-slot-clear" id="scoutClearFile" onclick="scoutClearFile(event)" style="display:none;">✕</button>
+      <!-- CSV slots -->
+      <div id="scoutCsvPane" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <!-- Slot 1 -->
+        <div class="scout-dropzone" id="scoutDropzone1"
+          ondragover="scoutDragOver(event,1)" ondragleave="scoutDragLeave(event,1)" ondrop="scoutDrop(event,1)"
+          onclick="document.getElementById('scoutCsvInput1').click()">
+          <input type="file" id="scoutCsvInput1" accept=".csv,.txt" style="display:none;" onchange="scoutFileChosen(this.files[0],1)">
+          <div class="scout-drop-icon" id="scoutDropIcon1">↑</div>
+          <div class="scout-drop-label" id="scoutDropLabel1">CSV 1 — up to 5,000 ASINs</div>
+          <div class="scout-drop-sub" id="scoutDropSub1">Drop Keepa export here</div>
+          <div class="scout-drop-filename" id="scoutDropFilename1"></div>
+          <button class="a2a-slot-clear" id="scoutClearFile1" onclick="scoutClearFile1(event)" style="display:none;">✕</button>
+        </div>
+        <!-- Slot 2 -->
+        <div class="scout-dropzone" id="scoutDropzone2"
+          ondragover="scoutDragOver(event,2)" ondragleave="scoutDragLeave(event,2)" ondrop="scoutDrop(event,2)"
+          onclick="document.getElementById('scoutCsvInput2').click()">
+          <input type="file" id="scoutCsvInput2" accept=".csv,.txt" style="display:none;" onchange="scoutFileChosen(this.files[0],2)">
+          <div class="scout-drop-icon" id="scoutDropIcon2">↑</div>
+          <div class="scout-drop-label" id="scoutDropLabel2">CSV 2 — up to 5,000 ASINs</div>
+          <div class="scout-drop-sub" id="scoutDropSub2">Drop Keepa export here</div>
+          <div class="scout-drop-filename" id="scoutDropFilename2"></div>
+          <button class="a2a-slot-clear" id="scoutClearFile2" onclick="scoutClearFile2(event)" style="display:none;">✕</button>
         </div>
       </div>
 
@@ -2643,7 +2655,7 @@ input::placeholder { color: var(--text-4); }
       </div>
       <div style="margin-top:10px;">
         <div class="rp-setting-label">Max ASINs</div>
-        <input id="scoutMaxAsins" type="number" value="20" step="1" min="1" max="20" class="rp-input rp-input-sm" oninput="scoutCountASINs()">
+        <input id="scoutMaxAsins" type="number" value="5000" step="100" min="1" max="10000" class="rp-input rp-input-sm" oninput="scoutCountASINs()">
       </div>
     </div>
 
@@ -4609,25 +4621,35 @@ function scoutToggleMarket(market, el) {
 }
 
 // ── CSV / File handling ──
-function scoutDragOver(e) {
+let scoutLoadedAsins1 = [], scoutLoadedAsins2 = [];
+let scoutCsvBBMap1 = {}, scoutCsvBBMap2 = {};
+let scoutCsvBBSourceMap1 = {}, scoutCsvBBSourceMap2 = {};
+let scoutCsvTitleMap1 = {}, scoutCsvTitleMap2 = {};
+let scoutCsvImageMap1 = {}, scoutCsvImageMap2 = {};
+
+function scoutDragOver(e, slot) {
   e.preventDefault();
-  document.getElementById('scoutDropzone')?.classList.add('drag-over');
+  document.getElementById('scoutDropzone'+slot)?.classList.add('drag-over');
 }
-function scoutDragLeave(e) {
-  document.getElementById('scoutDropzone')?.classList.remove('drag-over');
+function scoutDragLeave(e, slot) {
+  document.getElementById('scoutDropzone'+slot)?.classList.remove('drag-over');
 }
-function scoutDrop(e) {
+function scoutDrop(e, slot) {
   e.preventDefault();
-  document.getElementById('scoutDropzone')?.classList.remove('drag-over');
+  document.getElementById('scoutDropzone'+slot)?.classList.remove('drag-over');
   const file = e.dataTransfer?.files[0];
-  if (file) scoutFileChosen(file);
+  if (file) scoutFileChosen(file, slot);
 }
-function scoutFileChosen(file) {
+function scoutFileChosen(file, slot=1) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
     const text = ev.target.result;
-    scoutLoadedAsins = scoutExtractASINs(text);
+    const asins = scoutExtractASINs(text).slice(0, 5000);
+    if (slot === 1) { scoutLoadedAsins1 = asins; }
+    else            { scoutLoadedAsins2 = asins; }
+    // Merge for backward compat
+    scoutLoadedAsins = [...new Set([...scoutLoadedAsins1, ...scoutLoadedAsins2])];
     // Also parse UK 180d BB + title from CSV if it's a Keepa export
     scoutCsvBBMap   = {};
     scoutCsvTitleMap = {};
@@ -4689,55 +4711,70 @@ function scoutFileChosen(file) {
               bestSell = bbCur; sellSource = 'cur';
             }
             if (asin && bestSell) {
-              scoutCsvBBMap[asin]      = bestSell;
+              const bbMapSlot      = slot === 1 ? scoutCsvBBMap1      : scoutCsvBBMap2;
+              const bbSrcMapSlot   = slot === 1 ? scoutCsvBBSourceMap1 : scoutCsvBBSourceMap2;
+              const titleMapSlot   = slot === 1 ? scoutCsvTitleMap1   : scoutCsvTitleMap2;
+              const imageMapSlot   = slot === 1 ? scoutCsvImageMap1   : scoutCsvImageMap2;
+              bbMapSlot[asin]      = bestSell;
+              bbSrcMapSlot[asin]   = sellSource;
+              titleMapSlot[asin]   = title;
+              imageMapSlot[asin]   = image;
+              // Also update merged maps
+              scoutCsvBBMap[asin]       = bestSell;
               scoutCsvBBSourceMap[asin] = sellSource;
-              scoutCsvTitleMap[asin]   = title;
-              scoutCsvImageMap[asin]   = image;
+              scoutCsvTitleMap[asin]    = title;
+              scoutCsvImageMap[asin]    = image;
             }
           }
         }
       }
       console.log('CSV parsed:', Object.keys(scoutCsvBBMap).length, 'ASINs with UK BB');
     } catch(e) { console.error('CSV parse error:', e); }
-    const dz = document.getElementById('scoutDropzone');
-    dz?.classList.add('loaded');
-    const icon = document.getElementById('scoutDropIcon');
+    const s = slot;
+    document.getElementById('scoutDropzone'+s)?.classList.add('loaded');
+    const icon = document.getElementById('scoutDropIcon'+s);
     if (icon) icon.textContent = '✓';
-    const label = document.getElementById('scoutDropLabel');
+    const label = document.getElementById('scoutDropLabel'+s);
     if (label) label.textContent = file.name;
-    const sub = document.getElementById('scoutDropSub');
+    const sub = document.getElementById('scoutDropSub'+s);
     if (sub) sub.textContent = '';
-    const fname = document.getElementById('scoutDropFilename');
-    if (fname) fname.textContent = `${scoutLoadedAsins.length} ASINs extracted`;
-    const clr = document.getElementById('scoutClearFile');
+    const fname = document.getElementById('scoutDropFilename'+s);
+    if (fname) fname.textContent = `${asins.length} ASINs`;
+    const clr = document.getElementById('scoutClearFile'+s);
     if (clr) clr.style.display = 'block';
     scoutCountASINs();
   };
   reader.readAsText(file);
 }
-function scoutClearFile(e) {
+function scoutClearSlot(e, slot) {
   e?.stopPropagation();
-  scoutLoadedAsins = [];
-  scoutCsvBBMap = {};
-  scoutCsvBBSourceMap = {};
-  scoutCsvTitleMap = {};
-  scoutCsvImageMap = {};
-  const dz = document.getElementById('scoutDropzone');
-  dz?.classList.remove('loaded');
-  const icon = document.getElementById('scoutDropIcon');
+  if (slot === 1) { scoutLoadedAsins1 = []; scoutCsvBBMap1 = {}; scoutCsvBBSourceMap1 = {}; scoutCsvTitleMap1 = {}; scoutCsvImageMap1 = {}; }
+  else            { scoutLoadedAsins2 = []; scoutCsvBBMap2 = {}; scoutCsvBBSourceMap2 = {}; scoutCsvTitleMap2 = {}; scoutCsvImageMap2 = {}; }
+  scoutLoadedAsins = [...new Set([...scoutLoadedAsins1, ...scoutLoadedAsins2])];
+  // Merge BB maps
+  scoutCsvBBMap = Object.assign({}, scoutCsvBBMap1, scoutCsvBBMap2);
+  scoutCsvBBSourceMap = Object.assign({}, scoutCsvBBSourceMap1, scoutCsvBBSourceMap2);
+  scoutCsvTitleMap = Object.assign({}, scoutCsvTitleMap1, scoutCsvTitleMap2);
+  scoutCsvImageMap = Object.assign({}, scoutCsvImageMap1, scoutCsvImageMap2);
+  const s = slot;
+  document.getElementById('scoutDropzone'+s)?.classList.remove('loaded');
+  const icon = document.getElementById('scoutDropIcon'+s);
   if (icon) icon.textContent = '↑';
-  const label = document.getElementById('scoutDropLabel');
-  if (label) label.textContent = 'Drop CSV / TXT here or click to browse';
-  const sub = document.getElementById('scoutDropSub');
-  if (sub) sub.textContent = 'Any file with ASINs — one per line, or comma-separated';
-  const fname = document.getElementById('scoutDropFilename');
+  const label = document.getElementById('scoutDropLabel'+s);
+  if (label) label.textContent = 'CSV ' + slot + ' — up to 5,000 ASINs';
+  const sub = document.getElementById('scoutDropSub'+s);
+  if (sub) sub.textContent = 'Drop Keepa export here';
+  const fname = document.getElementById('scoutDropFilename'+s);
   if (fname) fname.textContent = '';
-  const clr = document.getElementById('scoutClearFile');
+  const clr = document.getElementById('scoutClearFile'+s);
   if (clr) clr.style.display = 'none';
-  const inp = document.getElementById('scoutCsvInput');
+  const inp = document.getElementById('scoutCsvInput'+s);
   if (inp) inp.value = '';
   scoutCountASINs();
 }
+function scoutClearFile1(e) { scoutClearSlot(e, 1); }
+function scoutClearFile2(e) { scoutClearSlot(e, 2); }
+function scoutClearFile(e)  { scoutClearSlot(e, 1); }
 
 function scoutExtractASINs(text) {
   const matches = text.match(/\bB0[A-Z0-9]{8}\b/g) || [];
@@ -4746,14 +4783,14 @@ function scoutExtractASINs(text) {
 
 function scoutGetActiveASINs() {
   const max = parseInt(document.getElementById('scoutMaxAsins')?.value || '20');
-  if (scoutCurrentTab === 'csv') return scoutLoadedAsins.slice(0, max);
+  if (scoutCurrentTab === 'csv') return [...new Set([...scoutLoadedAsins1,...scoutLoadedAsins2])].slice(0, max);
   const raw = document.getElementById('scoutAsinInput')?.value || '';
   return scoutExtractASINs(raw).slice(0, max);
 }
 
 function scoutCountASINs() {
   const max = parseInt(document.getElementById('scoutMaxAsins')?.value || '20');
-  const asins = scoutCurrentTab === 'csv' ? scoutLoadedAsins : scoutExtractASINs(document.getElementById('scoutAsinInput')?.value || '');
+  const asins = scoutCurrentTab === 'csv' ? [...new Set([...scoutLoadedAsins1,...scoutLoadedAsins2])] : scoutExtractASINs(document.getElementById('scoutAsinInput')?.value || '');
   const count = asins.length;
   const el = document.getElementById('scoutAsinCount');
   if (el) el.textContent = `${Math.min(count, max)} ASIN${Math.min(count,max) !== 1 ? 's' : ''} detected`;
@@ -5102,7 +5139,7 @@ function scoutExport() {
 }
 
 function scoutClear() {
-  scoutClearFile();
+  scoutClearSlot(null,1); scoutClearSlot(null,2);
   const inp = document.getElementById('scoutAsinInput');
   if (inp) inp.value = '';
   scoutResults = [];

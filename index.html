@@ -4595,9 +4595,12 @@ function rpRenderTable(){
   if(tabM) tabM.textContent = '✓ In Purchases (' + matchedCount + ')';
   if(tabU) tabU.textContent = '⚠ Not in Purchases (' + unmatchedCount + ')';
 
+  // Amazon auto-generated SKUs start with amzn. — exclude from matched tab
+  const isAutoSKU = sku => (sku||'').toLowerCase().startsWith('amzn.');
+
   // Filter by tab and search
   let rows = rpResults.filter(r => {
-    const hasMin = !!rpSellMap[r.asin];
+    const hasMin = !!rpSellMap[r.asin] && !isAutoSKU(r.sku);
     if(rpCurrentTab === 'matched' && !hasMin) return false;
     if(rpCurrentTab === 'unmatched' && hasMin) return false;
     return q === '' || (r.asin+r.sku+r.title).toLowerCase().includes(q);
@@ -4605,7 +4608,16 @@ function rpRenderTable(){
 
   if(!rows.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No results</div></td></tr>';return;}
   tbody.innerHTML=rows.map(r=>{
-    const minSell = rpSellMap[r.asin] || null;
+    const sellPrice = rpSellMap[r.asin] || null;
+    let minSell = null;
+    if (sellPrice) {
+      const floor = sellPrice * 0.85; // never drop more than 15% below sell price
+      const bb180 = r.pct || null;    // pct holds the percentile/avg price from Keepa
+      const bbHigh180 = r.high || null;
+      // Use avg of sell price and 180d BB, floored at 85% of sell price
+      const combined = bb180 ? Math.max(floor, Math.min(sellPrice, bb180)) : sellPrice;
+      minSell = parseFloat(combined.toFixed(2));
+    }
     const minPriceDisplay = minSell ? '£'+minSell.toFixed(2) : '<span style="color:var(--amber);font-size:10px;">⚠ not in purchases</span>';
     return '<tr>' +
       '<td class="mono" style="font-size:12px;color:var(--text-2);">'+r.asin+'</td>' +
@@ -4626,9 +4638,14 @@ function rpDownload(){
   if (typeof allRows !== 'undefined' && allRows.length) {
     allRows.forEach(p => { if (p.asin && p.sell > 0) sellMap[p.asin] = p.sell; });
   }
-  // Only export rows that have a matched sell price from purchases
-  rows.filter(r => sellMap[r.asin]).forEach(r => {
-    const minPrice = sellMap[r.asin].toFixed(2);
+  const isAutoSKUExport = sku => (sku||'').toLowerCase().startsWith('amzn.');
+  // Only export rows that have a matched sell price from purchases and a valid SKU
+  rows.filter(r => sellMap[r.asin] && !isAutoSKUExport(r.sku)).forEach(r => {
+    const sellP = sellMap[r.asin];
+    const floor = sellP * 0.85;
+    const bb180 = r.pct || null;
+    const combined = bb180 ? Math.max(floor, Math.min(sellP, bb180)) : sellP;
+    const minPrice = combined.toFixed(2);
     lines.push([r.sku||'', r.asin, minPrice, r.high, 'BimmaMinPriceTool_Keepa180d'].join('\t'));
   });
   const blob=new Blob([lines.join('\r\n')],{type:'text/tab-separated-values'});

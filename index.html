@@ -2655,7 +2655,7 @@ input::placeholder { color: var(--text-4); }
       </div>
       <div style="margin-top:10px;">
         <div class="rp-setting-label">Max ASINs</div>
-        <input id="scoutMaxAsins" type="number" value="5000" step="100" min="1" max="10000" class="rp-input rp-input-sm" oninput="scoutCountASINs()">
+        <input id="scoutMaxAsins" type="number" value="10000" step="100" min="1" max="10000" class="rp-input rp-input-sm" oninput="scoutCountASINs()">
       </div>
     </div>
 
@@ -4651,9 +4651,9 @@ function scoutFileChosen(file, slot=1) {
     // Merge for backward compat
     scoutLoadedAsins = [...new Set([...scoutLoadedAsins1, ...scoutLoadedAsins2])];
     // Also parse UK 180d BB + title from CSV if it's a Keepa export
-    scoutCsvBBMap   = {};
-    scoutCsvTitleMap = {};
-    scoutCsvImageMap = {};
+    // Reset slot-specific maps
+    if (slot === 1) { scoutCsvBBMap1 = {}; scoutCsvBBSourceMap1 = {}; scoutCsvTitleMap1 = {}; scoutCsvImageMap1 = {}; }
+    else            { scoutCsvBBMap2 = {}; scoutCsvBBSourceMap2 = {}; scoutCsvTitleMap2 = {}; scoutCsvImageMap2 = {}; }
     try {
       // Proper CSV parser that handles quoted fields with commas inside
       function parseCSVLine(line) {
@@ -4728,7 +4728,12 @@ function scoutFileChosen(file, slot=1) {
           }
         }
       }
-      console.log('CSV parsed:', Object.keys(scoutCsvBBMap).length, 'ASINs with UK BB');
+      // Merge slot maps into main maps
+      scoutCsvBBMap       = Object.assign({}, scoutCsvBBMap1, scoutCsvBBMap2);
+      scoutCsvBBSourceMap = Object.assign({}, scoutCsvBBSourceMap1, scoutCsvBBSourceMap2);
+      scoutCsvTitleMap    = Object.assign({}, scoutCsvTitleMap1, scoutCsvTitleMap2);
+      scoutCsvImageMap    = Object.assign({}, scoutCsvImageMap1, scoutCsvImageMap2);
+      console.log('CSV parsed slot', slot, ':', Object.keys(slot===1?scoutCsvBBMap1:scoutCsvBBMap2).length, 'ASINs. Total:', Object.keys(scoutCsvBBMap).length);
     } catch(e) { console.error('CSV parse error:', e); }
     const s = slot;
     document.getElementById('scoutDropzone'+s)?.classList.add('loaded');
@@ -4797,7 +4802,7 @@ function scoutCountASINs() {
   const warn = document.getElementById('scoutAsinWarning');
   const maxDisplay = document.getElementById('scoutMaxDisplay');
   if (maxDisplay) maxDisplay.textContent = max;
-  if (warn) warn.style.display = count > max ? 'inline' : 'none';
+  if (warn) warn.style.display = (count > max) ? 'inline' : 'none';
 }
 
 // ── Fee calcs ──
@@ -4977,12 +4982,15 @@ async function scoutRun() {
         scoutSetStatus(`Fetching ${market} prices for ${qualifiedAsins.length} qualified ASINs…`, 20 + (step / markets.length) * 60);
         try {
           const euProducts = await scoutFetchKeepa(qualifiedAsins, SCOUT_DOMAINS[market].id, apiKey, false);
+          let found = 0;
           euProducts.forEach(p => {
             if (!p.asin) return;
             if (!euData[p.asin]) euData[p.asin] = {};
             const bb = scoutGetCurrentBB(p);
-            if (bb && bb > 0) euData[p.asin][market] = bb;
+            if (bb && bb > 0) { euData[p.asin][market] = bb; found++; }
           });
+          console.log(`${market}: ${euProducts.length} products returned, ${found} with prices`);
+          if (euProducts.length > 0) console.log('Sample product keys:', Object.keys(euProducts[0]), 'stats:', euProducts[0].stats);
         } catch(e) { console.warn(`Scout ${market}:`, e.message); }
         await new Promise(r => setTimeout(r, 300));
       }

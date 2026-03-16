@@ -4493,7 +4493,7 @@ async function rpRun(){
   const apiKey=(localStorage.getItem('bimma_keepa_key')||localStorage.getItem('bimma_stalker_key')||'').trim();
   if(!apiKey){rpShowError('No Keepa API key found — add your key in Deal Scout or Storefront Stalker first.');return;}
   if(!rpReplenishASINs.length){rpShowError('Please upload your STK Replenish export first.');return;}
-  const items=rpGetASINs();
+  const allItems=rpGetASINs();
   const lookbackDays=parseInt(document.getElementById('rp-lookback').value);
   const percentile=parseInt(document.getElementById('rp-percentile').value);
   const bufferPct=parseFloat(document.getElementById('rp-buffer').value)/100;
@@ -4503,6 +4503,27 @@ async function rpRun(){
   rpResults=[];
   const prog=document.getElementById('rp-progress');
   const cutoffMs=Date.now()-lookbackDays*86400000;
+
+  // Filter ASINs by purchase date from SKU (format: DD/MM/YY-price-marketplace)
+  function parseSKUDate(sku) {
+    const m = (sku||'').match(/^(\d{2})\/(\d{2})\/(\d{2})/);
+    if (!m) return null;
+    const [,dd,mm,yy] = m;
+    return new Date(2000+parseInt(yy), parseInt(mm)-1, parseInt(dd)).getTime();
+  }
+  const items = allItems.filter(it => {
+    const purchaseMs = parseSKUDate(it.sku);
+    if (!purchaseMs) return true; // no date in SKU — include anyway
+    return purchaseMs >= cutoffMs;
+  });
+
+  if (!items.length) {
+    rpShowError('No ASINs purchased in the last '+lookbackDays+' days. Try a longer lookback window.');
+    document.getElementById('rpRunBtn').disabled=false;
+    return;
+  }
+  prog.textContent = 'Filtered to '+items.length+' ASINs purchased in last '+lookbackDays+' days…';
+
   const chunks=[];
   for(let i=0;i<items.length;i+=100)chunks.push(items.slice(i,i+100));
   const itemMap={};items.forEach(it=>itemMap[it.asin]=it);

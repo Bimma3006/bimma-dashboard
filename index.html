@@ -111,7 +111,7 @@ body::before {
   display: flex; align-items: center; justify-content: center;
   font-family: var(--mono); font-size: 13px; font-weight: 700;
   color: #000; flex-shrink: 0;
-  box-shadow: 0 2px 12px rgba(0,229,132,0.35);
+  box-shadow: none;
 }
 .logo-text { min-width: 0; }
 .logo-title {
@@ -165,7 +165,7 @@ body::before {
   width: 6px; height: 6px; border-radius: 50%; background: var(--text-4);
   flex-shrink: 0; transition: background 0.4s, box-shadow 0.4s;
 }
-.auth-dot.on { background: var(--green); box-shadow: 0 0 6px rgba(0,229,132,0.6); }
+.auth-dot.on { background: var(--green); box-shadow: none; }
 .auth-label {
   font-family: var(--mono); font-size: 10px; color: var(--text-3);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -184,7 +184,7 @@ body::before {
 .btn-auth:hover {
   background: rgba(0,229,132,0.08);
   border-color: var(--green);
-  box-shadow: 0 0 16px rgba(0,229,132,0.12);
+  box-shadow: none;
 }
 
 /* ═══════════════════════════════════════
@@ -222,11 +222,11 @@ body::before {
 }
 .btn-green {
   background: var(--green); color: #000;
-  box-shadow: 0 1px 8px rgba(0,229,132,0.2);
+  box-shadow: none;
 }
 .btn-green:hover {
   background: #1affa0;
-  box-shadow: 0 2px 20px rgba(0,229,132,0.38);
+  box-shadow: none;
   transform: translateY(-1px);
 }
 .btn-green:active { transform: translateY(0); }
@@ -359,7 +359,7 @@ input::placeholder { color: var(--text-4); }
 }
 .drop-zone:hover, .drop-zone.drag-over {
   border-color: var(--green); background: rgba(0,229,132,0.04);
-  box-shadow: 0 0 0 3px rgba(0,229,132,0.06);
+  box-shadow: none;
 }
 .drop-zone.loaded {
   border-style: solid; border-color: var(--green-dim);
@@ -446,7 +446,7 @@ input::placeholder { color: var(--text-4); }
   background: var(--text-4); top: 3px; left: 3px; transition: all 0.22s;
 }
 .toggle.on { background: rgba(0,229,132,0.22); }
-.toggle.on::after { background: var(--green); left: 19px; box-shadow: 0 0 6px rgba(0,229,132,0.5); }
+.toggle.on::after { background: var(--green); left: 19px; box-shadow: none; }
 
 /* ═══════════════════════════════════════
    FILTER ROW & PILLS
@@ -681,7 +681,7 @@ input::placeholder { color: var(--text-4); }
   color: var(--text); font-family: var(--mono); font-size: 20px; font-weight: 700;
   outline: none; transition: border-color 0.2s; letter-spacing: -0.01em;
 }
-.exp-amount-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(0,229,132,0.08); }
+.exp-amount-input:focus { border-color: var(--green); box-shadow: none; }
 .exp-amount-input::placeholder { color: var(--text-4); font-weight: 400; font-size: 16px; }
 .exp-currency { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 6px; letter-spacing: 0.04em; }
 .exp-saved { font-family: var(--mono); font-size: 10px; color: var(--green); opacity: 0; transition: opacity 0.2s; margin-top: 5px; height: 14px; }
@@ -1206,11 +1206,11 @@ input::placeholder { color: var(--text-4); }
   color: #000;
   pointer-events: all;
   border-color: transparent;
-  box-shadow: 0 4px 24px rgba(0,229,132,0.28);
+  box-shadow: none;
 }
 .a2a-go-btn.ready:hover {
   background: #00ff99;
-  box-shadow: 0 6px 32px rgba(0,229,132,0.4);
+  box-shadow: none;
   transform: translateY(-1px);
 }
 .a2a-go-btn.ready:active { transform: translateY(0); }
@@ -1327,9 +1327,9 @@ input::placeholder { color: var(--text-4); }
   color: #000;
   border-color: transparent;
   font-weight: 700;
-  box-shadow: 0 2px 10px rgba(0,229,132,0.2);
+  box-shadow: none;
 }
-.a2a-action-btn.a2a-action-green:hover { background: #00ff99; box-shadow: 0 3px 16px rgba(0,229,132,0.3); }
+.a2a-action-btn.a2a-action-green:hover { background: #00ff99; box-shadow: none; }
 
 /* Table wrapper */
 .a2a-table-wrap {
@@ -1418,9 +1418,9 @@ input::placeholder { color: var(--text-4); }
   border-radius: var(--r-sm);
   cursor: pointer;
   transition: all 0.15s;
-  box-shadow: 0 2px 12px rgba(0,229,132,0.25);
+  box-shadow: none;
 }
-.rp-run-btn:hover { background: #00ff99; box-shadow: 0 4px 20px rgba(0,229,132,0.35); }
+.rp-run-btn:hover { background: #00ff99; box-shadow: none; }
 .rp-run-btn:disabled { background: var(--surface3); color: var(--text-3); box-shadow: none; pointer-events: none; }
 .rp-run-icon { font-size: 14px; }
 
@@ -1840,7 +1840,7 @@ input::placeholder { color: var(--text-4); }
 .stalker-fetch-progress { padding:16px 22px; font-family:var(--mono); font-size:12px; color:var(--text-3); }
 .stalker-fetch-bar-wrap { height:4px; background:var(--border); border-radius:2px; margin-top:8px; overflow:hidden; }
 .stalker-fetch-bar { height:4px; background:var(--green); border-radius:2px; transition:width 0.3s; }
-.stalker-new-dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 6px rgba(0,232,138,0.5); flex-shrink:0; display:inline-block; margin-right:4px; }
+.stalker-new-dot { width:8px; height:8px; border-radius:50%; background:var(--green);  flex-shrink:0; display:inline-block; margin-right:4px; }
 
 
 /* ── STALKER STATS + TABLE ──────────────── */
@@ -4865,6 +4865,7 @@ async function scoutFetchKeepa(asins, domainId, apiKey, isUK = false) {
 // ── Token throttle ──
 let scoutLastTokenCount = null;
 let scoutShouldStop = false;
+let scoutIsRunning = false;
 const scoutRefillRate = 70; // tokens per minute
 
 async function scoutWaitForTokens(needed) {
@@ -4955,6 +4956,7 @@ async function scoutRun() {
   document.getElementById('scoutStopBtn').style.display = 'inline-flex';
   document.getElementById('scoutStopBtn').textContent = '⏹ Stop';
   scoutShouldStop = false;
+  scoutIsRunning = true;
   scoutResults = [];
 
   try {
@@ -5065,6 +5067,8 @@ async function scoutRun() {
     document.getElementById('scoutRunBtn').disabled = false;
     document.getElementById('scoutStopBtn').style.display = 'none';
     scoutShouldStop = false;
+    scoutIsRunning = false;
+    scoutRenderTable();
   }
 }
 
@@ -5100,12 +5104,14 @@ function scoutRenderTable() {
     return;
   }
 
-  // During run: only show strong/moderate (reject/noprice are incomplete)
-  const isRunning = document.getElementById('scoutStopBtn')?.style.display !== 'none';
+  // While running: All tab only shows confirmed strong/moderate
+  // When done: All tab shows everything except no EU price
   let filtered = scoutResults.filter(r => {
     const cls = scoutClassify(r);
-    if (isRunning && scoutCurrentFilter === 'all') return cls === 'strong' || cls === 'moderate';
-    if (scoutCurrentFilter === 'all') return cls !== 'noprice';
+    if (scoutCurrentFilter === 'all') {
+      if (scoutIsRunning) return cls === 'strong' || cls === 'moderate';
+      return cls !== 'noprice';
+    }
     return cls === scoutCurrentFilter;
   });
 
@@ -5121,10 +5127,9 @@ function scoutRenderTable() {
   const moderate = scoutResults.filter(r => scoutClassify(r) === 'moderate').length;
   const reject   = scoutResults.filter(r => scoutClassify(r) === 'reject').length;
   const noprice  = scoutResults.filter(r => scoutClassify(r) === 'noprice').length;
-  const isRunning = document.getElementById('scoutStopBtn')?.style.display !== 'none';
-  const rejectLabel = isRunning ? '⏳ pending' : '🔴 reject';
-  const nopriceLabel = isRunning ? '— not yet checked' : '— no EU price';
-  const badge = `${filtered.length} shown · 💚 ${strong} strong · 🟡 ${moderate} moderate · ${rejectLabel}: ${reject} · ${nopriceLabel}: ${noprice}`;
+  const badge = scoutIsRunning
+    ? `${filtered.length} confirmed · 💚 ${strong} strong · 🟡 ${moderate} moderate · ⏳ ${reject + noprice} still scanning…`
+    : `${filtered.length} shown · 💚 ${strong} strong · 🟡 ${moderate} moderate · 🔴 ${reject} reject · — ${noprice} no EU price`;
   if (countEl) { countEl.textContent = badge; countEl.className = 'rp-table-badge'; }
 
   const f2  = v => v != null ? '£' + v.toFixed(2) : '—';
@@ -5143,8 +5148,7 @@ function scoutRenderTable() {
       else if (roi >= 15) roiCol = 'var(--amber)';
     }
     const profitCol = (r.calc?.profit ?? -1) >= 0 ? 'var(--green)' : 'var(--red)';
-    const isRunning2 = document.getElementById('scoutStopBtn')?.style.display !== 'none';
-    const groupLabel = { strong:'💚 Strong Deals', moderate:'🟡 Moderate Deals', reject: isRunning2 ? '⏳ Pending — more markets still scanning' : '🔴 Reject', noprice: isRunning2 ? '— Not yet checked' : '— No EU Price' };
+    const groupLabel = { strong:'💚 Strong Deals', moderate:'🟡 Moderate Deals', reject: scoutIsRunning ? '⏳ Still Scanning' : '🔴 Reject', noprice: scoutIsRunning ? '⏳ Not Yet Checked' : '— No EU Price' };
     let groupRow = '';
     if (scoutCurrentFilter === 'all' && cls !== lastGroup) {
       lastGroup = cls;

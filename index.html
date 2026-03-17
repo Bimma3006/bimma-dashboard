@@ -2699,11 +2699,10 @@ input::placeholder { color: var(--text-4); }
             <th style="text-align:right;">Fees</th>
             <th style="text-align:right;">Profit</th>
             <th style="text-align:right;">ROI %</th>
-            <th style="text-align:center;">↗</th>
           </tr>
         </thead>
         <tbody id="scoutTableBody">
-          <tr><td colspan="10" class="rp-table-empty">Upload an ASIN list and click Run Scout to begin</td></tr>
+          <tr><td colspan="9" class="rp-table-empty">Upload an ASIN list and click Run Scout to begin</td></tr>
         </tbody>
       </table>
     </div>
@@ -5199,7 +5198,7 @@ function scoutRenderTable() {
   if (!tbody) return;
 
   if (!scoutResults.length) {
-    tbody.innerHTML = '<tr><td colspan="10" class="rp-table-empty">No results</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="rp-table-empty">No results</td></tr>';
     if (countEl) countEl.textContent = '';
     return;
   }
@@ -5260,14 +5259,14 @@ function scoutRenderTable() {
     let groupRow = '';
     if (scoutCurrentFilter === 'all' && cls !== lastGroup) {
       lastGroup = cls;
-      groupRow = `<tr><td colspan="10" style="padding:10px 12px 6px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);background:var(--surface2);border-bottom:1px solid var(--border);">${groupLabel[cls]}</td></tr>`;
+      groupRow = `<tr><td colspan="9" style="padding:10px 12px 6px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);background:var(--surface2);border-bottom:1px solid var(--border);">${groupLabel[cls]}</td></tr>`;
     }
     return groupRow + `<tr style="border-left:3px solid ${cls==='strong'?'var(--green)':cls==='moderate'?'var(--amber)':'transparent'};">
       <td style="font-family:var(--mono);font-size:11px;color:var(--text-2);">
-        ${r.asin}
+        <a href="https://keepa.com/#!product/2-${r.asin}" target="_blank" onclick="setTimeout(()=>scoutMarkViewed('${r.asin}'),0)" style="color:var(--text-2);text-decoration:none;border-bottom:1px dashed var(--border2);">${r.asin}</a>
         ${(typeof allRows !== 'undefined' && allRows.some(p => p.asin === r.asin)) ? `<div style="font-family:var(--mono);font-size:9px;background:rgba(240,165,0,0.15);color:var(--amber);border:1px solid rgba(240,165,0,0.3);border-radius:3px;padding:1px 5px;margin-top:2px;display:inline-block;">🛒 Bought</div>` : ''}
       </td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(r.title||'').replace(/"/g,'&quot;')}">${r.title}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(r.title||'').replace(/"/g,'&quot;')}">${r.title}<span id="sv_${r.asin}">${scoutViewedAsins.has(r.asin)?'<span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:5px;">👁 viewed</span>':''}</span></td>
       <td style="text-align:center;">
         ${r.bestMarket ? `<span class="rp-tag">${srcFlag[r.bestMarket]||''} ${r.bestMarket}</span>` : '<span style="color:var(--text-3)">—</span>'}
       </td>
@@ -5277,7 +5276,6 @@ function scoutRenderTable() {
       <td style="text-align:right;font-family:var(--mono);color:var(--text-3);">${f2(r.calc?.fba)}</td>
       <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${profitCol};">${f2(r.calc?.profit)}</td>
       <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${roiCol};">${fPct(roi)}</td>
-      <td style="text-align:center;"><a href="https://keepa.com/#!product/2-${r.asin}" target="_blank" style="color:var(--green);text-decoration:none;font-size:14px;font-weight:700;">↗</a></td>
     </tr>`;
   }).join('');
 }
@@ -5340,7 +5338,7 @@ function scoutClear() {
   // Reset UI
   scoutCountASINs();
   const tbody = document.getElementById('scoutTableBody');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="rp-table-empty">Upload an ASIN list and click Run Scout to begin</td></tr>';
+  if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="rp-table-empty">Upload an ASIN list and click Run Scout to begin</td></tr>';
   const countEl = document.getElementById('scoutResultCount');
   if (countEl) countEl.textContent = '';
   const statusEl = document.getElementById('scoutStatus');

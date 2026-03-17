@@ -5264,9 +5264,10 @@ function scoutRenderTable() {
     return groupRow + `<tr style="border-left:3px solid ${cls==='strong'?'var(--green)':cls==='moderate'?'var(--amber)':'transparent'};">
       <td style="font-family:var(--mono);font-size:11px;color:var(--text-2);">
         <a href="https://keepa.com/#!product/2-${r.asin}" target="_blank" onclick="setTimeout(()=>scoutMarkViewed('${r.asin}'),0)" style="color:var(--text-2);text-decoration:none;border-bottom:1px dashed var(--border2);">${r.asin}</a>
+        <span id="sv_${r.asin}">${scoutViewedAsins.has(r.asin) ? '<span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:4px;">👁 viewed</span>' : ''}</span>
         ${(typeof allRows !== 'undefined' && allRows.some(p => p.asin === r.asin)) ? `<div style="font-family:var(--mono);font-size:9px;background:rgba(240,165,0,0.15);color:var(--amber);border:1px solid rgba(240,165,0,0.3);border-radius:3px;padding:1px 5px;margin-top:2px;display:inline-block;">🛒 Bought</div>` : ''}
       </td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(r.title||'').replace(/"/g,'&quot;')}">${r.title}<span id="sv_${r.asin}">${scoutViewedAsins.has(r.asin)?'<span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:5px;">👁 viewed</span>':''}</span></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(r.title||'').replace(/"/g,'&quot;')}">${r.title}</td>
       <td style="text-align:center;">
         ${r.bestMarket ? `<span class="rp-tag">${srcFlag[r.bestMarket]||''} ${r.bestMarket}</span>` : '<span style="color:var(--text-3)">—</span>'}
       </td>
@@ -6173,8 +6174,7 @@ function scoutMarkViewed(asin, el) {
   try { localStorage.setItem('bimma_scout_viewed', JSON.stringify([...scoutViewedAsins])); } catch {}
   const badge = document.getElementById('sv_' + asin);
   if (badge) {
-    badge.style.cssText = 'font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:5px;';
-    badge.textContent = '👁 viewed';
+    badge.innerHTML = '<span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:4px;">👁 viewed</span>';
   }
 }
 

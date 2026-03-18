@@ -1865,6 +1865,7 @@ input::placeholder { color: var(--text-4); }
 .stalker-status-dot { width:7px; height:7px; border-radius:50%; background:var(--green); display:inline-block; margin-right:5px; }
 .stalker-status-dot.checking { background:var(--amber); }
 .stalker-status-dot.error { background:var(--red); }
+.stalker-status-dot.baseline { background:var(--blue); }
 /* product rows - compact like Seller Fuse */
 .stalker-product-row { display:grid; grid-template-columns:44px minmax(0,1fr) 140px 100px 160px; gap:14px; align-items:center; padding:10px 20px; border-bottom:1px solid var(--border); transition:background 0.15s; }
 .stalker-product-row:hover { background:rgba(255,255,255,0.015); }
@@ -1879,6 +1880,94 @@ input::placeholder { color: var(--text-4); }
 
 /* ── END STALKER ────────────────────────── */
 
+
+/* ════════════════════════════════════════
+   LEAKAGE TRACKER STYLES
+════════════════════════════════════════ */
+.leak-tab {
+  background: transparent; border: none; border-bottom: 2px solid transparent;
+  padding: 12px 20px; font-family: var(--mono); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-3);
+  cursor: pointer; transition: all 0.15s; margin-bottom: -1px;
+}
+.leak-tab:hover { color: var(--text-2); }
+.leak-tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+.leak-panel { padding: 24px 28px; }
+
+.leak-upload-box {
+  background: var(--surface2); border: 1px dashed var(--border3);
+  border-radius: var(--r); padding: 24px 20px; text-align: center;
+  transition: border-color 0.2s;
+}
+.leak-upload-box:hover { border-color: var(--green); }
+.leak-upload-icon { font-size: 28px; margin-bottom: 8px; }
+.leak-upload-label { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.leak-upload-sub { font-family: var(--mono); font-size: 10px; color: var(--text-2); line-height: 1.6; margin-bottom: 14px; }
+.leak-upload-btn {
+  background: var(--surface3); border: 1px solid var(--border2);
+  color: var(--text-2); font-family: var(--mono); font-size: 11px;
+  padding: 7px 16px; border-radius: var(--r-xs); cursor: pointer; transition: all 0.15s;
+}
+.leak-upload-btn:hover { border-color: var(--green); color: var(--green); }
+
+.leak-stat-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px 18px;
+}
+.leak-stat-card.red { border-color: rgba(240,59,80,0.25); background: rgba(240,59,80,0.05); }
+.leak-stat-val { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--text); }
+.leak-stat-card.red .leak-stat-val { color: var(--red); }
+.leak-stat-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 4px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+.leak-alert {
+  background: rgba(240,165,0,0.08); border: 1px solid rgba(240,165,0,0.25);
+  border-radius: var(--r-xs); padding: 10px 14px;
+  font-family: var(--mono); font-size: 12px; color: var(--amber);
+}
+
+.leak-table-wrap { overflow-x: auto; border-radius: var(--r); border: 1px solid var(--border); }
+.leak-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.leak-table th {
+  background: var(--surface2); padding: 10px 12px;
+  font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.leak-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: middle; }
+.leak-table tr:last-child td { border-bottom: none; }
+.leak-table tr:hover td { background: var(--surface2); }
+.leak-table td.leak-empty { text-align: center; color: var(--text-3); font-family: var(--mono); font-size: 12px; padding: 32px; }
+.leak-tag-red { background: rgba(240,59,80,0.12); color: var(--red); font-family: var(--mono); font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+.leak-tag-amber { background: rgba(240,165,0,0.12); color: var(--amber); font-family: var(--mono); font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+.leak-tag-green { background: rgba(0,232,138,0.1); color: var(--green); font-family: var(--mono); font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+
+.leak-filter-btn {
+  background: var(--surface3); border: 1px solid var(--border2);
+  color: var(--text-3); font-family: var(--mono); font-size: 10px; font-weight: 600;
+  padding: 5px 12px; border-radius: var(--r-xs); cursor: pointer; transition: all 0.15s;
+}
+.leak-filter-btn.active { background: var(--surface4); border-color: var(--green); color: var(--green); }
+.leak-filter-btn:hover { border-color: var(--border3); color: var(--text-2); }
+
+.leak-export-btn {
+  background: var(--surface3); border: 1px solid var(--border2);
+  color: var(--text-2); font-family: var(--mono); font-size: 10px; font-weight: 600;
+  padding: 5px 12px; border-radius: var(--r-xs); cursor: pointer; transition: all 0.15s;
+}
+.leak-export-btn:hover { border-color: var(--green); color: var(--green); }
+
+.leak-select {
+  background: var(--surface3); border: 1px solid var(--border2); color: var(--text-2);
+  font-family: var(--mono); font-size: 10px; padding: 5px 10px;
+  border-radius: var(--r-xs); cursor: pointer;
+}
+.leak-run-btn {
+  background: var(--green); color: #000; font-family: var(--mono); font-size: 11px;
+  font-weight: 700; padding: 9px 20px; border: none; border-radius: var(--r-xs);
+  cursor: pointer; letter-spacing: 0.04em; transition: opacity 0.15s;
+}
+.leak-run-btn:hover { opacity: 0.85; }
 </style>
 </head>
 <body>
@@ -1915,6 +2004,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-divider"></div>
     <div class="sidebar-section-label">Intelligence</div>
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
+    <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage Tracker</div>
   </div>
   <div class="sidebar-footer">
     <div class="sidebar-version">v2.9 · 12 Mar 26</div>
@@ -2710,6 +2800,184 @@ input::placeholder { color: var(--text-4); }
 
 </div><!-- /page-scout -->
 
+
+<!-- ════════════════════════════════════════ -->
+<!-- LEAKAGE TRACKER PAGE                     -->
+<!-- ════════════════════════════════════════ -->
+<div class="page" id="page-leakage">
+  <div class="page-header">
+    <div>
+      <div class="page-header-title">Leakage Tracker</div>
+      <div class="page-header-sub">Prep centre discrepancies · Unreimbursed returns · True COGS P&L</div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0;padding:0 28px;">
+    <button class="leak-tab active" id="leakTabPrep" onclick="leakSetTab('prep')">📦 Prep Centre</button>
+    <button class="leak-tab" id="leakTabReturns" onclick="leakSetTab('returns')">↩ Returns Audit</button>
+    <button class="leak-tab" id="leakTabPL" onclick="leakSetTab('pl')">£ COGS P&amp;L</button>
+  </div>
+
+  <!-- ── PREP CENTRE TAB ── -->
+  <div id="leakPanelPrep" class="leak-panel">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+      <!-- Upload: Prep Centre TSV -->
+      <div class="leak-upload-box" id="leakPrepDropzone">
+        <div class="leak-upload-icon">📋</div>
+        <div class="leak-upload-label">Prep Centre Form</div>
+        <div class="leak-upload-sub">Your prep management TSV/CSV<br><span style="color:var(--text-3);">Columns: ASIN · SKU · Units Expected · Units Actual</span></div>
+        <input type="file" id="leakPrepFile" accept=".csv,.tsv" style="display:none" onchange="leakLoadPrep(this)">
+        <button class="leak-upload-btn" onclick="document.getElementById('leakPrepFile').click()">Choose File</button>
+        <div id="leakPrepFileName" style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px;"></div>
+      </div>
+      <!-- Upload: FBA Inventory (Receipts) -->
+      <div class="leak-upload-box" id="leakInboundDropzone">
+        <div class="leak-upload-icon">🏭</div>
+        <div class="leak-upload-label">FBA Inventory Adjustments</div>
+        <div class="leak-upload-sub">From Seller Central → Reports → Fulfilment<br><span style="color:var(--text-3);">Filter: Event Type = Receipts</span></div>
+        <input type="file" id="leakInboundFile" accept=".csv,.tsv" style="display:none" onchange="leakLoadInbound(this)">
+        <button class="leak-upload-btn" onclick="document.getElementById('leakInboundFile').click()">Choose File</button>
+        <div id="leakInboundFileName" style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <!-- Summary stats -->
+    <div id="leakPrepStats" style="display:none;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+      <div class="leak-stat-card"><div class="leak-stat-val" id="lpStatShipments">—</div><div class="leak-stat-lbl">Shipments</div></div>
+      <div class="leak-stat-card"><div class="leak-stat-val" id="lpStatExpected">—</div><div class="leak-stat-lbl">Units Sent</div></div>
+      <div class="leak-stat-card"><div class="leak-stat-val" id="lpStatReceived">—</div><div class="leak-stat-lbl">Units Received</div></div>
+      <div class="leak-stat-card red"><div class="leak-stat-val" id="lpStatMissing">—</div><div class="leak-stat-lbl">Missing Units</div></div>
+    </div>
+    <div id="leakPrepMissingVal" style="display:none;margin-bottom:16px;">
+      <div class="leak-alert">⚠ Estimated value of missing units: <strong id="lpMissingVal">£0.00</strong> based on your purchase COGS</div>
+    </div>
+
+    <div id="leakPrepTableWrap" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);">Discrepancies Only</div>
+        <div style="display:flex;gap:8px;">
+          <select id="leakPrepFilter" class="leak-select" onchange="leakRenderPrep()">
+            <option value="discrepancy">Discrepancies only</option>
+            <option value="all">All shipments</option>
+          </select>
+          <button class="leak-export-btn" onclick="leakExportPrep()">↓ Export</button>
+        </div>
+      </div>
+      <div class="leak-table-wrap">
+        <table class="leak-table">
+          <thead><tr>
+            <th>Date</th><th>ASIN</th><th>SKU</th><th>Description</th>
+            <th style="text-align:right;">Sent</th><th style="text-align:right;">Received</th>
+            <th style="text-align:right;">Missing</th><th style="text-align:right;">COGS Value</th>
+            <th>FBA Ref</th><th>Status</th>
+          </tr></thead>
+          <tbody id="leakPrepTbody"><tr><td colspan="10" class="leak-empty">Upload both files to see discrepancies</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RETURNS AUDIT TAB ── -->
+  <div id="leakPanelReturns" class="leak-panel" style="display:none;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+      <div class="leak-upload-box">
+        <div class="leak-upload-icon">↩</div>
+        <div class="leak-upload-label">Returns Report</div>
+        <div class="leak-upload-sub">Seller Central → Reports → Fulfilment → Returns<br><span style="color:var(--text-3);">return-date · order-id · asin · disposition · status</span></div>
+        <input type="file" id="leakReturnsFile" accept=".csv,.tsv" style="display:none" onchange="leakLoadReturns(this)">
+        <button class="leak-upload-btn" onclick="document.getElementById('leakReturnsFile').click()">Choose File</button>
+        <div id="leakReturnsFileName" style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px;"></div>
+      </div>
+      <div class="leak-upload-box">
+        <div class="leak-upload-icon">💰</div>
+        <div class="leak-upload-label">Reimbursements Report</div>
+        <div class="leak-upload-sub">Seller Central → Reports → Fulfilment → Reimbursements<br><span style="color:var(--text-3);">approval-date · reason · asin · amount-total</span></div>
+        <input type="file" id="leakReimbFile" accept=".csv,.tsv" style="display:none" onchange="leakLoadReimb(this)">
+        <button class="leak-upload-btn" onclick="document.getElementById('leakReimbFile').click()">Choose File</button>
+        <div id="leakReimbFileName" style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div id="leakReturnsStats" style="display:none;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;">
+      <div class="leak-stat-card"><div class="leak-stat-val" id="lrStatTotal">—</div><div class="leak-stat-lbl">Total Returns</div></div>
+      <div class="leak-stat-card"><div class="leak-stat-val" id="lrStatDamaged">—</div><div class="leak-stat-lbl">Damaged</div></div>
+      <div class="leak-stat-card"><div class="leak-stat-val" id="lrStatReimbursed">—</div><div class="leak-stat-lbl">Reimbursed</div></div>
+      <div class="leak-stat-card red"><div class="leak-stat-val" id="lrStatUnreimb">—</div><div class="leak-stat-lbl">Not Reimbursed</div></div>
+      <div class="leak-stat-card red"><div class="leak-stat-val" id="lrStatExposure">—</div><div class="leak-stat-lbl">£ Exposure</div></div>
+    </div>
+
+    <div id="leakReturnsTableWrap" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="display:flex;gap:6px;">
+          <button class="leak-filter-btn active" id="lrfAll" onclick="leakSetReturnFilter('all',this)">All</button>
+          <button class="leak-filter-btn" id="lrfClaim" onclick="leakSetReturnFilter('claim',this)">🔴 Claim Needed</button>
+          <button class="leak-filter-btn" id="lrfDamaged" onclick="leakSetReturnFilter('damaged',this)">⚠ Damaged</button>
+          <button class="leak-filter-btn" id="lrfReimb" onclick="leakSetReturnFilter('reimbursed',this)">✓ Reimbursed</button>
+        </div>
+        <button class="leak-export-btn" onclick="leakExportReturns()">↓ Export</button>
+      </div>
+      <div class="leak-table-wrap">
+        <table class="leak-table">
+          <thead><tr>
+            <th>Return Date</th><th>ASIN</th><th>SKU</th><th>Product</th>
+            <th>Reason</th><th>Disposition</th><th>Status</th>
+            <th style="text-align:right;">Reimb. £</th><th>Action</th>
+          </tr></thead>
+          <tbody id="leakReturnsTbody"><tr><td colspan="9" class="leak-empty">Upload returns report to begin</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── COGS P&L TAB ── -->
+  <div id="leakPanelPL" class="leak-panel" style="display:none;">
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+      <span style="font-size:20px;">📊</span>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);">Uses your Purchases sheet data</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px;">Pull cost + sell price from purchases · cross-reference reimbursements · show true net per ASIN</div>
+      </div>
+      <button class="leak-run-btn" onclick="leakRunPL()" style="margin-left:auto;">▶ Run P&amp;L</button>
+    </div>
+
+    <div id="leakPLStats" style="display:none;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;">
+      <div class="leak-stat-card"><div class="leak-stat-val" id="plStatRevenue">—</div><div class="leak-stat-lbl">Gross Revenue</div></div>
+      <div class="leak-stat-card"><div class="leak-stat-val" id="plStatCOGS">—</div><div class="leak-stat-lbl">Total COGS</div></div>
+      <div class="leak-stat-card"><div class="leak-stat-val" id="plStatFees">—</div><div class="leak-stat-lbl">Est. FBA Fees</div></div>
+      <div class="leak-stat-card"><div class="leak-stat-val" id="plStatProfit">—</div><div class="leak-stat-lbl">Net Profit</div></div>
+      <div class="leak-stat-card red"><div class="leak-stat-val" id="plStatLeakage">—</div><div class="leak-stat-lbl">Total Leakage</div></div>
+    </div>
+
+    <div id="leakPLTableWrap" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="display:flex;gap:6px;">
+          <button class="leak-filter-btn active" id="plFilterAll" onclick="leakSetPLFilter('all',this)">All ASINs</button>
+          <button class="leak-filter-btn" id="plFilterLoss" onclick="leakSetPLFilter('loss',this)">🔴 Losing Money</button>
+          <button class="leak-filter-btn" id="plFilterLow" onclick="leakSetPLFilter('low',this)">⚠ &lt;10% ROI</button>
+          <button class="leak-filter-btn" id="plFilterGood" onclick="leakSetPLFilter('good',this)">✓ Profitable</button>
+        </div>
+        <button class="leak-export-btn" onclick="leakExportPL()">↓ Export</button>
+      </div>
+      <div class="leak-table-wrap">
+        <table class="leak-table">
+          <thead><tr>
+            <th>ASIN</th><th>SKU</th><th>Product</th>
+            <th style="text-align:right;">Buy Price</th>
+            <th style="text-align:right;">Sell Price</th>
+            <th style="text-align:right;">Est. Fees</th>
+            <th style="text-align:right;">Reimb.</th>
+            <th style="text-align:right;">Net Profit</th>
+            <th style="text-align:right;">ROI %</th>
+          </tr></thead>
+          <tbody id="leakPLTbody"><tr><td colspan="9" class="leak-empty">Click "Run P&amp;L" to analyse your purchases</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <div class="page" id="page-stalker">
   <div class="page-header" style="margin-bottom:20px;">
     <div class="page-header-title">👁 Storefront Stalker</div>
@@ -2876,7 +3144,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', deals:'Deal Analyser', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker' };
+  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', deals:'Deal Analyser', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker', leakage:'Leakage Tracker' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   document.dispatchEvent(new CustomEvent('bimma:pagechange', { detail: name }));
 }
@@ -5595,13 +5863,13 @@ function stalkerRenderSellers() {
     const snap     = stalkerSnapshots[s.uid];
     const newCount = stalkerFeedItems.filter(f => f.sellerId === s.id && f.type==='new' && f.detectedAt >= new Date().setHours(0,0,0,0)).length;
     const isChecking = s.status === 'checking';
-    const dotClass = isChecking ? 'checking' : s.status==='error' ? 'error' : '';
+    const dotClass = isChecking ? 'checking' : s.status==='error' ? 'error' : s.status==='baseline' ? 'baseline' : '';
     const lastCheckStr = s.lastCheck ? stalkerFmtTime(s.lastCheck) : '—';
     const avatarColor  = AVATARCOLORS[i % AVATARCOLORS.length];
     const initial      = (s.name||'?')[0].toUpperCase();
 
     return `<tr id="stalkerCard_${s.uid}">
-      <td><span class="stalker-status-dot ${dotClass}"></span><span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${isChecking?'Checking':'Active'}</span></td>
+      <td><span class="stalker-status-dot ${dotClass}"></span><span style="font-family:var(--mono);font-size:11px;color:var(--text-3);" title="${s.status==='error'?(s.errorMsg||'Error'):''}">${isChecking?'Checking':s.status==='error'?'Error':'Active'}</span></td>
       <td>
         <div style="display:flex;align-items:center;gap:10px;">
           <div class="stalker-seller-avatar" style="background:${avatarColor}22;color:${avatarColor};">${initial}</div>
@@ -5668,6 +5936,41 @@ function stalkerRenderFeed() {
       const amzUrl   = `https://www.amazon.${tld}/dp/${item.asin}`;
       const keepaUrl = `https://keepa.com/#!product/${item.market}-${item.asin}`;
       const detectedStr = stalkerFmtTime(item.detectedAt);
+
+      // Rich card if we have title/image data, basic row otherwise
+      if (item.title || item.imgKey || item.price) {
+        const imgUrl      = item.imgKey ? `https://m.media-amazon.com/images/I/${item.imgKey}` : null;
+        const feeEstimate = item.price ? (parseFloat(item.price) * 0.15).toFixed(2) : null;
+        return `<div class="stalker-product-row" style="border-left:3px solid var(--green);background:rgba(0,232,138,0.04);">
+          ${imgUrl
+            ? `<img src="${imgUrl}" class="stalker-product-img" onerror="this.style.display='none'">`
+            : `<div class="stalker-product-img-placeholder">📦</div>`}
+          <div style="min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+              <span style="background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;">NEW</span>
+              <span style="font-family:var(--mono);font-size:10px;color:var(--text-3);">detected ${detectedStr}</span>
+            </div>
+            <div class="stalker-product-title" title="${item.title||item.asin}">${item.title||item.asin}</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--blue);margin-top:2px;">${item.asin}</div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);">${item.sellerName}</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px;">${flag} ${tld}</div>
+          </div>
+          <div>
+            ${item.price
+              ? `<div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);">£${item.price}</div>
+                 <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px;">~Fees: £${feeEstimate}</div>`
+              : `<div style="font-family:var(--mono);font-size:12px;color:var(--text-3);">—</div>`}
+          </div>
+          <div style="display:flex;gap:7px;justify-content:flex-end;align-items:center;">
+            <a href="${keepaUrl}" target="_blank" class="stalker-product-link" onclick="setTimeout(()=>scoutMarkViewed('${item.asin}'),0)">Keepa ↗</a>
+            <a href="${amzUrl}" target="_blank" class="stalker-product-link green" onclick="setTimeout(()=>scoutMarkViewed('${item.asin}'),0)">Amazon ↗</a>
+          </div>
+        </div>`;
+      }
+
+      // Legacy basic row (old feed items without rich data)
       return `<div class="stalker-item">
         <div class="stalker-item-dot"></div>
         <div class="stalker-item-info">
@@ -5802,7 +6105,7 @@ async function stalkerFetchProducts(uid) {
   for (let b = 0; b < totalBatches; b++) {
     const batch = asins.slice(b * batchSize, (b + 1) * batchSize);
     try {
-      const url = `https://api.keepa.com/product?key=${key}&domain=${seller.market}&asin=${batch.join(',')}&history=1&stats=180&update=1`;
+      const url = `https://api.keepa.com/product?key=${key}&domain=${seller.market}&asin=${batch.join(',')}&history=0&stats=180&update=0`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.tokensLeft !== undefined) {
@@ -5903,8 +6206,8 @@ function stalkerRenderProductFeed(products, seller) {
           : `<div style="font-family:var(--mono);font-size:12px;color:var(--text-3);">—</div>`}
       </div>
       <div style="display:flex;gap:7px;justify-content:flex-end;align-items:center;">
-        <a href="${keepaUrl}" target="_blank" class="stalker-product-link" onclick="setTimeout(()=>scoutMarkViewed('${r.asin}'),0)">Keepa ↗</a>
-        <a href="${amzUrl}" target="_blank" class="stalker-product-link green" onclick="setTimeout(()=>scoutMarkViewed('${r.asin}'),0)">Amazon ↗</a>
+        <a href="${keepaUrl}" target="_blank" class="stalker-product-link" onclick="setTimeout(()=>scoutMarkViewed('${asin}'),0)">Keepa ↗</a>
+        <a href="${amzUrl}" target="_blank" class="stalker-product-link green" onclick="setTimeout(()=>scoutMarkViewed('${asin}'),0)">Amazon ↗</a>
       </div>
     </div>`;
   }).join('');
@@ -5923,7 +6226,7 @@ async function stalkerFetchAndPrependNewAsins(newAsins, seller) {
   for (let i = 0; i < newAsins.length; i += 100) {
     const batch = newAsins.slice(i, i + 100);
     try {
-      const url = `https://api.keepa.com/product?key=${key}&domain=${seller.market}&asin=${batch.join(',')}&history=1&stats=180&update=1`;
+      const url = `https://api.keepa.com/product?key=${key}&domain=${seller.market}&asin=${batch.join(',')}&history=0&stats=180&update=0`;
       const res  = await fetch(url);
       const data = await res.json();
       if (data.tokensLeft !== undefined) {
@@ -5940,73 +6243,45 @@ async function stalkerFetchAndPrependNewAsins(newAsins, seller) {
   const productMap = {};
   products.forEach(p => { if (p.asin) productMap[p.asin] = p; });
 
-  // Get existing feed content element
-  const feedEl  = document.getElementById('stalkerFeed');
-  const emptyEl = document.getElementById('stalkerFeedEmpty');
-  if (emptyEl) emptyEl.style.display = 'none';
-
-  // Build new ASIN rows HTML
+  // Save rich feed items to localStorage so they survive page reload
   const detectedAt = Date.now();
-  const newRows = newAsins.map(asin => {
-    const p       = productMap[asin] || {};
-    const title   = p.title || asin;
-    const imgKey  = p.imagesCSV ? p.imagesCSV.split(',')[0] : null;
-    const imgUrl  = imgKey ? `https://m.media-amazon.com/images/I/${imgKey}` : null;
+  const newFeedItems = newAsins.map(asin => {
+    const p = productMap[asin] || {};
+    const imgKey = p.imagesCSV ? p.imagesCSV.split(',')[0] : null;
     let price = null, priceLabel = 'New';
     try {
       const csv = p.csv;
       const tryFields = [[18,'Buy Box'],[1,'New'],[0,'Amazon'],[7,'Used']];
-      for (const [f, label] of tryFields) {
+      for (const [f, lbl] of tryFields) {
         if (csv && csv[f] && csv[f].length >= 2) {
           for (let i = csv[f].length - 1; i >= 1; i -= 2) {
             const raw = csv[f][i];
-            if (raw > 0) { price = (raw / 100).toFixed(2); priceLabel = label; break; }
+            if (raw > 0) { price = (raw / 100).toFixed(2); priceLabel = lbl; break; }
           }
           if (price) break;
         }
       }
     } catch(_) {}
-    const feeEstimate = price ? (parseFloat(price) * 0.15).toFixed(2) : null;
-    const keepaUrl = `https://keepa.com/#!product/${seller.market}-${asin}`;
-    const amzUrl   = `https://www.amazon.${tld}/dp/${asin}`;
-    const timeStr  = new Date(detectedAt).toLocaleString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',','');
+    return {
+      type: 'new',
+      asin,
+      sellerId:   seller.id,
+      sellerName: seller.name,
+      market:     seller.market,
+      detectedAt,
+      title:      p.title || null,
+      imgKey:     imgKey || null,
+      price:      price || null,
+      priceLabel
+    };
+  });
 
-    return `<div class="stalker-product-row" style="border-left:3px solid var(--green);background:rgba(0,232,138,0.04);">
-      ${imgUrl
-        ? `<img src="${imgUrl}" class="stalker-product-img" onerror="this.style.display='none'">`
-        : `<div class="stalker-product-img-placeholder">📦</div>`}
-      <div style="min-width:0;">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
-          <span style="background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;">NEW</span>
-          <span style="font-family:var(--mono);font-size:10px;color:var(--text-3);">detected ${timeStr}</span>
-        </div>
-        <div class="stalker-product-title" title="${title}">${title}</div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--blue);margin-top:2px;">${asin}</div>
-      </div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text);">${seller.name}</div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px;">${flag} ${tld}</div>
-      </div>
-      <div>
-        ${price
-          ? `<div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);">£${price}</div>
-             <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px;">Fees: £${feeEstimate}</div>`
-          : `<div style="font-family:var(--mono);font-size:12px;color:var(--text-3);">—</div>`}
-      </div>
-      <div style="display:flex;gap:7px;justify-content:flex-end;align-items:center;">
-        <a href="${keepaUrl}" target="_blank" class="stalker-product-link" onclick="setTimeout(()=>scoutMarkViewed('${r.asin}'),0)">Keepa ↗</a>
-        <a href="${amzUrl}" target="_blank" class="stalker-product-link green" onclick="setTimeout(()=>scoutMarkViewed('${r.asin}'),0)">Amazon ↗</a>
-      </div>
-    </div>`;
-  }).join('');
+  // Prepend to feed (newest first), cap at 500
+  stalkerFeedItems = [...newFeedItems, ...stalkerFeedItems].slice(0, 500);
+  stalkerSave();
 
-  // Date header for new items
-  const dateHeader = `<div class="stalker-product-header" style="border-left:3px solid var(--green);">
-    <span style="color:var(--green);">🆕 ${newAsins.length} NEW ASIN${newAsins.length>1?'S':''} DETECTED — ${new Date(detectedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
-  </div>`;
-
-  // Prepend to existing feed content
-  feedEl.innerHTML = dateHeader + newRows + feedEl.innerHTML;
+  // Re-render the full feed
+  stalkerRenderFeed();
 }
 
 
@@ -6176,6 +6451,494 @@ function scoutMarkViewed(asin, el) {
   if (badge) {
     badge.innerHTML = '<span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:4px;">👁 viewed</span>';
   }
+}
+
+
+// ════════════════════════════════════════
+// LEAKAGE TRACKER
+// ════════════════════════════════════════
+
+// --- State ---
+let leakPrepData     = [];   // parsed prep centre rows
+let leakInboundData  = [];   // parsed FBA inventory adjustments (Receipts)
+let leakReturnsData  = [];   // parsed returns report
+let leakReimbData    = [];   // parsed reimbursements report
+let leakReturnFilter = 'all';
+let leakPLFilter     = 'all';
+let leakPLData       = [];
+
+// --- Tab switching ---
+function leakSetTab(tab) {
+  ['prep','returns','pl'].forEach(t => {
+    document.getElementById('leakTabPrep')?.classList[t==='prep'?'add':'remove']('active');
+    document.getElementById('leakTabReturns')?.classList[t==='returns'?'add':'remove']('active');
+    document.getElementById('leakTabPL')?.classList[t==='pl'?'add':'remove']('active');
+    document.getElementById('leakPanelPrep').style.display   = tab==='prep'    ? '' : 'none';
+    document.getElementById('leakPanelReturns').style.display = tab==='returns' ? '' : 'none';
+    document.getElementById('leakPanelPL').style.display     = tab==='pl'      ? '' : 'none';
+  });
+  // Fix active tab button manually
+  ['prep','returns','pl'].forEach(t => {
+    const btn = document.getElementById('leakTab' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+}
+
+// --- CSV/TSV Parser (handles quoted fields, commas within quotes) ---
+function leakParseCSV(text, delimiter) {
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l => l.trim());
+  if (!lines.length) return [];
+  // Auto-detect delimiter if not specified
+  if (!delimiter) {
+    const firstLine = lines[0];
+    delimiter = firstLine.includes('\t') ? '\t' : ',';
+  }
+  const headers = leakSplitLine(lines[0], delimiter).map(h => h.replace(/^"|"$/g,'').trim().toLowerCase());
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = leakSplitLine(lines[i], delimiter).map(v => v.replace(/^"|"$/g,'').trim());
+    if (vals.length < 2) continue;
+    const row = {};
+    headers.forEach((h, idx) => { row[h] = vals[idx] || ''; });
+    rows.push(row);
+  }
+  return rows;
+}
+
+function leakSplitLine(line, delim) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === delim && !inQ) { result.push(cur); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur);
+  return result;
+}
+
+function leakReadFile(file, cb) {
+  const reader = new FileReader();
+  reader.onload = e => cb(e.target.result);
+  reader.readAsText(file);
+}
+
+// --- PREP CENTRE ---
+function leakLoadPrep(input) {
+  const file = input.files[0]; if (!file) return;
+  document.getElementById('leakPrepFileName').textContent = '✓ ' + file.name;
+  leakReadFile(file, text => {
+    const rows = leakParseCSV(text);
+    // Expected columns: ASIN, SKU, Individual Units Expected, Individual Units Actual, Actual Arrival Date, FBA Reference, Product Description etc
+    leakPrepData = rows.filter(r => r['asin'] && r['asin'].match(/^B0[A-Z0-9]{8}$/i));
+    leakReconcilePrep();
+  });
+}
+
+function leakLoadInbound(input) {
+  const file = input.files[0]; if (!file) return;
+  document.getElementById('leakInboundFileName').textContent = '✓ ' + file.name;
+  leakReadFile(file, text => {
+    const rows = leakParseCSV(text);
+    // FBA Inventory Adjustments: date, fnsku, asin, msku, title, event type, reference id, quantity, fulfillment center, disposition
+    leakInboundData = rows.filter(r => {
+      const et = (r['event type'] || '').toLowerCase();
+      return et === 'receipts';
+    });
+    leakReconcilePrep();
+  });
+}
+
+function leakReconcilePrep() {
+  if (!leakPrepData.length) return;
+
+  // Build received qty map from FBA inbound: asin → total received qty
+  const receivedMap = {};  // asin → qty
+  const receivedByFBARef = {}; // fbaRef → { asin → qty }
+  leakInboundData.forEach(r => {
+    const asin = (r['asin'] || '').trim().toUpperCase();
+    const qty  = parseInt(r['quantity'] || '0', 10);
+    const ref  = (r['reference id'] || '').trim();
+    if (!asin) return;
+    receivedMap[asin] = (receivedMap[asin] || 0) + (qty > 0 ? qty : 0);
+    if (ref) {
+      if (!receivedByFBARef[ref]) receivedByFBARef[ref] = {};
+      receivedByFBARef[ref][asin] = (receivedByFBARef[ref][asin] || 0) + (qty > 0 ? qty : 0);
+    }
+  });
+
+  // Get COGS map from purchases (allRows global)
+  const cogsMap = {};
+  if (typeof allRows !== 'undefined' && allRows.length) {
+    allRows.forEach(p => {
+      if (p.asin && p.buy > 0) cogsMap[p.asin.toUpperCase()] = p.buy;
+    });
+  }
+
+  // Reconcile each prep row
+  const reconciled = leakPrepData.map(r => {
+    const asin     = (r['asin'] || '').trim().toUpperCase();
+    const sku      = r['sku'] || r['msku'] || '';
+    const desc     = r['product description'] || '';
+    const fbaRef   = (r['fba reference'] || '').trim();
+    const dateSent = r['shipping date'] || r['actual arrival date'] || r['booking in date'] || '';
+    const sent     = parseInt(r['sellable units expected'] || r['individual units expected'] || '0', 10);
+    const sentActual = parseInt(r['sellable units actual'] || r['individual units actual'] || '0', 10);
+
+    // Look up received: prefer by FBA ref, fall back to total ASIN received
+    let received = 0;
+    if (fbaRef && receivedByFBARef[fbaRef] && receivedByFBARef[fbaRef][asin] !== undefined) {
+      received = receivedByFBARef[fbaRef][asin];
+    } else if (leakInboundData.length > 0) {
+      // If inbound loaded, use it; otherwise fall back to prep actual
+      received = receivedMap[asin] || 0;
+    } else {
+      // No inbound data — use prep centre's own actual
+      received = sentActual;
+    }
+
+    const expected = sent || sentActual;
+    const missing  = Math.max(0, expected - received);
+    const cogs     = cogsMap[asin] || 0;
+    const cogsVal  = missing * cogs;
+
+    return { asin, sku, desc, fbaRef, dateSent, sent: expected, received, missing, cogs, cogsVal };
+  });
+
+  // Stats
+  const totalSent     = reconciled.reduce((s,r) => s + r.sent, 0);
+  const totalReceived = reconciled.reduce((s,r) => s + r.received, 0);
+  const totalMissing  = reconciled.reduce((s,r) => s + r.missing, 0);
+  const totalVal      = reconciled.reduce((s,r) => s + r.cogsVal, 0);
+
+  const statsEl = document.getElementById('leakPrepStats');
+  if (statsEl) { statsEl.style.display = 'grid'; }
+  document.getElementById('lpStatShipments').textContent = reconciled.length;
+  document.getElementById('lpStatExpected').textContent  = totalSent.toLocaleString();
+  document.getElementById('lpStatReceived').textContent  = totalReceived.toLocaleString();
+  document.getElementById('lpStatMissing').textContent   = totalMissing.toLocaleString();
+
+  const missingValEl = document.getElementById('leakPrepMissingVal');
+  if (totalVal > 0 && missingValEl) {
+    missingValEl.style.display = 'block';
+    document.getElementById('lpMissingVal').textContent = '£' + totalVal.toFixed(2);
+  }
+
+  document.getElementById('leakPrepTableWrap').style.display = 'block';
+
+  // Store for render
+  window._leakPrepReconciled = reconciled;
+  leakRenderPrep();
+}
+
+function leakRenderPrep() {
+  const rows = window._leakPrepReconciled || [];
+  const filter = document.getElementById('leakPrepFilter')?.value || 'discrepancy';
+  const tbody = document.getElementById('leakPrepTbody');
+  if (!tbody) return;
+
+  const filtered = filter === 'discrepancy' ? rows.filter(r => r.missing > 0) : rows;
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="10" class="leak-empty">${filter==='discrepancy'?'✓ No discrepancies found — all units accounted for':'No data'}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => {
+    const missingTag = r.missing > 0
+      ? `<span class="leak-tag-red">▼ ${r.missing} missing</span>`
+      : `<span class="leak-tag-green">✓ OK</span>`;
+    const cogsDisplay = r.cogsVal > 0 ? `<span style="color:var(--red);font-weight:700;">£${r.cogsVal.toFixed(2)}</span>` : '—';
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${r.dateSent||'—'}</td>
+      <td><a href="https://keepa.com/#!product/2-${r.asin}" target="_blank" style="font-family:var(--mono);font-size:11px;color:var(--blue);text-decoration:none;">${r.asin}</a></td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text-3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.sku}</td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.desc}">${r.desc||'—'}</td>
+      <td style="text-align:right;font-family:var(--mono);">${r.sent}</td>
+      <td style="text-align:right;font-family:var(--mono);">${r.received}</td>
+      <td style="text-align:right;">${missingTag}</td>
+      <td style="text-align:right;">${cogsDisplay}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text-3);">${r.fbaRef||'—'}</td>
+      <td>${r.missing > 0 ? '<span class="leak-tag-amber">Chase</span>' : '<span class="leak-tag-green">Clear</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function leakExportPrep() {
+  const rows = (window._leakPrepReconciled || []).filter(r => r.missing > 0);
+  if (!rows.length) return;
+  const lines = [['Date','ASIN','SKU','Description','Sent','Received','Missing','COGS Value','FBA Ref'].join('\t')];
+  rows.forEach(r => lines.push([r.dateSent,r.asin,r.sku,r.desc,r.sent,r.received,r.missing,r.cogsVal.toFixed(2),r.fbaRef].join('\t')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\n')], {type:'text/tab-separated-values'}));
+  a.download = 'bimma-prep-discrepancies-' + new Date().toISOString().slice(0,10) + '.tsv';
+  a.click();
+}
+
+// --- RETURNS AUDIT ---
+function leakLoadReturns(input) {
+  const file = input.files[0]; if (!file) return;
+  document.getElementById('leakReturnsFileName').textContent = '✓ ' + file.name;
+  leakReadFile(file, text => {
+    const rows = leakParseCSV(text);
+    leakReturnsData = rows.filter(r => r['asin'] || r['order-id']);
+    leakReconcileReturns();
+  });
+}
+
+function leakLoadReimb(input) {
+  const file = input.files[0]; if (!file) return;
+  document.getElementById('leakReimbFileName').textContent = '✓ ' + file.name;
+  leakReadFile(file, text => {
+    const rows = leakParseCSV(text);
+    leakReimbData = rows;
+    leakReconcileReturns();
+  });
+}
+
+function leakReconcileReturns() {
+  if (!leakReturnsData.length) return;
+
+  // Build reimbursement lookup: order-id → reimbursement amount
+  // Also asin → total reimbursed
+  const reimbByOrder = {};
+  const reimbByAsin  = {};
+  leakReimbData.forEach(r => {
+    const orderId = (r['amazon-order-id'] || '').trim();
+    const asin    = (r['asin'] || '').trim().toUpperCase();
+    const amt     = parseFloat(r['amount-total'] || '0');
+    const reason  = (r['reason'] || '').toLowerCase();
+    if (orderId) reimbByOrder[orderId] = (reimbByOrder[orderId] || 0) + amt;
+    if (asin && reason.includes('return')) reimbByAsin[asin] = (reimbByAsin[asin] || 0) + amt;
+  });
+
+  // Get sell price map from purchases
+  const sellMap = {};
+  if (typeof allRows !== 'undefined' && allRows.length) {
+    allRows.forEach(p => { if (p.asin && p.sell > 0) sellMap[p.asin.toUpperCase()] = p.sell; });
+  }
+
+  const processed = leakReturnsData.map(r => {
+    const returnDate  = (r['return-date'] || '').slice(0,10);
+    const orderId     = (r['order-id'] || '').trim();
+    const asin        = (r['asin'] || '').trim().toUpperCase();
+    const sku         = r['sku'] || '';
+    const product     = r['product-name'] || r['title'] || '';
+    const qty         = parseInt(r['quantity'] || '1', 10);
+    const disposition = (r['detailed-disposition'] || '').replace(/_/g,' ');
+    const reason      = (r['reason'] || '').replace(/_/g,' ');
+    const status      = (r['status'] || '').trim();
+
+    const isDamaged = disposition.includes('DAMAGED') || disposition.includes('DEFECTIVE') ||
+                      reason.includes('DAMAGED') || reason.includes('DEFECTIVE') ||
+                      disposition.includes('CARRIER');
+    const isReturned = status.toLowerCase().includes('returned to inventory');
+    const reimbAmt   = reimbByOrder[orderId] || 0;
+    const isReimbursed = reimbAmt > 0;
+
+    // Exposure: items that are damaged/not restocked and not reimbursed
+    const sellPrice  = sellMap[asin] || 0;
+    const exposure   = (!isReimbursed && (isDamaged || !isReturned)) ? sellPrice * qty : 0;
+
+    return { returnDate, orderId, asin, sku, product, qty, disposition, reason, status, isDamaged, isReturned, isReimbursed, reimbAmt, sellPrice, exposure };
+  });
+
+  // Stats
+  const totalReturns   = processed.length;
+  const totalDamaged   = processed.filter(r => r.isDamaged).length;
+  const totalReimbursed = processed.filter(r => r.isReimbursed).length;
+  const needClaim      = processed.filter(r => !r.isReimbursed && (r.isDamaged || !r.isReturned)).length;
+  const totalExposure  = processed.reduce((s,r) => s + r.exposure, 0);
+
+  const statsEl = document.getElementById('leakReturnsStats');
+  if (statsEl) statsEl.style.display = 'grid';
+  document.getElementById('lrStatTotal').textContent     = totalReturns;
+  document.getElementById('lrStatDamaged').textContent   = totalDamaged;
+  document.getElementById('lrStatReimbursed').textContent = totalReimbursed;
+  document.getElementById('lrStatUnreimb').textContent   = needClaim;
+  document.getElementById('lrStatExposure').textContent  = totalExposure > 0 ? '£'+totalExposure.toFixed(0) : '£0';
+
+  document.getElementById('leakReturnsTableWrap').style.display = 'block';
+  window._leakReturnsProcessed = processed;
+  leakRenderReturns();
+}
+
+function leakSetReturnFilter(f, btn) {
+  leakReturnFilter = f;
+  document.querySelectorAll('.leak-filter-btn[id^="lrf"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  leakRenderReturns();
+}
+
+function leakRenderReturns() {
+  const tbody = document.getElementById('leakReturnsTbody');
+  if (!tbody) return;
+  const rows = window._leakReturnsProcessed || [];
+  let filtered = rows;
+  if (leakReturnFilter === 'claim')      filtered = rows.filter(r => !r.isReimbursed && (r.isDamaged || !r.isReturned));
+  else if (leakReturnFilter === 'damaged')    filtered = rows.filter(r => r.isDamaged);
+  else if (leakReturnFilter === 'reimbursed') filtered = rows.filter(r => r.isReimbursed);
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="leak-empty">No results for this filter</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => {
+    const statusTag = r.isReimbursed
+      ? `<span class="leak-tag-green">✓ Reimbursed</span>`
+      : r.isDamaged
+        ? `<span class="leak-tag-red">⚠ Damaged</span>`
+        : r.isReturned
+          ? `<span class="leak-tag-amber">Restocked</span>`
+          : `<span class="leak-tag-red">Not Returned</span>`;
+
+    const actionTag = (!r.isReimbursed && (r.isDamaged || !r.isReturned))
+      ? `<span class="leak-tag-red">File Claim</span>`
+      : `<span style="color:var(--text-3);font-family:var(--mono);font-size:10px;">—</span>`;
+
+    const reimbDisplay = r.reimbAmt > 0
+      ? `<span style="color:var(--green);font-family:var(--mono);">£${r.reimbAmt.toFixed(2)}</span>`
+      : r.exposure > 0
+        ? `<span style="color:var(--red);font-family:var(--mono);">~£${r.exposure.toFixed(2)}</span>`
+        : '—';
+
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${r.returnDate}</td>
+      <td><a href="https://keepa.com/#!product/2-${r.asin}" target="_blank" style="font-family:var(--mono);font-size:11px;color:var(--blue);text-decoration:none;">${r.asin||'—'}</a></td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text-3);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.sku}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.product}">${r.product||'—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;">${r.reason||'—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;">${r.disposition||'—'}</td>
+      <td>${statusTag}</td>
+      <td style="text-align:right;">${reimbDisplay}</td>
+      <td>${actionTag}</td>
+    </tr>`;
+  }).join('');
+}
+
+function leakExportReturns() {
+  const rows = (window._leakReturnsProcessed || []).filter(r => !r.isReimbursed && (r.isDamaged || !r.isReturned));
+  if (!rows.length) { alert('No claim-needed items to export'); return; }
+  const lines = [['Return Date','Order ID','ASIN','SKU','Product','Reason','Disposition','Status','Exposure £'].join('\t')];
+  rows.forEach(r => lines.push([r.returnDate,r.orderId,r.asin,r.sku,(r.product||'').replace(/\t/g,' '),r.reason,r.disposition,r.status,r.exposure.toFixed(2)].join('\t')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\n')], {type:'text/tab-separated-values'}));
+  a.download = 'bimma-returns-claims-' + new Date().toISOString().slice(0,10) + '.tsv';
+  a.click();
+}
+
+// --- COGS P&L ---
+function leakRunPL() {
+  if (typeof allRows === 'undefined' || !allRows.length) {
+    alert('No purchases data found. Make sure your Purchases sheet is loaded.');
+    return;
+  }
+
+  // Build reimbursement map: asin → total reimbursed
+  const reimbMap = {};
+  leakReimbData.forEach(r => {
+    const asin = (r['asin'] || '').trim().toUpperCase();
+    const amt  = parseFloat(r['amount-total'] || '0');
+    if (asin) reimbMap[asin] = (reimbMap[asin] || 0) + amt;
+  });
+
+  // Group purchases by ASIN
+  const byAsin = {};
+  allRows.forEach(p => {
+    const asin = (p.asin || '').trim().toUpperCase();
+    if (!asin) return;
+    if (!byAsin[asin]) byAsin[asin] = { asin, sku: p.sku||'', title: p.title||p.asin, units: 0, totalBuy: 0, totalSell: 0 };
+    byAsin[asin].units    += (p.qty || 1);
+    byAsin[asin].totalBuy += (p.buy || 0) * (p.qty || 1);
+    byAsin[asin].totalSell += (p.sell || 0) * (p.qty || 1);
+  });
+
+  leakPLData = Object.values(byAsin).map(g => {
+    const avgBuy    = g.units > 0 ? g.totalBuy / g.units : 0;
+    const avgSell   = g.units > 0 ? g.totalSell / g.units : 0;
+    // Estimate FBA fees at 15% of sell + £3 fixed
+    const estFees   = g.totalSell > 0 ? (g.totalSell * 0.15) + (3 * g.units) : 0;
+    const reimb     = reimbMap[g.asin] || 0;
+    const netProfit = g.totalSell - g.totalBuy - estFees + reimb;
+    const roi       = g.totalBuy > 0 ? (netProfit / g.totalBuy) * 100 : null;
+    return { ...g, avgBuy, avgSell, estFees, reimb, netProfit, roi };
+  }).sort((a,b) => a.netProfit - b.netProfit); // worst first
+
+  // Stats
+  const totalRevenue = leakPLData.reduce((s,r) => s + r.totalSell, 0);
+  const totalCOGS    = leakPLData.reduce((s,r) => s + r.totalBuy, 0);
+  const totalFees    = leakPLData.reduce((s,r) => s + r.estFees, 0);
+  const totalProfit  = leakPLData.reduce((s,r) => s + r.netProfit, 0);
+  const totalLeakage = leakPLData.filter(r => r.netProfit < 0).reduce((s,r) => s + Math.abs(r.netProfit), 0);
+
+  const statsEl = document.getElementById('leakPLStats');
+  if (statsEl) statsEl.style.display = 'grid';
+  document.getElementById('plStatRevenue').textContent = '£' + totalRevenue.toFixed(0);
+  document.getElementById('plStatCOGS').textContent    = '£' + totalCOGS.toFixed(0);
+  document.getElementById('plStatFees').textContent    = '£' + totalFees.toFixed(0);
+  document.getElementById('plStatProfit').textContent  = (totalProfit >= 0 ? '+' : '') + '£' + totalProfit.toFixed(0);
+  document.getElementById('plStatLeakage').textContent = '£' + totalLeakage.toFixed(0);
+
+  document.getElementById('leakPLTableWrap').style.display = 'block';
+  leakRenderPL();
+}
+
+function leakSetPLFilter(f, btn) {
+  leakPLFilter = f;
+  ['plFilterAll','plFilterLoss','plFilterLow','plFilterGood'].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+  leakRenderPL();
+}
+
+function leakRenderPL() {
+  const tbody = document.getElementById('leakPLTbody');
+  if (!tbody) return;
+  let rows = leakPLData;
+  if (leakPLFilter === 'loss') rows = rows.filter(r => r.netProfit < 0);
+  else if (leakPLFilter === 'low')  rows = rows.filter(r => r.roi !== null && r.roi >= 0 && r.roi < 10);
+  else if (leakPLFilter === 'good') rows = rows.filter(r => r.roi !== null && r.roi >= 10);
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="leak-empty">No results for this filter</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const roiStr = r.roi !== null ? r.roi.toFixed(1) + '%' : '—';
+    const roiCol = r.roi === null ? 'var(--text-3)' : r.roi < 0 ? 'var(--red)' : r.roi < 10 ? 'var(--amber)' : 'var(--green)';
+    const profitCol = r.netProfit < 0 ? 'var(--red)' : 'var(--green)';
+    const profitStr = (r.netProfit >= 0 ? '+' : '') + '£' + r.netProfit.toFixed(2);
+    const reimbDisplay = r.reimb > 0 ? `<span style="color:var(--green);font-family:var(--mono);">£${r.reimb.toFixed(2)}</span>` : '—';
+    return `<tr>
+      <td><a href="https://keepa.com/#!product/2-${r.asin}" target="_blank" style="font-family:var(--mono);font-size:11px;color:var(--blue);text-decoration:none;">${r.asin}</a></td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text-3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.sku}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.title}">${r.title}</td>
+      <td style="text-align:right;font-family:var(--mono);">£${(r.avgBuy||0).toFixed(2)}</td>
+      <td style="text-align:right;font-family:var(--mono);">£${(r.avgSell||0).toFixed(2)}</td>
+      <td style="text-align:right;font-family:var(--mono);color:var(--text-3);">£${r.estFees.toFixed(2)}</td>
+      <td style="text-align:right;">${reimbDisplay}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${profitCol};">${profitStr}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${roiCol};">${roiStr}</td>
+    </tr>`;
+  }).join('');
+}
+
+function leakExportPL() {
+  if (!leakPLData.length) return;
+  const lines = [['ASIN','SKU','Title','Units','Avg Buy','Avg Sell','Est Fees','Reimbursed','Net Profit','ROI %'].join('\t')];
+  leakPLData.forEach(r => lines.push([
+    r.asin, r.sku, (r.title||'').replace(/\t/g,' '), r.units,
+    (r.avgBuy||0).toFixed(2), (r.avgSell||0).toFixed(2),
+    r.estFees.toFixed(2), r.reimb.toFixed(2), r.netProfit.toFixed(2),
+    r.roi !== null ? r.roi.toFixed(1) : ''
+  ].join('\t')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\n')], {type:'text/tab-separated-values'}));
+  a.download = 'bimma-cogs-pl-' + new Date().toISOString().slice(0,10) + '.tsv';
+  a.click();
 }
 
 </script>

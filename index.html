@@ -729,125 +729,8 @@ input::placeholder { color: var(--text-4); }
 #sidebarOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; pointer-events: none; }
 #sidebarOverlay.visible { display: block; pointer-events: all; }
 
-/* ═══ A2A ANALYSER (3-mode) ═══ */
-
-/* Mode tabs */
-.mode-tabs { display: flex; gap: 6px; margin-bottom: 0; }
-.mode-tab {
-  font-family: var(--mono); font-size: 10px; font-weight: 700;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 7px 18px; border-radius: var(--r-xs);
-  border: 1px solid var(--border2); background: transparent;
-  color: var(--text-3); cursor: pointer; transition: all 0.18s;
-}
-.mode-tab:hover { color: var(--text-2); border-color: var(--border3); }
-.mode-tab.active { background: var(--green); color: var(--bg); border-color: var(--green); }
-.mode-tab.active.eu { background: var(--blue); border-color: var(--blue); color: #fff; }
-.mode-tab.active.uln { background: var(--amber); border-color: var(--amber); color: var(--bg); }
-
-/* Mode banner */
-.mode-banner {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 16px;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  font-family: var(--mono); font-size: 11px; color: var(--text-3);
-}
-.mode-pill {
-  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 3px 10px; border-radius: 20px; white-space: nowrap;
-  background: var(--green); color: var(--bg);
-}
-.mode-pill.eu { background: var(--blue); color: #fff; }
-.mode-pill.uln { background: var(--amber); color: var(--bg); }
-.mode-desc strong { color: var(--text-2); }
-
-/* Drop zone */
-.da-dropzone {
-  max-width: 820px; margin: 0 auto;
-  padding: 36px 32px;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: var(--r);
-}
-.da-dropzone-label {
-  font-family: var(--mono); font-size: 10px; color: var(--text-3);
-  letter-spacing: 0.12em; text-transform: uppercase;
-  margin-bottom: 20px; text-align: center;
-}
-.da-slots { display: flex; gap: 12px; margin-bottom: 16px; }
-.da-slot {
-  flex: 1; position: relative;
-  background: var(--bg);
-  border: 1.5px dashed var(--border2);
-  border-radius: var(--r-sm);
-  padding: 24px 16px;
-  cursor: pointer; transition: all 0.2s; text-align: center;
-  min-height: 100px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-}
-.da-slot:hover, .da-slot.drag-over { border-color: var(--green); background: rgba(0,229,132,0.03); }
-.da-slot.has-file { border-style: solid; border-color: rgba(0,229,132,0.4); background: rgba(0,229,132,0.04); }
-.da-slot input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 1; }
-.da-slot-icon { font-size: 18px; opacity: 0.3; font-family: var(--mono); transition: opacity 0.2s; }
-.da-slot.has-file .da-slot-icon { opacity: 1; color: var(--green); }
-.da-slot-label { font-family: var(--mono); font-size: 9px; color: var(--text-3); letter-spacing: 0.1em; text-transform: uppercase; }
-.da-slot-name { font-family: var(--mono); font-size: 10px; color: var(--green); display: none; word-break: break-all; padding: 0 6px; font-weight: 600; }
-.da-slot-clear { display: none; position: absolute; top: 7px; right: 9px; font-size: 16px; color: var(--text-3); cursor: pointer; line-height: 1; z-index: 2; }
-.da-slot-clear:hover { color: var(--red); }
-
-/* Analyse button */
-.da-go {
-  width: 100%; padding: 13px;
-  font-family: var(--mono); font-size: 11px; font-weight: 700;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  border-radius: var(--r-sm); border: 1.5px solid var(--border2);
-  background: transparent; color: var(--text-3);
-  cursor: not-allowed; transition: all 0.2s; margin-top: 4px;
-}
-.da-go.ready { border-color: var(--green); color: var(--green); cursor: pointer; background: rgba(0,229,132,0.05); }
-.da-go.ready:hover { background: var(--green); color: var(--bg); }
-.da-go.ready.eu { border-color: var(--blue); color: var(--blue); background: rgba(59,130,246,0.05); }
-.da-go.ready.eu:hover { background: var(--blue); color: #fff; }
-.da-go.ready.uln { border-color: var(--amber); color: var(--amber); background: rgba(240,165,0,0.05); }
-.da-go.ready.uln:hover { background: var(--amber); color: var(--bg); }
-
-/* Loading */
-.da-loading { display: none; padding: 40px; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--text-3); letter-spacing: 0.1em; }
-.da-loading.visible { display: block; }
-
-/* Filter bar */
-.da-filters {
-  display: none; align-items: center; gap: 8px;
-  padding: 10px 0; margin-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-  flex-wrap: wrap;
-}
-.da-filters.visible { display: flex; }
-.da-filter-btn {
-  font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
-  padding: 5px 12px; border-radius: var(--r-xs);
-  border: 1px solid var(--border); background: transparent;
-  color: var(--text-3); cursor: pointer; transition: all 0.15s; text-transform: uppercase;
-}
-.da-filter-btn:hover { border-color: var(--border2); color: var(--text-2); }
-.da-filter-btn.active { background: var(--surface3); color: var(--text); border-color: var(--border2); }
-.da-filter-btn.f-green.active { background: rgba(0,229,132,0.12); color: var(--green); border-color: rgba(0,229,132,0.4); }
-.da-filter-btn.f-amber.active { background: rgba(240,165,0,0.12); color: var(--amber); border-color: rgba(240,165,0,0.4); }
-.da-filter-btn.f-red.active { background: rgba(240,59,80,0.12); color: var(--red); border-color: rgba(240,59,80,0.4); }
-.da-stats { font-family: var(--mono); font-size: 10px; color: var(--text-3); display: flex; gap: 14px; margin-left: 8px; }
-.da-stat-g { color: var(--green); }
-.da-stat-r { color: var(--red); }
-.da-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
-.spike-notice {
-  font-family: var(--mono); font-size: 10px; color: var(--amber);
-  padding: 4px 10px; background: rgba(240,165,0,0.06);
-  border: 1px solid rgba(240,165,0,0.2); border-radius: 4px;
-}
-.veto-count { font-family: var(--mono); font-size: 10px; color: var(--amber); }
-
-/* Table */
-.da-table-wrap { display: none; margin-top: 4px; }
-.da-table-wrap.visible { display: block; }
+/* ═══ A2A ANALYSER — TABLE ═══ */
+/* .da-table is still used by <table class="da-table"> in the A2A results */
 .da-table { width: 100%; border-collapse: collapse; table-layout: auto; }
 .da-table thead th {
   font-family: var(--mono); font-size: 8.5px; font-weight: 700;
@@ -2173,7 +2056,7 @@ input::placeholder { color: var(--text-4); }
           </div>
           <div class="field-label">Prep Cost Override (£)</div>
           <input type="number" id="cogs-prepOverride" placeholder="Leave blank to auto-read col Q" step="0.01">
-          <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:8px;line-height:1.8;">Col F=ASIN · Col G=SKU · Col I=Units · Col Q=Prep</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.8;">Col F=ASIN · Col G=SKU · Col I=Units · Col Q=Prep</div>
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
@@ -2261,19 +2144,19 @@ input::placeholder { color: var(--text-4); }
           <span id="rpSheetsStatus" style="color:var(--text-3);">Connect Google Sheets above to enable min price matching.</span>
         </div>
         <script>
-          document.addEventListener('DOMContentLoaded', () => {
-            setInterval(() => {
-              const el = document.getElementById('rpSheetsStatus');
-              if (!el) return;
-              if (typeof allRows !== 'undefined' && allRows.length > 0) {
-                el.style.color = 'var(--green)';
-                el.textContent = '✓ ' + allRows.length + ' purchases loaded — min prices ready';
-              } else {
-                el.style.color = 'var(--amber)';
-                el.textContent = '⚠ Not connected — connect Google Sheets to enable min prices';
-              }
-            }, 1000);
-          });
+          window.rpUpdateStatus = function() {
+            const el = document.getElementById('rpSheetsStatus');
+            if (!el) return;
+            if (typeof allRows !== 'undefined' && allRows.length > 0) {
+              el.style.color = 'var(--green)';
+              el.textContent = '✓ ' + allRows.length + ' purchases loaded — min prices ready';
+            } else {
+              el.style.color = 'var(--amber)';
+              el.textContent = '⚠ Not connected — connect Google Sheets to enable min prices';
+            }
+          };
+          document.addEventListener('DOMContentLoaded', rpUpdateStatus);
+          document.addEventListener('bimma:pagechange', e => { if (e.detail === 'repricer') rpUpdateStatus(); });
         </script>
       </div>
     </div>
@@ -2470,7 +2353,7 @@ input::placeholder { color: var(--text-4); }
           <option value="all">All months</option>
         </select>
         <input type="text" id="searchInput" placeholder="Search SKU, title, ASIN…" oninput="filterPurchases()" style="width:240px;">
-        <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-left:auto;" id="purchaseCount"></span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:auto;" id="purchaseCount"></span>
       </div>
       <div class="table-wrap">
         <table>
@@ -3007,8 +2890,8 @@ input::placeholder { color: var(--text-4); }
           <div class="stalker-panel-title" style="margin-bottom:0;">Monitored Sellers</div>
           <div style="display:flex;gap:8px;align-items:center;">
             <button class="stalker-btn" onclick="stalkerExportBackup()" title="Export sellers to file">↓ Backup</button>
-            <button class="stalker-btn" onclick="document.getElementById('stalkerImportFile').click()" title="Import sellers from file">↑ Restore</button>
-            <input type="file" id="stalkerImportFile" accept=".json" style="display:none" onchange="stalkerImportBackup(this)">
+            <button class="stalker-btn" onclick="document.getElementById('stalkerImportFile2').click()" title="Import sellers from file">↑ Restore</button>
+            <input type="file" id="stalkerImportFile2" accept=".json" style="display:none" onchange="stalkerImportBackup(this)">
             <button class="stalker-check-all-btn" onclick="stalkerCheckAll()">↻ Check All</button>
           </div>
         </div>
@@ -3058,7 +2941,7 @@ input::placeholder { color: var(--text-4); }
   <div class="modal">
     <div class="modal-title">Connect Google Sheets</div>
     <div class="modal-sub">You need a Google OAuth Client ID to read and write your spreadsheet. Setup takes ~2 minutes.</div>
-    <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:2;margin-bottom:16px;">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);line-height:2;margin-bottom:16px;">
       1. Go to console.cloud.google.com → create/select a project<br>
       2. Enable the Google Sheets API<br>
       3. Create OAuth 2.0 credentials → Web Application<br>
@@ -3230,6 +3113,7 @@ function renderDashboard() {
     const bc=up===rows.length?'ub-all':up>0?'ub-some':'ub-none';
     return `<div class="month-card" onclick="goToMonth('${m}')"><div class="mc-header"><div><div class="mc-name">${m}</div><div class="mc-deals">${rows.length} deals</div></div><span class="upload-badge ${bc}">${up}/${rows.length} uploaded</span></div><div class="mc-stats"><div><div class="mcs-label">SPEND</div><div class="mcs-value">£${fmt(sp)}</div></div><div><div class="mcs-label">UNITS</div><div class="mcs-value">${qty}</div></div></div></div>`;
   }).join('');
+  if (typeof rpUpdateStatus === 'function') rpUpdateStatus();
 }
 // chart removed
 function renderPurchases(rows) {
@@ -3727,7 +3611,7 @@ function rmRenderResults(allRecover){
 
   // Requested returns
   if(requested.length){
-    html+=`<div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">✓ Requested Returns</div>`;
+    html+=`<div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;">✓ Requested Returns</div>`;
     requested.forEach(asin=>{
       const rr=rmReturnRequests[asin];
       const ship=new Date(rr.shipDeadline);
@@ -3749,7 +3633,7 @@ function rmRenderResults(allRecover){
   if(!allRecover.length){
     html+=`<div class="empty-state">No recoverable COGS found. All refunds are outside the return window or have no UK SKUs.</div>`;
   } else {
-    html+=`<div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">↩ Open Windows — Request a return from Amazon to recover your purchase cost</div>`;
+    html+=`<div style="font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;">↩ Open Windows — Request a return from Amazon to recover your purchase cost</div>`;
     allRecover.forEach(a=>{
       const isUrgent=a.daysLeft!==null&&a.daysLeft<=5;
       const bannerStyle=isUrgent?'background:rgba(255,184,0,0.07);border-color:rgba(255,184,0,0.25);':'';
@@ -3770,9 +3654,9 @@ function rmRenderResults(allRecover){
               ?`<span class="pill pill-green">✓ ${dLeft} days left to request</span><div style="font-family:var(--mono);font-size:11px;color:#335533;margin-top:4px;">+30 days to ship back once requested</div>`
               :dLeft>=0
                 ?`<span class="pill pill-amber">⚡ ${dLeft} day${dLeft!==1?'s':''} left — act now</span>`
-                :`<span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">Request window closed</span>`;
+                :`<span style="font-family:var(--mono);font-size:12px;color:var(--text-3);">Request window closed</span>`;
           }
-        } else if(r.sku&&!rmIsUK(r.sku)){canReturn='<span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">EU — no return</span>';}
+        } else if(r.sku&&!rmIsUK(r.sku)){canReturn='<span style="font-family:var(--mono);font-size:12px;color:var(--text-3);">EU — no return</span>';}
         return `<tr>
           <td>${r.skuDate?r.skuDate.toLocaleDateString('en-GB'):'—'}<br><span style="font-size:10px;color:#555;display:block;margin-top:3px;">${r.sku||''}</span></td>
           <td>${r.date?r.date.toLocaleDateString('en-GB'):'—'}</td>
@@ -3791,7 +3675,7 @@ function rmRenderResults(allRecover){
           ?`<span class="pill pill-green">✓ ${dLeft} days left</span>`
           :dLeft>=0
             ?`<span class="pill pill-amber">⚡ ${dLeft} day${dLeft!==1?'s':''} left</span>`
-            :`<span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">Window closed</span>`;
+            :`<span style="font-family:var(--mono);font-size:12px;color:var(--text-3);">Window closed</span>`;
         return `<tr>
           <td>${d.toLocaleDateString('en-GB')}</td>
           <td>${deadline.toLocaleDateString('en-GB')}</td>
@@ -4351,7 +4235,7 @@ function daRenderTable() {
     if (deal.decision === 'rejected') tr.classList.add('rejected');
     const fmtN = (n, p='£', dp=2) => n == null ? '—' : p + n.toFixed(dp);
     const fmtP = n => n == null ? '—' : (n * 100).toFixed(1) + '%';
-    const roiColour = deal.roi !== null && deal.roi >= 0.20 ? 'var(--green)' : deal.roi !== null && deal.roi >= 0.15 ? 'var(--amber)' : deal.colour === 'red' ? 'var(--red)' : 'var(--text-dim)';
+    const roiColour = deal.roi !== null && deal.roi >= 0.20 ? 'var(--green)' : deal.roi !== null && deal.roi >= 0.15 ? 'var(--amber)' : deal.colour === 'red' ? 'var(--red)' : 'var(--text-3)';
     const spTag = deal.spSource === 'ST' ? '<span class="sp-tag st">ST</span>' : deal.spSource === '365d' ? '<span class="sp-tag">365d</span>' : '';
     const trendWarn = !deal.spikeFlag && deal.priceTrendWarning
       ? `<div class="row-warn">↘ trending down ${(deal.priceTrendWarning*100).toFixed(1)}%</div>` : '';
@@ -4522,6 +4406,7 @@ function daReset() {
   document.getElementById('daExportBtn').style.display = 'none';
   document.getElementById('spikeNotice').style.display = 'none';
   document.getElementById('daCountGreen').textContent = '0';
+  document.getElementById('daCountAmber').textContent = '0';
   document.getElementById('daCountRed').textContent = '0';
   document.getElementById('daGoBtn').classList.remove('ready');
   document.getElementById('daTableBody').innerHTML = '';
@@ -5421,8 +5306,8 @@ function scoutClassify(r) {
   const roi = r.calc?.roi;
   const minRoi = r.minRoi ?? 15;
   if (roi == null) return 'reject';
-  if (roi >= 20) return 'strong';
-  if (roi >= 15) return 'moderate';
+  if (roi >= minRoi + 5) return 'strong';
+  if (roi >= minRoi) return 'moderate';
   return 'reject';
 }
 
@@ -5485,8 +5370,8 @@ function scoutRenderTable() {
     const minRoi = r.minRoi ?? 15;
     let roiCol = 'var(--red)';
     if (roi != null) {
-      if (roi >= 20) roiCol = 'var(--green)';
-      else if (roi >= 15) roiCol = 'var(--amber)';
+      if (roi >= minRoi + 5) roiCol = 'var(--green)';
+      else if (roi >= minRoi) roiCol = 'var(--amber)';
     }
     const profitCol = (r.calc?.profit ?? -1) >= 0 ? 'var(--green)' : 'var(--red)';
     const groupLabel = { strong:'💚 Strong Deals', moderate:'🟡 Moderate Deals', reject: scoutIsRunning ? '⏳ Still Scanning' : '🔴 Reject', noprice: scoutIsRunning ? '⏳ Not Yet Checked' : '— No EU Price' };

@@ -19,8 +19,8 @@
   --border2:     #28283a;
   --border3:     #32324a;
 
-  --green:       #00e88a;
-  --green-glow:  rgba(0,229,132,0.18);
+  --green:       #00d97e;
+  --green-glow:  rgba(0,217,126,0.16);
   --green-dim:   #00b868;
   --amber:       #f0a500;
   --amber-glow:  rgba(240,165,0,0.15);
@@ -28,6 +28,8 @@
   --red-glow:    rgba(240,59,80,0.12);
   --purple:      #9b6dff;
   --blue:        #4d8ef5;
+  --accent:      #4d8ef5;
+  --accent-glow: rgba(77,142,245,0.15);
 
   --text:        #f0f0f8;
   --text-2:      #a0a0c0;
@@ -77,7 +79,7 @@ body::before {
 #sidebar {
   width: var(--sidebar-w);
   min-height: 100vh;
-  background: var(--surface);
+  background: linear-gradient(180deg, #0c0c13 0%, #090910 100%);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -86,14 +88,7 @@ body::before {
   z-index: 200;
   overflow: visible;
 }
-/* subtle left accent line */
-#sidebar::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(0,229,132,0.3) 40%, rgba(0,229,132,0.3) 60%, transparent);
-}
+#sidebar::before { display: none; }
 
 .sidebar-logo {
   padding: 22px 20px 18px;
@@ -107,10 +102,11 @@ body::before {
 .logo-mark {
   width: 32px; height: 32px;
   border-radius: var(--r-sm);
-  background: linear-gradient(135deg, #00e584 0%, #00c070 100%);
+  background: var(--surface3);
+  border: 1px solid var(--border2);
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 13px; font-weight: 700;
-  color: #000; flex-shrink: 0;
+  font-family: var(--mono); font-size: 15px; font-weight: 600;
+  color: var(--text); flex-shrink: 0;
   box-shadow: none;
 }
 .logo-text { min-width: 0; }
@@ -125,8 +121,8 @@ body::before {
 
 .sidebar-section-label {
   font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--text-4);
-  padding: 18px 20px 5px;
+  text-transform: uppercase; color: var(--text-3);
+  padding: 18px 20px 5px; opacity: 0.5;
 }
 .sidebar-nav { flex:1; padding: 6px 0 0; overflow-y: auto; overflow-x: hidden; }
 .sidebar-nav::-webkit-scrollbar { width: 0; }
@@ -141,12 +137,12 @@ body::before {
 }
 .nav-item:hover {
   color: var(--text-2);
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.04);
 }
 .nav-item.active {
   color: var(--text);
-  border-left-color: var(--green);
-  background: linear-gradient(90deg, rgba(0,229,132,0.1) 0%, rgba(0,229,132,0.01) 100%);
+  border-left-color: var(--accent);
+  background: rgba(77,142,245,0.1);
 }
 .nav-icon { font-size: 13px; width: 18px; text-align: center; flex-shrink: 0; opacity: 0.7; }
 .nav-item.active .nav-icon { opacity: 1; }
@@ -173,8 +169,8 @@ body::before {
 .btn-auth {
   width: 100%;
   background: transparent;
-  color: var(--green);
-  border: 1px solid rgba(0,229,132,0.25);
+  color: var(--accent);
+  border: 1px solid rgba(77,142,245,0.25);
   border-radius: var(--r-sm);
   padding: 8px 12px;
   font-family: var(--mono); font-size: 10px; font-weight: 600;
@@ -182,8 +178,8 @@ body::before {
   cursor: pointer; transition: all 0.2s;
 }
 .btn-auth:hover {
-  background: rgba(0,229,132,0.08);
-  border-color: var(--green);
+  background: var(--accent-glow);
+  border-color: var(--accent);
   box-shadow: none;
 }
 
@@ -196,18 +192,18 @@ body::before {
    TOPBAR
 ═══════════════════════════════════════ */
 .topbar {
-  height: var(--topbar-h);
+  height: 58px;
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center;
-  padding: 0 36px; gap: 14px;
+  padding: 0 40px; gap: 14px;
   position: sticky; top: 0; z-index: 100;
-  background: rgba(7,7,10,0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(6,6,9,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 .topbar-title {
-  font-family: var(--sans); font-size: 15px; font-weight: 600;
-  color: var(--text); letter-spacing: -0.01em;
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  color: var(--text-2); letter-spacing: 0;
 }
 .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 
@@ -221,11 +217,11 @@ body::before {
   cursor: pointer; transition: all 0.18s; white-space: nowrap; line-height: 1;
 }
 .btn-green {
-  background: var(--green); color: #000;
+  background: var(--green); color: #050508;
   box-shadow: none;
 }
 .btn-green:hover {
-  background: #1affa0;
+  background: #14eba6;
   box-shadow: none;
   transform: translateY(-1px);
 }
@@ -247,23 +243,31 @@ body::before {
 /* ═══════════════════════════════════════
    PAGE HEADER
 ═══════════════════════════════════════ */
-.page-header { margin-bottom: 32px; }
+.page-header {
+  margin-bottom: 40px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+}
+.page-header-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
+}
 .page-header-title {
-  font-family: var(--sans); font-size: 28px; font-weight: 700; letter-spacing: -0.03em;
-  color: var(--text); letter-spacing: -0.03em; line-height: 1.15;
-  margin-bottom: 5px;
+  font-family: var(--sans); font-size: 26px; font-weight: 700;
+  letter-spacing: -0.025em; color: var(--text); line-height: 1.15;
+  margin-bottom: 6px;
 }
 .page-header-sub {
-  font-size: 14.5px; color: var(--text-3); font-weight: 400; letter-spacing: 0;
+  font-size: 14px; color: var(--text-3); font-weight: 400; letter-spacing: 0; line-height: 1.6;
 }
 
 /* ═══════════════════════════════════════
    SECTION TITLE
 ═══════════════════════════════════════ */
 .section-title {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--text-3);
-  margin-bottom: 16px; padding-bottom: 10px;
+  margin-bottom: 18px; padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -278,7 +282,7 @@ body::before {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  padding: 20px 22px;
+  padding: 22px 24px;
   position: relative;
   overflow: hidden;
   transition: border-color 0.2s, transform 0.2s;
@@ -292,12 +296,12 @@ body::before {
 }
 .stat-card:hover { border-color: var(--border3); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
 .stat-label {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--text-3); margin-bottom: 10px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-3); margin-bottom: 12px;
 }
 .stat-value {
-  font-family: var(--mono); font-size: 32px; font-weight: 700; letter-spacing: -0.03em;
-  color: var(--green); line-height: 1; letter-spacing: -0.03em;
+  font-family: var(--mono); font-size: 30px; font-weight: 700; letter-spacing: -0.03em;
+  color: var(--text); line-height: 1;
 }
 .stat-sub { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 6px; }
 
@@ -321,7 +325,7 @@ thead th {
 tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
 tbody tr:hover { background: var(--surface2); }
 tbody tr:last-child { border-bottom: none; }
-tbody td { padding: 12px 16px; vertical-align: middle; }
+tbody td { padding: 13px 16px; vertical-align: middle; }
 .mono { font-family: var(--mono); font-size: 12.5px; }
 .num { text-align: right; font-family: var(--mono); }
 .empty-state {
@@ -340,7 +344,7 @@ input[type=date], input[type=text], input[type=number], select {
   outline: none; transition: border-color 0.2s, background 0.2s; width: 100%;
 }
 input:hover, select:hover { border-color: var(--border3); }
-input:focus, select:focus { border-color: var(--green); background: var(--surface3); }
+input:focus, select:focus { border-color: var(--accent); background: var(--surface3); }
 input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.4); cursor: pointer; }
 select option { background: var(--surface2); }
 input::placeholder { color: var(--text-4); }
@@ -399,7 +403,7 @@ input::placeholder { color: var(--text-4); }
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,229,132,0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
 }
 .modal-title {
   font-family: var(--sans); font-size: 17px; font-weight: 700;
@@ -412,7 +416,7 @@ input::placeholder { color: var(--text-4); }
   color: var(--text); font-family: var(--mono); font-size: 12px;
   outline: none; margin-bottom: 14px; transition: border-color 0.2s;
 }
-.modal-input:focus { border-color: var(--green); }
+.modal-input:focus { border-color: var(--accent); }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
 
 /* ═══════════════════════════════════════
@@ -523,12 +527,12 @@ input::placeholder { color: var(--text-4); }
 .quick-action-card::before {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(0,229,132,0.05) 0%, transparent 60%);
+  background: linear-gradient(135deg, rgba(77,142,245,0.06) 0%, transparent 60%);
   opacity: 0; transition: opacity 0.2s;
   pointer-events: none;
 }
 .quick-action-card:hover {
-  border-color: rgba(0,229,132,0.25);
+  border-color: rgba(77,142,245,0.2);
   transform: translateY(-2px);
   box-shadow: 0 10px 32px rgba(0,0,0,0.4);
 }
@@ -543,7 +547,7 @@ input::placeholder { color: var(--text-4); }
 .qa-title { font-family: var(--sans); font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
 .qa-sub { font-size: 12px; color: var(--text-3); }
 .qa-arrow { font-size: 14px; color: var(--text-4); transition: color 0.2s, transform 0.2s; }
-.quick-action-card:hover .qa-arrow { color: var(--green); transform: translateX(3px); }
+.quick-action-card:hover .qa-arrow { color: var(--accent); transform: translateX(3px); }
 
 /* ═══════════════════════════════════════
    MONTH CARDS
@@ -1438,10 +1442,10 @@ input::placeholder { color: var(--text-4); }
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-2);
 }
 .rp-table-badge {
-  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  font-family: var(--mono); font-size: 10px; font-weight: 500;
   padding: 2px 9px; border-radius: 4px;
-  background: rgba(0,229,132,0.1); color: var(--green);
-  border: 1px solid rgba(0,229,132,0.2);
+  background: rgba(255,255,255,0.05); color: var(--text-2);
+  border: 1px solid var(--border2);
 }
 .rp-table-empty {
   text-align: center; padding: 56px 48px;
@@ -1873,7 +1877,7 @@ input::placeholder { color: var(--text-4); }
 <nav id="sidebar">
   <div class="sidebar-logo">
     <div class="logo-lockup">
-      <div class="logo-mark">B</div>
+      <div class="logo-mark">bi</div>
       <div class="logo-text">
         <div class="logo-title">Bimma Retail</div>
         <div class="logo-sub">FBA Operations</div>
@@ -1928,6 +1932,7 @@ input::placeholder { color: var(--text-4); }
   <div class="page active" id="page-dashboard">
     <div class="page-inner">
       <div class="page-header">
+        <div class="page-header-label">Operations</div>
         <div class="page-header-title" id="dashGreeting"><script>const _h=new Date().getHours();document.write(_h<12?'Good morning':_h<18?'Good afternoon':'Good evening')</script>, James.</div>
         <div class="page-header-sub">Here's what's happening across your FBA business today.</div>
       </div>
@@ -2024,6 +2029,7 @@ input::placeholder { color: var(--text-4); }
   <div class="page" id="page-refund">
     <div class="page-inner">
       <div class="page-header">
+        <div class="page-header-label">Operations</div>
         <div class="page-header-title">Refund Monitor</div>
         <div class="page-header-sub">Identify recoverable COGS from Amazon refunds within your return window</div>
       </div>
@@ -2071,6 +2077,7 @@ input::placeholder { color: var(--text-4); }
   <div class="page" id="page-cogs">
     <div class="page-inner">
       <div class="page-header">
+        <div class="page-header-label">Analytics</div>
         <div class="page-header-title">COGS Calculator</div>
         <div class="page-header-sub">Calculate cost of goods from prep centre exports and merge into STK</div>
       </div>
@@ -2149,7 +2156,8 @@ input::placeholder { color: var(--text-4); }
 
     <div class="page-header" style="margin-bottom:24px;">
       <div>
-        <div class="page-header-title">⚖ Min Price Tool</div>
+        <div class="page-header-label">Tools</div>
+        <div class="page-header-title">Min Price Tool</div>
         <div class="page-header-sub">Uses your purchase sell prices as repricer floor · Keepa BB history for context</div>
       </div>
       <div class="rp-header-actions">
@@ -2258,6 +2266,7 @@ input::placeholder { color: var(--text-4); }
     <!-- PAGE HEADER -->
     <div class="a2a-page-header">
       <div class="a2a-page-header-left">
+        <div class="page-header-label">Analytics</div>
         <div class="page-header-title">A2A Analyser</div>
         <div class="page-header-sub">Keepa Product Finder CSV · EU→UK · UK→UK · Used LN</div>
       </div>
@@ -2402,6 +2411,7 @@ input::placeholder { color: var(--text-4); }
   <div class="page" id="page-purchases">
     <div class="page-inner">
       <div class="page-header">
+        <div class="page-header-label">Management</div>
         <div class="page-header-title">Purchases</div>
         <div class="page-header-sub">All deals tracked in Google Sheets</div>
       </div>
@@ -2430,6 +2440,7 @@ input::placeholder { color: var(--text-4); }
   <div class="page" id="page-listing">
     <div class="page-inner">
       <div class="page-header">
+        <div class="page-header-label">Management</div>
         <div class="page-header-title">Listing Uploader</div>
         <div class="page-header-sub">Review pending deals and export TSV for Amazon listing</div>
       </div>
@@ -2492,6 +2503,7 @@ input::placeholder { color: var(--text-4); }
   <div class="page" id="page-expenses">
     <div class="page-inner">
       <div class="page-header">
+        <div class="page-header-label">Finance</div>
         <div class="page-header-title">Expenses</div>
         <div class="page-header-sub">Track monthly business costs — recurring subscriptions and variable fees</div>
       </div>
@@ -2562,6 +2574,7 @@ input::placeholder { color: var(--text-4); }
   <!-- HEADER BAR -->
   <div class="rp-header-bar">
     <div>
+      <div class="page-header-label">Analytics</div>
       <div class="page-header-title">Deal Scout</div>
       <div class="page-header-sub">Upload ASIN list → live Keepa fetch → EU current BB vs UK 180d avg · <span id="scoutTokenDisplay" style="font-family:var(--mono);color:var(--green);font-size:13px;"></span></div>
     </div>
@@ -2754,6 +2767,7 @@ input::placeholder { color: var(--text-4); }
 <div class="page" id="page-leakage">
   <div class="page-header">
     <div>
+      <div class="page-header-label">Analytics</div>
       <div class="page-header-title">Leakage Tracker</div>
       <div class="page-header-sub">Prep centre discrepancies · Unreimbursed returns</div>
     </div>
@@ -2881,7 +2895,8 @@ input::placeholder { color: var(--text-4); }
 
 <div class="page" id="page-stalker">
   <div class="page-header" style="margin-bottom:20px;">
-    <div class="page-header-title">👁 Storefront Stalker</div>
+    <div class="page-header-label">Intelligence</div>
+    <div class="page-header-title">Storefront Stalker</div>
     <div class="page-header-sub">Monitor competitor storefronts — new ASINs appear in the feed instantly</div>
   </div>
   <div class="stalker-page">

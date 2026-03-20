@@ -1435,6 +1435,28 @@ input::placeholder { color: var(--text-4); }
   flex-wrap: wrap;
 }
 
+.rp-table-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 16px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap; gap: 10px;
+}
+.rp-table-title {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-2);
+}
+.rp-table-badge {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  padding: 2px 9px; border-radius: 4px;
+  background: rgba(0,229,132,0.1); color: var(--green);
+  border: 1px solid rgba(0,229,132,0.2);
+}
+.rp-table-empty {
+  text-align: center; padding: 56px 48px;
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-4);
+}
+
 .rp-table-toolbar {
   display: flex;
   align-items: center;
@@ -3306,7 +3328,14 @@ function saveExpItems(items){localStorage.setItem('bimma_exp_items',JSON.stringi
 function renderExpenses(){
   const seen=new Set(),months=[];
   allRows.forEach(r=>{const k=monthKey(r.date);if(k&&!seen.has(k)){seen.add(k);months.push(k);}});
-  if(!months.length){document.getElementById('expMonthTabs').innerHTML='<div style="font-family:var(--mono);font-size:12px;color:#333;">Connect to Sheets to load months</div>';return;}
+  if(!months.length){
+    const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const now=new Date();
+    activeExpMonth=mn[now.getMonth()]+' '+now.getFullYear();
+    document.getElementById('expMonthTabs').innerHTML=`<div style="font-family:var(--mono);font-size:11px;color:var(--text-3);">Connect Google Sheets to load months &nbsp;·&nbsp; Showing ${activeExpMonth}</div>`;
+    renderExpGrid();
+    return;
+  }
   if(!activeExpMonth||!months.includes(activeExpMonth))activeExpMonth=months[months.length-1];
   document.getElementById('expMonthTabs').innerHTML=months.map(m=>`<button class="exp-tab ${m===activeExpMonth?'active':''}" onclick="setExpMonth('${m}')">${m}</button>`).join('');
   renderExpGrid();
@@ -4072,7 +4101,7 @@ function daRunAnalysis() {
   document.getElementById('daDropzone').style.display = 'none';
   document.getElementById('daLoading').classList.add('visible');
   Promise.all(files.map(f => new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsText(f); }))).then(results => {
-    setTimeout(() => { try {
+    setTimeout(() => { try { // tick 1: parse + analyse (CPU-heavy)
       const cfg = MODES[currentMode];
       let merged = [];
 
@@ -4173,19 +4202,26 @@ function daRunAnalysis() {
       const noticeEl = document.getElementById('spikeNotice');
       if (notices.length) { noticeEl.textContent = notices.join('  ·  '); noticeEl.style.display = ''; }
 
-      document.getElementById('daLoading').classList.remove('visible');
-      document.getElementById('daFilters').classList.add('visible');
-      document.getElementById('daTableWrap').classList.add('visible');
-      document.getElementById('daResetBtn').style.display = '';
-      document.getElementById('daStatsBarWrap') && (document.getElementById('daStatsBarWrap').style.display = 'flex');
-      daUpdateVetoCount(); daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable();
+      // tick 2: yield to browser so spinner can update, then render
+      setTimeout(() => { try {
+        document.getElementById('daLoading').classList.remove('visible');
+        document.getElementById('daFilters').classList.add('visible');
+        document.getElementById('daTableWrap').classList.add('visible');
+        document.getElementById('daResetBtn').style.display = '';
+        daUpdateVetoCount(); daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable();
+      } catch(err) {
+        document.getElementById('daLoading').classList.remove('visible');
+        document.getElementById('daDropzone').style.display = '';
+        console.error('Analysis error:', err);
+        toast('Analysis error: ' + (err.message || 'unknown error'), 'error');
+      }}, 0);
     } catch(err) {
       document.getElementById('daLoading').classList.remove('visible');
       document.getElementById('daDropzone').style.display = '';
       console.error('Analysis error:', err);
-      alert('Analysis error: ' + err.message + '\n\nCheck browser console for details.');
+      toast('Analysis error: ' + (err.message || 'unknown error'), 'error');
     }
-    }, 200);
+    }, 50);
   });
 }
 
@@ -5474,9 +5510,10 @@ function scoutClear() {
 // ════════════════════════════════════════
 // STOREFRONT STALKER
 // ════════════════════════════════════════
-let stalkerSellers   = JSON.parse(localStorage.getItem('bimma_stalker_sellers') || '[]');
-let stalkerSnapshots = JSON.parse(localStorage.getItem('bimma_stalker_snaps')   || '{}');
-let stalkerFeedItems = JSON.parse(localStorage.getItem('bimma_stalker_feed')    || '[]');
+let stalkerSellers   = [];
+let stalkerSnapshots = {};
+let stalkerFeedItems = [];
+let stalkerLoaded    = false;
 
 const STALKER_MARKETS = { '1':'com','2':'co.uk','3':'de','4':'fr','8':'it','9':'es' };
 const STALKER_FLAGS   = { '1':'🇺🇸','2':'🇬🇧','3':'🇩🇪','4':'🇫🇷','8':'🇮🇹','9':'🇪🇸' };
@@ -5502,6 +5539,12 @@ function stalkerGetKey() {
 }
 
 function stalkerInit() {
+  if (!stalkerLoaded) {
+    stalkerSellers   = JSON.parse(localStorage.getItem('bimma_stalker_sellers') || '[]');
+    stalkerSnapshots = JSON.parse(localStorage.getItem('bimma_stalker_snaps')   || '{}');
+    stalkerFeedItems = JSON.parse(localStorage.getItem('bimma_stalker_feed')    || '[]');
+    stalkerLoaded    = true;
+  }
   const saved = localStorage.getItem('bimma_stalker_key');
   if (saved) { const el = document.getElementById('stalkerApiKey'); if(el) el.value = saved; }
   stalkerRenderSellers();
@@ -5815,8 +5858,8 @@ function stalkerRenderFeed() {
               : `<div style="font-family:var(--mono);font-size:12px;color:var(--text-3);">—</div>`}
           </div>
           <div style="display:flex;gap:7px;justify-content:flex-end;align-items:center;">
-            <a href="${keepaUrl}" target="_blank" class="stalker-product-link" onclick="setTimeout(()=>scoutMarkViewed('${item.asin}'),0)">Keepa ↗</a>
-            <a href="${amzUrl}" target="_blank" class="stalker-product-link green" onclick="setTimeout(()=>scoutMarkViewed('${item.asin}'),0)">Amazon ↗</a>
+            <a href="${keepaUrl}" target="_blank" class="stalker-product-link">Keepa ↗</a>
+            <a href="${amzUrl}" target="_blank" class="stalker-product-link green">Amazon ↗</a>
           </div>
         </div>`;
       }
@@ -6057,8 +6100,8 @@ function stalkerRenderProductFeed(products, seller) {
           : `<div style="font-family:var(--mono);font-size:12px;color:var(--text-3);">—</div>`}
       </div>
       <div style="display:flex;gap:7px;justify-content:flex-end;align-items:center;">
-        <a href="${keepaUrl}" target="_blank" class="stalker-product-link" onclick="setTimeout(()=>scoutMarkViewed('${asin}'),0)">Keepa ↗</a>
-        <a href="${amzUrl}" target="_blank" class="stalker-product-link green" onclick="setTimeout(()=>scoutMarkViewed('${asin}'),0)">Amazon ↗</a>
+        <a href="${keepaUrl}" target="_blank" class="stalker-product-link">Keepa ↗</a>
+        <a href="${amzUrl}" target="_blank" class="stalker-product-link green">Amazon ↗</a>
       </div>
     </div>`;
   }).join('');

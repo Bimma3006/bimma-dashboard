@@ -1937,33 +1937,79 @@ input::placeholder { color: var(--text-4); }
         <div class="stat-card" style="border-top:2px solid var(--green);"><div class="stat-label">Uploaded</div><div class="stat-value" id="s-uploaded" style="color:var(--green);">—</div><div class="stat-sub">to listing loader</div></div>
         <div class="stat-card" style="border-top:2px solid var(--amber);"><div class="stat-label">This Month</div><div class="stat-value" id="s-month" style="color:var(--amber);">—</div><div class="stat-sub">deals</div></div>
       </div>
+      <div class="stat-grid stat-grid-4" style="margin-top:14px;">
+        <div class="stat-card" style="border-top:2px solid var(--green);">
+          <div class="stat-label">This Week</div>
+          <div class="stat-value" id="s-week" style="color:var(--green);">—</div>
+          <div class="stat-sub">deals bought</div>
+        </div>
+        <div class="stat-card" style="border-top:2px solid var(--red);cursor:pointer;" onclick="showPage('leakage',document.querySelector('[data-page=leakage]'))">
+          <div class="stat-label">£ Leakage</div>
+          <div class="stat-value" id="s-leakage" style="color:var(--red);">—</div>
+          <div class="stat-sub" id="s-leakage-sub">from leakage tracker</div>
+        </div>
+        <div class="stat-card" style="border-top:2px solid var(--blue);cursor:pointer;" onclick="showPage('stalker',document.querySelector('[data-page=stalker]'))">
+          <div class="stat-label">New ASINs Today</div>
+          <div class="stat-value" id="s-stalker-new" style="color:var(--blue);">—</div>
+          <div class="stat-sub">from storefront stalker</div>
+        </div>
+        <div class="stat-card" style="border-top:2px solid var(--purple);">
+          <div class="stat-label">Keepa Tokens</div>
+          <div class="stat-value" id="s-tokens" style="color:var(--purple);">—</div>
+          <div class="stat-sub" id="s-tokens-sub">last scout run</div>
+        </div>
+      </div>
       <div id="bulkUploadBanner" class="bulk-banner" style="display:none;">
         <div><div style="font-weight:600;font-size:13px;color:var(--amber)" id="bulkBannerText">—</div><div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:3px">Mark all existing purchases as uploaded so only new deals go into the Listing loader queue</div></div>
         <button class="btn-sm btn-ghost" id="bulkMarkBtn" onclick="bulkMarkUploaded()">MARK ALL AS UPLOADED</button>
       </div>
       <!-- Quick Actions -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:32px;">
-        <div class="quick-action-card" onclick="showPage('refund', document.querySelector('[data-page=refund]'))">
-          <div class="qa-icon" style="font-size:18px;">↩</div>
-          <div class="qa-body">
-            <div class="qa-title">Refund Monitor</div>
-            <div class="qa-sub">Check for recoverable COGS</div>
-          </div>
-          <div class="qa-arrow">→</div>
-        </div>
         <div class="quick-action-card" onclick="showPage('a2a', document.querySelector('[data-page=a2a]'))">
           <div class="qa-icon" style="font-size:18px;">⚡</div>
           <div class="qa-body">
-            <div class="qa-title">Deal Analyser</div>
+            <div class="qa-title">A2A Analyser</div>
             <div class="qa-sub">Analyse Keepa CSV exports</div>
           </div>
           <div class="qa-arrow">→</div>
         </div>
-        <div class="quick-action-card" onclick="showPage('listing', document.querySelector('[data-page=listing]'))">
-          <div class="qa-icon" style="font-size:18px;">🚀</div>
+        <div class="quick-action-card" onclick="showPage('scout', document.querySelector('[data-page=scout]'))">
+          <div class="qa-icon" style="font-size:18px;">🔍</div>
           <div class="qa-body">
-            <div class="qa-title">Listing Uploader</div>
-            <div class="qa-sub">Upload pending deals to Amazon</div>
+            <div class="qa-title">Deal Scout</div>
+            <div class="qa-sub">Find EU arbitrage deals</div>
+          </div>
+          <div class="qa-arrow">→</div>
+        </div>
+        <div class="quick-action-card" onclick="showPage('repricer', document.querySelector('[data-page=repricer]'))">
+          <div class="qa-icon" style="font-size:18px;">💰</div>
+          <div class="qa-body">
+            <div class="qa-title">Min Price Tool</div>
+            <div class="qa-sub">Set floor prices from COGS</div>
+          </div>
+          <div class="qa-arrow">→</div>
+        </div>
+        <div class="quick-action-card" onclick="showPage('stalker', document.querySelector('[data-page=stalker]'))">
+          <div class="qa-icon" style="font-size:18px;">👁</div>
+          <div class="qa-body">
+            <div class="qa-title">Storefront Stalker</div>
+            <div class="qa-sub">Monitor seller storefronts</div>
+          </div>
+          <div class="qa-arrow">→</div>
+        </div>
+        <div class="quick-action-card" onclick="showPage('leakage', document.querySelector('[data-page=leakage]'))">
+          <div class="qa-icon" style="font-size:18px;">🔎</div>
+          <div class="qa-body">
+            <div class="qa-title">Leakage Tracker</div>
+            <div class="qa-sub">Track unrecovered COGS</div>
+          </div>
+          <div class="qa-arrow">→</div>
+        </div>
+        <div class="quick-action-card" onclick="showPage('purchases', document.querySelector('[data-page=purchases]'))">
+          <div class="qa-icon" style="font-size:18px;">📋</div>
+          <div class="qa-body">
+            <div class="qa-title">Purchases</div>
+            <div class="qa-sub">View and manage all deals</div>
           </div>
           <div class="qa-arrow">→</div>
         </div>
@@ -2648,6 +2694,12 @@ input::placeholder { color: var(--text-4); }
     </div>
   </div>
 
+  <!-- Scout cache restore banner -->
+  <div id="scoutCacheBanner" style="display:none;margin-bottom:12px;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);align-items:center;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:11px;color:var(--text-3);">
+    <span>📋 Showing saved scan from <strong id="scoutCacheDate" style="color:var(--text-2);"></strong> — <strong id="scoutCacheCount" style="color:var(--text-2);"></strong> ASINs</span>
+    <button onclick="scoutClearCache()" class="stalker-btn" style="font-size:11px;">✕ Clear &amp; start fresh</button>
+  </div>
+
   <!-- RESULTS TABLE -->
   <div class="rp-table-wrap" id="scoutTableWrap">
     <div class="rp-table-header">
@@ -2666,6 +2718,7 @@ input::placeholder { color: var(--text-4); }
             <button onclick="scoutSetFilter('moderate')" id="scoutFilterModerate" class="scout-filter-btn">🟡 Moderate</button>
             <button onclick="scoutSetFilter('reject')"  id="scoutFilterReject"   class="scout-filter-btn">🔴 Reject</button>
             <button onclick="scoutSetFilter('noprice')" id="scoutFilterNoprice"  class="scout-filter-btn">— No EU Price</button>
+            <button onclick="scoutSetFilter('giftcard')" id="scoutFilterGiftcard" class="scout-filter-btn">🎁 GC Only</button>
           </span>
         </div>
       </div>
@@ -3118,6 +3171,47 @@ function renderDashboard() {
   document.getElementById('s-deals').textContent = allRows.length;
   document.getElementById('s-uploaded').textContent = uploaded+'/'+allRows.length;
   document.getElementById('s-month').textContent = thisDeals;
+
+  // Live ops stats
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + (weekStart.getDay() === 0 ? -6 : 1));
+  weekStart.setHours(0,0,0,0);
+  const weekDeals = allRows.filter(r => { try { return parseUKDate(r.date) >= weekStart; } catch { return false; } }).length;
+  const weekEl = document.getElementById('s-week');
+  if (weekEl) weekEl.textContent = weekDeals;
+
+  let leakTotal = 0, leakHasData = false;
+  if (window._leakPrepReconciled?.length) {
+    leakTotal += window._leakPrepReconciled.reduce((s,r) => s + (r.cogsVal||0), 0);
+    leakHasData = true;
+  }
+  if (window._leakReturnsProcessed?.length) {
+    leakTotal += window._leakReturnsProcessed.filter(r => !r.isReimbursed).reduce((s,r) => s + (r.exposure||0), 0);
+    leakHasData = true;
+  }
+  const leakEl = document.getElementById('s-leakage');
+  if (leakEl) leakEl.textContent = leakHasData ? '£'+fmt(leakTotal) : '—';
+  const leakSubEl = document.getElementById('s-leakage-sub');
+  if (leakSubEl && !leakHasData) leakSubEl.textContent = 'upload leakage CSVs to track';
+
+  const stalkerFeedData = JSON.parse(localStorage.getItem('bimma_stalker_feed') || '[]');
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const newToday = stalkerFeedData.filter(f => f.detectedAt >= todayStart.getTime() && f.type === 'new').length;
+  const stalkerNewEl = document.getElementById('s-stalker-new');
+  if (stalkerNewEl) stalkerNewEl.textContent = newToday;
+
+  const cachedTokens = localStorage.getItem('bimma_scout_tokens_cache');
+  if (cachedTokens) {
+    try {
+      const { tokens, ts } = JSON.parse(cachedTokens);
+      const tokEl = document.getElementById('s-tokens');
+      if (tokEl) tokEl.textContent = Number(tokens).toLocaleString();
+      const ago = Math.round((Date.now() - ts) / 60000);
+      const tokSubEl = document.getElementById('s-tokens-sub');
+      if (tokSubEl) tokSubEl.textContent = ago < 60 ? `${ago}m ago` : `${Math.round(ago/60)}h ago`;
+    } catch(e) {}
+  }
+
   const months={}, order=[];
   allRows.forEach(r=>{ const k=monthKey(r.date); if(!k)return; if(!months[k]){months[k]=[];order.push(k);} months[k].push(r); });
   const uniq=[...new Set(order)];
@@ -4839,6 +4933,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // Init market button states
   ['DE','FR','IT','ES'].forEach(m => scoutToggleMarket(m, document.getElementById('scout'+m)));
+
+  // Restore cached scout results
+  const scoutCacheRaw = localStorage.getItem('bimma_scout_cache');
+  if (scoutCacheRaw) {
+    try {
+      const { results } = JSON.parse(scoutCacheRaw);
+      if (results && results.length) {
+        scoutResults = results;
+        scoutRenderTable();
+        scoutShowCacheBanner();
+        document.getElementById('scoutExportBtn').disabled = false;
+      }
+    } catch(e) {}
+  }
 });
 
 function scoutSyncApiKey() {
@@ -5071,7 +5179,11 @@ function scoutCalcProfit(euPriceEur, ukBB, eurGbp, shipping, prep) {
   const totalFees = referral + dsf + fba;
   const profit = ukBB - landed - totalFees;
   const roi = (profit / landed) * 100;
-  return { euGbp, landed, fba: totalFees, profit, roi };
+  const GC_DISCOUNT = 0.10;
+  const gcLanded = landed * (1 - GC_DISCOUNT);
+  const gcProfit = ukBB - gcLanded - totalFees;
+  const gcRoi = (gcProfit / gcLanded) * 100;
+  return { euGbp, landed, fba: totalFees, profit, roi, gcProfit, gcRoi };
 }
 
 // ── Keepa fetch ──
@@ -5205,6 +5317,8 @@ async function scoutRun() {
   scoutShouldStop = false;
   scoutIsRunning = true;
   scoutResults = [];
+  localStorage.removeItem('bimma_scout_cache');
+  document.getElementById('scoutCacheBanner').style.display = 'none';
 
   try {
     // Fetch actual token refill rate from Keepa before scan
@@ -5212,6 +5326,9 @@ async function scoutRun() {
       const tkRes = await fetch(`https://api.keepa.com/token?key=${apiKey}`);
       const tkData = await tkRes.json();
       if (tkData.refillRate && tkData.refillRate > 0) scoutRefillRate = tkData.refillRate;
+      if (tkData.tokensLeft != null) {
+        try { localStorage.setItem('bimma_scout_tokens_cache', JSON.stringify({ tokens: tkData.tokensLeft, ts: Date.now() })); } catch(_) {}
+      }
     } catch(_) { /* use default 70/min */ }
 
     // UK 180d BB — use CSV values if available (saves all UK Keepa tokens)
@@ -5328,6 +5445,10 @@ async function scoutRun() {
     scoutShouldStop = false;
     scoutIsRunning = false;
     scoutRenderTable();
+    if (scoutResults.length) {
+      try { localStorage.setItem('bimma_scout_cache', JSON.stringify({ ts: Date.now(), results: scoutResults })); } catch(_) {}
+    }
+    scoutShowCacheBanner();
   }
 }
 
@@ -5335,11 +5456,31 @@ let scoutCurrentFilter = 'all';
 
 function scoutSetFilter(f) {
   scoutCurrentFilter = f;
-  ['all','strong','moderate','reject','noprice'].forEach(id => {
+  ['all','strong','moderate','reject','noprice','giftcard'].forEach(id => {
     const el = document.getElementById('scoutFilter' + id.charAt(0).toUpperCase() + id.slice(1));
     if (el) el.classList.toggle('active', id === f);
   });
   scoutRenderTable();
+}
+
+function scoutShowCacheBanner() {
+  const raw = localStorage.getItem('bimma_scout_cache');
+  if (!raw || !scoutResults.length) {
+    document.getElementById('scoutCacheBanner').style.display = 'none'; return;
+  }
+  try {
+    const { ts } = JSON.parse(raw);
+    const d = new Date(ts);
+    const dateStr = d.toLocaleDateString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    document.getElementById('scoutCacheDate').textContent = dateStr;
+    document.getElementById('scoutCacheCount').textContent = scoutResults.length;
+    document.getElementById('scoutCacheBanner').style.display = 'flex';
+  } catch(e) {}
+}
+
+function scoutClearCache() {
+  localStorage.removeItem('bimma_scout_cache');
+  scoutClear();
 }
 
 function scoutClassify(r) {
@@ -5367,6 +5508,10 @@ function scoutRenderTable() {
   // When done: All tab shows everything except no EU price
   let filtered = scoutResults.filter(r => {
     const cls = scoutClassify(r);
+    if (scoutCurrentFilter === 'giftcard') {
+      const minRoi = r.minRoi ?? 15;
+      return (r.calc?.gcRoi ?? -999) >= minRoi && (r.calc?.roi ?? -999) < minRoi;
+    }
     if (scoutCurrentFilter === 'all') {
       if (scoutIsRunning) return cls === 'strong' || cls === 'moderate';
       return cls !== 'noprice';
@@ -5394,9 +5539,10 @@ function scoutRenderTable() {
   const moderate = scoutResults.filter(r => scoutClassify(r) === 'moderate').length;
   const reject   = scoutResults.filter(r => scoutClassify(r) === 'reject').length;
   const noprice  = scoutResults.filter(r => scoutClassify(r) === 'noprice').length;
+  const gcOnly   = scoutResults.filter(r => { const m = r.minRoi ?? 15; return (r.calc?.gcRoi ?? -999) >= m && (r.calc?.roi ?? -999) < m; }).length;
   const badge = scoutIsRunning
     ? `${filtered.length} confirmed · 💚 ${strong} strong · 🟡 ${moderate} moderate · ⏳ ${reject + noprice} still scanning…`
-    : `${filtered.length} shown · 💚 ${strong} strong · 🟡 ${moderate} moderate · 🔴 ${reject} reject · — ${noprice} no EU price`;
+    : `${filtered.length} shown · 💚 ${strong} strong · 🟡 ${moderate} moderate · 🔴 ${reject} reject · — ${noprice} no EU price · 🎁 ${gcOnly} GC`;
   if (countEl) { countEl.textContent = badge; countEl.className = 'rp-table-badge'; }
 
   const f2  = v => v != null ? '£' + v.toFixed(2) : '—';
@@ -5415,6 +5561,10 @@ function scoutRenderTable() {
       else if (roi >= minRoi) roiCol = 'var(--amber)';
     }
     const profitCol = (r.calc?.profit ?? -1) >= 0 ? 'var(--green)' : 'var(--red)';
+    const gcRoi = r.calc?.gcRoi;
+    const gcBadge = (gcRoi != null && gcRoi >= minRoi && (roi ?? -999) < minRoi)
+      ? `<div style="font-family:var(--mono);font-size:9px;color:var(--amber);margin-top:2px;">🎁 ${gcRoi.toFixed(1)}%</div>`
+      : '';
     const groupLabel = { strong:'💚 Strong Deals', moderate:'🟡 Moderate Deals', reject: scoutIsRunning ? '⏳ Still Scanning' : '🔴 Reject', noprice: scoutIsRunning ? '⏳ Not Yet Checked' : '— No EU Price' };
     let groupRow = '';
     if (scoutCurrentFilter === 'all' && cls !== lastGroup) {
@@ -5436,7 +5586,7 @@ function scoutRenderTable() {
       <td style="text-align:right;font-family:var(--mono);font-weight:600;">${f2(r.ukBB)}<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);">${r.ukBBSource||''}</div></td>
       <td style="text-align:right;font-family:var(--mono);color:var(--text-3);">${f2(r.calc?.fba)}</td>
       <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${profitCol};">${f2(r.calc?.profit)}</td>
-      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${roiCol};">${fPct(roi)}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${roiCol};">${fPct(roi)}${gcBadge}</td>
     </tr>`;
   }).join('');
 }
@@ -5506,6 +5656,8 @@ function scoutClear() {
   document.getElementById('scoutExportBtn').disabled = true;
   document.getElementById('scoutRunBtn').disabled = false;
   document.getElementById('scoutStopBtn').style.display = 'none';
+  localStorage.removeItem('bimma_scout_cache');
+  document.getElementById('scoutCacheBanner').style.display = 'none';
 }
 
 

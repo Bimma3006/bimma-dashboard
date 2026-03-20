@@ -702,11 +702,6 @@ input::placeholder { color: var(--text-4); }
 .exp-type-btn.active { background: var(--green); color: #000; border-color: var(--green); }
 
 /* ═══════════════════════════════════════
-   SIDEBAR AUTH (legacy alias)
-═══════════════════════════════════════ */
-.sidebar-auth { display: none; }
-
-/* ═══════════════════════════════════════
    CANVAS / CHART
 ═══════════════════════════════════════ */
 .canvas-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px; margin-bottom: 24px; overflow: hidden; }
@@ -853,7 +848,6 @@ input::placeholder { color: var(--text-4); }
    A2A ANALYSER — REDESIGN
 ════════════════════════════════════════ */
 
-/* Mode selector bar */
 /* ════════════════════════════════════════
    A2A ANALYSER — FULL REDESIGN
 ════════════════════════════════════════ */
@@ -873,7 +867,6 @@ input::placeholder { color: var(--text-4); }
   margin-bottom: 18px;
   border-bottom: 1px solid var(--border);
 }
-.a2a-page-header-left {}
 
 /* Mode selector */
 .a2a-mode-bar {
@@ -989,7 +982,6 @@ input::placeholder { color: var(--text-4); }
   justify-content: space-between;
   margin-bottom: 12px;
 }
-.a2a-upload-header-left {}
 .a2a-upload-title {
   font-family: var(--mono);
   font-size: 10px;
@@ -1751,7 +1743,6 @@ input::placeholder { color: var(--text-4); }
 /* ── STALKER STATS + TABLE ──────────────── */
 .stalker-stats-bar { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
 .stalker-stat-card { background:var(--surface); border:1px solid var(--border2); border-radius:var(--r); padding:18px 20px; display:flex; align-items:center; justify-content:space-between; }
-.stalker-stat-card-left {}
 .stalker-stat-card-label { font-family:var(--mono); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-3); margin-bottom:6px; }
 .stalker-stat-card-value { font-family:var(--mono); font-size:28px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
 .stalker-stat-card-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:4px; }
@@ -1937,7 +1928,7 @@ input::placeholder { color: var(--text-4); }
   <div class="page active" id="page-dashboard">
     <div class="page-inner">
       <div class="page-header">
-        <div class="page-header-title">Good morning, James.</div>
+        <div class="page-header-title" id="dashGreeting">Good morning, James.</div>
         <div class="page-header-sub">Here's what's happening across your FBA business today.</div>
       </div>
       <div class="stat-grid stat-grid-4">
@@ -2030,13 +2021,6 @@ input::placeholder { color: var(--text-4); }
     </div>
   </div>
 
-  <!-- ══ PAGE: DEAL ANALYSER ══ -->
-  <div class="page" id="page-deals">
-    <div style="padding:40px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-3);">
-      Deal Analyser has moved to <a href="#" onclick="showPage('a2a',document.querySelector('[data-page=a2a]'));return false;" style="color:var(--green);">A2A Analyser ↗</a>
-    </div>
-  </div>
-
   <!-- ══ PAGE: COGS CALCULATOR ══ -->
   <div class="page" id="page-cogs">
     <div class="page-inner">
@@ -2115,6 +2099,7 @@ input::placeholder { color: var(--text-4); }
 
   <!-- ══ PAGE: MIN PRICE TOOL ══ -->
   <div class="page" id="page-repricer">
+  <div class="page-inner">
 
     <div class="page-header" style="margin-bottom:24px;">
       <div>
@@ -2168,13 +2153,16 @@ input::placeholder { color: var(--text-4); }
         <script>
           window.rpUpdateStatus = function() {
             const el = document.getElementById('rpSheetsStatus');
+            const warn = document.getElementById('rpSheetsWarning');
             if (!el) return;
             if (typeof allRows !== 'undefined' && allRows.length > 0) {
               el.style.color = 'var(--green)';
               el.textContent = '✓ ' + allRows.length + ' purchases loaded — min prices ready';
+              if (warn) warn.style.display = 'none';
             } else {
               el.style.color = 'var(--amber)';
               el.textContent = '⚠ Not connected — connect Google Sheets to enable min prices';
+              if (warn) warn.style.display = '';
             }
           };
           document.addEventListener('DOMContentLoaded', rpUpdateStatus);
@@ -2215,6 +2203,7 @@ input::placeholder { color: var(--text-4); }
       </div>
     </div>
 
+  </div>
   </div>
 
   <!-- ══ PAGE: A2A ANALYSER ══ -->
@@ -2668,8 +2657,8 @@ input::placeholder { color: var(--text-4); }
       </div>
       <div style="display:flex;align-items:center;gap:14px;">
         <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:8px;">
-          <span><span style="color:var(--green);">■</span> ≥30% ROI</span>
-          <span><span style="color:var(--amber);">■</span> ≥min ROI</span>
+          <span><span style="color:var(--green);">■</span> <span id="scoutLegendStrong">≥20% ROI</span></span>
+          <span><span style="color:var(--amber);">■</span> <span id="scoutLegendMod">≥15% ROI</span></span>
           <span><span style="color:var(--red);">■</span> below</span>
           <span style="margin-left:12px;display:flex;gap:6px;">
             <button onclick="scoutSetFilter('all')"     id="scoutFilterAll"      class="scout-filter-btn active">All</button>
@@ -3003,7 +2992,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', deals:'Deal Analyser', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker', leakage:'Leakage Tracker' };
+  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker', leakage:'Leakage Tracker' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   document.dispatchEvent(new CustomEvent('bimma:pagechange', { detail: name }));
 }
@@ -3097,7 +3086,8 @@ async function loadData() {
       spend:cleanNum(row[7]), vat:cleanNum(row[8]), supplier:row[9]||'',
       uploaded:row[10]==='TRUE'||row[10]===true||row[10]==='Yes', rowIdx:i+2
     }));
-    renderDashboard(); renderPurchases(allRows); renderListing(allRows); renderPrep(allRows); renderExpenses();
+    renderDashboard(); renderPurchases(allRows); renderListing(allRows);
+    if (document.getElementById('page-expenses')?.classList.contains('active')) renderExpenses();
     populateFilters(); setListingDefaults();
     toast(`Loaded ${allRows.length} purchases`,'success');
   } catch(e) { toast('Load error: '+e.message,'error'); }
@@ -3111,6 +3101,10 @@ async function gFetch(url, opts={}) {
 
 // Dashboard
 function renderDashboard() {
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  const gEl = document.getElementById('dashGreeting');
+  if (gEl) gEl.textContent = greet + ', James.';
   const spend = allRows.reduce((s,r)=>s+r.spend,0);
   const uploaded = allRows.filter(r=>r.uploaded).length;
   const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -3143,7 +3137,8 @@ function renderPurchases(rows) {
   const tb=document.getElementById('purchasesTbody');
   if(!rows.length){tb.innerHTML='<tr><td colspan="10"><div class="empty-state">No purchases</div></td></tr>';return;}
   tb.innerHTML=rows.map(r=>{
-    const roi=r.sell>0&&r.buy>0?((r.sell-(r.buy/1.2))/(r.buy/1.2)*100):null;
+    const cost=r.buy/1.2, netRev=r.sell>0?r.sell-scoutReferral(r.sell)-scoutFbaFee(r.sell):0;
+    const roi=r.sell>0&&r.buy>0?((netRev-cost)/cost*100):null;
     const roiHtml=roi!==null?`<span class="roi-pill ${roi>=20?'roi-green':roi>=15?'roi-amber':'roi-red'}">${roi.toFixed(1)}%</span>`:'—';
     return `<tr><td class="td-date">${fmtDate(r.date)}</td><td class="td-sku">${esc(r.sku)}</td><td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td><td class="td-center mono">${esc(r.asin)}</td><td class="td-price">£${r.buy.toFixed(2)}</td><td class="td-price">£${r.sell.toFixed(2)}</td><td class="td-center">${r.qty}</td><td class="td-price">£${r.spend.toFixed(2)}</td><td style="font-size:11px;color:#555">${esc(r.supplier)}</td><td class="toggle-wrap"><button class="toggle ${r.uploaded?'on':''}" onclick="toggleUpload(${r.rowIdx},this,'purchases')"></button></td></tr>`;
   }).join('');
@@ -3277,8 +3272,10 @@ async function exportListingTSV() {
       const requests=rows.filter(r=>!r.uploaded).map(r=>({range:`${PURCH_TAB}!K${r.rowIdx}`,values:[['TRUE']]}));
       if(requests.length){
         for(let i=0;i<requests.length;i+=100)await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchUpdate`,{method:'POST',body:JSON.stringify({valueInputOption:'RAW',data:requests.slice(i,i+100)})});
+        // Update local state — no full reload needed
+        rows.filter(r=>!r.uploaded).forEach(r=>r.uploaded=true);
+        renderListing(allRows); renderDashboard();
         toast('✓ Exported '+rows.length+' items & marked as uploaded','success');
-        loadData();
       } else {
         toast('✓ Exported '+rows.length+' items','success');
       }
@@ -3305,8 +3302,6 @@ async function bulkMarkUploaded() {
 // Prep
 function getPrepData(){try{return JSON.parse(localStorage.getItem('bimma_prep')||'{}');}catch{return {};}}
 function savePrepData(d){localStorage.setItem('bimma_prep',JSON.stringify(d));}
-function renderPrep(rows){}
-function filterPrep(){}
 
 // ════════════════════════════════════════
 // EXPENSES
@@ -3336,7 +3331,11 @@ function renderExpenses(){
     renderExpGrid();
     return;
   }
-  if(!activeExpMonth||!months.includes(activeExpMonth))activeExpMonth=months[months.length-1];
+  if(!activeExpMonth||!months.includes(activeExpMonth)){
+    const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const now=new Date(), curMonth=mn[now.getMonth()]+' '+now.getFullYear();
+    activeExpMonth=months.includes(curMonth)?curMonth:months[months.length-1];
+  }
   document.getElementById('expMonthTabs').innerHTML=months.map(m=>`<button class="exp-tab ${m===activeExpMonth?'active':''}" onclick="setExpMonth('${m}')">${m}</button>`).join('');
   renderExpGrid();
 }
@@ -3425,7 +3424,6 @@ function expConfirmAdd(){
   const name=document.getElementById('expNewName').value.trim();
   if(!name){toast('Enter a name','error');return;}
   const def=parseFloat(document.getElementById('expNewDefault').value)||0;
-  const icons={subscription:'📊',tool:'🧰',shipping:'📦',fee:'💳',other:'•'};
   const key='custom_'+Date.now();
   const items=getExpItems();
   items.push({key,name,icon:'📌',default:def,recurring:expNewType==='recurring'});
@@ -3765,7 +3763,6 @@ function rmCloseModal(){document.getElementById('rmModal').classList.remove('sho
 function rmConfirmRequest(){
   if(!rmPendingAsin)return;
   const asin=rmPendingAsin, shipDeadline=document.getElementById('rmModalDate').value;
-  const card=document.querySelector(`.rm-card`);
   const amountEl=document.querySelector(`#rmDet-${asin} .rm-mini-val`);
   const amount=amountEl?parseFloat(amountEl.textContent.replace(/[^0-9.]/g,''))||0:0;
   const titleEl=document.querySelector(`[onclick="rmToggle('${asin}')"] .rm-title`);
@@ -4080,7 +4077,7 @@ function daFileChosen(num, file) {
 function daClearSlot(e, num) {
   e.stopPropagation(); daSlotFiles[num] = null;
   document.getElementById('daSlot' + num).classList.remove('has-file');
-  document.getElementById('daSlot' + num + 'Icon').textContent = '⬆';
+  document.getElementById('daSlot' + num + 'Icon').textContent = '↑';
   document.getElementById('daSlot' + num + 'Icon').style.cssText = '';
   document.getElementById('daSlot' + num + 'Label').style.display = 'block';
   document.getElementById('daSlot' + num + 'Name').style.display = 'none';
@@ -4158,7 +4155,7 @@ function daRunAnalysis() {
         const asin = (row['ASIN'] || '').trim();
         if (!daRejectedList.has(asin)) return true;
         const rejection = daRejectedList.get(asin);
-        if (!rejection || rejection.price == null) return false; // no price stored — keep rejected
+        if (!rejection || rejection.price == null) return true; // no price stored — show as clearable rejected
         const currentPrice = daParseNum(row[cfg.buyCol]);
         if (currentPrice == null) return false;
         const priceDiff = Math.abs(currentPrice - rejection.price) / rejection.price;
@@ -4427,7 +4424,7 @@ function daReset() {
   daSlotFiles = { 1: null, 2: null, 3: null };
   [1, 2, 3].forEach(n => {
     document.getElementById('daSlot' + n).classList.remove('has-file');
-    document.getElementById('daSlot' + n + 'Icon').textContent = '⬆';
+    document.getElementById('daSlot' + n + 'Icon').textContent = '↑';
     document.getElementById('daSlot' + n + 'Icon').style.cssText = '';
     document.getElementById('daSlot' + n + 'Label').style.display = 'block';
     document.getElementById('daSlot' + n + 'Name').style.display = 'none';
@@ -4768,7 +4765,13 @@ function rpRenderTable(){
     return q === '' || (r.asin+r.sku+r.title).toLowerCase().includes(q);
   });
 
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No results</div></td></tr>';return;}
+  if(!rows.length){
+    const hint = rpCurrentTab==='matched' && !accessToken
+      ? 'Connect Google Sheets to match STK ASINs against your Purchases sell prices'
+      : 'No results';
+    tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state">${hint}</div></td></tr>`;
+    return;
+  }
   tbody.innerHTML=rows.map(r=>{
     const sellPrice = rpSellMap[r.asin] || null;
     let minSell = null;
@@ -4826,7 +4829,6 @@ let scoutLoadedAsins = []; // ASINs loaded from file
 let scoutCsvBBMap      = {}; // ASIN → best UK sell price from CSV
 let scoutCsvBBSourceMap = {}; // ASIN → source label (180d/ST/365d etc)
 let scoutCsvTitleMap   = {}; // ASIN → title from CSV
-let scoutCsvImageMap   = {}; // ASIN → image URL from CSV
 
 // Sync API key from localStorage on load
 document.addEventListener('DOMContentLoaded', () => {
@@ -4866,7 +4868,6 @@ let scoutLoadedAsins1 = [], scoutLoadedAsins2 = [];
 let scoutCsvBBMap1 = {}, scoutCsvBBMap2 = {};
 let scoutCsvBBSourceMap1 = {}, scoutCsvBBSourceMap2 = {};
 let scoutCsvTitleMap1 = {}, scoutCsvTitleMap2 = {};
-let scoutCsvImageMap1 = {}, scoutCsvImageMap2 = {};
 
 function scoutDragOver(e, slot) {
   e.preventDefault();
@@ -4886,6 +4887,13 @@ function scoutFileChosen(file, slot=1) {
   const reader = new FileReader();
   reader.onload = ev => {
     const text = ev.target.result;
+    // Show parsing indicator immediately, then defer heavy parse
+    const dzEl = document.getElementById('scoutDropzone'+slot);
+    const iconEl = document.getElementById('scoutDropIcon'+slot);
+    const labelEl = document.getElementById('scoutDropLabel'+slot);
+    if (iconEl) iconEl.textContent = '⋯';
+    if (labelEl) labelEl.textContent = 'Parsing…';
+    setTimeout(() => {
     const asins = scoutExtractASINs(text).slice(0, 5000);
     if (slot === 1) { scoutLoadedAsins1 = asins; }
     else            { scoutLoadedAsins2 = asins; }
@@ -4893,8 +4901,8 @@ function scoutFileChosen(file, slot=1) {
     scoutLoadedAsins = [...new Set([...scoutLoadedAsins1, ...scoutLoadedAsins2])];
     // Also parse UK 180d BB + title from CSV if it's a Keepa export
     // Reset slot-specific maps
-    if (slot === 1) { scoutCsvBBMap1 = {}; scoutCsvBBSourceMap1 = {}; scoutCsvTitleMap1 = {}; scoutCsvImageMap1 = {}; }
-    else            { scoutCsvBBMap2 = {}; scoutCsvBBSourceMap2 = {}; scoutCsvTitleMap2 = {}; scoutCsvImageMap2 = {}; }
+    if (slot === 1) { scoutCsvBBMap1 = {}; scoutCsvBBSourceMap1 = {}; scoutCsvTitleMap1 = {}; }
+    else            { scoutCsvBBMap2 = {}; scoutCsvBBSourceMap2 = {}; scoutCsvTitleMap2 = {}; }
     try {
       // Proper CSV parser that handles quoted fields with commas inside
       function parseCSVLine(line) {
@@ -4919,7 +4927,6 @@ function scoutFileChosen(file, slot=1) {
         const bbCurIdx = headers.findIndex(h => h === 'Buy Box: Current');
         const bbStIdx  = headers.findIndex(h => h === 'Buy Box: Strikethrough Price');
         const titleIdx = headers.findIndex(h => h === 'Title');
-        const imageIdx = headers.findIndex(h => h === 'Image');
         if (asinIdx >= 0) {
           for (let i = 1; i < lines.length; i++) {
             const cols  = parseCSVLine(lines[i]);
@@ -4932,7 +4939,6 @@ function scoutFileChosen(file, slot=1) {
             const bbCur  = getNum(bbCurIdx);
             const bbSt   = getNum(bbStIdx);
             const title  = (cols[titleIdx]||'').replace(/"/g,'').trim();
-            const image  = (cols[imageIdx]||'').replace(/"/g,'').split(';')[0].trim();
             // Best sell price — same logic as A2A analyser
             // ST_CAP: strikethrough only used if > base but <= 130% of base (filters stale RRPs)
             const ST_CAP = 1.30;
@@ -4955,16 +4961,13 @@ function scoutFileChosen(file, slot=1) {
               const bbMapSlot      = slot === 1 ? scoutCsvBBMap1      : scoutCsvBBMap2;
               const bbSrcMapSlot   = slot === 1 ? scoutCsvBBSourceMap1 : scoutCsvBBSourceMap2;
               const titleMapSlot   = slot === 1 ? scoutCsvTitleMap1   : scoutCsvTitleMap2;
-              const imageMapSlot   = slot === 1 ? scoutCsvImageMap1   : scoutCsvImageMap2;
               bbMapSlot[asin]      = bestSell;
               bbSrcMapSlot[asin]   = sellSource;
               titleMapSlot[asin]   = title;
-              imageMapSlot[asin]   = image;
               // Also update merged maps
               scoutCsvBBMap[asin]       = bestSell;
               scoutCsvBBSourceMap[asin] = sellSource;
               scoutCsvTitleMap[asin]    = title;
-              scoutCsvImageMap[asin]    = image;
             }
           }
         }
@@ -4973,8 +4976,6 @@ function scoutFileChosen(file, slot=1) {
       scoutCsvBBMap       = Object.assign({}, scoutCsvBBMap1, scoutCsvBBMap2);
       scoutCsvBBSourceMap = Object.assign({}, scoutCsvBBSourceMap1, scoutCsvBBSourceMap2);
       scoutCsvTitleMap    = Object.assign({}, scoutCsvTitleMap1, scoutCsvTitleMap2);
-      scoutCsvImageMap    = Object.assign({}, scoutCsvImageMap1, scoutCsvImageMap2);
-      console.log('CSV parsed slot', slot, ':', Object.keys(slot===1?scoutCsvBBMap1:scoutCsvBBMap2).length, 'ASINs. Total:', Object.keys(scoutCsvBBMap).length);
     } catch(e) { console.error('CSV parse error:', e); }
     const s = slot;
     document.getElementById('scoutDropzone'+s)?.classList.add('loaded');
@@ -4989,19 +4990,19 @@ function scoutFileChosen(file, slot=1) {
     const clr = document.getElementById('scoutClearFile'+s);
     if (clr) clr.style.display = 'block';
     scoutCountASINs();
+    }, 0); // end deferred parse
   };
   reader.readAsText(file);
 }
 function scoutClearSlot(e, slot) {
   e?.stopPropagation();
-  if (slot === 1) { scoutLoadedAsins1 = []; scoutCsvBBMap1 = {}; scoutCsvBBSourceMap1 = {}; scoutCsvTitleMap1 = {}; scoutCsvImageMap1 = {}; }
-  else            { scoutLoadedAsins2 = []; scoutCsvBBMap2 = {}; scoutCsvBBSourceMap2 = {}; scoutCsvTitleMap2 = {}; scoutCsvImageMap2 = {}; }
+  if (slot === 1) { scoutLoadedAsins1 = []; scoutCsvBBMap1 = {}; scoutCsvBBSourceMap1 = {}; scoutCsvTitleMap1 = {}; }
+  else            { scoutLoadedAsins2 = []; scoutCsvBBMap2 = {}; scoutCsvBBSourceMap2 = {}; scoutCsvTitleMap2 = {}; }
   scoutLoadedAsins = [...new Set([...scoutLoadedAsins1, ...scoutLoadedAsins2])];
   // Merge BB maps
   scoutCsvBBMap = Object.assign({}, scoutCsvBBMap1, scoutCsvBBMap2);
   scoutCsvBBSourceMap = Object.assign({}, scoutCsvBBSourceMap1, scoutCsvBBSourceMap2);
   scoutCsvTitleMap = Object.assign({}, scoutCsvTitleMap1, scoutCsvTitleMap2);
-  scoutCsvImageMap = Object.assign({}, scoutCsvImageMap1, scoutCsvImageMap2);
   const s = slot;
   document.getElementById('scoutDropzone'+s)?.classList.remove('loaded');
   const icon = document.getElementById('scoutDropIcon'+s);
@@ -5081,7 +5082,7 @@ async function scoutFetchKeepa(asins, domainId, apiKey, isUK = false) {
   const batchSize = 100;
   const results = [];
   for (let i = 0; i < asins.length; i += batchSize) {
-    if (scoutShouldStop) { console.log('Scout stopped by user at', i, 'ASINs'); break; }
+    if (scoutShouldStop) break;
     const batch = asins.slice(i, i + batchSize);
     // Throttle check — pause if tokens low
     if (scoutLastTokenCount !== null && scoutLastTokenCount < batch.length + 20) {
@@ -5109,7 +5110,7 @@ let scoutViewedAsins   = new Set(JSON.parse(localStorage.getItem('bimma_scout_vi
 let scoutDiscoveryOrder = {}; // asin → order found (lower = found earlier)
 let scoutDiscoveryCounter = 0;
 let scoutIsRunning = false;
-const scoutRefillRate = 70; // tokens per minute
+let scoutRefillRate = 70; // tokens per minute — updated from Keepa /token at scan start
 
 async function scoutWaitForTokens(needed) {
   if (scoutLastTokenCount === null || scoutLastTokenCount >= needed) return;
@@ -5133,36 +5134,34 @@ function scoutGetBB180(product) {
   return null;
 }
 function scoutGetCurrentBB(product) {
-  // Only return a price if Amazon itself is selling this on the EU marketplace
-  // stats.current[0] = Amazon current price (-1 = not selling)
-  // csv[0] = Amazon price history
+  // Returns the best current EU price: Amazon-direct first, then buy box (csv[18] covers 3P sellers)
+  // csv[0] = Amazon price history, csv[18] = buy box history
   const stats = product.stats;
+  const csv = product.csv;
+  const cutoff = Date.now() - 30 * 86400000;
 
-  // Check Amazon is actively selling (csv field 0 = Amazon price)
-  let amazonPrice = null;
-  try {
-    const csv = product.csv;
-    if (csv && csv[0] && csv[0].length >= 2) {
-      const cutoff = Date.now() - 30 * 86400000;
-      for (let i = csv[0].length - 1; i >= 1; i -= 2) {
-        const raw = csv[0][i];
-        const t = (csv[0][i-1] + 21564000) * 60000;
-        if (t < cutoff) break; // too old
-        if (raw > 0) { amazonPrice = raw / 100; break; }
-        if (raw === -1) break; // Amazon explicitly not selling
+  function recentPrice(channel) {
+    try {
+      if (csv && csv[channel] && csv[channel].length >= 2) {
+        for (let i = csv[channel].length - 1; i >= 1; i -= 2) {
+          const raw = csv[channel][i];
+          const t = (csv[channel][i-1] + 21564000) * 60000;
+          if (t < cutoff) break;
+          if (raw > 0) return raw / 100;
+          if (raw === -1) break;
+        }
       }
-    }
-  } catch(_) {}
-
-  // Also check stats.current[0] for Amazon current price
-  if (!amazonPrice && stats) {
-    const amzCur = stats.current?.[0];
-    if (amzCur && amzCur > 0) amazonPrice = amzCur / 100;
+    } catch(_) {}
+    return null;
   }
 
-  // If Amazon isn't selling this on the EU marketplace, reject it
-  return amazonPrice;
-  return null;
+  // 1. Amazon-direct (csv[0] / stats.current[0])
+  const amazonPrice = recentPrice(0) || (stats?.current?.[0] > 0 ? stats.current[0] / 100 : null);
+  if (amazonPrice) return amazonPrice;
+
+  // 2. Buy box fallback — catches 3P EU sellers (csv[18] / stats.current[18])
+  const bbPrice = recentPrice(18) || (stats?.current?.[18] > 0 ? stats.current[18] / 100 : null);
+  return bbPrice || null;
 }
 
 // ── Progress ──
@@ -5208,12 +5207,18 @@ async function scoutRun() {
   scoutResults = [];
 
   try {
+    // Fetch actual token refill rate from Keepa before scan
+    try {
+      const tkRes = await fetch(`https://api.keepa.com/token?key=${apiKey}`);
+      const tkData = await tkRes.json();
+      if (tkData.refillRate && tkData.refillRate > 0) scoutRefillRate = tkData.refillRate;
+    } catch(_) { /* use default 70/min */ }
+
     // UK 180d BB — use CSV values if available (saves all UK Keepa tokens)
     // Re-merge slot maps in case they got out of sync
     scoutCsvBBMap       = Object.assign({}, scoutCsvBBMap1, scoutCsvBBMap2);
     scoutCsvBBSourceMap = Object.assign({}, scoutCsvBBSourceMap1, scoutCsvBBSourceMap2);
     scoutCsvTitleMap    = Object.assign({}, scoutCsvTitleMap1, scoutCsvTitleMap2);
-    scoutCsvImageMap    = Object.assign({}, scoutCsvImageMap1, scoutCsvImageMap2);
 
     const csvHasBB = Object.keys(scoutCsvBBMap).length > 0;
     let ukMap = {};
@@ -5475,9 +5480,6 @@ function scoutClear() {
   scoutCsvTitleMap = {};
   scoutCsvTitleMap1 = {};
   scoutCsvTitleMap2 = {};
-  scoutCsvImageMap = {};
-  scoutCsvImageMap1 = {};
-  scoutCsvImageMap2 = {};
 
   // Clear paste input
   const inp = document.getElementById('scoutAsinInput');
@@ -5566,14 +5568,14 @@ async function stalkerFetchTokens(key) {
       const subEl = document.getElementById('stalkerStatTokenSub');
       if (subEl) subEl.textContent = 'Refills every minute';
     }
-  } catch(e) { console.log('Token fetch error:', e); }
+  } catch(e) { /* token fetch failed — non-fatal */ }
 }
 
 function stalkerAddSeller() {
   const sellerId = document.getElementById('stalkerSellerId').value.trim().toUpperCase();
   const market   = document.getElementById('stalkerMarket').value;
-  if (!sellerId) { alert('Please enter a seller ID.'); return; }
-  if (stalkerSellers.find(s => s.id === sellerId && s.market === market)) { alert('Already tracking this seller on this marketplace.'); return; }
+  if (!sellerId) { toast('Please enter a seller ID.', 'error'); return; }
+  if (stalkerSellers.find(s => s.id === sellerId && s.market === market)) { toast('Already tracking this seller on this marketplace.', 'warn'); return; }
   const seller = { uid: Date.now().toString(), id: sellerId, name: sellerId, market, lastCheck: null, asinCount: null, lastSeen: null, status: 'idle' };
   stalkerSellers.push(seller);
   stalkerSave();
@@ -5641,7 +5643,6 @@ async function stalkerCheckSeller(seller) {
       if (data.error) throw new Error(data.error.message || 'Keepa API error');
 
       const pageAsins = data.asinList || [];
-      console.log(`Page ${page}: got ${pageAsins.length} ASINs, totalResults: ${data.totalResults}`);
       allAsins.push(...pageAsins);
 
       if (totalExpected === null) totalExpected = data.totalResults || 0;
@@ -5662,14 +5663,7 @@ async function stalkerCheckSeller(seller) {
       if (sfObj) {
         if (sfObj.sellerName && sfObj.sellerName !== seller.id) seller.name = sfObj.sellerName;
         allAsins.push(...(sfObj.asinList || []));
-        // Log full raw response so we can see what fields exist
-        console.log('FULL sellerObj:', JSON.stringify(sfObj));
-        console.log('asinList length:', (sfObj.asinList||[]).length);
-        console.log('All sfData keys:', Object.keys(sfData));
       } else {
-        console.log('sellerObj not found. sfData keys:', Object.keys(sfData||{}));
-        console.log('sellers keys:', Object.keys(sfData?.sellers||{}));
-        console.log('Full raw response:', JSON.stringify(sfData).substring(0, 2000));
       }
     }
 
@@ -5921,12 +5915,22 @@ function toggleSidebar() {
 function stalkerRename(uid) {
   const seller = stalkerSellers.find(s => s.uid === uid);
   if (!seller) return;
-  const newName = prompt('Rename seller:', seller.name);
-  if (newName && newName.trim()) {
-    seller.name = newName.trim();
-    stalkerSave();
+  const row = document.getElementById('stalkerCard_' + uid);
+  if (!row) return;
+  const nameDiv = row.querySelector('div[style*="font-size:13.5px"]');
+  if (!nameDiv) return;
+  const input = document.createElement('input');
+  input.value = seller.name;
+  input.style.cssText = 'font-size:13px;font-weight:600;background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:4px;padding:2px 6px;width:140px;';
+  nameDiv.replaceWith(input);
+  input.focus(); input.select();
+  const commit = () => {
+    const v = input.value.trim();
+    if (v) { seller.name = v; stalkerSave(); }
     stalkerRenderSellers();
-  }
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commit(); } if (e.key === 'Escape') stalkerRenderSellers(); });
 }
 
 
@@ -5949,7 +5953,7 @@ function stalkerHandleCSV(uid, input) {
       const asin = lines[i].replace(/"/g, '').split(',')[0].trim();
       if (asin && asin.length === 10 && asin.startsWith('B')) asins.push(asin);
     }
-    if (!asins.length) { alert('No ASINs found in CSV. Make sure it has an ASIN column.'); return; }
+    if (!asins.length) { toast('No ASINs found in CSV. Make sure it has an ASIN column.', 'error'); return; }
     const seller = stalkerSellers.find(s => s.uid === uid);
     if (!seller) return;
     stalkerSnapshots[uid] = { asins, ts: Date.now() };
@@ -5958,7 +5962,7 @@ function stalkerHandleCSV(uid, input) {
     seller.lastCheck = Date.now();
     stalkerSave();
     stalkerRenderSellers();
-    alert(`✓ Baseline set: ${asins.length} ASINs imported from ${file.name}`);
+    toast(`Baseline set: ${asins.length} ASINs imported from ${file.name}`, 'success');
   };
   reader.readAsText(file);
   input.value = ''; // reset so same file can be re-imported
@@ -6070,7 +6074,7 @@ function stalkerRenderProductFeed(products, seller) {
           if (c && c > 0) { price = (c / 100).toFixed(2); priceLabel = 'Current'; break; }
         }
       }
-    } catch(e) { console.log('Price err:', e, p.asin); }
+    } catch(e) { /* price parse error — skip product */ }
 
     const keepaUrl = `https://keepa.com/#!product/${seller.market}-${asin}`;
     const amzUrl   = `https://www.amazon.${tld}/dp/${asin}`;
@@ -6210,6 +6214,11 @@ function scoutRenderPartial(asins, ukMap, euData, markets, eurGbp, shipping, pre
     return result;
   });
   scoutResults = partial;
+  // Update legend to reflect actual minRoi threshold
+  const ls = document.getElementById('scoutLegendStrong');
+  const lm = document.getElementById('scoutLegendMod');
+  if (ls) ls.textContent = `≥${minRoi + 5}% ROI`;
+  if (lm) lm.textContent = `≥${minRoi}% ROI`;
   scoutRenderTable();
   document.getElementById('scoutExportBtn').disabled = !partial.some(r => r.bestEuPrice);
 }

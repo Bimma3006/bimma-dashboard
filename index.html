@@ -2808,7 +2808,7 @@ input::placeholder { color: var(--text-4); }
   <div class="page-header">
     <div>
       <div class="page-header-title">Leakage Tracker</div>
-      <div class="page-header-sub">Prep centre discrepancies · Unreimbursed returns · True COGS P&L</div>
+      <div class="page-header-sub">Prep centre discrepancies · Unreimbursed returns</div>
     </div>
   </div>
 
@@ -2816,7 +2816,6 @@ input::placeholder { color: var(--text-4); }
   <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0;padding:0 28px;">
     <button class="leak-tab active" id="leakTabPrep" onclick="leakSetTab('prep')">📦 Prep Centre</button>
     <button class="leak-tab" id="leakTabReturns" onclick="leakSetTab('returns')">↩ Returns Audit</button>
-    <button class="leak-tab" id="leakTabPL" onclick="leakSetTab('pl')">£ COGS P&amp;L</button>
   </div>
 
   <!-- ── PREP CENTRE TAB ── -->
@@ -2930,51 +2929,6 @@ input::placeholder { color: var(--text-4); }
     </div>
   </div>
 
-  <!-- ── COGS P&L TAB ── -->
-  <div id="leakPanelPL" class="leak-panel" style="display:none;">
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
-      <span style="font-size:20px;">📊</span>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text);">Uses your Purchases sheet data</div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px;">Pull cost + sell price from purchases · cross-reference reimbursements · show true net per ASIN</div>
-      </div>
-      <button class="leak-run-btn" onclick="leakRunPL()" style="margin-left:auto;">▶ Run P&amp;L</button>
-    </div>
-
-    <div id="leakPLStats" style="display:none;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;">
-      <div class="leak-stat-card"><div class="leak-stat-val" id="plStatRevenue">—</div><div class="leak-stat-lbl">Gross Revenue</div></div>
-      <div class="leak-stat-card"><div class="leak-stat-val" id="plStatCOGS">—</div><div class="leak-stat-lbl">Total COGS</div></div>
-      <div class="leak-stat-card"><div class="leak-stat-val" id="plStatFees">—</div><div class="leak-stat-lbl">Est. FBA Fees</div></div>
-      <div class="leak-stat-card"><div class="leak-stat-val" id="plStatProfit">—</div><div class="leak-stat-lbl">Net Profit</div></div>
-      <div class="leak-stat-card red"><div class="leak-stat-val" id="plStatLeakage">—</div><div class="leak-stat-lbl">Total Leakage</div></div>
-    </div>
-
-    <div id="leakPLTableWrap" style="display:none;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="display:flex;gap:6px;">
-          <button class="leak-filter-btn active" id="plFilterAll" onclick="leakSetPLFilter('all',this)">All ASINs</button>
-          <button class="leak-filter-btn" id="plFilterLoss" onclick="leakSetPLFilter('loss',this)">🔴 Losing Money</button>
-          <button class="leak-filter-btn" id="plFilterLow" onclick="leakSetPLFilter('low',this)">⚠ &lt;10% ROI</button>
-          <button class="leak-filter-btn" id="plFilterGood" onclick="leakSetPLFilter('good',this)">✓ Profitable</button>
-        </div>
-        <button class="leak-export-btn" onclick="leakExportPL()">↓ Export</button>
-      </div>
-      <div class="leak-table-wrap">
-        <table class="leak-table">
-          <thead><tr>
-            <th>ASIN</th><th>SKU</th><th>Product</th>
-            <th style="text-align:right;">Buy Price</th>
-            <th style="text-align:right;">Sell Price</th>
-            <th style="text-align:right;">Est. Fees</th>
-            <th style="text-align:right;">Reimb.</th>
-            <th style="text-align:right;">Net Profit</th>
-            <th style="text-align:right;">ROI %</th>
-          </tr></thead>
-          <tbody id="leakPLTbody"><tr><td colspan="9" class="leak-empty">Click "Run P&amp;L" to analyse your purchases</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
 </div>
 
 
@@ -4175,7 +4129,16 @@ function daAnalyseRow(row) {
   if (fbaFeeEst && reason && colour !== 'grey') reason += ' · FBA est.';
   const sortOrder = colour === 'green' ? 0 : colour === 'amber' ? 1 : spikeFlag ? 4 : colour === 'red' ? 2 : 3;
 
-  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, decision: null };
+  // Gift card: 10% off buy price
+  const gcBuyExVat = buyExVat ? buyExVat * 0.90 : null;
+  const gcBuyIncVat = buyIncVat ? buyIncVat * 0.90 : null;
+  let gcProfit = null, gcRoi = null;
+  if (sp && gcBuyExVat && refFee !== null && fbaExVat !== null) {
+    const gcVatDue = (spIncVat * vat / (1 + vat)) - (gcBuyIncVat ? gcBuyIncVat * vat / (1 + vat) : 0);
+    gcProfit = sp - gcBuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - gcVatDue;
+    gcRoi = gcProfit / gcBuyExVat;
+  }
+  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, decision: null };
 }
 
 // ════════════════════════════════════════
@@ -4355,6 +4318,7 @@ function daRenderHeaders() {
     <th data-col="spIncVat" data-type="num">${spLabel}</th>
     <th data-col="profit" data-type="num">Profit</th>
     <th data-col="roi" data-type="num">ROI</th>
+    <th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI if you buy with 10% gift card discount">🎁 GC ROI</th>
     <th data-col="boughtPerMonth" data-type="num">Bought/mo</th>
     <th class="no-sort th-left" style="min-width:200px;">Rating</th>
     <th class="no-sort" style="min-width:150px;"></th>
@@ -4393,6 +4357,7 @@ function daRenderTable() {
       ? `<div class="row-warn">↘ trending down ${(deal.priceTrendWarning*100).toFixed(1)}%</div>` : '';
     const spikeWarn = deal.spikeFlag === 'bb_spike'
       ? `<div class="row-warn spike">⚡ price outlier</div>` : '';
+    tr.dataset.asin = deal.asin;
     tr.innerHTML = `
       <td class="td-product">
         <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.inInventory ? ' <span class="inv-badge">📦 bought &lt;30d</span>' : ''}${deal.priceChanged ? ' <span class="pc-badge">🔄 price changed</span>' : ''}${daViewedList.has(deal.asin) ? ' <span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;">👁 viewed</span>' : ''}</div>
@@ -4405,6 +4370,7 @@ function daRenderTable() {
       <td class="td-num">${fmtN(deal.spIncVat)}${spTag}</td>
       <td class="td-num td-profit">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}">${fmtP(deal.roi)}</td>
+      <td class="td-num" style="${deal.gcRoi != null ? (deal.gcRoi >= 0.20 ? 'color:var(--green);font-weight:700;' : deal.gcRoi >= 0.15 ? 'color:var(--amber);font-weight:600;' : deal.gcRoi > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${deal.gcRoi != null ? (deal.gcRoi >= 0.15 && (deal.roi == null || deal.roi < 0.15) ? '🎁 ' : '') + fmtP(deal.gcRoi) : '—'}</td>
       <td class="td-num td-center">${deal.boughtPerMonth ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
       <td class="td-rating">
         <div class="rating-strength ${deal.colour}">${deal.strength}</div>
@@ -4428,7 +4394,7 @@ function daRenderTable() {
   normal.forEach(d => mkRow(d, false));
   if (vetoed.length) {
     const div = document.createElement('tr'); div.className = 'veto-divider';
-    div.innerHTML = `<td colspan="12">⛔ ${vetoed.length} previously vetoed &nbsp;·&nbsp; <button class="unveto-btn" onclick="daClearVetos()">Clear all</button></td>`;
+    div.innerHTML = `<td colspan="9">⛔ ${vetoed.length} previously vetoed &nbsp;·&nbsp; <button class="unveto-btn" onclick="daClearVetos()">Clear all</button></td>`;
     tbody.appendChild(div);
     vetoed.forEach(d => mkRow(d, true));
   }
@@ -6323,65 +6289,21 @@ function scoutRenderPartial(asins, ukMap, euData, markets, eurGbp, shipping, pre
 
 function stalkerExportBackup() {
   const backup = {
-    version: 1,
+    version:  2,
     exported: new Date().toISOString(),
-    sellers: stalkerSellers,
+    sellers:  stalkerSellers,
     snapshots: stalkerSnapshots,
-    apiKey: localStorage.getItem('bimma_stalker_key') || ''
+    feed:     stalkerFeedItems,
+    apiKey:   localStorage.getItem('bimma_stalker_key') || ''
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `bimma-stalker-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.href = url;
+  a.download = `bimma-stalker-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  toast('Stalker backup downloaded', 'success');
-}
-
-function stalkerImportBackup(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const backup = JSON.parse(e.target.result);
-      if (!backup.sellers) throw new Error('Invalid backup file');
-      if (!confirm(`Restore ${backup.sellers.length} sellers from backup dated ${backup.exported?.slice(0,10)}? This will overwrite your current sellers.`)) return;
-      stalkerSellers   = backup.sellers;
-      stalkerSnapshots = backup.snapshots || {};
-      if (backup.apiKey) {
-        localStorage.setItem('bimma_stalker_key', backup.apiKey);
-        const el = document.getElementById('stalkerApiKey');
-        if (el) el.value = backup.apiKey;
-      }
-      stalkerSave();
-      stalkerRenderSellers();
-      stalkerRenderFeed();
-      toast(`Restored ${backup.sellers.length} sellers from backup`, 'success');
-    } catch(err) {
-      alert('Failed to restore: ' + err.message);
-    }
-  };
-  reader.readAsText(file);
-  input.value = '';
-}
-
-
-function stalkerExportBackup() {
-  const backup = {
-    sellers:   stalkerSellers,
-    snapshots: stalkerSnapshots,
-    exported:  new Date().toISOString()
-  };
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `bimma-stalker-backup-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('Stalker backup downloaded', 'success');
+  toast('Stalker data exported', 'success');
 }
 
 function stalkerImportBackup(input) {
@@ -6394,29 +6316,66 @@ function stalkerImportBackup(input) {
       if (!backup.sellers || !Array.isArray(backup.sellers)) {
         toast('Invalid backup file', 'error'); return;
       }
-      if (!confirm(`Restore ${backup.sellers.length} sellers from backup dated ${backup.exported?.slice(0,10) || 'unknown'}? This will merge with existing sellers.`)) return;
-      // Merge — add sellers not already tracked
-      let added = 0;
+      const date = backup.exported?.slice(0,10) || 'unknown';
+      if (!confirm(`Merge ${backup.sellers.length} sellers from ${date} into this device?\n\nNew sellers will be added. Existing sellers kept. Feed items merged.`)) return;
+
+      // Merge sellers — add any not already tracked by id+market
+      let addedSellers = 0;
       backup.sellers.forEach(s => {
         if (!stalkerSellers.find(x => x.id === s.id && x.market === s.market)) {
           stalkerSellers.push(s);
-          added++;
+          addedSellers++;
         }
       });
-      // Restore snapshots
+
+      // Merge snapshots — only fill in missing, don't overwrite newer local data
       if (backup.snapshots) {
-        Object.assign(stalkerSnapshots, backup.snapshots);
+        Object.keys(backup.snapshots).forEach(uid => {
+          if (!stalkerSnapshots[uid] ||
+              (backup.snapshots[uid].ts && stalkerSnapshots[uid].ts && backup.snapshots[uid].ts > stalkerSnapshots[uid].ts)) {
+            stalkerSnapshots[uid] = backup.snapshots[uid];
+          }
+        });
       }
+
+      // Merge feed items — add items not already in feed (by asin+detectedAt)
+      let addedFeed = 0;
+      if (backup.feed && Array.isArray(backup.feed)) {
+        const existingKeys = new Set(stalkerFeedItems.map(f => f.asin + '_' + f.detectedAt));
+        backup.feed.forEach(f => {
+          const key = f.asin + '_' + f.detectedAt;
+          if (!existingKeys.has(key)) {
+            stalkerFeedItems.push(f);
+            addedFeed++;
+          }
+        });
+        // Re-sort by detectedAt desc, cap at 500
+        stalkerFeedItems.sort((a,b) => (b.detectedAt||0) - (a.detectedAt||0));
+        stalkerFeedItems = stalkerFeedItems.slice(0, 500);
+      }
+
+      // Restore API key if not already set
+      if (backup.apiKey && !localStorage.getItem('bimma_stalker_key')) {
+        localStorage.setItem('bimma_stalker_key', backup.apiKey);
+        const el = document.getElementById('stalkerApiKey');
+        if (el) el.value = backup.apiKey;
+      }
+
       stalkerSave();
       stalkerRenderSellers();
-      toast(`Restored ${added} sellers from backup`, 'success');
-    } catch(e) {
-      toast('Failed to parse backup file', 'error');
+      stalkerRenderFeed();
+      stalkerUpdateBadge();
+      toast(`Merged: +${addedSellers} sellers, +${addedFeed} feed items`, 'success');
+    } catch(err) {
+      toast('Failed to import: ' + err.message, 'error');
     }
   };
   reader.readAsText(file);
   input.value = '';
 }
+
+
+
 
 
 let rpCurrentTab = 'matched';
@@ -6432,13 +6391,10 @@ function daMarkViewed(asin) {
   daViewedList.add(asin);
   try { localStorage.setItem('bimma-a2a-viewed', JSON.stringify([...daViewedList])); } catch {}
   // Update badge in DOM without full re-render
-  const rows = document.querySelectorAll('#daTableBody tr');
-  rows.forEach(tr => {
-    if (tr.innerHTML.includes(asin)) {
-      const titleDiv = tr.querySelector('.td-product-title');
-      if (titleDiv && !titleDiv.querySelector('.viewed-badge')) {
-        titleDiv.insertAdjacentHTML('beforeend', ' <span class="viewed-badge" style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;">👁 viewed</span>');
-      }
+  document.querySelectorAll(`#daTableBody tr[data-asin="${asin}"]`).forEach(tr => {
+    const titleDiv = tr.querySelector('.td-product-title');
+    if (titleDiv && !titleDiv.querySelector('.viewed-badge')) {
+      titleDiv.insertAdjacentHTML('beforeend', ' <span class="viewed-badge" style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;">👁 viewed</span>');
     }
   });
 }
@@ -6469,19 +6425,10 @@ let leakPLData       = [];
 
 // --- Tab switching ---
 function leakSetTab(tab) {
-  ['prep','returns','pl'].forEach(t => {
-    document.getElementById('leakTabPrep')?.classList[t==='prep'?'add':'remove']('active');
-    document.getElementById('leakTabReturns')?.classList[t==='returns'?'add':'remove']('active');
-    document.getElementById('leakTabPL')?.classList[t==='pl'?'add':'remove']('active');
-    document.getElementById('leakPanelPrep').style.display   = tab==='prep'    ? '' : 'none';
-    document.getElementById('leakPanelReturns').style.display = tab==='returns' ? '' : 'none';
-    document.getElementById('leakPanelPL').style.display     = tab==='pl'      ? '' : 'none';
-  });
-  // Fix active tab button manually
-  ['prep','returns','pl'].forEach(t => {
-    const btn = document.getElementById('leakTab' + t.charAt(0).toUpperCase() + t.slice(1));
-    if (btn) btn.classList.toggle('active', t === tab);
-  });
+  document.getElementById('leakTabPrep')?.classList.toggle('active', tab==='prep');
+  document.getElementById('leakTabReturns')?.classList.toggle('active', tab==='returns');
+  document.getElementById('leakPanelPrep').style.display    = tab==='prep'    ? '' : 'none';
+  document.getElementById('leakPanelReturns').style.display = tab==='returns' ? '' : 'none';
 }
 
 // --- CSV/TSV Parser (handles quoted fields, commas within quotes) ---
@@ -6827,120 +6774,6 @@ function leakExportReturns() {
   a.download = 'bimma-returns-claims-' + new Date().toISOString().slice(0,10) + '.tsv';
   a.click();
 }
-
-// --- COGS P&L ---
-function leakRunPL() {
-  if (typeof allRows === 'undefined' || !allRows.length) {
-    alert('No purchases data found. Make sure your Purchases sheet is loaded.');
-    return;
-  }
-
-  // Build reimbursement map: asin → total reimbursed
-  const reimbMap = {};
-  leakReimbData.forEach(r => {
-    const asin = (r['asin'] || '').trim().toUpperCase();
-    const amt  = parseFloat(r['amount-total'] || '0');
-    if (asin) reimbMap[asin] = (reimbMap[asin] || 0) + amt;
-  });
-
-  // Group purchases by ASIN
-  const byAsin = {};
-  allRows.forEach(p => {
-    const asin = (p.asin || '').trim().toUpperCase();
-    if (!asin) return;
-    if (!byAsin[asin]) byAsin[asin] = { asin, sku: p.sku||'', title: p.title||p.asin, units: 0, totalBuy: 0, totalSell: 0 };
-    byAsin[asin].units    += (p.qty || 1);
-    byAsin[asin].totalBuy += (p.buy || 0) * (p.qty || 1);
-    byAsin[asin].totalSell += (p.sell || 0) * (p.qty || 1);
-  });
-
-  leakPLData = Object.values(byAsin).map(g => {
-    const avgBuy    = g.units > 0 ? g.totalBuy / g.units : 0;
-    const avgSell   = g.units > 0 ? g.totalSell / g.units : 0;
-    // Estimate FBA fees at 15% of sell + £3 fixed
-    const estFees   = g.totalSell > 0 ? (g.totalSell * 0.15) + (3 * g.units) : 0;
-    const reimb     = reimbMap[g.asin] || 0;
-    const netProfit = g.totalSell - g.totalBuy - estFees + reimb;
-    const roi       = g.totalBuy > 0 ? (netProfit / g.totalBuy) * 100 : null;
-    return { ...g, avgBuy, avgSell, estFees, reimb, netProfit, roi };
-  }).sort((a,b) => a.netProfit - b.netProfit); // worst first
-
-  // Stats
-  const totalRevenue = leakPLData.reduce((s,r) => s + r.totalSell, 0);
-  const totalCOGS    = leakPLData.reduce((s,r) => s + r.totalBuy, 0);
-  const totalFees    = leakPLData.reduce((s,r) => s + r.estFees, 0);
-  const totalProfit  = leakPLData.reduce((s,r) => s + r.netProfit, 0);
-  const totalLeakage = leakPLData.filter(r => r.netProfit < 0).reduce((s,r) => s + Math.abs(r.netProfit), 0);
-
-  const statsEl = document.getElementById('leakPLStats');
-  if (statsEl) statsEl.style.display = 'grid';
-  document.getElementById('plStatRevenue').textContent = '£' + totalRevenue.toFixed(0);
-  document.getElementById('plStatCOGS').textContent    = '£' + totalCOGS.toFixed(0);
-  document.getElementById('plStatFees').textContent    = '£' + totalFees.toFixed(0);
-  document.getElementById('plStatProfit').textContent  = (totalProfit >= 0 ? '+' : '') + '£' + totalProfit.toFixed(0);
-  document.getElementById('plStatLeakage').textContent = '£' + totalLeakage.toFixed(0);
-
-  document.getElementById('leakPLTableWrap').style.display = 'block';
-  leakRenderPL();
-}
-
-function leakSetPLFilter(f, btn) {
-  leakPLFilter = f;
-  ['plFilterAll','plFilterLoss','plFilterLow','plFilterGood'].forEach(id => {
-    document.getElementById(id)?.classList.remove('active');
-  });
-  if (btn) btn.classList.add('active');
-  leakRenderPL();
-}
-
-function leakRenderPL() {
-  const tbody = document.getElementById('leakPLTbody');
-  if (!tbody) return;
-  let rows = leakPLData;
-  if (leakPLFilter === 'loss') rows = rows.filter(r => r.netProfit < 0);
-  else if (leakPLFilter === 'low')  rows = rows.filter(r => r.roi !== null && r.roi >= 0 && r.roi < 10);
-  else if (leakPLFilter === 'good') rows = rows.filter(r => r.roi !== null && r.roi >= 10);
-
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="leak-empty">No results for this filter</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = rows.map(r => {
-    const roiStr = r.roi !== null ? r.roi.toFixed(1) + '%' : '—';
-    const roiCol = r.roi === null ? 'var(--text-3)' : r.roi < 0 ? 'var(--red)' : r.roi < 10 ? 'var(--amber)' : 'var(--green)';
-    const profitCol = r.netProfit < 0 ? 'var(--red)' : 'var(--green)';
-    const profitStr = (r.netProfit >= 0 ? '+' : '') + '£' + r.netProfit.toFixed(2);
-    const reimbDisplay = r.reimb > 0 ? `<span style="color:var(--green);font-family:var(--mono);">£${r.reimb.toFixed(2)}</span>` : '—';
-    return `<tr>
-      <td><a href="https://keepa.com/#!product/2-${r.asin}" target="_blank" style="font-family:var(--mono);font-size:11px;color:var(--blue);text-decoration:none;">${r.asin}</a></td>
-      <td style="font-family:var(--mono);font-size:10px;color:var(--text-3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.sku}</td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.title}">${r.title}</td>
-      <td style="text-align:right;font-family:var(--mono);">£${(r.avgBuy||0).toFixed(2)}</td>
-      <td style="text-align:right;font-family:var(--mono);">£${(r.avgSell||0).toFixed(2)}</td>
-      <td style="text-align:right;font-family:var(--mono);color:var(--text-3);">£${r.estFees.toFixed(2)}</td>
-      <td style="text-align:right;">${reimbDisplay}</td>
-      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${profitCol};">${profitStr}</td>
-      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${roiCol};">${roiStr}</td>
-    </tr>`;
-  }).join('');
-}
-
-function leakExportPL() {
-  if (!leakPLData.length) return;
-  const lines = [['ASIN','SKU','Title','Units','Avg Buy','Avg Sell','Est Fees','Reimbursed','Net Profit','ROI %'].join('\t')];
-  leakPLData.forEach(r => lines.push([
-    r.asin, r.sku, (r.title||'').replace(/\t/g,' '), r.units,
-    (r.avgBuy||0).toFixed(2), (r.avgSell||0).toFixed(2),
-    r.estFees.toFixed(2), r.reimb.toFixed(2), r.netProfit.toFixed(2),
-    r.roi !== null ? r.roi.toFixed(1) : ''
-  ].join('\t')));
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([lines.join('\n')], {type:'text/tab-separated-values'}));
-  a.download = 'bimma-cogs-pl-' + new Date().toISOString().slice(0,10) + '.tsv';
-  a.click();
-}
-
 </script>
 </body>
 </html>

@@ -1908,7 +1908,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage Tracker</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v4.0 · 21 Mar 26</div>
+    <div class="sidebar-version">v4.1 · 21 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -2452,7 +2452,7 @@ input::placeholder { color: var(--text-4); }
       <div class="page-header">
         <div class="page-header-label">Management</div>
         <div class="page-header-title">Listing Uploader</div>
-        <div class="page-header-sub">Review pending deals and export TSV for Amazon listing</div>
+        <div class="page-header-sub">Review pending deals and export XLSM for Amazon Listing Loader</div>
       </div>
       <div class="stat-grid stat-grid-3" style="margin-bottom:20px;">
         <div class="stat-card"><div class="stat-label">Pending Upload</div><div class="stat-value" style="color:var(--amber);" id="ls-pending">—</div></div>
@@ -2978,6 +2978,21 @@ input::placeholder { color: var(--text-4); }
             <option value="1">🇺🇸 amazon.com</option>
           </select>
           <button class="stalker-add-btn" onclick="stalkerAddSeller()">+ Track</button>
+        </div>
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-bottom:6px;">Auto-refresh interval</div>
+          <div class="stalker-row" style="gap:6px;">
+            <select id="stalkerAutoRefresh" class="stalker-select" style="flex:1;" onchange="stalkerSetAutoRefresh(this.value)">
+              <option value="0">Off</option>
+              <option value="1">Every 1 hour</option>
+              <option value="2">Every 2 hours</option>
+              <option value="4">Every 4 hours</option>
+              <option value="8">Every 8 hours</option>
+              <option value="12">Every 12 hours</option>
+              <option value="24">Every 24 hours</option>
+            </select>
+          </div>
+          <div id="stalkerNextCheck" style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:5px;min-height:14px;"></div>
         </div>
         <div class="stalker-row" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
           <button class="stalker-btn" style="flex:1;font-size:11px;padding:7px;" onclick="stalkerExportBackup()">↓ Backup sellers</button>
@@ -5937,6 +5952,8 @@ let stalkerFeedFilter = 'all';
 let stalkerSnapshots = {};
 let stalkerFeedItems = [];
 let stalkerLoaded    = false;
+let stalkerAutoInterval = null;
+let stalkerNextCheckAt  = null;
 
 const STALKER_MARKETS = { '1':'com','2':'co.uk','3':'de','4':'fr','8':'it','9':'es' };
 const STALKER_FLAGS   = { '1':'🇺🇸','2':'🇬🇧','3':'🇩🇪','4':'🇫🇷','8':'🇮🇹','9':'🇪🇸' };
@@ -5972,9 +5989,43 @@ function stalkerInit() {
   if (saved) { const el = document.getElementById('stalkerApiKey'); if(el) el.value = saved; }
   stalkerRenderSellers();
   stalkerRenderFeed();
-  // Fetch token count on load if key exists
   if (saved) stalkerFetchTokens(saved);
+  // Restore auto-refresh setting
+  const savedInterval = localStorage.getItem('bimma_stalker_refresh') || '0';
+  const sel = document.getElementById('stalkerAutoRefresh');
+  if (sel) sel.value = savedInterval;
+  if (savedInterval !== '0') stalkerSetAutoRefresh(savedInterval, true);
 }
+
+function stalkerSetAutoRefresh(hours, silent) {
+  clearInterval(stalkerAutoInterval);
+  stalkerAutoInterval = null;
+  stalkerNextCheckAt  = null;
+  localStorage.setItem('bimma_stalker_refresh', hours);
+  const nextEl = document.getElementById('stalkerNextCheck');
+  if (!hours || hours === '0') { if (nextEl) nextEl.textContent = ''; return; }
+  const ms = hours * 3600000;
+  stalkerNextCheckAt = Date.now() + ms;
+  stalkerAutoInterval = setInterval(async () => {
+    stalkerNextCheckAt = Date.now() + ms;
+    await stalkerCheckAll();
+    stalkerUpdateNextCheck();
+  }, ms);
+  stalkerUpdateNextCheck();
+  if (!silent) toast('Auto-refresh set to every ' + hours + 'h', 'success');
+}
+
+function stalkerUpdateNextCheck() {
+  const el = document.getElementById('stalkerNextCheck');
+  if (!el || !stalkerNextCheckAt) return;
+  const diff = stalkerNextCheckAt - Date.now();
+  if (diff <= 0) { el.textContent = 'Checking now…'; return; }
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  el.textContent = `Next check in ${h > 0 ? h + 'h ' : ''}${m}m`;
+}
+// Tick the countdown every minute
+setInterval(() => { if (stalkerNextCheckAt) stalkerUpdateNextCheck(); }, 60000);
 
 async function stalkerFetchTokens(key) {
   try {

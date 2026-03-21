@@ -815,7 +815,6 @@ input::placeholder { color: var(--text-4); }
 .da-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
 .da-table tbody tr:last-child { border-bottom: none; }
 .da-table tbody tr:hover { background: rgba(255,255,255,0.02); }
-.da-table tbody tr.vetoed { opacity: 0.25; }
 .da-table tbody tr.approved { border-left: 2px solid var(--green); }
 .da-table tbody tr.rejected { border-left: 2px solid var(--red); opacity: 0.4; }
 .da-table td { padding: 13px 14px; vertical-align: middle; }
@@ -850,8 +849,8 @@ input::placeholder { color: var(--text-4); }
 .pc-badge {
   font-family: var(--mono); font-size: 8px; font-weight: 700;
   padding: 1px 6px; border-radius: 3px;
-  background: rgba(99,179,237,0.12); color: #63b3ed;
-  letter-spacing: 0.05em; border: 1px solid rgba(99,179,237,0.25);
+  background: rgba(0,217,126,0.10); color: var(--green);
+  letter-spacing: 0.05em; border: 1px solid rgba(0,217,126,0.25);
 }
 
 /* Number cells */
@@ -896,7 +895,7 @@ input::placeholder { color: var(--text-4); }
 /* Action buttons */
 .td-actions { white-space: nowrap; padding: 13px 10px; }
 .action-btns { display: flex; flex-direction: column; gap: 5px; }
-.btn-approve, .btn-reject, .btn-veto, .btn-unveto {
+.btn-approve, .btn-reject {
   font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
   padding: 5px 12px; border-radius: 4px; border: 1px solid;
   background: transparent; cursor: pointer; transition: all 0.15s; white-space: nowrap;
@@ -908,14 +907,6 @@ input::placeholder { color: var(--text-4); }
 .btn-reject { color: var(--red); border-color: rgba(240,59,80,0.2); }
 .btn-reject:hover { background: rgba(240,59,80,0.08); border-color: rgba(240,59,80,0.5); }
 .btn-reject.active { background: var(--red); color: #fff; border-color: var(--red); }
-.btn-veto { color: var(--text-3); border-color: var(--border); }
-.btn-veto:hover { color: var(--red); border-color: rgba(240,59,80,0.3); }
-.btn-unveto { color: var(--text-2); border-color: var(--border); }
-.btn-unveto:hover { color: var(--text); border-color: var(--border3); }
-.veto-divider td {
-  padding: 8px 14px; font-family: var(--mono); font-size: 10px; color: var(--text-3);
-  background: var(--surface2); border-top: 1px solid var(--border);
-}
 
 /* ════════════════════════════════════════
    A2A ANALYSER — REDESIGN
@@ -1246,16 +1237,15 @@ input::placeholder { color: var(--text-4); }
 .a2a-spike-notice { font-family: var(--mono); font-size: 10px; color: var(--amber); }
 
 .a2a-results-right { display: flex; gap: 6px; align-items: center; margin-left: auto; flex-shrink: 0; }
-.a2a-veto-badge {
+.a2a-rejected-badge {
   font-family: var(--mono);
   font-size: 9px;
-  color: var(--text-2);
+  color: var(--red);
   padding: 3px 8px;
-  background: var(--surface3);
-  border: 1px solid var(--border2);
+  background: rgba(240,59,80,0.06);
+  border: 1px solid rgba(240,59,80,0.2);
   border-radius: 4px;
 }
-.a2a-veto-red { color: var(--red); border-color: rgba(240,59,80,0.2); background: rgba(240,59,80,0.06); }
 .a2a-action-btn {
   padding: 5px 12px;
   font-family: var(--mono);
@@ -2550,8 +2540,7 @@ input::placeholder { color: var(--text-4); }
       </div>
       <div class="a2a-results-right">
         <input type="text" id="daSearch" class="da-search" placeholder="Search ASIN or title…" oninput="daRenderTable()">
-        <span class="a2a-veto-badge" id="daVetoCount" style="display:none;"></span>
-        <span class="a2a-veto-badge a2a-veto-red" id="daRejectedCount" style="display:none;"></span>
+        <span class="a2a-rejected-badge" id="daRejectedCount" style="display:none;"></span>
         <button class="a2a-action-btn" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;">Clear rejected</button>
         <button class="a2a-action-btn" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
         <button class="a2a-action-btn a2a-action-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export CSV</button>
@@ -4313,7 +4302,6 @@ let daDeals = [], daFilter = 'all', daSort = { col: null, dir: 1 };
 let daSlotFiles = { 1: null, 2: null, 3: null };
 let daSlotTexts = { 1: null, 2: null, 3: null };
 try { [1,2,3].forEach(n => { const t=localStorage.getItem('bimma_da_slot'+n+'_text'); if(t) daSlotTexts[n]=t; }); } catch(e) {}
-let daVetoList     = (() => { try { return new Set(JSON.parse(localStorage.getItem('bimma-a2a-veto')     || '[]')); } catch { return new Set(); } })();
 let daViewedList   = (() => { try { return new Set(JSON.parse(localStorage.getItem('bimma-a2a-viewed')   || '[]')); } catch { return new Set(); } })();
 // daRejectedList: Map of asin → { price, date } — price at time of rejection so we can un-reject if price changes
 let daRejectedList = (() => {
@@ -4577,7 +4565,7 @@ setTimeout(() => {
         const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
         document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
         const gcEl = document.getElementById('daCountGC'); if(gcEl) gcEl.textContent = daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
-        daUpdateVetoCount(); daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
+        daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
       }
     }
   } catch(e) { try { localStorage.removeItem('bimma_da_results'); } catch {} }
@@ -4735,7 +4723,7 @@ function daRunAnalysis() {
         document.getElementById('daTableWrap').classList.add('visible');
         document.getElementById('daResetBtn').style.display = '';
         const tb = document.getElementById('daThresholdBar'); if (tb) tb.classList.add('visible');
-        daUpdateVetoCount(); daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
+        daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
         try { localStorage.setItem('bimma_da_results', JSON.stringify(daDeals)); localStorage.setItem('bimma_da_results_mode', currentMode); } catch(e) {}
       } catch(err) {
         document.getElementById('daLoading').classList.remove('visible');
@@ -4793,12 +4781,8 @@ function daRenderTable() {
   }
   document.getElementById('daResultCount').textContent = `${filtered.length} shown · ${daDeals.length} total`;
 
-  const normal = filtered.filter(d => !daVetoList.has(d.asin));
-  const vetoed = filtered.filter(d => daVetoList.has(d.asin));
-
-  function mkRow(deal, isVetoed) {
+  function mkRow(deal) {
     const tr = document.createElement('tr'); tr.dataset.idx = daDeals.indexOf(deal);
-    if (isVetoed) tr.classList.add('vetoed');
     if (deal.decision === 'approved') tr.classList.add('approved');
     if (deal.decision === 'rejected') tr.classList.add('rejected');
     if (daViewedList.has(deal.asin)) tr.classList.add('viewed');
@@ -4813,7 +4797,7 @@ function daRenderTable() {
     tr.dataset.asin = deal.asin;
     tr.innerHTML = `
       <td class="td-product">
-        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.inInventory ? ' <span class="inv-badge">📦 bought &lt;30d</span>' : ''}${deal.priceChanged ? ' <span class="pc-badge">🔄 price changed</span>' : ''}${daViewedList.has(deal.asin) ? ' <span class="viewed-badge">SEEN</span>' : ''}</div>
+        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.inInventory ? ' <span class="inv-badge">📦 bought &lt;30d</span>' : ''}${deal.priceChanged ? ' <span class="pc-badge">↓ PRICE DROP</span>' : ''}${daViewedList.has(deal.asin) ? ' <span class="viewed-badge">SEEN</span>' : ''}</div>
         <div class="td-asin-row">
           <a href="https://www.amazon.co.uk/dp/${deal.asin}" target="_blank" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">${deal.asin}</a>
           <a href="https://www.keepa.com/#product/2-${deal.asin}" target="_blank" class="keepa-link" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">Keepa ↗</a>
@@ -4832,25 +4816,15 @@ function daRenderTable() {
         <div class="rating-bar ${deal.colour}" style="margin-top:5px;"></div>
       </td>
       <td class="td-actions">
-        ${isVetoed
-          ? `<button class="btn-unveto" onclick="daRemoveVeto('${deal.asin}')">↩ Unveto</button>`
-          : `<div class="action-btns">
-               <button class="btn-approve ${deal.decision==='approved'?'active':''}" onclick="daSetDecision(${daDeals.indexOf(deal)},'approved',this)">✓ Approve</button>
-               <button class="btn-reject ${deal.decision==='rejected'?'active':''}" onclick="daSetDecision(${daDeals.indexOf(deal)},'rejected',this)">✕ Reject</button>
-               <button class="btn-veto" onclick="daAddVeto('${deal.asin}')">⊘ Veto</button>
-             </div>`
-        }
+        <div class="action-btns">
+          <button class="btn-approve ${deal.decision==='approved'?'active':''}" onclick="daSetDecision(${daDeals.indexOf(deal)},'approved',this)">✓ Approve</button>
+          <button class="btn-reject ${deal.decision==='rejected'?'active':''}" onclick="daSetDecision(${daDeals.indexOf(deal)},'rejected',this)">✕ Reject</button>
+        </div>
       </td>`;
     tbody.appendChild(tr);
   }
 
-  normal.forEach(d => mkRow(d, false));
-  if (vetoed.length) {
-    const div = document.createElement('tr'); div.className = 'veto-divider';
-    div.innerHTML = `<td colspan="9">⛔ ${vetoed.length} previously vetoed &nbsp;·&nbsp; <button class="unveto-btn" onclick="daClearVetos()">Clear all</button></td>`;
-    tbody.appendChild(div);
-    vetoed.forEach(d => mkRow(d, true));
-  }
+  filtered.forEach(d => mkRow(d));
 
   // Show export btn if any approved
   const hasApproved = daDeals.some(d => d.decision === 'approved');
@@ -4920,7 +4894,7 @@ function daInitSort() {
 }
 
 // ════════════════════════════════════════
-// FILTER / DECISION / VETO
+// FILTER / DECISION
 // ════════════════════════════════════════
 function daSetFilter(f, btn) {
   daFilter = f;
@@ -4943,23 +4917,6 @@ function daSetDecision(idx, decision, btn) {
   daRenderTable();
 }
 
-function daAddVeto(asin) {
-  daVetoList.add(asin);
-  try { localStorage.setItem('bimma-a2a-veto', JSON.stringify([...daVetoList])); } catch {}
-  daUpdateVetoCount(); daRenderTable();
-}
-
-function daRemoveVeto(asin) {
-  daVetoList.delete(asin);
-  try { localStorage.setItem('bimma-a2a-veto', JSON.stringify([...daVetoList])); } catch {}
-  daUpdateVetoCount(); daRenderTable();
-}
-
-function daClearVetos() {
-  daVetoList.clear();
-  try { localStorage.setItem('bimma-a2a-veto', JSON.stringify([])); } catch {}
-  daUpdateVetoCount(); daRenderTable();
-}
 function daClearRejected() {
   if (!confirm(`Clear all ${daRejectedList.size} rejected ASINs? They will reappear on next import.`)) return;
   daRejectedList.clear();
@@ -4974,12 +4931,6 @@ function daUpdateRejectedCount() {
   if (btn) btn.style.display = n ? '' : 'none';
 }
 
-function daUpdateVetoCount() {
-  const n = daVetoList.size;
-  const el = document.getElementById('daVetoCount');
-  el.style.display = n ? '' : 'none';
-  el.textContent = `⛔ ${n} vetoed`;
-}
 
 // ════════════════════════════════════════
 // EXPORT APPROVED

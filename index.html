@@ -1907,7 +1907,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage Tracker</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v3.0 · 21 Mar 26</div>
+    <div class="sidebar-version">v3.1 · 21 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -3434,119 +3434,29 @@ async function exportListingTSV() {
   if(s==='pending')rows=rows.filter(r=>!r.uploaded);
   else if(s==='uploaded')rows=rows.filter(r=>r.uploaded);
   if(!rows.length){toast('No rows to export','error');return;}
-  // SP-API Listing Loader format — exact headers from Amazon's ListingLoader template
-  // attributeRow=5 tells Amazon the headers are in row 5; rows 1-4 are metadata/blank
+  // SP-API Listing Loader — only the columns we actually need
   const META='settings=AttributeDefaultValues=eyJwcm9kdWN0X3R5cGUjMS52YWx1ZSI6IlBST0RVQ1QiLCJyZWNvcmRfYWN0aW9uIzEudmFsdWUiOiJwYXJ0aWFsX3VwZGF0ZSJ9&attributeRow=5';
-  const COLS=156;
-  const blank=Array(COLS).fill('').join('\t');
-  // Row 5 machine-readable headers (copied verbatim from Amazon template row 5)
   const headers=[
-    'contribution_sku#1.value','externally_assigned_product_identifier#1.type','externally_assigned_product_identifier#1.value',
-    'merchant_suggested_asin#1.value','unspsc_code#1.value','national_stock_number#1.value','skip_offer#1.value',
-    'condition_type#1.value','condition_note#1.value','product_tax_code#1.value','merchant_release_date#1.value',
-    'max_order_quantity#1.value','gift_options#1.can_be_messaged','gift_options#1.can_be_wrapped',
-    'main_offer_image_locator#1.media_location','other_offer_image_locator_1#1.media_location',
-    'other_offer_image_locator_2#1.media_location','other_offer_image_locator_3#1.media_location',
-    'other_offer_image_locator_4#1.media_location','other_offer_image_locator_5#1.media_location',
-    'supplemental_condition_information#1.accessories','supplemental_condition_information#1.battery_life_percentage',
-    'supplemental_condition_information#1.cosmetic','supplemental_condition_information#1.features#1',
-    'supplemental_condition_information#1.features#2','supplemental_condition_information#1.features#3',
-    'supplemental_condition_information#1.features#4','supplemental_condition_information#1.features#5',
-    'supplemental_condition_information#1.functional_condition','supplemental_condition_information#1.packaging',
-    'supplemental_condition_information#1.source_type',
-    'fulfillment_availability#1.fulfillment_channel_code','fulfillment_availability#1.quantity',
-    'fulfillment_availability#1.lead_time_to_ship_max_days','fulfillment_availability#1.restock_date',
-    'fulfillment_availability#1.is_inventory_available',
+    'contribution_sku#1.value',
+    'merchant_suggested_asin#1.value',
+    'condition_type#1.value',
+    'product_tax_code#1.value',
+    'max_order_quantity#1.value',
+    'fulfillment_availability#1.fulfillment_channel_code',
     'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=ALL]#1.our_price#1.schedule#1.value_with_tax',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=ALL]#1.automated_pricing_merchandising_rule_plan#1.merchandising_rule.rule_id',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=ALL]#1.minimum_seller_allowed_price#1.schedule#1.value_with_tax',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=ALL]#1.maximum_seller_allowed_price#1.schedule#1.value_with_tax',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=ALL]#1.discounted_price#1.schedule#1.value_with_tax',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=ALL]#1.discounted_price#1.schedule#1.start_at',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=ALL]#1.discounted_price#1.schedule#1.end_at',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=ALL]#1.start_at.value',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=ALL]#1.end_at.value',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.our_price#1.schedule#1.value_with_tax',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.minimum_seller_allowed_price#1.schedule#1.value_with_tax',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.maximum_seller_allowed_price#1.schedule#1.value_with_tax',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.start_at.value',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.end_at.value',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.quantity_discount_plan#1.schedule#1.discount_type',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.quantity_discount_plan#1.schedule#1.levels#1.lower_bound',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.quantity_discount_plan#1.schedule#1.levels#1.value',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.quantity_discount_plan#1.schedule#1.levels#2.lower_bound',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.quantity_discount_plan#1.schedule#1.levels#2.value',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.quantity_discount_plan#1.schedule#1.levels#3.lower_bound',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.quantity_discount_plan#1.schedule#1.levels#3.value',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.quantity_discount_plan#1.schedule#1.levels#4.lower_bound',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.quantity_discount_plan#1.schedule#1.levels#4.value',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.quantity_discount_plan#1.schedule#1.levels#5.lower_bound',
-    'purchasable_offer[marketplace_id=A1F83G8C2ARO7P][audience=B2B]#1.quantity_discount_plan#1.schedule#1.levels#5.value',
-    'merchant_shipping_group[marketplace_id=A1F83G8C2ARO7P]#1.value',
-    'item_dimensions#1.length.value','item_dimensions#1.length.unit','item_dimensions#1.width.value',
-    'item_dimensions#1.width.unit','item_dimensions#1.height.value','item_dimensions#1.height.unit',
-    'item_package_dimensions#1.length.value','item_package_dimensions#1.length.unit',
-    'item_package_dimensions#1.width.value','item_package_dimensions#1.width.unit',
-    'item_package_dimensions#1.height.value','item_package_dimensions#1.height.unit',
-    'item_package_weight#1.value','item_package_weight#1.unit',
-    'epr_product_packaging#1.main_material','epr_product_packaging#1.granular_materials#1.granular_material',
-    'epr_product_packaging#1.granular_materials#1.weight.value','epr_product_packaging#1.granular_materials#1.weight.unit',
-    'epr_product_packaging#1.granular_materials#1.recycled_content_percentage',
-    'epr_product_packaging#1.granular_materials#2.granular_material','epr_product_packaging#1.granular_materials#2.weight.value',
-    'epr_product_packaging#1.granular_materials#2.weight.unit','epr_product_packaging#1.granular_materials#2.recycled_content_percentage',
-    'epr_product_packaging#1.granular_materials#3.granular_material','epr_product_packaging#1.granular_materials#3.weight.value',
-    'epr_product_packaging#1.granular_materials#3.weight.unit','epr_product_packaging#1.granular_materials#3.recycled_content_percentage',
-    'epr_product_packaging#1.granular_materials#4.granular_material','epr_product_packaging#1.granular_materials#4.weight.value',
-    'epr_product_packaging#1.granular_materials#4.weight.unit','epr_product_packaging#1.granular_materials#4.recycled_content_percentage',
-    'epr_product_packaging#2.main_material','epr_product_packaging#2.granular_materials#1.granular_material',
-    'epr_product_packaging#2.granular_materials#1.weight.value','epr_product_packaging#2.granular_materials#1.weight.unit',
-    'epr_product_packaging#2.granular_materials#1.recycled_content_percentage',
-    'epr_product_packaging#2.granular_materials#2.granular_material','epr_product_packaging#2.granular_materials#2.weight.value',
-    'epr_product_packaging#2.granular_materials#2.weight.unit','epr_product_packaging#2.granular_materials#2.recycled_content_percentage',
-    'epr_product_packaging#2.granular_materials#3.granular_material','epr_product_packaging#2.granular_materials#3.weight.value',
-    'epr_product_packaging#2.granular_materials#3.weight.unit','epr_product_packaging#2.granular_materials#3.recycled_content_percentage',
-    'epr_product_packaging#2.granular_materials#4.granular_material','epr_product_packaging#2.granular_materials#4.weight.value',
-    'epr_product_packaging#2.granular_materials#4.weight.unit','epr_product_packaging#2.granular_materials#4.recycled_content_percentage',
-    'country_of_origin#1.value','batteries_required#1.value','batteries_included#1.value',
-    'battery#1.cell_composition#1.value','battery#1.cell_composition_other_than_listed#1.value',
-    'battery#1.weight#1.value','battery#1.weight#1.unit',
-    'num_batteries#1.quantity','num_batteries#1.type','num_batteries#2.quantity','num_batteries#2.type',
-    'num_batteries#3.quantity','num_batteries#3.type','num_batteries#4.quantity','num_batteries#4.type',
-    'num_batteries#5.quantity','num_batteries#5.type',
-    'number_of_lithium_metal_cells#1.value','number_of_lithium_ion_cells#1.value',
-    'lithium_battery#1.energy_content#1.value','lithium_battery#1.energy_content#1.unit',
-    'lithium_battery#1.packaging#1.value','lithium_battery#1.weight#1.value','lithium_battery#1.weight#1.unit',
-    'supplier_declared_dg_hz_regulation#1.value','supplier_declared_dg_hz_regulation#2.value',
-    'supplier_declared_dg_hz_regulation#3.value','supplier_declared_dg_hz_regulation#4.value',
-    'supplier_declared_dg_hz_regulation#5.value',
-    'ghs#1.classification#1.class','ghs#1.classification#2.class','ghs#1.classification#3.class',
-    'ghs#1.classification#4.class','ghs#1.classification#5.class',
-    'hazmat#1.aspect','hazmat#1.value','safety_data_sheet_url#1.value',
-    'item_weight#1.value','item_weight#1.unit','is_this_product_subject_to_buyer_age_restrictions#1.value',
-    'ships_globally#1.value',
-    'ghs_chemical_h_code#1.value','ghs_chemical_h_code#2.value','ghs_chemical_h_code#3.value',
-    'ghs_chemical_h_code#4.value','ghs_chemical_h_code#5.value'
+    'supplier_declared_dg_hz_regulation#1.value',
+    'supplier_declared_dg_hz_regulation#2.value',
+    'supplier_declared_dg_hz_regulation#3.value',
+    'supplier_declared_dg_hz_regulation#4.value',
+    'supplier_declared_dg_hz_regulation#5.value'
   ];
+  const blank=headers.map(()=>'').join('\t');
   const tsvRows=rows.map(r=>{
     const price=(Math.round(r.sell*BIMMA_CFG.listingMarkup*100)/100).toFixed(2);
-    const d=Array(COLS).fill('');
-    d[0]=r.sku;                          // contribution_sku#1.value
-    d[3]=r.asin;                         // merchant_suggested_asin#1.value
-    d[7]='new';                          // condition_type#1.value
-    d[9]='A_GEN_NOTAX';                  // product_tax_code#1.value
-    d[11]=3;                             // max_order_quantity#1.value
-    d[31]='AMAZON_NA';                   // fulfillment_availability#1.fulfillment_channel_code (FBA)
-    // d[32] left blank — quantity must be empty for FBA (Amazon sets it at FC receipt)
-    d[36]=price;                         // purchasable_offer price inc VAT
-    d[134]='not_applicable';             // supplier_declared_dg_hz_regulation#1
-    d[135]='not_applicable';             // supplier_declared_dg_hz_regulation#2
-    d[136]='not_applicable';             // supplier_declared_dg_hz_regulation#3
-    d[137]='not_applicable';             // supplier_declared_dg_hz_regulation#4
-    d[138]='not_applicable';             // supplier_declared_dg_hz_regulation#5
-    return d.join('\t');
+    return [r.sku,r.asin,'new','A_GEN_NOTAX',3,'AMAZON_NA',price,'not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'].join('\t');
   });
-  // Build file: row1=metadata, rows2-4=blank, row5=headers, row6=blank, row7+=data
-  const tsv=[META+'\t'.repeat(COLS-1),blank,blank,blank,headers.join('\t'),blank,...tsvRows].join('\n');
+  // Row 1=metadata, rows 2-4=blank, row 5=headers, row 6=blank, row 7+=data
+  const tsv=[META,blank,blank,blank,headers.join('\t'),blank,...tsvRows].join('\n');
   const blob=new Blob([tsv],{type:'text/tab-separated-values'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');

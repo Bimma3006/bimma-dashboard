@@ -1907,7 +1907,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage Tracker</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v3.1 · 21 Mar 26</div>
+    <div class="sidebar-version">v3.2 · 21 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -3461,7 +3461,7 @@ async function exportListingTSV() {
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;
-  a.download='Bimma_Listing_Upload_'+new Date().toISOString().split('T')[0]+'.txt';
+  a.download='Bimma_Listing_Upload_'+new Date().toISOString().split('T')[0]+'.tsv';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

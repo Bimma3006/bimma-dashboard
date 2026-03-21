@@ -1937,6 +1937,42 @@ input::placeholder { color: var(--text-4); }
   cursor: pointer; letter-spacing: 0.04em; transition: opacity 0.15s;
 }
 .leak-run-btn:hover { opacity: 0.85; }
+
+/* ═══════════════════════════════════════
+   ACTIVITY STRIP
+═══════════════════════════════════════ */
+.activity-strip {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-top: 12px;
+  margin-bottom: 28px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.activity-item {
+  flex: 1;
+  padding: 16px 22px;
+  border-right: 1px solid var(--border);
+  transition: background var(--transition);
+}
+.activity-item:last-child { border-right: none; }
+.activity-item[style*="cursor:pointer"]:hover { background: var(--surface2); }
+.activity-label {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-3); margin-bottom: 8px;
+  display: block;
+}
+.activity-value {
+  font-family: var(--mono); font-size: 22px; font-weight: 700;
+  letter-spacing: -0.025em; display: block; line-height: 1; color: var(--text);
+}
+.activity-sub {
+  font-family: var(--mono); font-size: 10px; color: var(--text-3);
+  margin-top: 5px; display: block;
+}
+
 </style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
@@ -1947,21 +1983,20 @@ input::placeholder { color: var(--text-4); }
 <nav id="sidebar">
   <div class="sidebar-logo">
     <div class="logo-lockup">
-      <div class="logo-mark">bi</div>
+      <div class="logo-mark">BR</div>
       <div class="logo-text">
         <div class="logo-title">Bimma Retail</div>
-        <div class="logo-sub">FBA Operations</div>
+        <div class="logo-sub">FBA Command Centre</div>
       </div>
     </div>
   </div>
   <div class="sidebar-nav">
-    <div class="sidebar-section-label">Overview</div>
     <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard',this)"><span class="nav-icon">◻</span>Dashboard</div>
     <div class="nav-divider"></div>
-    <div class="sidebar-section-label">Tools</div>
+    <div class="sidebar-section-label">Workspace</div>
     <div class="nav-item" data-page="refund" onclick="showPage('refund',this)"><span class="nav-icon">↩</span>Refund Monitor</div>
-    <div class="nav-item" data-page="cogs" onclick="showPage('cogs',this)"><span class="nav-icon">∑</span>COGS Calculator</div>
-    <div class="nav-item" data-page="repricer" onclick="showPage('repricer',this)"><span class="nav-icon">⇅</span>Min Price Tool</div>
+    <div class="nav-item" data-page="cogs" onclick="showPage('cogs',this)"><span class="nav-icon">∑</span>COGS</div>
+    <div class="nav-item" data-page="repricer" onclick="showPage('repricer',this)"><span class="nav-icon">⇅</span>Min Pricer</div>
     <div class="nav-item" data-page="a2a" onclick="showPage('a2a',this)"><span class="nav-icon">⚡</span>Deal Analyser</div>
     <div class="nav-item" data-page="scout" onclick="showPage('scout',this)"><span class="nav-icon">🔍</span>Deal Scout</div>
     <div class="nav-divider"></div>
@@ -1974,7 +2009,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-divider"></div>
     <div class="sidebar-section-label">Intelligence</div>
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
-    <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage Tracker</div>
+    <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage</div>
   </div>
   <div class="sidebar-footer">
     <div class="sidebar-version">v5.0 · 21 Mar 26</div>
@@ -1993,45 +2028,53 @@ input::placeholder { color: var(--text-4); }
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:8px;"><div style="width:5px;height:5px;border-radius:50%;background:var(--green);opacity:0.7;flex-shrink:0;"></div><div class="topbar-title" id="topbarTitle">Dashboard</div></div>
     <div class="topbar-right">
+      <span id="topbarDate" style="font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:0.04em;"></span>
       <button id="menuToggle" onclick="toggleSidebar()">☰</button>
       <button class="btn-sm btn-ghost" id="refreshBtn" onclick="refreshData()" disabled style="gap:6px;display:flex;align-items:center;">↻ Refresh</button>
     </div>
   </div>
+  <script>
+    (function(){
+      const el=document.getElementById('topbarDate');
+      if(!el)return;
+      const d=new Date();
+      el.textContent=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    })();
+  </script>
 
   <!-- ══ PAGE: DASHBOARD ══ -->
   <div class="page active" id="page-dashboard">
     <div class="page-inner">
       <div class="page-header">
-        <div class="page-header-label">Operations</div>
         <div class="page-header-title" id="dashGreeting"><script>const _h=new Date().getHours();document.write(_h<12?'Good morning':_h<18?'Good afternoon':'Good evening')</script>, James.</div>
-        <div class="page-header-sub">Here's what's happening across your FBA business today.</div>
+        <div class="page-header-sub">Your FBA operation at a glance — deals, spend, and margins in one place.</div>
       </div>
       <div class="stat-grid stat-grid-4">
-        <div class="stat-card" style="border-top:2px solid var(--red);"><div class="stat-label">Total Spend</div><div class="stat-value" id="s-spend" style="color:var(--text);">—</div></div>
-        <div class="stat-card" style="border-top:2px solid var(--blue);"><div class="stat-label">Deals</div><div class="stat-value" id="s-deals" style="color:var(--blue);">—</div></div>
-        <div class="stat-card" style="border-top:2px solid var(--green);"><div class="stat-label">Uploaded</div><div class="stat-value" id="s-uploaded" style="color:var(--green);">—</div><div class="stat-sub">to listing loader</div></div>
-        <div class="stat-card" style="border-top:2px solid var(--amber);"><div class="stat-label">This Month</div><div class="stat-value" id="s-month" style="color:var(--amber);">—</div><div class="stat-sub">deals</div></div>
+        <div class="stat-card" style="border-top:2px solid var(--red);"><div class="stat-label">Capital Deployed</div><div class="stat-value" id="s-spend" style="color:var(--text);">—</div></div>
+        <div class="stat-card" style="border-top:2px solid var(--blue);"><div class="stat-label">Total Deals</div><div class="stat-value" id="s-deals" style="color:var(--blue);">—</div></div>
+        <div class="stat-card" style="border-top:2px solid var(--green);"><div class="stat-label">On Amazon</div><div class="stat-value" id="s-uploaded" style="color:var(--green);">—</div><div class="stat-sub">units listed</div></div>
+        <div class="stat-card" style="border-top:2px solid var(--amber);"><div class="stat-label">This Month</div><div class="stat-value" id="s-month" style="color:var(--amber);">—</div><div class="stat-sub">deals bought</div></div>
       </div>
-      <div class="stat-grid stat-grid-4" style="margin-top:14px;">
-        <div class="stat-card" style="border-top:2px solid var(--green);">
-          <div class="stat-label">This Week</div>
-          <div class="stat-value" id="s-week" style="color:var(--green);">—</div>
-          <div class="stat-sub">deals bought</div>
+      <div class="activity-strip">
+        <div class="activity-item">
+          <span class="activity-label">This Week</span>
+          <span class="activity-value" id="s-week" style="color:var(--green);">—</span>
+          <span class="activity-sub">deals bought</span>
         </div>
-        <div class="stat-card" style="border-top:2px solid var(--red);cursor:pointer;" onclick="showPage('leakage',document.querySelector('[data-page=leakage]'))">
-          <div class="stat-label">£ Leakage</div>
-          <div class="stat-value" id="s-leakage" style="color:var(--red);">—</div>
-          <div class="stat-sub" id="s-leakage-sub">from leakage tracker</div>
+        <div class="activity-item" style="cursor:pointer;" onclick="showPage('leakage',document.querySelector('[data-page=leakage]'))">
+          <span class="activity-label">Unrecovered COGS</span>
+          <span class="activity-value" id="s-leakage" style="color:var(--red);">—</span>
+          <span class="activity-sub" id="s-leakage-sub">leakage tracker →</span>
         </div>
-        <div class="stat-card" style="border-top:2px solid var(--blue);cursor:pointer;" onclick="showPage('stalker',document.querySelector('[data-page=stalker]'))">
-          <div class="stat-label">New ASINs Today</div>
-          <div class="stat-value" id="s-stalker-new" style="color:var(--blue);">—</div>
-          <div class="stat-sub">from storefront stalker</div>
+        <div class="activity-item" style="cursor:pointer;" onclick="showPage('stalker',document.querySelector('[data-page=stalker]'))">
+          <span class="activity-label">New ASINs</span>
+          <span class="activity-value" id="s-stalker-new" style="color:var(--blue);">—</span>
+          <span class="activity-sub">detected today →</span>
         </div>
-        <div class="stat-card" style="border-top:2px solid var(--purple);">
-          <div class="stat-label">Keepa Tokens</div>
-          <div class="stat-value" id="s-tokens" style="color:var(--purple);">—</div>
-          <div class="stat-sub" id="s-tokens-sub">last scout run</div>
+        <div class="activity-item" style="border-right:none;">
+          <span class="activity-label">Keepa Tokens</span>
+          <span class="activity-value" id="s-tokens" style="color:var(--purple);">—</span>
+          <span class="activity-sub" id="s-tokens-sub">remaining</span>
         </div>
       </div>
       <div id="bulkUploadBanner" class="bulk-banner" style="display:none;">
@@ -2043,8 +2086,8 @@ input::placeholder { color: var(--text-4); }
         <div class="quick-action-card" onclick="showPage('a2a', document.querySelector('[data-page=a2a]'))">
           <div class="qa-icon" style="font-size:18px;">⚡</div>
           <div class="qa-body">
-            <div class="qa-title">A2A Analyser</div>
-            <div class="qa-sub">Analyse Keepa CSV exports</div>
+            <div class="qa-title">Deal Analyser</div>
+            <div class="qa-sub">Score Keepa exports in seconds</div>
           </div>
           <div class="qa-arrow">→</div>
         </div>
@@ -2052,15 +2095,15 @@ input::placeholder { color: var(--text-4); }
           <div class="qa-icon" style="font-size:18px;">🔍</div>
           <div class="qa-body">
             <div class="qa-title">Deal Scout</div>
-            <div class="qa-sub">Find EU arbitrage deals</div>
+            <div class="qa-sub">Hunt EU→UK arbitrage live</div>
           </div>
           <div class="qa-arrow">→</div>
         </div>
         <div class="quick-action-card" onclick="showPage('repricer', document.querySelector('[data-page=repricer]'))">
           <div class="qa-icon" style="font-size:18px;">💰</div>
           <div class="qa-body">
-            <div class="qa-title">Min Price Tool</div>
-            <div class="qa-sub">Set floor prices from COGS</div>
+            <div class="qa-title">Min Pricer</div>
+            <div class="qa-sub">Floor prices locked to COGS</div>
           </div>
           <div class="qa-arrow">→</div>
         </div>
@@ -2068,15 +2111,15 @@ input::placeholder { color: var(--text-4); }
           <div class="qa-icon" style="font-size:18px;">👁</div>
           <div class="qa-body">
             <div class="qa-title">Storefront Stalker</div>
-            <div class="qa-sub">Monitor seller storefronts</div>
+            <div class="qa-sub">Watch competitors for new drops</div>
           </div>
           <div class="qa-arrow">→</div>
         </div>
         <div class="quick-action-card" onclick="showPage('leakage', document.querySelector('[data-page=leakage]'))">
           <div class="qa-icon" style="font-size:18px;">🔎</div>
           <div class="qa-body">
-            <div class="qa-title">Leakage Tracker</div>
-            <div class="qa-sub">Track unrecovered COGS</div>
+            <div class="qa-title">Leakage</div>
+            <div class="qa-sub">Recover lost margin from returns</div>
           </div>
           <div class="qa-arrow">→</div>
         </div>
@@ -2084,7 +2127,7 @@ input::placeholder { color: var(--text-4); }
           <div class="qa-icon" style="font-size:18px;">📋</div>
           <div class="qa-body">
             <div class="qa-title">Purchases</div>
-            <div class="qa-sub">View and manage all deals</div>
+            <div class="qa-sub">Full deal history and P&amp;L</div>
           </div>
           <div class="qa-arrow">→</div>
         </div>
@@ -2099,9 +2142,9 @@ input::placeholder { color: var(--text-4); }
   <div class="page" id="page-refund">
     <div class="page-inner">
       <div class="page-header">
-        <div class="page-header-label">Operations</div>
+        <div class="page-header-label">Recovery</div>
         <div class="page-header-title">Refund Monitor</div>
-        <div class="page-header-sub">Identify recoverable COGS from Amazon refunds within your return window</div>
+        <div class="page-header-sub">Cross-match Amazon refunds against your STK orders to surface recoverable COGS</div>
       </div>
       <div class="cogs-grid" id="rmFileGrid" style="margin-bottom:20px;">
         <div class="cogs-card">
@@ -2147,9 +2190,9 @@ input::placeholder { color: var(--text-4); }
   <div class="page" id="page-cogs">
     <div class="page-inner">
       <div class="page-header">
-        <div class="page-header-label">Analytics</div>
+        <div class="page-header-label">Cost Analysis</div>
         <div class="page-header-title">COGS Calculator</div>
-        <div class="page-header-sub">Calculate cost of goods from prep centre exports and merge into STK</div>
+        <div class="page-header-sub">Import prep centre invoices, calculate per-unit cost, and push directly into STK</div>
       </div>
       <div class="cogs-grid">
         <div class="cogs-card">
@@ -2226,9 +2269,9 @@ input::placeholder { color: var(--text-4); }
 
     <div class="page-header" style="margin-bottom:24px;">
       <div>
-        <div class="page-header-label">Tools</div>
-        <div class="page-header-title">Min Price Tool</div>
-        <div class="page-header-sub">Uses your purchase sell prices as repricer floor · Keepa BB history for context</div>
+        <div class="page-header-label">Repricing</div>
+        <div class="page-header-title">Min Pricer</div>
+        <div class="page-header-sub">Locks floor prices to your COGS data — never sell below break-even</div>
       </div>
       <div class="rp-header-actions">
         <button class="rp-dl-btn" id="rpDownloadBtn" style="display:none;" onclick="rpDownload()">↓ Download STK File</button>
@@ -2336,9 +2379,9 @@ input::placeholder { color: var(--text-4); }
     <!-- PAGE HEADER -->
     <div class="a2a-page-header">
       <div class="a2a-page-header-left">
-        <div class="page-header-label">Analytics</div>
-        <div class="page-header-title">A2A Analyser</div>
-        <div class="page-header-sub">Keepa Product Finder CSV · EU→UK · UK→UK · Used LN</div>
+        <div class="page-header-label">Deal Analysis</div>
+        <div class="page-header-title">Deal Analyser</div>
+        <div class="page-header-sub">Score bulk Keepa exports for profitability — EU→UK, UK→UK, and Used LN modes</div>
       </div>
     </div>
 
@@ -2485,9 +2528,9 @@ input::placeholder { color: var(--text-4); }
   <div class="page" id="page-purchases">
     <div class="page-inner">
       <div class="page-header">
-        <div class="page-header-label">Management</div>
+        <div class="page-header-label">Inventory</div>
         <div class="page-header-title">Purchases</div>
-        <div class="page-header-sub">All deals tracked in Google Sheets</div>
+        <div class="page-header-sub">Your complete deal ledger — costs, margins, upload status and month-by-month performance</div>
       </div>
       <div class="filter-row">
         <select id="monthFilter" onchange="filterPurchases()" style="width:160px;">
@@ -2519,9 +2562,9 @@ input::placeholder { color: var(--text-4); }
   <div class="page" id="page-listing">
     <div class="page-inner">
       <div class="page-header">
-        <div class="page-header-label">Management</div>
+        <div class="page-header-label">Inventory</div>
         <div class="page-header-title">Listing Uploader</div>
-        <div class="page-header-sub">Review pending deals and export XLSM for Amazon Listing Loader</div>
+        <div class="page-header-sub">Export Amazon-ready XLSM files from your deal queue — all required fields pre-populated</div>
       </div>
       <div class="stat-grid stat-grid-3" style="margin-bottom:20px;">
         <div class="stat-card"><div class="stat-label">Pending Upload</div><div class="stat-value" style="color:var(--amber);" id="ls-pending">—</div></div>
@@ -2597,7 +2640,7 @@ input::placeholder { color: var(--text-4); }
       <div class="page-header">
         <div class="page-header-label">Finance</div>
         <div class="page-header-title">Expenses</div>
-        <div class="page-header-sub">Track monthly business costs — recurring subscriptions and variable fees</div>
+        <div class="page-header-sub">Track recurring and one-off costs against monthly revenue to understand true margins</div>
       </div>
 
       <!-- Stat tiles -->
@@ -2666,9 +2709,9 @@ input::placeholder { color: var(--text-4); }
   <!-- HEADER BAR -->
   <div class="rp-header-bar">
     <div>
-      <div class="page-header-label">Analytics</div>
+      <div class="page-header-label">Sourcing</div>
       <div class="page-header-title">Deal Scout</div>
-      <div class="page-header-sub">Upload ASIN list → live Keepa fetch → EU current BB vs UK 180d avg · <span id="scoutTokenDisplay" style="font-family:var(--mono);color:var(--green);font-size:13px;"></span></div>
+      <div class="page-header-sub">Live Keepa fetch — drop an ASIN list to score EU buy box vs UK 180-day average · <span id="scoutTokenDisplay" style="font-family:var(--mono);color:var(--green);font-size:13px;"></span></div>
     </div>
     <div class="rp-header-actions">
       <button class="rp-dl-btn" id="scoutExportBtn" onclick="scoutExport()" disabled>↓ Export TSV</button>
@@ -2859,9 +2902,9 @@ input::placeholder { color: var(--text-4); }
 <div class="page" id="page-leakage">
   <div class="page-header">
     <div>
-      <div class="page-header-label">Analytics</div>
-      <div class="page-header-title">Leakage Tracker</div>
-      <div class="page-header-sub">Prep centre discrepancies · Unreimbursed returns</div>
+      <div class="page-header-label">Intelligence</div>
+      <div class="page-header-title">Leakage</div>
+      <div class="page-header-sub">Surface units lost to returns or disposal without a corresponding cost recovery</div>
     </div>
   </div>
 
@@ -2989,7 +3032,7 @@ input::placeholder { color: var(--text-4); }
   <div class="page-header" style="margin-bottom:20px;">
     <div class="page-header-label">Intelligence</div>
     <div class="page-header-title">Storefront Stalker</div>
-    <div class="page-header-sub">Monitor competitor storefronts — new ASINs appear in the feed instantly</div>
+    <div class="page-header-sub">Track competitor storefronts for new drops — new ASINs surface in your feed the moment they list</div>
   </div>
   <div class="stalker-page">
 

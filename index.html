@@ -2381,12 +2381,16 @@ input::placeholder { color: var(--text-4); }
           <button class="a2a-fpill fp-red" onclick="daSetFilter('red',this)">
             <span class="a2a-fpill-dot fp-red-dot"></span>Reject
           </button>
+          <button class="a2a-fpill fp-amber" onclick="daSetFilter('giftcard',this)">
+            <span class="a2a-fpill-dot fp-amber-dot"></span>🎁 GC Only
+          </button>
         </div>
       </div>
       <div class="a2a-results-mid">
         <span class="a2a-tally a2a-tally-g"><span class="a2a-tally-dot"></span><span id="daCountGreen">0</span> strong</span>
         <span class="a2a-tally a2a-tally-a"><span class="a2a-tally-dot"></span><span id="daCountAmber">0</span> marginal</span>
         <span class="a2a-tally a2a-tally-r"><span class="a2a-tally-dot"></span><span id="daCountRed">0</span> reject</span>
+        <span class="a2a-tally" style="color:var(--amber);"><span class="a2a-tally-dot" style="background:var(--amber);"></span><span id="daCountGC">0</span> 🎁 GC</span>
         <span class="a2a-spike-notice" id="spikeNotice" style="display:none;"></span>
       </div>
       <div class="a2a-results-right">
@@ -4298,6 +4302,7 @@ function daRunAnalysis() {
       document.getElementById('daCountGreen').textContent = daDeals.filter(d => d.colour === 'green').length;
       const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
       document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
+      const gcEl = document.getElementById('daCountGC'); if(gcEl) gcEl.textContent = daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
 
       const softSpiked = daDeals.filter(d => d.spikeFlag).length;
       const notices = [];
@@ -4356,7 +4361,9 @@ function daRenderHeaders() {
 // ════════════════════════════════════════
 function daRenderTable() {
   const tbody = document.getElementById('daTableBody'); tbody.innerHTML = '';
-  let filtered = daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter);
+  let filtered = daFilter === 'giftcard'
+    ? daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15))
+    : daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter);
   if (daSort.col) {
     filtered = [...filtered].sort((a, b) => {
       let av = a[daSort.col], bv = b[daSort.col];
@@ -4550,6 +4557,7 @@ function daReset() {
   document.getElementById('daCountGreen').textContent = '0';
   document.getElementById('daCountAmber').textContent = '0';
   document.getElementById('daCountRed').textContent = '0';
+  const gcResetEl = document.getElementById('daCountGC'); if(gcResetEl) gcResetEl.textContent = '0';
   document.getElementById('daGoBtn').classList.remove('ready');
   document.getElementById('daTableBody').innerHTML = '';
   document.querySelectorAll('#daFilters .a2a-fpill').forEach((b, i) => b.classList.toggle('active', i === 0));

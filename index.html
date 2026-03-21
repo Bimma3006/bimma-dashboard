@@ -2747,12 +2747,12 @@ input::placeholder { color: var(--text-4); }
             <th>ASIN</th>
             <th>Title</th>
             <th style="text-align:center;">Src</th>
-            <th style="text-align:right;">EU Price</th>
-            <th style="text-align:right;">Landed £</th>
-            <th style="text-align:right;">UK BB 180d</th>
-            <th style="text-align:right;">Fees</th>
-            <th style="text-align:right;">Profit</th>
-            <th style="text-align:right;">ROI %</th>
+            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="scoutSetSort('euPrice')" title="Sort by EU Price">EU Price<span id="scoutSortEuPrice" style="color:var(--green);font-size:9px;"></span></th>
+            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="scoutSetSort('landed')" title="Sort by Landed cost">Landed £<span id="scoutSortLanded" style="color:var(--green);font-size:9px;"></span></th>
+            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="scoutSetSort('ukBB')" title="Sort by UK BB 180d">UK BB 180d<span id="scoutSortUkBB" style="color:var(--green);font-size:9px;"></span></th>
+            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="scoutSetSort('fees')" title="Sort by Fees">Fees<span id="scoutSortFees" style="color:var(--green);font-size:9px;"></span></th>
+            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="scoutSetSort('profit')" title="Sort by Profit">Profit<span id="scoutSortProfit" style="color:var(--green);font-size:9px;"></span></th>
+            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="scoutSetSort('roi')" title="Sort by ROI %">ROI %<span id="scoutSortRoi" style="color:var(--green);font-size:9px;"></span></th>
           </tr>
         </thead>
         <tbody id="scoutTableBody">
@@ -5477,6 +5477,27 @@ async function scoutRun() {
 }
 
 let scoutCurrentFilter = 'all';
+let scoutSortCol = null;   // null = default classification sort
+let scoutSortDir = 1;      // 1 = descending, -1 = ascending
+
+function scoutSetSort(col) {
+  if (scoutSortCol === col) {
+    if (scoutSortDir === 1) {
+      scoutSortDir = -1; // flip to ascending
+    } else {
+      scoutSortCol = null; // third click resets to default
+    }
+  } else {
+    scoutSortCol = col;
+    scoutSortDir = 1; // start descending
+  }
+  const colIds = { euPrice:'EuPrice', landed:'Landed', ukBB:'UkBB', fees:'Fees', profit:'Profit', roi:'Roi' };
+  Object.entries(colIds).forEach(([c, id]) => {
+    const el = document.getElementById('scoutSort' + id);
+    if (el) el.textContent = (c === scoutSortCol) ? (scoutSortDir === 1 ? ' ▼' : ' ▲') : '';
+  });
+  scoutRenderTable();
+}
 
 function scoutSetFilter(f) {
   scoutCurrentFilter = f;
@@ -5543,15 +5564,28 @@ function scoutRenderTable() {
     return cls === scoutCurrentFilter;
   });
 
-  // Sort: strong first, then moderate, then reject
-  // During run: newest finds at top (discovery order desc)
-  // After run: by ROI desc
+  // Sort: column sort takes priority; falls back to classification → ROI
   const order = { strong:0, moderate:1, reject:2, noprice:3 };
   filtered.sort((a,b) => {
+    if (scoutSortCol) {
+      const getVal = r => {
+        switch (scoutSortCol) {
+          case 'euPrice': return r.bestEuPrice ?? -Infinity;
+          case 'landed':  return r.calc?.landed ?? -Infinity;
+          case 'ukBB':    return r.ukBB ?? -Infinity;
+          case 'fees':    return r.calc?.fba ?? -Infinity;
+          case 'profit':  return r.calc?.profit ?? -Infinity;
+          case 'roi':     return r.calc?.roi ?? -Infinity;
+          default:        return 0;
+        }
+      };
+      return scoutSortDir * (getVal(b) - getVal(a));
+    }
+    // Default: strong first, then moderate, then reject
+    // During run: newest finds at top; after run: by ROI desc
     const oa = order[scoutClassify(a)], ob = order[scoutClassify(b)];
     if (oa !== ob) return oa - ob;
     if (scoutIsRunning) {
-      // Newest first — higher counter = found later = top
       const da = scoutDiscoveryOrder[a.asin] ?? -1;
       const db = scoutDiscoveryOrder[b.asin] ?? -1;
       return db - da;
@@ -5591,7 +5625,7 @@ function scoutRenderTable() {
       : '';
     const groupLabel = { strong:'💚 Strong Deals', moderate:'🟡 Moderate Deals', reject: scoutIsRunning ? '⏳ Still Scanning' : '🔴 Reject', noprice: scoutIsRunning ? '⏳ Not Yet Checked' : '— No EU Price' };
     let groupRow = '';
-    if (scoutCurrentFilter === 'all' && cls !== lastGroup) {
+    if (scoutCurrentFilter === 'all' && !scoutSortCol && cls !== lastGroup) {
       lastGroup = cls;
       groupRow = `<tr><td colspan="9" style="padding:10px 12px 6px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);background:var(--surface2);border-bottom:1px solid var(--border);">${groupLabel[cls]}</td></tr>`;
     }

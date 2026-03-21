@@ -1908,7 +1908,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage Tracker</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v3.6 · 21 Mar 26</div>
+    <div class="sidebar-version">v3.7 · 21 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -3479,7 +3479,7 @@ async function exportListingXLSM() {
     const price = parseFloat((Math.round(row.sell * BIMMA_CFG.listingMarkup * 100) / 100).toFixed(2));
     set(ws, r, C.sku,         row.sku);
     set(ws, r, C.asin,        row.asin);
-    set(ws, r, C.condition,   'new');
+    set(ws, r, C.condition,   'New');
     set(ws, r, C.taxCode,     'A_GEN_NOTAX');
     set(ws, r, C.maxQty,      3);
     set(ws, r, C.fulfillment, 'AMAZON_EU');

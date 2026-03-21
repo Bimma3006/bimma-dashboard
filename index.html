@@ -1908,7 +1908,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage Tracker</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v3.9 · 21 Mar 26</div>
+    <div class="sidebar-version">v4.0 · 21 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -3468,7 +3468,7 @@ async function exportListingXLSM() {
   if(!ws){toast('Template sheet not found in file','error');return;}
   // Column indices (0-based) from Amazon template row 5
   const C = { sku:0, asin:3, condition:7, taxCode:9, maxQty:11, fulfillment:31, price:36,
-               countryOfOrigin:110, dg1:134, dg2:135, dg3:136, dg4:137, dg5:138 };
+               countryOfOrigin:110, batteriesRequired:111, dg1:134, dg2:135, dg3:136, dg4:137, dg5:138 };
   const set = (ws, r, c, v) => {
     const ref = XLSX.utils.encode_cell({r, c});
     ws[ref] = { v, t: typeof v === 'number' ? 'n' : 's' };
@@ -3484,7 +3484,8 @@ async function exportListingXLSM() {
     set(ws, r, C.maxQty,      3);
     set(ws, r, C.fulfillment, 'AMAZON_EU');
     set(ws, r, C.price,       price);
-    set(ws, r, C.countryOfOrigin, 'United Kingdom');
+    set(ws, r, C.countryOfOrigin,   'United Kingdom');
+    set(ws, r, C.batteriesRequired, 'No');
     set(ws, r, C.dg1,         'not_applicable');
     set(ws, r, C.dg2,         'not_applicable');
     set(ws, r, C.dg3,         'not_applicable');

@@ -1869,6 +1869,7 @@ input::placeholder { color: var(--text-4); }
 }
 .leak-run-btn:hover { opacity: 0.85; }
 </style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1907,7 +1908,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage Tracker</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v3.4 · 21 Mar 26</div>
+    <div class="sidebar-version">v3.5 · 21 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -2465,7 +2466,11 @@ input::placeholder { color: var(--text-4); }
           <option value="pending">Pending only</option>
           <option value="uploaded">Uploaded only</option>
         </select>
-        <button class="btn-sm btn-green" onclick="exportListingTSV()" style="margin-left:auto;">↓ Export TSV</button>
+        <label id="llTemplateLabel" style="margin-left:auto;cursor:pointer;">
+          <input type="file" accept=".xlsm,.xlsx" style="display:none;" onchange="llLoadTemplate(this)">
+          <span id="llTemplateBadge" class="btn-sm btn-ghost" style="font-size:11px;">📋 Load Template</span>
+        </label>
+        <button class="btn-sm btn-green" onclick="exportListingXLSM()">↓ Export XLSM</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -3426,7 +3431,28 @@ function clearForm() {
   document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('calcPreview').classList.remove('show');
 }
-async function exportListingTSV() {
+// Template cache — persisted in localStorage
+let llTemplateB64 = localStorage.getItem('bimma_ll_template') || null;
+function llLoadTemplate(input) {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    llTemplateB64 = e.target.result.split(',')[1]; // strip data URI prefix
+    localStorage.setItem('bimma_ll_template', llTemplateB64);
+    document.getElementById('llTemplateBadge').textContent = '✓ Template: ' + file.name;
+    document.getElementById('llTemplateBadge').style.color = 'var(--green)';
+    toast('Template loaded & cached', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+// Restore badge if template already cached
+if(llTemplateB64) {
+  setTimeout(()=>{
+    const b = document.getElementById('llTemplateBadge');
+    if(b){ b.textContent='✓ Template loaded'; b.style.color='var(--green)'; }
+  }, 0);
+}
+async function exportListingXLSM() {
   const m=document.getElementById('listingMonthFilter').value;
   const s=document.getElementById('listingStatusFilter').value;
   let rows=allRows;
@@ -3434,29 +3460,47 @@ async function exportListingTSV() {
   if(s==='pending')rows=rows.filter(r=>!r.uploaded);
   else if(s==='uploaded')rows=rows.filter(r=>r.uploaded);
   if(!rows.length){toast('No rows to export','error');return;}
-  // Inventory Loader TSV — headers in row 1, data from row 2
-  const headers=['sku','product-id','product-id-type','item-condition','price','add-delete','fulfillment-center-id','batteries_required','supplier_declared_dg_hz_regulation1','supplier_declared_dg_hz_regulation2','supplier_declared_dg_hz_regulation3','supplier_declared_dg_hz_regulation4','supplier_declared_dg_hz_regulation5'];
-  const tsvRows=rows.map(r=>{
-    const price=(Math.round(r.sell*BIMMA_CFG.listingMarkup*100)/100).toFixed(2);
-    return [r.sku,r.asin,4,11,price,'a','AMAZON_EU','false','not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'].join('\t');
+  if(!llTemplateB64){toast('Load the Amazon template first (📋 Load Template)','error');return;}
+  if(typeof XLSX==='undefined'){toast('SheetJS not loaded — check internet connection','error');return;}
+  // Read template
+  const wb = XLSX.read(llTemplateB64, {type:'base64'});
+  const ws = wb.Sheets['Template'];
+  if(!ws){toast('Template sheet not found in file','error');return;}
+  // Column indices (0-based) from Amazon template row 5
+  const C = { sku:0, asin:3, condition:7, taxCode:9, maxQty:11, fulfillment:31, price:36,
+               dg1:134, dg2:135, dg3:136, dg4:137, dg5:138 };
+  const set = (ws, r, c, v) => {
+    const ref = XLSX.utils.encode_cell({r, c});
+    ws[ref] = { v, t: typeof v === 'number' ? 'n' : 's' };
+  };
+  // Data starts at row 7 (0-based index 6); rows 1-6 are template header rows
+  rows.forEach((row, i) => {
+    const r = 6 + i;
+    const price = parseFloat((Math.round(row.sell * BIMMA_CFG.listingMarkup * 100) / 100).toFixed(2));
+    set(ws, r, C.sku,         row.sku);
+    set(ws, r, C.asin,        row.asin);
+    set(ws, r, C.condition,   'new');
+    set(ws, r, C.taxCode,     'A_GEN_NOTAX');
+    set(ws, r, C.maxQty,      3);
+    set(ws, r, C.fulfillment, 'AMAZON_NA');
+    set(ws, r, C.price,       price);
+    set(ws, r, C.dg1,         'not_applicable');
+    set(ws, r, C.dg2,         'not_applicable');
+    set(ws, r, C.dg3,         'not_applicable');
+    set(ws, r, C.dg4,         'not_applicable');
+    set(ws, r, C.dg5,         'not_applicable');
   });
-  const tsv=[headers.join('\t'),...tsvRows].join('\n');
-  const blob=new Blob([tsv],{type:'text/tab-separated-values'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download='Bimma_Listing_Upload_'+new Date().toISOString().split('T')[0]+'.tsv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // Update sheet range
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:EZ6');
+  range.e.r = Math.max(range.e.r, 6 + rows.length - 1);
+  ws['!ref'] = XLSX.utils.encode_range(range);
+  XLSX.writeFile(wb, 'Bimma_Listing_Upload_' + new Date().toISOString().split('T')[0] + '.xlsm', {bookType:'xlsm'});
   // Auto-mark exported rows as uploaded in Google Sheet
   if(accessToken){
     try {
       const requests=rows.filter(r=>!r.uploaded).map(r=>({range:`${PURCH_TAB}!K${r.rowIdx}`,values:[['TRUE']]}));
       if(requests.length){
         for(let i=0;i<requests.length;i+=100)await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchUpdate`,{method:'POST',body:JSON.stringify({valueInputOption:'RAW',data:requests.slice(i,i+100)})});
-        // Update local state — no full reload needed
         rows.filter(r=>!r.uploaded).forEach(r=>r.uploaded=true);
         renderListing(allRows); renderDashboard();
         toast('✓ Exported '+rows.length+' items & marked as uploaded','success');

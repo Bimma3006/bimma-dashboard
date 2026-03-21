@@ -1907,7 +1907,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage Tracker</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v3.3 · 21 Mar 26</div>
+    <div class="sidebar-version">v3.4 · 21 Mar 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -3435,10 +3435,10 @@ async function exportListingTSV() {
   else if(s==='uploaded')rows=rows.filter(r=>r.uploaded);
   if(!rows.length){toast('No rows to export','error');return;}
   // Inventory Loader TSV — headers in row 1, data from row 2
-  const headers=['sku','product-id','product-id-type','item-condition','price','max-order-quantity','add-delete','fulfillment-center-id','supplier_declared_dg_hz_regulation1','supplier_declared_dg_hz_regulation2','supplier_declared_dg_hz_regulation3','supplier_declared_dg_hz_regulation4','supplier_declared_dg_hz_regulation5'];
+  const headers=['sku','product-id','product-id-type','item-condition','price','add-delete','fulfillment-center-id','batteries_required','supplier_declared_dg_hz_regulation1','supplier_declared_dg_hz_regulation2','supplier_declared_dg_hz_regulation3','supplier_declared_dg_hz_regulation4','supplier_declared_dg_hz_regulation5'];
   const tsvRows=rows.map(r=>{
     const price=(Math.round(r.sell*BIMMA_CFG.listingMarkup*100)/100).toFixed(2);
-    return [r.sku,r.asin,4,11,price,3,'a','AMAZON_EU','not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'].join('\t');
+    return [r.sku,r.asin,4,11,price,'a','AMAZON_EU','false','not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'].join('\t');
   });
   const tsv=[headers.join('\t'),...tsvRows].join('\n');
   const blob=new Blob([tsv],{type:'text/tab-separated-values'});

@@ -2429,12 +2429,17 @@ input::placeholder { color: var(--text-4); }
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Date</th><th>SKU</th><th>Title</th><th>ASIN</th>
-            <th style="text-align:right;">Buy</th><th style="text-align:right;">Sell</th>
-            <th style="text-align:center;">Qty</th><th style="text-align:right;">Spend</th>
-            <th>Supplier</th><th style="text-align:center;">Uploaded</th>
+            <th style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="purchaseSetSort('date')">Date<span id="purchSort_date" style="color:var(--green);font-size:9px;"></span></th>
+            <th>SKU</th><th>Title</th><th>ASIN</th>
+            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="purchaseSetSort('buy')">Buy<span id="purchSort_buy" style="color:var(--green);font-size:9px;"></span></th>
+            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="purchaseSetSort('sell')">Sell<span id="purchSort_sell" style="color:var(--green);font-size:9px;"></span></th>
+            <th style="text-align:center;cursor:pointer;user-select:none;white-space:nowrap;" onclick="purchaseSetSort('qty')">Qty<span id="purchSort_qty" style="color:var(--green);font-size:9px;"></span></th>
+            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="purchaseSetSort('spend')">Spend<span id="purchSort_spend" style="color:var(--green);font-size:9px;"></span></th>
+            <th>Supplier</th>
+            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="purchaseSetSort('roi')">ROI<span id="purchSort_roi" style="color:var(--green);font-size:9px;"></span></th>
+            <th style="text-align:center;">Uploaded</th>
           </tr></thead>
-          <tbody id="purchasesTbody"><tr><td colspan="10"><div class="empty-state">Connect to load purchases</div></td></tr></tbody>
+          <tbody id="purchasesTbody"><tr><td colspan="11"><div class="empty-state">Connect to load purchases</div></td></tr></tbody>
         </table>
       </div>
     </div>
@@ -2481,7 +2486,7 @@ input::placeholder { color: var(--text-4); }
     <div class="page-inner" style="max-width:560px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
         <div><div class="field-label">Date</div><input type="date" id="f-date"></div>
-        <div><div class="field-label">Supplier</div><input type="text" id="f-supplier" placeholder="Amazon, eBay…"></div>
+        <div><div class="field-label">Supplier</div><input type="text" id="f-supplier" placeholder="Amazon, eBay…" list="supplierList" autocomplete="off"><datalist id="supplierList"></datalist></div>
       </div>
       <div style="margin-bottom:12px;"><div class="field-label">SKU</div><input type="text" id="f-sku" placeholder="DD/MM/YY-PRICE-uk"></div>
       <div style="margin-bottom:12px;"><div class="field-label">Title</div><input type="text" id="f-title" placeholder="Product title"></div>
@@ -2500,6 +2505,15 @@ input::placeholder { color: var(--text-4); }
         <button class="btn-sm btn-green" id="addBtn" onclick="addPurchase()" disabled>+ ADD TO SHEET</button>
         <button class="btn-sm btn-ghost" onclick="clearForm()">Clear</button>
       </div>
+      <details style="margin-top:24px;border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px 14px;">
+        <summary style="font-family:var(--mono);font-size:10px;color:var(--text-3);cursor:pointer;letter-spacing:0.08em;text-transform:uppercase;">⚙ Calculation Settings</summary>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:14px;">
+          <div><div class="field-label">VAT Rate (%)</div><input type="number" id="cfg-vat" value="20" min="0" max="100" step="1" oninput="bimmaUpdateCfg()"></div>
+          <div><div class="field-label">Listing Markup (×)</div><input type="number" id="cfg-markup" value="1.25" min="1" max="5" step="0.01" oninput="bimmaUpdateCfg()"></div>
+          <div><div class="field-label">EU Shipping (£)</div><input type="number" id="cfg-shipping" value="2.00" min="0" max="99" step="0.01" oninput="bimmaUpdateCfg()"></div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:10px;">Changes apply immediately to all calculations across the dashboard.</div>
+      </details>
     </div>
   </div>
 
@@ -3078,6 +3092,17 @@ const PURCH_TAB = 'Purchasing sheet';
 const LISTING_TAB = 'Listing loader';
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 let tokenClient = null, accessToken = null, allRows = [];
+
+// ── Global config (editable via Settings panel on Add Purchase page) ─────────
+const BIMMA_CFG = (() => {
+  const def = { vatRate: 0.2, listingMarkup: 1.25, euShipping: 2.0 };
+  try { return Object.assign({}, def, JSON.parse(localStorage.getItem('bimma_cfg') || '{}')); }
+  catch { return def; }
+})();
+// Migrate legacy bimma_stalker_key → bimma_keepa_key (one-time)
+if (!localStorage.getItem('bimma_keepa_key') && localStorage.getItem('bimma_stalker_key')) {
+  localStorage.setItem('bimma_keepa_key', localStorage.getItem('bimma_stalker_key'));
+}
 let clientId = localStorage.getItem('bimma_goog_cid') || '';
 
 window.onload = () => {
@@ -3246,18 +3271,46 @@ function renderDashboard() {
   if (typeof rpUpdateStatus === 'function') rpUpdateStatus();
 }
 // chart removed
+let purchaseSortCol = null, purchaseSortDir = 1;
+function purchaseSetSort(col) {
+  if (purchaseSortCol === col) {
+    if (purchaseSortDir === 1) purchaseSortDir = -1;
+    else purchaseSortCol = null;
+  } else { purchaseSortCol = col; purchaseSortDir = 1; }
+  ['date','buy','sell','qty','spend','roi'].forEach(c => {
+    const el = document.getElementById('purchSort_'+c);
+    if (el) el.textContent = c === purchaseSortCol ? (purchaseSortDir === 1 ? ' ▼' : ' ▲') : '';
+  });
+  filterPurchases();
+}
 function renderPurchases(rows) {
   document.getElementById('purchaseCount').textContent = rows.length+' purchases';
   const tb=document.getElementById('purchasesTbody');
-  if(!rows.length){tb.innerHTML='<tr><td colspan="10"><div class="empty-state">No purchases</div></td></tr>';return;}
+  if(!rows.length){tb.innerHTML='<tr><td colspan="11"><div class="empty-state">No purchases</div></td></tr>';return;}
+  const calcRoi = r => { const cost=r.buy/(1+BIMMA_CFG.vatRate), netRev=r.sell>0?r.sell-scoutReferral(r.sell)-scoutFbaFee(r.sell):0; return r.sell>0&&r.buy>0?((netRev-cost)/cost*100):null; };
+  if (purchaseSortCol) {
+    rows = [...rows].sort((a,b) => {
+      let va, vb;
+      if (purchaseSortCol==='date') { va=new Date(a.date||0); vb=new Date(b.date||0); return purchaseSortDir*(vb-va); }
+      if (purchaseSortCol==='roi')  { va=calcRoi(a)??-999; vb=calcRoi(b)??-999; }
+      else { va=a[purchaseSortCol]||0; vb=b[purchaseSortCol]||0; }
+      return purchaseSortDir*(vb-va);
+    });
+  }
   tb.innerHTML=rows.map(r=>{
-    const cost=r.buy/1.2, netRev=r.sell>0?r.sell-scoutReferral(r.sell)-scoutFbaFee(r.sell):0;
-    const roi=r.sell>0&&r.buy>0?((netRev-cost)/cost*100):null;
+    const roi=calcRoi(r);
     const roiHtml=roi!==null?`<span class="roi-pill ${roi>=20?'roi-green':roi>=15?'roi-amber':'roi-red'}">${roi.toFixed(1)}%</span>`:'—';
-    return `<tr><td class="td-date">${fmtDate(r.date)}</td><td class="td-sku">${esc(r.sku)}</td><td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td><td class="td-center mono">${esc(r.asin)}</td><td class="td-price">£${r.buy.toFixed(2)}</td><td class="td-price">£${r.sell.toFixed(2)}</td><td class="td-center">${r.qty}</td><td class="td-price">£${r.spend.toFixed(2)}</td><td style="font-size:11px;color:#555">${esc(r.supplier)}</td><td class="toggle-wrap"><button class="toggle ${r.uploaded?'on':''}" onclick="toggleUpload(${r.rowIdx},this,'purchases')"></button></td></tr>`;
+    return `<tr><td class="td-date">${fmtDate(r.date)}</td><td class="td-sku">${esc(r.sku)}</td><td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td><td class="td-center mono">${esc(r.asin)}</td><td class="td-price">£${r.buy.toFixed(2)}</td><td class="td-price">£${r.sell.toFixed(2)}</td><td class="td-center">${r.qty}</td><td class="td-price">£${r.spend.toFixed(2)}</td><td style="font-size:11px;color:var(--text-3)">${esc(r.supplier)}</td><td style="text-align:right;">${roiHtml}</td><td class="toggle-wrap"><button class="toggle ${r.uploaded?'on':''}" onclick="toggleUpload(${r.rowIdx},this,'purchases')"></button></td></tr>`;
   }).join('');
 }
+function updateSupplierList() {
+  const dl = document.getElementById('supplierList');
+  if (!dl || !allRows.length) return;
+  const suppliers = [...new Set(allRows.map(r => r.supplier).filter(Boolean))].sort();
+  dl.innerHTML = suppliers.map(s => `<option value="${s}">`).join('');
+}
 function filterPurchases() {
+  updateSupplierList();
   const m=document.getElementById('monthFilter').value, s=document.getElementById('searchInput').value.toLowerCase();
   let f=allRows;
   if(m!=='all')f=f.filter(r=>monthKey(r.date)===m);
@@ -3271,7 +3324,7 @@ function renderListing(rows) {
   const tb=document.getElementById('listingTbody');
   if(!rows.length){tb.innerHTML='<tr><td colspan="9"><div class="empty-state">No items</div></td></tr>';return;}
   tb.innerHTML=rows.map(r=>{
-    const lp=(r.sell*1.25).toFixed(2);
+    const lp=(r.sell*BIMMA_CFG.listingMarkup).toFixed(2);
     return `<tr><td class="td-date">${fmtDate(r.date)}</td><td class="td-sku">${esc(r.sku)}</td><td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td><td class="td-center mono">${esc(r.asin)}</td><td class="td-price">£${r.buy.toFixed(2)}</td><td class="td-price">£${r.sell.toFixed(2)}</td><td class="td-price" style="color:var(--green)">£${lp}</td><td class="td-center">${r.qty}</td><td class="toggle-wrap"><button class="toggle ${r.uploaded?'on':''}" onclick="toggleUpload(${r.rowIdx},this,'listing')"></button></td></tr>`;
   }).join('');
 }
@@ -3311,7 +3364,7 @@ async function toggleUpload(rowIdx,btn,context) {
 async function addToListingLoader(row) {
   const existing=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:A`);
   if((existing.values||[]).flat().includes(row.sku))return;
-  const price=Math.round(row.sell*1.25*100)/100;
+  const price=Math.round(row.sell*BIMMA_CFG.listingMarkup*100)/100;
   const newRow=[row.sku,row.asin,1,'New',price,row.qty,'a','AMAZON_EU',false,'not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'];
   await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:N:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,{method:'POST',body:JSON.stringify({values:[newRow]})});
 }
@@ -3327,15 +3380,32 @@ async function removeFromListingLoader(sku) {
 function calcPreview() {
   const buy=parseFloat(document.getElementById('f-buy').value)||0, sell=parseFloat(document.getElementById('f-sell').value)||0, qty=parseInt(document.getElementById('f-qty').value)||1;
   const prev=document.getElementById('calcPreview');
-  if(buy>0||sell>0){ const spend=buy*qty; document.getElementById('cp-spend').textContent='£'+spend.toFixed(2); document.getElementById('cp-vat').textContent='£'+(spend-spend/1.2).toFixed(2); document.getElementById('cp-list').textContent='£'+(sell*1.25).toFixed(2); prev.classList.add('show'); }
+  if(buy>0||sell>0){ const spend=buy*qty; document.getElementById('cp-spend').textContent='£'+spend.toFixed(2); document.getElementById('cp-vat').textContent='£'+(spend-spend/(1+BIMMA_CFG.vatRate)).toFixed(2); document.getElementById('cp-list').textContent='£'+(sell*BIMMA_CFG.listingMarkup).toFixed(2); prev.classList.add('show'); }
   else prev.classList.remove('show');
 }
+function bimmaUpdateCfg() {
+  const vat = parseFloat(document.getElementById('cfg-vat')?.value);
+  const markup = parseFloat(document.getElementById('cfg-markup')?.value);
+  const shipping = parseFloat(document.getElementById('cfg-shipping')?.value);
+  if (!isNaN(vat)) BIMMA_CFG.vatRate = vat / 100;
+  if (!isNaN(markup)) BIMMA_CFG.listingMarkup = markup;
+  if (!isNaN(shipping)) BIMMA_CFG.euShipping = shipping;
+  localStorage.setItem('bimma_cfg', JSON.stringify(BIMMA_CFG));
+  calcPreview();
+}
+// Init settings panel values from saved config (runs after DOM ready)
+setTimeout(() => {
+  const v = document.getElementById('cfg-vat'); if (v) v.value = (BIMMA_CFG.vatRate * 100).toFixed(0);
+  const m = document.getElementById('cfg-markup'); if (m) m.value = BIMMA_CFG.listingMarkup.toFixed(2);
+  const s = document.getElementById('cfg-shipping'); if (s) s.value = BIMMA_CFG.euShipping.toFixed(2);
+}, 0);
+
 async function addPurchase() {
   if(!accessToken){toast('Not connected','error');return;}
   const date=document.getElementById('f-date').value, sku=document.getElementById('f-sku').value.trim(), title=document.getElementById('f-title').value.trim(), asin=document.getElementById('f-asin').value.trim();
   const buy=parseFloat(document.getElementById('f-buy').value)||0, sell=parseFloat(document.getElementById('f-sell').value)||0, qty=parseInt(document.getElementById('f-qty').value)||1, supplier=document.getElementById('f-supplier').value.trim();
   if(!date||!title){toast('Date and title required','error');return;}
-  const spend=buy*qty, vat=spend-spend/1.2;
+  const spend=buy*qty, vat=spend-spend/(1+BIMMA_CFG.vatRate);
   const btn=document.getElementById('addBtn'); btn.disabled=true; btn.textContent='SAVING…';
   try {
     const purchRow=[date,sku,title,asin,buy,sell,qty,spend.toFixed(2),vat.toFixed(2),supplier,'FALSE'];
@@ -3343,7 +3413,7 @@ async function addPurchase() {
     const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const d=new Date(date), monthTabName=mn[d.getMonth()]+' '+d.getFullYear();
     try { await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(monthTabName)}!A:K:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,{method:'POST',body:JSON.stringify({values:[purchRow]})}); } catch(e){}
-    const price=(Math.round(sell*1.25*100)/100).toFixed(2);
+    const price=(Math.round(sell*BIMMA_CFG.listingMarkup*100)/100).toFixed(2);
     const listingRow=[sku,asin,1,'New',price,qty,'a','AMAZON_EU','FALSE','not_applicable','not_applicable','not_applicable','not_applicable','not_applicable'];
     const existing=await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:A`);
     if(!(existing.values||[]).flat().includes(sku))await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(LISTING_TAB)}!A:N:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,{method:'POST',body:JSON.stringify({values:[listingRow]})});
@@ -3768,11 +3838,34 @@ function rmAnalyse(){
   }).catch(err=>{toast('Error: '+err.message,'error');});
 }
 
+let _rmLastRecover = [];
+function rmExport() {
+  if (!_rmLastRecover.length) { toast('No results to export', 'error'); return; }
+  const header = ['ASIN','Title','COGS Recoverable (£)','Days Left','Best Purchase Date','Refunds','Total Lost (£)'].join('\t');
+  const lines = _rmLastRecover.map(a => [
+    a.asin, (a.title||'').replace(/\t/g,' '),
+    a.recoverableAmt.toFixed(2),
+    a.daysLeft != null ? a.daysLeft : '',
+    a.bestUkDate ? a.bestUkDate.toLocaleDateString('en-GB') : '',
+    a.refunds.length,
+    a.refunds.reduce((s,r)=>s+r.total,0).toFixed(2)
+  ].join('\t')).join('\n');
+  const blob = new Blob([header+'\n'+lines], {type:'text/tab-separated-values'});
+  const url = URL.createObjectURL(blob);
+  const el = document.createElement('a'); el.href=url; el.download='refund-monitor-'+new Date().toISOString().slice(0,10)+'.tsv'; el.click();
+  URL.revokeObjectURL(url);
+  toast('Exported '+_rmLastRecover.length+' rows', 'success');
+}
 function rmRenderResults(allRecover){
+  _rmLastRecover = allRecover;
   const totalRecover=allRecover.reduce((s,a)=>s+a.recoverableAmt,0);
   const expiringCount=allRecover.filter(a=>a.daysLeft!==null&&a.daysLeft<=5).length;
   const requested=Object.keys(rmReturnRequests);
   let html=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);">Refund Analysis</div>
+      <button class="btn-sm btn-ghost" onclick="rmExport()" style="font-size:11px;">↓ Export TSV</button>
+    </div>
     <div class="stat-grid stat-grid-3" style="margin-bottom:20px;">
       <div class="stat-card"><div class="stat-label">COGS Recoverable</div><div class="stat-value">£${totalRecover.toFixed(2)}</div></div>
       <div class="stat-card"><div class="stat-label">Expiring ≤5 Days</div><div class="stat-value" style="color:var(--amber);">${expiringCount}</div></div>
@@ -3947,7 +4040,7 @@ const MODES = {
     desc: 'Buy price: <strong>EU Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK Buy Box 180d avg</strong> &nbsp;·&nbsp; Extra cost: <strong>+£2.00 shipping</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong>',
     buyCol: 'Buy Box: Current',           // EU Buy Box current
     sellCol: 'Buy Box: 180 days avg.',    // UK 180d avg
-    extraCost: 2.00,                      // shipping per unit
+    extraCost: BIMMA_CFG.euShipping,      // shipping per unit
     condition: 'new',
     minROI: 0.15, strongROI: 0.20,
   },
@@ -3986,6 +4079,8 @@ const FEES = {
 let currentMode = 'eu';
 let daDeals = [], daFilter = 'all', daSort = { col: null, dir: 1 };
 let daSlotFiles = { 1: null, 2: null, 3: null };
+let daSlotTexts = { 1: null, 2: null, 3: null };
+try { [1,2,3].forEach(n => { const t=localStorage.getItem('bimma_da_slot'+n+'_text'); if(t) daSlotTexts[n]=t; }); } catch(e) {}
 let daVetoList     = (() => { try { return new Set(JSON.parse(localStorage.getItem('bimma-a2a-veto')     || '[]')); } catch { return new Set(); } })();
 let daViewedList   = (() => { try { return new Set(JSON.parse(localStorage.getItem('bimma-a2a-viewed')   || '[]')); } catch { return new Set(); } })();
 // daRejectedList: Map of asin → { price, date } — price at time of rejection so we can un-reject if price changes
@@ -4212,9 +4307,29 @@ function daDragOver(e, el) { e.preventDefault(); el.classList.add('drag-over'); 
 function daDragLeave(el) { el.classList.remove('drag-over'); }
 function daDrop(e, num) { e.preventDefault(); document.getElementById('daSlot' + num).classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) daFileChosen(num, f); }
 
+// Restore A2A file UI from cached text
+setTimeout(() => {
+  [1,2,3].forEach(n => {
+    const name = localStorage.getItem('bimma_da_slot'+n+'_name');
+    if (daSlotTexts[n] && name) {
+      document.getElementById('daSlot'+n)?.classList.add('has-file');
+      const icon = document.getElementById('daSlot'+n+'Icon'); if(icon){icon.textContent='✓';icon.style.cssText='font-size:18px;color:var(--green);opacity:1;font-family:var(--mono);font-weight:600';}
+      const lbl = document.getElementById('daSlot'+n+'Label'); if(lbl) lbl.style.display='none';
+      const nm = document.getElementById('daSlot'+n+'Name'); if(nm){nm.textContent=name;nm.style.display='block';}
+      const cl = document.getElementById('daSlot'+n+'Clear'); if(cl) cl.style.display='block';
+    }
+  });
+  const btn = document.getElementById('daGoBtn');
+  if (btn) {
+    const ready = currentMode==='eu' ? (daSlotTexts[1]||daSlotFiles[1]) && (daSlotTexts[3]||daSlotFiles[3]) : !!(daSlotTexts[1]||daSlotFiles[1]);
+    if (ready) btn.classList.add('ready', currentMode);
+  }
+}, 0);
+
 function daFileChosen(num, file) {
   if (!file) return;
   daSlotFiles[num] = file;
+  const fr = new FileReader(); fr.onload = e => { daSlotTexts[num]=e.target.result; try{localStorage.setItem('bimma_da_slot'+num+'_text',e.target.result);localStorage.setItem('bimma_da_slot'+num+'_name',file.name);}catch(e){} }; fr.readAsText(file);
   document.getElementById('daSlot' + num).classList.add('has-file');
   document.getElementById('daSlot' + num + 'Icon').textContent = '✓';
   document.getElementById('daSlot' + num + 'Icon').style.cssText = 'font-size:18px;color:var(--green);opacity:1;font-family:var(--mono);font-weight:600';
@@ -4229,7 +4344,8 @@ function daFileChosen(num, file) {
 }
 
 function daClearSlot(e, num) {
-  e.stopPropagation(); daSlotFiles[num] = null;
+  e.stopPropagation(); daSlotFiles[num] = null; daSlotTexts[num] = null;
+  try{localStorage.removeItem('bimma_da_slot'+num+'_text');localStorage.removeItem('bimma_da_slot'+num+'_name');}catch(e){}
   document.getElementById('daSlot' + num).classList.remove('has-file');
   document.getElementById('daSlot' + num + 'Icon').textContent = '↑';
   document.getElementById('daSlot' + num + 'Icon').style.cssText = '';
@@ -4247,11 +4363,12 @@ function daClearSlot(e, num) {
 // RUN ANALYSIS
 // ════════════════════════════════════════
 function daRunAnalysis() {
-  const files = [daSlotFiles[1], daSlotFiles[2], daSlotFiles[3]].filter(Boolean);
-  if (!files.length) return;
+  const activeSlots = [1,2,3].filter(n => daSlotFiles[n] || daSlotTexts[n]);
+  if (!activeSlots.length) return;
   document.getElementById('daDropzone').style.display = 'none';
   document.getElementById('daLoading').classList.add('visible');
-  Promise.all(files.map(f => new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsText(f); }))).then(results => {
+  const getText = n => daSlotTexts[n] ? Promise.resolve(daSlotTexts[n]) : new Promise(res => { const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsText(daSlotFiles[n]); });
+  Promise.all(activeSlots.map(n => getText(n))).then(results => {
     setTimeout(() => { try { // tick 1: parse + analyse (CPU-heavy)
       const cfg = MODES[currentMode];
       let merged = [];
@@ -4811,7 +4928,7 @@ function rpPercentile(arr,p){if(!arr.length)return 0;const sorted=[...arr].sort(
 
 async function rpRun(){
   // Auto-pull API key from scout/stalker key storage
-  const apiKey=(localStorage.getItem('bimma_keepa_key')||localStorage.getItem('bimma_stalker_key')||'').trim();
+  const apiKey=(localStorage.getItem('bimma_keepa_key')||'').trim();
   if(!apiKey){rpShowError('No Keepa API key found — add your key in Deal Scout or Storefront Stalker first.');return;}
   if(!rpReplenishASINs.length){rpShowError('Please upload your STK Replenish export first.');return;}
   const allItems=rpGetASINs();
@@ -4998,16 +5115,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // Init market button states
   ['DE','FR','IT','ES'].forEach(m => scoutToggleMarket(m, document.getElementById('scout'+m)));
 
-  // Restore cached scout results
+  // Restore cached scout results (max 24h old)
   const scoutCacheRaw = localStorage.getItem('bimma_scout_cache');
   if (scoutCacheRaw) {
     try {
-      const { results } = JSON.parse(scoutCacheRaw);
-      if (results && results.length) {
+      const { results, ts } = JSON.parse(scoutCacheRaw);
+      const ageH = ts ? (Date.now() - ts) / 3600000 : 999;
+      if (results && results.length && ageH < 24) {
         scoutResults = results;
         scoutRenderTable();
         scoutShowCacheBanner();
         document.getElementById('scoutExportBtn').disabled = false;
+      } else if (ageH >= 24) {
+        localStorage.removeItem('bimma_scout_cache');
       }
     } catch(e) {}
   }
@@ -5556,8 +5676,12 @@ function scoutShowCacheBanner() {
   try {
     const { ts } = JSON.parse(raw);
     const d = new Date(ts);
+    const ageMs = Date.now() - ts;
+    const ageH = Math.floor(ageMs / 3600000);
+    const ageM = Math.floor((ageMs % 3600000) / 60000);
+    const ageStr = ageH > 0 ? `${ageH}h ${ageM}m ago` : `${ageM}m ago`;
     const dateStr = d.toLocaleDateString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-    document.getElementById('scoutCacheDate').textContent = dateStr;
+    document.getElementById('scoutCacheDate').textContent = `${dateStr} · ${ageStr}`;
     document.getElementById('scoutCacheCount').textContent = scoutResults.length;
     document.getElementById('scoutCacheBanner').style.display = 'flex';
   } catch(e) {}
@@ -5784,11 +5908,11 @@ function stalkerSave() {
 
 function stalkerSaveKey() {
   const k = document.getElementById('stalkerApiKey').value.trim();
-  if (k) { localStorage.setItem('bimma_stalker_key', k); stalkerFetchTokens(k); }
+  if (k) { localStorage.setItem('bimma_keepa_key', k); stalkerFetchTokens(k); }
 }
 
 function stalkerGetKey() {
-  return document.getElementById('stalkerApiKey')?.value.trim() || localStorage.getItem('bimma_stalker_key') || '';
+  return document.getElementById('stalkerApiKey')?.value.trim() || localStorage.getItem('bimma_keepa_key') || '';
 }
 
 function stalkerInit() {
@@ -5798,7 +5922,7 @@ function stalkerInit() {
     stalkerFeedItems = JSON.parse(localStorage.getItem('bimma_stalker_feed')    || '[]');
     stalkerLoaded    = true;
   }
-  const saved = localStorage.getItem('bimma_stalker_key');
+  const saved = localStorage.getItem('bimma_keepa_key');
   if (saved) { const el = document.getElementById('stalkerApiKey'); if(el) el.value = saved; }
   stalkerRenderSellers();
   stalkerRenderFeed();
@@ -6099,6 +6223,8 @@ function stalkerRenderFeed() {
   });
 
   const sortedKeys = Object.keys(groups).sort((a,b) => b-a);
+  // Sort within each group: most recently detected first
+  sortedKeys.forEach(key => groups[key].sort((a,b) => (b.detectedAt||0) - (a.detectedAt||0)));
 
   feedEl.innerHTML = sortedKeys.map(key => {
     const d = new Date(parseInt(key));
@@ -6520,7 +6646,7 @@ function stalkerExportBackup() {
     sellers:  stalkerSellers,
     snapshots: stalkerSnapshots,
     feed:     stalkerFeedItems,
-    apiKey:   localStorage.getItem('bimma_stalker_key') || ''
+    apiKey:   localStorage.getItem('bimma_keepa_key') || ''
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
@@ -6581,8 +6707,8 @@ function stalkerImportBackup(input) {
       }
 
       // Restore API key if not already set
-      if (backup.apiKey && !localStorage.getItem('bimma_stalker_key')) {
-        localStorage.setItem('bimma_stalker_key', backup.apiKey);
+      if (backup.apiKey && !localStorage.getItem('bimma_keepa_key')) {
+        localStorage.setItem('bimma_keepa_key', backup.apiKey);
         const el = document.getElementById('stalkerApiKey');
         if (el) el.value = backup.apiKey;
       }
@@ -6800,13 +6926,14 @@ function leakReconcilePrep() {
 
   document.getElementById('leakPrepTableWrap').style.display = 'block';
 
-  // Store for render
+  // Store for render (persist so data survives page refresh)
   window._leakPrepReconciled = reconciled;
+  try { localStorage.setItem('bimma_leak_prep', JSON.stringify({ rows: reconciled, stats: { totalSent, totalReceived, totalMissing, totalVal } })); } catch(e) {}
   leakRenderPrep();
 }
 
 function leakRenderPrep() {
-  const rows = window._leakPrepReconciled || [];
+  const rows = window._leakPrepReconciled || (() => { try { return JSON.parse(localStorage.getItem('bimma_leak_prep')||'null')?.rows||[]; } catch{return[];} })();
   const filter = document.getElementById('leakPrepFilter')?.value || 'discrepancy';
   const tbody = document.getElementById('leakPrepTbody');
   if (!tbody) return;
@@ -6933,8 +7060,40 @@ function leakReconcileReturns() {
 
   document.getElementById('leakReturnsTableWrap').style.display = 'block';
   window._leakReturnsProcessed = processed;
+  try { localStorage.setItem('bimma_leak_returns', JSON.stringify({ rows: processed, stats: { totalReturns, totalDamaged, totalReimbursed, needClaim, totalExposure } })); } catch(e) {}
   leakRenderReturns();
 }
+
+// Restore leakage data from localStorage on page load
+setTimeout(() => {
+  const prepCache = (() => { try { return JSON.parse(localStorage.getItem('bimma_leak_prep')||'null'); } catch{return null;} })();
+  if (prepCache?.rows?.length) {
+    window._leakPrepReconciled = prepCache.rows;
+    const s = prepCache.stats || {};
+    const statsEl = document.getElementById('leakPrepStats'); if (statsEl) statsEl.style.display = 'grid';
+    if (document.getElementById('lpStatShipments')) document.getElementById('lpStatShipments').textContent = prepCache.rows.length;
+    if (document.getElementById('lpStatExpected'))  document.getElementById('lpStatExpected').textContent  = (s.totalSent||0).toLocaleString();
+    if (document.getElementById('lpStatReceived'))  document.getElementById('lpStatReceived').textContent  = (s.totalReceived||0).toLocaleString();
+    if (document.getElementById('lpStatMissing'))   document.getElementById('lpStatMissing').textContent   = (s.totalMissing||0).toLocaleString();
+    const missingValEl = document.getElementById('leakPrepMissingVal');
+    if ((s.totalVal||0) > 0 && missingValEl) { missingValEl.style.display='block'; document.getElementById('lpMissingVal').textContent='£'+(s.totalVal||0).toFixed(2); }
+    const tw = document.getElementById('leakPrepTableWrap'); if (tw) tw.style.display = 'block';
+    leakRenderPrep();
+  }
+  const retCache = (() => { try { return JSON.parse(localStorage.getItem('bimma_leak_returns')||'null'); } catch{return null;} })();
+  if (retCache?.rows?.length) {
+    window._leakReturnsProcessed = retCache.rows;
+    const s = retCache.stats || {};
+    const statsEl = document.getElementById('leakReturnsStats'); if (statsEl) statsEl.style.display = 'grid';
+    if (document.getElementById('lrStatTotal'))      document.getElementById('lrStatTotal').textContent      = s.totalReturns||0;
+    if (document.getElementById('lrStatDamaged'))    document.getElementById('lrStatDamaged').textContent    = s.totalDamaged||0;
+    if (document.getElementById('lrStatReimbursed')) document.getElementById('lrStatReimbursed').textContent = s.totalReimbursed||0;
+    if (document.getElementById('lrStatUnreimb'))    document.getElementById('lrStatUnreimb').textContent    = s.needClaim||0;
+    if (document.getElementById('lrStatExposure'))   document.getElementById('lrStatExposure').textContent   = (s.totalExposure||0) > 0 ? '£'+(s.totalExposure).toFixed(0) : '£0';
+    const tw = document.getElementById('leakReturnsTableWrap'); if (tw) tw.style.display = 'block';
+    leakRenderReturns();
+  }
+}, 0);
 
 function leakSetReturnFilter(f, btn) {
   leakReturnFilter = f;
@@ -6946,7 +7105,7 @@ function leakSetReturnFilter(f, btn) {
 function leakRenderReturns() {
   const tbody = document.getElementById('leakReturnsTbody');
   if (!tbody) return;
-  const rows = window._leakReturnsProcessed || [];
+  const rows = window._leakReturnsProcessed || (() => { try { return JSON.parse(localStorage.getItem('bimma_leak_returns')||'null')?.rows||[]; } catch{return[];} })();
   let filtered = rows;
   if (leakReturnFilter === 'claim')      filtered = rows.filter(r => !r.isReimbursed && (r.isDamaged || !r.isReturned));
   else if (leakReturnFilter === 'damaged')    filtered = rows.filter(r => r.isDamaged);

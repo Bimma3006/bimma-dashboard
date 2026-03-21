@@ -3008,6 +3008,7 @@ input::placeholder { color: var(--text-4); }
           </div>
         </div>
       </div>
+      <div id="stalkerFeedFilters" style="display:none;padding:10px 18px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap;"></div>
       <div class="stalker-feed-body" id="stalkerFeed">
         <div class="stalker-feed-empty" id="stalkerFeedEmpty">
           <div class="stalker-feed-empty-icon">👁</div>
@@ -5688,6 +5689,7 @@ function scoutClear() {
 // STOREFRONT STALKER
 // ════════════════════════════════════════
 let stalkerSellers   = [];
+let stalkerFeedFilter = 'all';
 let stalkerSnapshots = {};
 let stalkerFeedItems = [];
 let stalkerLoaded    = false;
@@ -5962,10 +5964,42 @@ function stalkerRenderSellers() {
 
 
 
+function stalkerRenderFeedFilters() {
+  const bar = document.getElementById('stalkerFeedFilters');
+  if (!bar) return;
+  if (!stalkerFeedItems.length) { bar.style.display = 'none'; return; }
+
+  // Collect unique sellers from feed
+  const seen = new Map();
+  stalkerFeedItems.forEach(item => {
+    if (item.sellerId && !seen.has(item.sellerId)) seen.set(item.sellerId, item.sellerName || item.sellerId);
+  });
+
+  if (seen.size <= 1) { bar.style.display = 'none'; return; }
+
+  bar.style.display = 'flex';
+  const pills = [['all', `All (${stalkerFeedItems.length})`], ...Array.from(seen.entries()).map(([id, name]) => {
+    const count = stalkerFeedItems.filter(f => f.sellerId === id).length;
+    return [id, `${name} (${count})`];
+  })];
+  bar.innerHTML = pills.map(([id, label]) => {
+    const active = stalkerFeedFilter === id;
+    return `<button onclick="stalkerSetFeedFilter('${id}')" style="font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:var(--r-xs);border:1px solid ${active ? 'var(--accent)' : 'var(--border2)'};background:${active ? 'var(--accent-glow)' : 'transparent'};color:${active ? 'var(--accent)' : 'var(--text-3)'};cursor:pointer;transition:all 0.15s;white-space:nowrap;">${label}</button>`;
+  }).join('');
+}
+
+function stalkerSetFeedFilter(id) {
+  stalkerFeedFilter = id;
+  stalkerRenderFeedFilters();
+  stalkerRenderFeed();
+}
+
 function stalkerRenderFeed() {
   const feedEl  = document.getElementById('stalkerFeed');
   const emptyEl = document.getElementById('stalkerFeedEmpty');
   if (!feedEl) return;
+
+  stalkerRenderFeedFilters();
 
   if (!stalkerFeedItems.length) {
     if (emptyEl) emptyEl.style.display = 'flex';
@@ -5973,12 +6007,17 @@ function stalkerRenderFeed() {
   }
   if (emptyEl) emptyEl.style.display = 'none';
 
+  // Apply seller filter
+  const visibleItems = stalkerFeedFilter === 'all'
+    ? stalkerFeedItems
+    : stalkerFeedItems.filter(f => f.sellerId === stalkerFeedFilter);
+
   // Group items by date
   const today = new Date(); today.setHours(0,0,0,0);
   const yesterday = new Date(today); yesterday.setDate(yesterday.getDate()-1);
 
   const groups = {};
-  stalkerFeedItems.forEach(item => {
+  visibleItems.forEach(item => {
     const d = new Date(item.detectedAt); d.setHours(0,0,0,0);
     const key = d.getTime();
     if (!groups[key]) groups[key] = [];
@@ -6056,6 +6095,7 @@ function stalkerRenderFeed() {
 function stalkerClearFeed() {
   if (!confirm('Clear all feed items?')) return;
   stalkerFeedItems = [];
+  stalkerFeedFilter = 'all';
   stalkerSellers.forEach(s => { if (s.status === 'has-new') s.status = 'ok'; });
   stalkerSave();
   stalkerRenderSellers();

@@ -1336,6 +1336,48 @@ input::placeholder { color: var(--text-4); }
 .a2a-result-count { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
 .a2a-bar-actions { display: flex; gap: 6px; align-items: center; margin-left: auto; }
 
+/* Deal Analyser — enhancements */
+.da-table tbody tr.viewed { opacity: 0.42; }
+.da-table tbody tr.viewed .td-product-title { color: var(--text-3); }
+.viewed-badge {
+  font-family: var(--mono); font-size: 8px; font-weight: 700;
+  letter-spacing: 0.1em; padding: 1px 6px; border-radius: 3px;
+  background: rgba(255,255,255,0.06); color: var(--text-4);
+  border: 1px solid var(--border2); margin-left: 5px; vertical-align: middle;
+  text-transform: uppercase;
+}
+.pill-count {
+  display: inline-block; margin-left: 4px;
+  background: rgba(255,255,255,0.08); border-radius: 99px;
+  padding: 0 6px; font-size: 9px; min-width: 16px; text-align: center; line-height: 1.6;
+}
+.a2a-fpill.active .pill-count { background: rgba(255,255,255,0.18); }
+.da-search {
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: var(--r-sm); padding: 5px 11px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  outline: none; transition: border-color var(--transition); width: 210px;
+}
+.da-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(77,142,245,0.1); }
+.da-search::placeholder { color: var(--text-4); }
+.a2a-threshold-bar {
+  display: none; align-items: center; gap: 14px;
+  padding: 8px 14px; background: var(--surface2);
+  border: 1px solid var(--border2); border-radius: var(--r-sm);
+  margin-bottom: 8px; flex-wrap: wrap;
+}
+.a2a-threshold-bar.visible { display: flex; }
+.a2a-threshold-label { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.a2a-threshold-input {
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 4px; padding: 3px 8px; color: var(--text);
+  font-family: var(--mono); font-size: 12px; font-weight: 600;
+  outline: none; width: 48px; text-align: right;
+  transition: border-color var(--transition);
+}
+.a2a-threshold-input:focus { border-color: var(--accent); }
+.a2a-threshold-pct { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+
 /* ════════════════════════════════════════
    MIN PRICE TOOL — REDESIGN
 ════════════════════════════════════════ */
@@ -2484,18 +2526,18 @@ input::placeholder { color: var(--text-4); }
       <div class="a2a-results-left">
         <span id="daResultCount" class="a2a-result-total"></span>
         <div class="a2a-filter-pills">
-          <button class="a2a-fpill active" onclick="daSetFilter('all',this)">All</button>
-          <button class="a2a-fpill fp-green" onclick="daSetFilter('green',this)">
+          <button class="a2a-fpill active" id="daPillAll" onclick="daSetFilter('all',this)">All</button>
+          <button class="a2a-fpill fp-green" id="daPillGreen" onclick="daSetFilter('green',this)">
             <span class="a2a-fpill-dot fp-green-dot"></span>Strong
           </button>
-          <button class="a2a-fpill fp-amber" onclick="daSetFilter('amber',this)">
+          <button class="a2a-fpill fp-amber" id="daPillAmber" onclick="daSetFilter('amber',this)">
             <span class="a2a-fpill-dot fp-amber-dot"></span>Marginal
           </button>
-          <button class="a2a-fpill fp-red" onclick="daSetFilter('red',this)">
+          <button class="a2a-fpill fp-red" id="daPillRed" onclick="daSetFilter('red',this)">
             <span class="a2a-fpill-dot fp-red-dot"></span>Reject
           </button>
-          <button class="a2a-fpill fp-amber" onclick="daSetFilter('giftcard',this)">
-            <span class="a2a-fpill-dot fp-amber-dot"></span>🎁 GC Only
+          <button class="a2a-fpill fp-amber" id="daPillGC" onclick="daSetFilter('giftcard',this)">
+            <span class="a2a-fpill-dot fp-amber-dot"></span>🎁 GC
           </button>
         </div>
       </div>
@@ -2507,12 +2549,29 @@ input::placeholder { color: var(--text-4); }
         <span class="a2a-spike-notice" id="spikeNotice" style="display:none;"></span>
       </div>
       <div class="a2a-results-right">
+        <input type="text" id="daSearch" class="da-search" placeholder="Search ASIN or title…" oninput="daRenderTable()">
         <span class="a2a-veto-badge" id="daVetoCount" style="display:none;"></span>
         <span class="a2a-veto-badge a2a-veto-red" id="daRejectedCount" style="display:none;"></span>
         <button class="a2a-action-btn" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;">Clear rejected</button>
         <button class="a2a-action-btn" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
         <button class="a2a-action-btn a2a-action-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export CSV</button>
       </div>
+    </div>
+
+    <!-- ROI THRESHOLDS BAR -->
+    <div class="a2a-threshold-bar" id="daThresholdBar">
+      <span style="font-family:var(--mono);font-size:9px;color:var(--text-3);letter-spacing:0.12em;text-transform:uppercase;flex-shrink:0;">Thresholds</span>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <span class="a2a-threshold-label" style="color:var(--green);">Strong ≥</span>
+        <input type="number" id="daStrongROI" class="a2a-threshold-input" value="20" min="1" max="99" step="1" oninput="daUpdateThresholds()">
+        <span class="a2a-threshold-pct">%</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <span class="a2a-threshold-label" style="color:var(--amber);">Min ≥</span>
+        <input type="number" id="daMinROI" class="a2a-threshold-input" value="15" min="1" max="99" step="1" oninput="daUpdateThresholds()">
+        <span class="a2a-threshold-pct">%</span>
+      </label>
+      <span style="font-family:var(--mono);font-size:9.5px;color:var(--text-3);">— re-scores instantly without re-running</span>
     </div>
 
     <div class="a2a-table-wrap" id="daTableWrap">
@@ -4497,6 +4556,31 @@ setTimeout(() => {
     const ready = currentMode==='eu' ? (daSlotTexts[1]||daSlotFiles[1]) && (daSlotTexts[3]||daSlotFiles[3]) : !!(daSlotTexts[1]||daSlotFiles[1]);
     if (ready) btn.classList.add('ready', currentMode);
   }
+  // Restore last analysis results from localStorage
+  try {
+    const savedDeals = localStorage.getItem('bimma_da_results');
+    const savedMode  = localStorage.getItem('bimma_da_results_mode') || 'eu';
+    if (savedDeals) {
+      const parsed = JSON.parse(savedDeals);
+      if (parsed && parsed.length > 0) {
+        daDeals = parsed;
+        currentMode = savedMode;
+        document.querySelectorAll('.a2a-mode-btn').forEach(b => {
+          b.classList.toggle('active', (b.getAttribute('onclick')||'').includes("'"+savedMode+"'"));
+        });
+        const dz = document.getElementById('daDropzone'); if (dz) dz.style.display = 'none';
+        const df = document.getElementById('daFilters'); if (df) df.classList.add('visible');
+        const tw = document.getElementById('daTableWrap'); if (tw) tw.classList.add('visible');
+        const rb = document.getElementById('daResetBtn'); if (rb) rb.style.display = '';
+        const tb = document.getElementById('daThresholdBar'); if (tb) tb.classList.add('visible');
+        document.getElementById('daCountGreen').textContent = daDeals.filter(d => d.colour === 'green').length;
+        const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
+        document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
+        const gcEl = document.getElementById('daCountGC'); if(gcEl) gcEl.textContent = daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
+        daUpdateVetoCount(); daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
+      }
+    }
+  } catch(e) { try { localStorage.removeItem('bimma_da_results'); } catch {} }
 }, 0);
 
 function daFileChosen(num, file) {
@@ -4650,7 +4734,9 @@ function daRunAnalysis() {
         document.getElementById('daFilters').classList.add('visible');
         document.getElementById('daTableWrap').classList.add('visible');
         document.getElementById('daResetBtn').style.display = '';
-        daUpdateVetoCount(); daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable();
+        const tb = document.getElementById('daThresholdBar'); if (tb) tb.classList.add('visible');
+        daUpdateVetoCount(); daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
+        try { localStorage.setItem('bimma_da_results', JSON.stringify(daDeals)); localStorage.setItem('bimma_da_results_mode', currentMode); } catch(e) {}
       } catch(err) {
         document.getElementById('daLoading').classList.remove('visible');
         document.getElementById('daDropzone').style.display = '';
@@ -4692,9 +4778,11 @@ function daRenderHeaders() {
 // ════════════════════════════════════════
 function daRenderTable() {
   const tbody = document.getElementById('daTableBody'); tbody.innerHTML = '';
+  const daSearchQ = (document.getElementById('daSearch')?.value || '').toLowerCase().trim();
   let filtered = daFilter === 'giftcard'
     ? daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15))
     : daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter);
+  if (daSearchQ) filtered = filtered.filter(d => d.asin.toLowerCase().includes(daSearchQ) || d.title.toLowerCase().includes(daSearchQ));
   if (daSort.col) {
     filtered = [...filtered].sort((a, b) => {
       let av = a[daSort.col], bv = b[daSort.col];
@@ -4713,6 +4801,7 @@ function daRenderTable() {
     if (isVetoed) tr.classList.add('vetoed');
     if (deal.decision === 'approved') tr.classList.add('approved');
     if (deal.decision === 'rejected') tr.classList.add('rejected');
+    if (daViewedList.has(deal.asin)) tr.classList.add('viewed');
     const fmtN = (n, p='£', dp=2) => n == null ? '—' : p + n.toFixed(dp);
     const fmtP = n => n == null ? '—' : (n * 100).toFixed(1) + '%';
     const roiColour = deal.roi !== null && deal.roi >= 0.20 ? 'var(--green)' : deal.roi !== null && deal.roi >= 0.15 ? 'var(--amber)' : deal.colour === 'red' ? 'var(--red)' : 'var(--text-3)';
@@ -4724,7 +4813,7 @@ function daRenderTable() {
     tr.dataset.asin = deal.asin;
     tr.innerHTML = `
       <td class="td-product">
-        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.inInventory ? ' <span class="inv-badge">📦 bought &lt;30d</span>' : ''}${deal.priceChanged ? ' <span class="pc-badge">🔄 price changed</span>' : ''}${daViewedList.has(deal.asin) ? ' <span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;">👁 viewed</span>' : ''}</div>
+        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.inInventory ? ' <span class="inv-badge">📦 bought &lt;30d</span>' : ''}${deal.priceChanged ? ' <span class="pc-badge">🔄 price changed</span>' : ''}${daViewedList.has(deal.asin) ? ' <span class="viewed-badge">SEEN</span>' : ''}</div>
         <div class="td-asin-row">
           <a href="https://www.amazon.co.uk/dp/${deal.asin}" target="_blank" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">${deal.asin}</a>
           <a href="https://www.keepa.com/#product/2-${deal.asin}" target="_blank" class="keepa-link" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">Keepa ↗</a>
@@ -4732,8 +4821,8 @@ function daRenderTable() {
       </td>
       <td class="td-num">${fmtN(deal.buyIncVat)}</td>
       <td class="td-num">${fmtN(deal.spIncVat)}${spTag}</td>
-      <td class="td-num td-profit">${fmtN(deal.profit)}</td>
-      <td class="td-roi ${deal.colour}">${fmtP(deal.roi)}</td>
+      <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
+      <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
       <td class="td-num" style="${deal.gcRoi != null ? (deal.gcRoi >= 0.20 ? 'color:var(--green);font-weight:700;' : deal.gcRoi >= 0.15 ? 'color:var(--amber);font-weight:600;' : deal.gcRoi > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${deal.gcRoi != null ? (deal.gcRoi >= 0.15 && (deal.roi == null || deal.roi < 0.15) ? '🎁 ' : '') + fmtP(deal.gcRoi) : '—'}</td>
       <td class="td-num td-center">${deal.boughtPerMonth ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
       <td class="td-rating">
@@ -4766,6 +4855,52 @@ function daRenderTable() {
   // Show export btn if any approved
   const hasApproved = daDeals.some(d => d.decision === 'approved');
   document.getElementById('daExportBtn').style.display = hasApproved ? '' : 'none';
+}
+
+// ════════════════════════════════════════
+// PILL COUNTS + ROI THRESHOLDS
+// ════════════════════════════════════════
+function daUpdatePillCounts() {
+  const counts = {
+    all:      daDeals.length,
+    green:    daDeals.filter(d => d.colour === 'green').length,
+    amber:    daDeals.filter(d => d.colour === 'amber').length,
+    red:      daDeals.filter(d => d.colour === 'red').length,
+    giftcard: daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length,
+  };
+  [['daPillAll','all'],['daPillGreen','green'],['daPillAmber','amber'],['daPillRed','red'],['daPillGC','giftcard']].forEach(([id, key]) => {
+    const el = document.getElementById(id); if (!el) return;
+    let span = el.querySelector('.pill-count');
+    if (!span) { span = document.createElement('span'); span.className = 'pill-count'; el.appendChild(span); }
+    span.textContent = counts[key];
+  });
+}
+
+function daUpdateThresholds() {
+  const strong = parseFloat(document.getElementById('daStrongROI')?.value) / 100;
+  const min    = parseFloat(document.getElementById('daMinROI')?.value) / 100;
+  if (isNaN(strong) || isNaN(min) || strong <= min || min <= 0) return;
+  Object.keys(MODES).forEach(m => { MODES[m].strongROI = strong; MODES[m].minROI = min; });
+  daDeals.forEach(deal => {
+    if (deal.spikeFlag || deal.roi === null) return;
+    const fbaEst = deal.fbaFeeEst ? ' · FBA est.' : '';
+    if (deal.roi >= strong) {
+      deal.strength = 'STRONG'; deal.colour = 'green'; deal.sortOrder = 0;
+      deal.reason = (deal.recoveries ? `ROI ${(deal.roi*100).toFixed(1)}% · ${deal.recoveries} recover${deal.recoveries > 1 ? 'ies' : 'y'}` : `ROI ${(deal.roi*100).toFixed(1)}% — strong return`) + fbaEst;
+    } else if (deal.roi >= min) {
+      deal.strength = 'MARGINAL'; deal.colour = 'amber'; deal.sortOrder = 1;
+      deal.reason = `ROI ${(deal.roi*100).toFixed(1)}% — verify on Keepa${fbaEst}`;
+    } else {
+      deal.strength = 'REJECT'; deal.colour = 'red'; deal.sortOrder = 2;
+      deal.reason = `ROI ${(deal.roi*100).toFixed(1)}% — below minimum${fbaEst}`;
+    }
+  });
+  if (!daSort.col) daDeals.sort((a, b) => a.sortOrder - b.sortOrder);
+  document.getElementById('daCountGreen').textContent = daDeals.filter(d => d.colour === 'green').length;
+  const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
+  document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
+  const gcEl = document.getElementById('daCountGC'); if(gcEl) gcEl.textContent = daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
+  daRenderTable(); daUpdatePillCounts();
 }
 
 // ════════════════════════════════════════
@@ -4804,6 +4939,7 @@ function daSetDecision(idx, decision, btn) {
     else          { daRejectedList.set(deal.asin, { price: deal.buyIncVat, date: new Date().toISOString().split('T')[0] }); }
     daSaveRejected();
   }
+  try { localStorage.setItem('bimma_da_results', JSON.stringify(daDeals)); } catch {}
   daRenderTable();
 }
 
@@ -4892,6 +5028,9 @@ function daReset() {
   document.getElementById('daGoBtn').classList.remove('ready');
   document.getElementById('daTableBody').innerHTML = '';
   document.querySelectorAll('#daFilters .a2a-fpill').forEach((b, i) => b.classList.toggle('active', i === 0));
+  const tb = document.getElementById('daThresholdBar'); if (tb) tb.classList.remove('visible');
+  const ds = document.getElementById('daSearch'); if (ds) ds.value = '';
+  try { localStorage.removeItem('bimma_da_results'); localStorage.removeItem('bimma_da_results_mode'); } catch {}
 }
 
 // ════════════════════════════════════════
@@ -6951,11 +7090,11 @@ function rpSetTab(tab) {
 function daMarkViewed(asin) {
   daViewedList.add(asin);
   try { localStorage.setItem('bimma-a2a-viewed', JSON.stringify([...daViewedList])); } catch {}
-  // Update badge in DOM without full re-render
   document.querySelectorAll(`#daTableBody tr[data-asin="${asin}"]`).forEach(tr => {
+    tr.classList.add('viewed');
     const titleDiv = tr.querySelector('.td-product-title');
     if (titleDiv && !titleDiv.querySelector('.viewed-badge')) {
-      titleDiv.insertAdjacentHTML('beforeend', ' <span class="viewed-badge" style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;">👁 viewed</span>');
+      titleDiv.insertAdjacentHTML('beforeend', ' <span class="viewed-badge">SEEN</span>');
     }
   });
 }

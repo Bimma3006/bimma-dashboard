@@ -3592,6 +3592,11 @@ const rmToday = new Date(); rmToday.setHours(0,0,0,0);
 try{ rmReturnRequests=JSON.parse(localStorage.getItem('bimma_returnRequests')||'{}'); }catch{}
 try{ rmCustomWindows=JSON.parse(localStorage.getItem('bimma_customWindows')||'{}'); }catch{}
 
+let rmTxnText=null, rmStkText=null, rmSvText=null;
+try{ rmTxnText=localStorage.getItem('bimma_rm_txn_text')||null; }catch{}
+try{ rmStkText=localStorage.getItem('bimma_rm_stk_text')||null; }catch{}
+try{ rmSvText=localStorage.getItem('bimma_rm_sv_text')||null; }catch{}
+
 function rmWireDZ(dzId, inpId, fnId, cb){
   const dz=document.getElementById(dzId);
   document.getElementById(inpId).addEventListener('change',e=>{const f=e.target.files[0];if(f)cb(f,dz,fnId);});
@@ -3599,12 +3604,35 @@ function rmWireDZ(dzId, inpId, fnId, cb){
   dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
   dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)cb(f,dz,fnId);});
 }
-rmWireDZ('rm-dz-txn','rm-inp-txn','rm-fn-txn',(f,dz,fn)=>{rmTxnFile=f;document.getElementById(fn).textContent='✓ '+f.name;dz.classList.add('loaded');rmCheckReady();});
-rmWireDZ('rm-dz-stk','rm-inp-stk','rm-fn-stk',(f,dz,fn)=>{rmStkFile=f;document.getElementById(fn).textContent='✓ '+f.name;dz.classList.add('loaded');rmCheckReady();});
-rmWireDZ('rm-dz-sv','rm-inp-sv','rm-fn-sv',(f,dz,fn)=>{rmSvFile=f;document.getElementById(fn).textContent='✓ '+f.name;dz.classList.add('loaded');});
-function rmCheckReady(){document.getElementById('rmAnalyseBtn').disabled=!(rmTxnFile&&rmStkFile);}
+function rmCacheFile(key, f, onDone){
+  const r=new FileReader();
+  r.onload=e=>{
+    const text=e.target.result;
+    try{localStorage.setItem('bimma_rm_'+key+'_text',text);localStorage.setItem('bimma_rm_'+key+'_name',f.name);}catch(e){console.warn('RM cache too large to store:',e);}
+    onDone(text);
+  };
+  r.readAsText(f);
+}
+rmWireDZ('rm-dz-txn','rm-inp-txn','rm-fn-txn',(f,dz,fn)=>{rmTxnFile=f;document.getElementById(fn).textContent='✓ '+f.name;dz.classList.add('loaded');rmCacheFile('txn',f,t=>{rmTxnText=t;rmCheckReady();});});
+rmWireDZ('rm-dz-stk','rm-inp-stk','rm-fn-stk',(f,dz,fn)=>{rmStkFile=f;document.getElementById(fn).textContent='✓ '+f.name;dz.classList.add('loaded');rmCacheFile('stk',f,t=>{rmStkText=t;rmCheckReady();});});
+rmWireDZ('rm-dz-sv','rm-inp-sv','rm-fn-sv',(f,dz,fn)=>{rmSvFile=f;document.getElementById(fn).textContent='✓ '+f.name;dz.classList.add('loaded');rmCacheFile('sv',f,t=>{rmSvText=t;});});
+function rmCheckReady(){document.getElementById('rmAnalyseBtn').disabled=!((rmTxnFile||rmTxnText)&&(rmStkFile||rmStkText));}
+
+// Restore cached files on page load
+(function rmRestoreFromCache(){
+  const txnName=localStorage.getItem('bimma_rm_txn_name');
+  const stkName=localStorage.getItem('bimma_rm_stk_name');
+  const svName=localStorage.getItem('bimma_rm_sv_name');
+  if(rmTxnText&&txnName){document.getElementById('rm-fn-txn').textContent='✓ '+txnName;document.getElementById('rm-dz-txn').classList.add('loaded');}
+  if(rmStkText&&stkName){document.getElementById('rm-fn-stk').textContent='✓ '+stkName;document.getElementById('rm-dz-stk').classList.add('loaded');}
+  if(rmSvText&&svName){document.getElementById('rm-fn-sv').textContent='✓ '+svName;document.getElementById('rm-dz-sv').classList.add('loaded');}
+  rmCheckReady();
+  if(rmTxnText&&rmStkText)rmAnalyse();
+})();
 function rmReset(){
   rmTxnFile=null;rmStkFile=null;rmSvFile=null;
+  rmTxnText=null;rmStkText=null;rmSvText=null;
+  ['bimma_rm_txn_text','bimma_rm_txn_name','bimma_rm_stk_text','bimma_rm_stk_name','bimma_rm_sv_text','bimma_rm_sv_name'].forEach(k=>localStorage.removeItem(k));
   ['rm-dz-txn','rm-dz-stk','rm-dz-sv'].forEach(id=>document.getElementById(id).classList.remove('loaded'));
   ['rm-fn-txn','rm-fn-stk','rm-fn-sv'].forEach(id=>document.getElementById(id).textContent='');
   document.getElementById('rmAnalyseBtn').disabled=true;
@@ -3652,11 +3680,12 @@ function rmIsUK(sku){return/[-\s]uk\b/i.test(sku);}
 function rmDaysBetween(a,b){return Math.round((b-a)/(1000*60*60*24));}
 
 function rmAnalyse(){
-  if(!rmTxnFile||!rmStkFile)return;
-  const read=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=()=>rej(new Error('Read failed'));r.readAsText(f);});
-  const jobs=[read(rmTxnFile),read(rmStkFile)];
-  if(rmSvFile)jobs.push(read(rmSvFile));
-  Promise.all(jobs).then(([txnText,stkText,svText])=>{
+  if(!(rmTxnFile||rmTxnText)||!(rmStkFile||rmStkText))return;
+  const readF=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=()=>rej(new Error('Read failed'));r.readAsText(f);});
+  const txnP=rmTxnText?Promise.resolve(rmTxnText):readF(rmTxnFile);
+  const stkP=rmStkText?Promise.resolve(rmStkText):readF(rmStkFile);
+  const svP=rmSvText?Promise.resolve(rmSvText):(rmSvFile?readF(rmSvFile):Promise.resolve(null));
+  Promise.all([txnP,stkP,svP]).then(([txnText,stkText,svText])=>{
     // Parse STK orders
     const stkByOrder={}, stkByAsin={};
     rmParseTSV(stkText).forEach(row=>{

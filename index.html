@@ -1352,23 +1352,6 @@ input::placeholder { color: var(--text-4); }
 }
 .da-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(77,142,245,0.1); }
 .da-search::placeholder { color: var(--text-4); }
-.a2a-threshold-bar {
-  display: none; align-items: center; gap: 14px;
-  padding: 8px 14px; background: var(--surface2);
-  border: 1px solid var(--border2); border-radius: var(--r-sm);
-  margin-bottom: 8px; flex-wrap: wrap;
-}
-.a2a-threshold-bar.visible { display: flex; }
-.a2a-threshold-label { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
-.a2a-threshold-input {
-  background: var(--surface3); border: 1px solid var(--border2);
-  border-radius: 4px; padding: 3px 8px; color: var(--text);
-  font-family: var(--mono); font-size: 12px; font-weight: 600;
-  outline: none; width: 48px; text-align: right;
-  transition: border-color var(--transition);
-}
-.a2a-threshold-input:focus { border-color: var(--accent); }
-.a2a-threshold-pct { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
 
 /* ════════════════════════════════════════
    MIN PRICE TOOL — REDESIGN
@@ -2549,21 +2532,6 @@ input::placeholder { color: var(--text-4); }
       </div>
     </div>
 
-    <!-- ROI THRESHOLDS BAR -->
-    <div class="a2a-threshold-bar" id="daThresholdBar">
-      <span style="font-family:var(--mono);font-size:9px;color:var(--text-3);letter-spacing:0.12em;text-transform:uppercase;flex-shrink:0;">Thresholds</span>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-        <span class="a2a-threshold-label" style="color:var(--green);">Strong ≥</span>
-        <input type="number" id="daStrongROI" class="a2a-threshold-input" value="20" min="1" max="99" step="1" oninput="daUpdateThresholds()">
-        <span class="a2a-threshold-pct">%</span>
-      </label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-        <span class="a2a-threshold-label" style="color:var(--amber);">Min ≥</span>
-        <input type="number" id="daMinROI" class="a2a-threshold-input" value="15" min="1" max="99" step="1" oninput="daUpdateThresholds()">
-        <span class="a2a-threshold-pct">%</span>
-      </label>
-      <span style="font-family:var(--mono);font-size:9.5px;color:var(--text-3);">— re-scores instantly without re-running</span>
-    </div>
 
     <div class="a2a-table-wrap" id="daTableWrap">
       <table class="da-table">
@@ -4562,7 +4530,6 @@ setTimeout(() => {
         const df = document.getElementById('daFilters'); if (df) df.classList.add('visible');
         const tw = document.getElementById('daTableWrap'); if (tw) tw.classList.add('visible');
         const rb = document.getElementById('daResetBtn'); if (rb) rb.style.display = '';
-        const tb = document.getElementById('daThresholdBar'); if (tb) tb.classList.add('visible');
         document.getElementById('daCountGreen').textContent = daDeals.filter(d => d.colour === 'green').length;
         const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
         document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
@@ -4724,7 +4691,6 @@ function daRunAnalysis() {
         document.getElementById('daFilters').classList.add('visible');
         document.getElementById('daTableWrap').classList.add('visible');
         document.getElementById('daResetBtn').style.display = '';
-        const tb = document.getElementById('daThresholdBar'); if (tb) tb.classList.add('visible');
         daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
         try { localStorage.setItem('bimma_da_results', JSON.stringify(daDeals)); localStorage.setItem('bimma_da_results_mode', currentMode); } catch(e) {}
       } catch(err) {
@@ -4852,32 +4818,6 @@ function daUpdatePillCounts() {
   });
 }
 
-function daUpdateThresholds() {
-  const strong = parseFloat(document.getElementById('daStrongROI')?.value) / 100;
-  const min    = parseFloat(document.getElementById('daMinROI')?.value) / 100;
-  if (isNaN(strong) || isNaN(min) || strong <= min || min <= 0) return;
-  Object.keys(MODES).forEach(m => { MODES[m].strongROI = strong; MODES[m].minROI = min; });
-  daDeals.forEach(deal => {
-    if (deal.spikeFlag || deal.roi === null) return;
-    const fbaEst = deal.fbaFeeEst ? ' · FBA est.' : '';
-    if (deal.roi >= strong) {
-      deal.strength = 'STRONG'; deal.colour = 'green'; deal.sortOrder = 0;
-      deal.reason = (deal.recoveries ? `ROI ${(deal.roi*100).toFixed(1)}% · ${deal.recoveries} recover${deal.recoveries > 1 ? 'ies' : 'y'}` : `ROI ${(deal.roi*100).toFixed(1)}% — strong return`) + fbaEst;
-    } else if (deal.roi >= min) {
-      deal.strength = 'MARGINAL'; deal.colour = 'amber'; deal.sortOrder = 1;
-      deal.reason = `ROI ${(deal.roi*100).toFixed(1)}% — verify on Keepa${fbaEst}`;
-    } else {
-      deal.strength = 'REJECT'; deal.colour = 'red'; deal.sortOrder = 2;
-      deal.reason = `ROI ${(deal.roi*100).toFixed(1)}% — below minimum${fbaEst}`;
-    }
-  });
-  if (!daSort.col) daDeals.sort((a, b) => a.sortOrder - b.sortOrder);
-  document.getElementById('daCountGreen').textContent = daDeals.filter(d => d.colour === 'green').length;
-  const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
-  document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
-  const gcEl = document.getElementById('daCountGC'); if(gcEl) gcEl.textContent = daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
-  daRenderTable(); daUpdatePillCounts();
-}
 
 // ════════════════════════════════════════
 // SORT
@@ -4981,7 +4921,6 @@ function daReset() {
   document.getElementById('daGoBtn').classList.remove('ready');
   document.getElementById('daTableBody').innerHTML = '';
   document.querySelectorAll('#daFilters .a2a-fpill').forEach((b, i) => b.classList.toggle('active', i === 0));
-  const tb = document.getElementById('daThresholdBar'); if (tb) tb.classList.remove('visible');
   const ds = document.getElementById('daSearch'); if (ds) ds.value = '';
   try { localStorage.removeItem('bimma_da_results'); localStorage.removeItem('bimma_da_results_mode'); } catch {}
 }

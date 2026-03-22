@@ -805,7 +805,7 @@ input::placeholder { color: var(--text-4); }
   font-family: var(--mono); font-size: 8.5px; font-weight: 700;
   letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--text-3); text-align: right;
-  padding: 11px 14px; border-bottom: 1px solid var(--border2);
+  padding: 9px 12px; border-bottom: 1px solid var(--border2);
   cursor: pointer; user-select: none; white-space: nowrap;
   background: var(--surface2); position: sticky; top: 0; z-index: 5;
 }
@@ -818,7 +818,7 @@ input::placeholder { color: var(--text-4); }
 .da-table tbody tr:hover { background: rgba(255,255,255,0.02); }
 .da-table tbody tr.approved { border-left: 2px solid var(--green); }
 .da-table tbody tr.rejected { border-left: 2px solid var(--red); opacity: 0.4; }
-.da-table td { padding: 13px 14px; vertical-align: middle; }
+.da-table td { padding: 11px 12px; vertical-align: middle; }
 
 /* Product cell */
 .td-product { max-width: 280px; min-width: 190px; }
@@ -855,12 +855,12 @@ input::placeholder { color: var(--text-4); }
 }
 
 /* Number cells */
-.td-num { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--text-2); white-space: nowrap; padding: 13px 10px; }
+.td-num { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--text-2); white-space: nowrap; padding: 11px 10px; }
 .td-center { text-align: center !important; }
 .td-profit { color: var(--green) !important; font-weight: 600; }
 
 /* ROI cell */
-.td-roi { text-align: right; font-family: var(--mono); font-size: 14px; font-weight: 700; white-space: nowrap; padding: 13px 14px; }
+.td-roi { text-align: right; font-family: var(--mono); font-size: 13px; font-weight: 700; white-space: nowrap; padding: 11px 12px; }
 .td-roi.green { color: var(--green); }
 .td-roi.amber { color: var(--amber); }
 .td-roi.red { color: var(--red); opacity: 0.55; }
@@ -876,7 +876,7 @@ input::placeholder { color: var(--text-4); }
 .sp-tag.st { background: rgba(240,165,0,0.08); color: var(--amber); border-color: rgba(240,165,0,0.25); }
 
 /* Rating cell */
-.td-rating { min-width: 170px; max-width: 230px; padding: 13px 10px; }
+.td-rating { min-width: 160px; max-width: 210px; padding: 11px 10px; }
 .rating-strength {
   font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
   text-transform: uppercase; margin-bottom: 3px;
@@ -895,7 +895,7 @@ input::placeholder { color: var(--text-4); }
 .row-ss-roi { font-family: var(--mono); font-size: 9px; font-weight: 600; margin-top: 4px; letter-spacing: 0.04em; }
 
 /* Action buttons */
-.td-actions { white-space: nowrap; padding: 13px 10px; }
+.td-actions { white-space: nowrap; padding: 11px 10px; }
 .action-btns { display: flex; flex-direction: column; gap: 5px; }
 .btn-approve, .btn-reject {
   font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
@@ -1172,9 +1172,9 @@ input::placeholder { color: var(--text-4); }
 /* Results header / filter bar */
 .a2a-results-header {
   display: none;
-  align-items: center;
-  gap: 16px;
-  padding: 9px 14px;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: var(--r);
@@ -1182,16 +1182,31 @@ input::placeholder { color: var(--text-4); }
 }
 .a2a-results-header.visible { display: flex; }
 
-.a2a-results-left { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.a2a-result-total {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-2);
-  white-space: nowrap;
+/* Top row: pills + actions */
+.a2a-results-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* Bottom row: tallies + count + spike */
+.a2a-results-bottom {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
-.a2a-filter-pills { display: flex; gap: 5px; }
+.a2a-results-left { display: flex; align-items: center; gap: 8px; flex: 1; }
+.a2a-result-total {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
+  white-space: nowrap;
+  padding-right: 6px;
+  border-right: 1px solid var(--border2);
+}
+
+.a2a-filter-pills { display: flex; gap: 5px; flex-wrap: wrap; }
 .a2a-fpill {
   padding: 5px 13px;
   font-family: var(--mono);
@@ -1221,10 +1236,7 @@ input::placeholder { color: var(--text-4); }
 .a2a-fpill.fp-purple.active { border-color: rgba(155,109,255,0.35); color: var(--purple); background: rgba(155,109,255,0.06); }
 
 .a2a-results-mid {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex: 1;
+  display: contents; /* children flow into .a2a-results-bottom directly */
 }
 .a2a-tally {
   display: flex;
@@ -1240,7 +1252,7 @@ input::placeholder { color: var(--text-4); }
 .a2a-tally-r { color: var(--red); }
 .a2a-spike-notice { font-family: var(--mono); font-size: 10px; color: var(--amber); }
 
-.a2a-results-right { display: flex; gap: 6px; align-items: center; margin-left: auto; flex-shrink: 0; }
+.a2a-results-right { display: flex; gap: 6px; align-items: center; margin-left: auto; flex-shrink: 0; flex-wrap: wrap; }
 .a2a-rejected-badge {
   font-family: var(--mono);
   font-size: 9px;
@@ -2502,8 +2514,8 @@ input::placeholder { color: var(--text-4); }
 
     <!-- RESULTS HEADER + FILTER BAR -->
     <div class="a2a-results-header" id="daFilters">
-      <div class="a2a-results-left">
-        <span id="daResultCount" class="a2a-result-total"></span>
+      <!-- Row 1: filter pills + search/actions -->
+      <div class="a2a-results-top">
         <div class="a2a-filter-pills">
           <button class="a2a-fpill active" id="daPillAll" onclick="daSetFilter('all',this)">All</button>
           <button class="a2a-fpill fp-green" id="daPillGreen" onclick="daSetFilter('green',this)">
@@ -2516,27 +2528,29 @@ input::placeholder { color: var(--text-4); }
             <span class="a2a-fpill-dot fp-red-dot"></span>Reject
           </button>
           <button class="a2a-fpill fp-amber" id="daPillGC" onclick="daSetFilter('giftcard',this)">
-            <span class="a2a-fpill-dot fp-amber-dot"></span>🎁 GC
+            <span class="a2a-fpill-dot fp-amber-dot"></span>🎁 GC only
           </button>
           <button class="a2a-fpill fp-purple" id="daPillSS" onclick="daSetFilter('subsave',this)">
-            <span class="a2a-fpill-dot fp-purple-dot"></span>♻ S&amp;S
+            <span class="a2a-fpill-dot fp-purple-dot"></span>♻ Sub &amp; Save
           </button>
         </div>
+        <div class="a2a-results-right">
+          <input type="text" id="daSearch" class="da-search" placeholder="Search ASIN or title…" oninput="daRenderTable()">
+          <button class="a2a-action-btn" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
+          <button class="a2a-action-btn a2a-action-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export CSV</button>
+        </div>
       </div>
-      <div class="a2a-results-mid">
+      <!-- Row 2: tallies + count + notices -->
+      <div class="a2a-results-bottom">
+        <span id="daResultCount" class="a2a-result-total"></span>
         <span class="a2a-tally a2a-tally-g"><span class="a2a-tally-dot"></span><span id="daCountGreen">0</span> strong</span>
         <span class="a2a-tally a2a-tally-a"><span class="a2a-tally-dot"></span><span id="daCountAmber">0</span> marginal</span>
         <span class="a2a-tally a2a-tally-r"><span class="a2a-tally-dot"></span><span id="daCountRed">0</span> reject</span>
-        <span class="a2a-tally" style="color:var(--amber);"><span class="a2a-tally-dot" style="background:var(--amber);"></span><span id="daCountGC">0</span> 🎁 GC</span>
-        <span class="a2a-tally" style="color:var(--purple);"><span class="a2a-tally-dot" style="background:var(--purple);"></span><span id="daCountSS">0</span> ♻ S&amp;S</span>
+        <span class="a2a-tally" style="color:var(--amber);"><span class="a2a-tally-dot" style="background:var(--amber);"></span><span id="daCountGC">0</span> GC</span>
+        <span class="a2a-tally" style="color:var(--purple);"><span class="a2a-tally-dot" style="background:var(--purple);"></span><span id="daCountSS">0</span> S&amp;S</span>
         <span class="a2a-spike-notice" id="spikeNotice" style="display:none;"></span>
-      </div>
-      <div class="a2a-results-right">
-        <input type="text" id="daSearch" class="da-search" placeholder="Search ASIN or title…" oninput="daRenderTable()">
-        <span class="a2a-rejected-badge" id="daRejectedCount" style="display:none;"></span>
-        <button class="a2a-action-btn" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;">Clear rejected</button>
-        <button class="a2a-action-btn" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
-        <button class="a2a-action-btn a2a-action-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export CSV</button>
+        <span class="a2a-rejected-badge" id="daRejectedCount" style="display:none;margin-left:auto;"></span>
+        <button class="a2a-action-btn" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;font-size:9px;">Clear rejected</button>
       </div>
     </div>
 

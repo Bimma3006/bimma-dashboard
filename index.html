@@ -4488,7 +4488,17 @@ function daAnalyseRow(row) {
     gcProfit = sp - gcBuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - gcVatDue;
     gcRoi = gcProfit / gcBuyExVat;
   }
-  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, decision: null };
+
+  // Subscribe & Save: 15% off buy price
+  let ssProfit = null, ssRoi = null;
+  if (ss && sp && buyExVat && buyIncVat && refFee !== null && fbaExVat !== null) {
+    const ssBuyIncVat = buyIncVat * 0.85;
+    const ssBuyExVat  = ssBuyIncVat / (1 + vat);
+    const ssVatDue    = (spIncVat * vat / (1 + vat)) - (ssBuyIncVat * vat / (1 + vat));
+    ssProfit = sp - ssBuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - ssVatDue;
+    ssRoi    = ssProfit / ssBuyExVat;
+  }
+  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, decision: null };
 }
 
 // ════════════════════════════════════════
@@ -4724,6 +4734,7 @@ function daRenderHeaders() {
     <th data-col="profit" data-type="num">Profit</th>
     <th data-col="roi" data-type="num">ROI</th>
     <th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI if you buy with 10% gift card discount">🎁 GC ROI</th>
+    <th data-col="ssRoi" data-type="num" style="color:var(--purple);" title="ROI if bought via Subscribe &amp; Save (15% off buy price)">♻ S&amp;S ROI</th>
     <th data-col="boughtPerMonth" data-type="num">Bought/mo</th>
     <th class="no-sort th-left" style="min-width:200px;">Rating</th>
     <th class="no-sort" style="min-width:150px;"></th>
@@ -4777,6 +4788,7 @@ function daRenderTable() {
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
       <td class="td-num" style="${deal.gcRoi != null ? (deal.gcRoi >= 0.20 ? 'color:var(--green);font-weight:700;' : deal.gcRoi >= 0.15 ? 'color:var(--amber);font-weight:600;' : deal.gcRoi > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${deal.gcRoi != null ? (deal.gcRoi >= 0.15 && (deal.roi == null || deal.roi < 0.15) ? '🎁 ' : '') + fmtP(deal.gcRoi) : '—'}</td>
+      <td class="td-num" style="${deal.ssRoi != null ? (deal.ssRoi >= 0.20 ? 'color:var(--green);font-weight:700;' : deal.ssRoi >= 0.15 ? 'color:var(--purple);font-weight:600;' : deal.ssRoi > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : 'color:var(--text-3);'}">${deal.ss ? (deal.ssRoi != null ? fmtP(deal.ssRoi) : '—') : '—'}</td>
       <td class="td-num td-center">${deal.boughtPerMonth ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
       <td class="td-rating">
         <div class="rating-strength ${deal.colour}">${deal.strength}</div>

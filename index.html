@@ -1215,6 +1215,8 @@ input::placeholder { color: var(--text-4); }
 .a2a-fpill.fp-amber.active { border-color: rgba(240,165,0,0.35); color: var(--amber); background: rgba(240,165,0,0.06); }
 .a2a-fpill.fp-red.active { border-color: rgba(240,59,80,0.35); color: var(--red); background: rgba(240,59,80,0.06); }
 .a2a-fpill.fp-purple.active { border-color: rgba(155,109,255,0.35); color: var(--purple); background: rgba(155,109,255,0.06); }
+.fp-blue-dot { background: var(--blue); }
+.a2a-fpill.fp-blue.active { border-color: rgba(77,142,245,0.35); color: var(--blue); background: rgba(77,142,245,0.06); }
 
 .a2a-results-mid {
   display: contents; /* children flow into .a2a-results-bottom directly */
@@ -2512,6 +2514,9 @@ input::placeholder { color: var(--text-4); }
         <button class="a2a-fpill fp-purple" id="daPillSS" onclick="daSetFilter('subsave',this)">
           <span class="a2a-fpill-dot fp-purple-dot"></span>♻ Sub &amp; Save
         </button>
+        <button class="a2a-fpill fp-blue" id="daPillR15" onclick="daSetFilter('retailer',this)">
+          <span class="a2a-fpill-dot fp-blue-dot"></span>🏪 Currys/Argos
+        </button>
         <span class="a2a-spike-notice" id="spikeNotice" style="display:none;margin-left:4px;"></span>
       </div>
       <div class="a2a-filter-actions">
@@ -2528,6 +2533,7 @@ input::placeholder { color: var(--text-4); }
       <span id="daCountRed" style="display:none;"></span>
       <span id="daCountGC" style="display:none;"></span>
       <span id="daCountSS" style="display:none;"></span>
+      <span id="daCountR15" style="display:none;"></span>
     </div>
 
 
@@ -4502,7 +4508,18 @@ function daAnalyseRow(row) {
     ssProfit = sp - ssBuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - ssVatDue;
     ssRoi    = ssProfit / ssBuyExVat;
   }
-  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, decision: null };
+
+  // Retailer 15% gift card (Currys / Argos / Shark / Vax): 15% off buy price, price-matched to Amazon
+  const r15BuyExVat  = buyExVat ? buyExVat * 0.85 : null;
+  const r15BuyIncVat = buyIncVat ? buyIncVat * 0.85 : null;
+  let r15Profit = null, r15Roi = null;
+  if (sp && r15BuyExVat && refFee !== null && fbaExVat !== null) {
+    const r15VatDue = (spIncVat * vat / (1 + vat)) - (r15BuyIncVat ? r15BuyIncVat * vat / (1 + vat) : 0);
+    r15Profit = sp - r15BuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - r15VatDue;
+    r15Roi    = r15Profit / r15BuyExVat;
+  }
+
+  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, decision: null };
 }
 
 // ════════════════════════════════════════
@@ -4571,6 +4588,7 @@ setTimeout(() => {
         document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
         const gcEl = document.getElementById('daCountGC'); if(gcEl) gcEl.textContent = daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
         const ssEl2 = document.getElementById('daCountSS'); if(ssEl2) ssEl2.textContent = daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15).length;
+        const r15El2 = document.getElementById('daCountR15'); if(r15El2) r15El2.textContent = daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
         daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
       }
     }
@@ -4714,6 +4732,7 @@ function daRunAnalysis() {
       document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
       const gcEl = document.getElementById('daCountGC'); if(gcEl) gcEl.textContent = daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
       const ssElRun = document.getElementById('daCountSS'); if(ssElRun) ssElRun.textContent = daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15).length;
+      const r15ElRun = document.getElementById('daCountR15'); if(r15ElRun) r15ElRun.textContent = daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
 
       const softSpiked = daDeals.filter(d => d.spikeFlag).length;
       const notices = [];
@@ -4762,6 +4781,7 @@ function daRenderHeaders() {
     <th data-col="profit" data-type="num">Profit</th>
     <th data-col="roi" data-type="num">ROI</th>
     <th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI if you buy with 10% gift card discount">🎁 GC ROI</th>
+    <th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys / Argos / Shark / Vax with 15% gift card discount (price-matched to Amazon)">🏪 15% GC</th>
     <th data-col="boughtPerMonth" data-type="num">Bought/mo</th>
     <th class="no-sort th-left" style="min-width:200px;">Rating</th>
     <th class="no-sort" style="min-width:150px;"></th>
@@ -4778,6 +4798,8 @@ function daRenderTable() {
     ? daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15))
     : daFilter === 'subsave'
     ? daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15)
+    : daFilter === 'retailer'
+    ? daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15))
     : daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter);
   if (daSearchQ) filtered = filtered.filter(d => d.asin.toLowerCase().includes(daSearchQ) || d.title.toLowerCase().includes(daSearchQ));
   if (daSort.col) {
@@ -4819,6 +4841,7 @@ function daRenderTable() {
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
       <td class="td-num" style="${deal.gcRoi != null ? (deal.gcRoi >= 0.20 ? 'color:var(--green);font-weight:700;' : deal.gcRoi >= 0.15 ? 'color:var(--amber);font-weight:600;' : deal.gcRoi > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${deal.gcRoi != null ? (deal.gcRoi >= 0.15 && (deal.roi == null || deal.roi < 0.15) ? '🎁 ' : '') + fmtP(deal.gcRoi) : '—'}</td>
+      <td class="td-num" style="${deal.r15Roi != null ? (deal.r15Roi >= 0.20 ? 'color:var(--green);font-weight:700;' : deal.r15Roi >= 0.15 ? 'color:var(--blue);font-weight:600;' : deal.r15Roi > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${deal.r15Roi != null ? (deal.r15Roi >= 0.15 && (deal.roi == null || deal.roi < 0.15) ? '🏪 ' : '') + fmtP(deal.r15Roi) : '—'}</td>
       <td class="td-num td-center">${deal.boughtPerMonth ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
       <td class="td-rating">
         <div class="rating-strength ${deal.colour}">${deal.strength}</div>
@@ -4853,9 +4876,11 @@ function daUpdatePillCounts() {
     red:      daDeals.filter(d => d.colour === 'red').length,
     giftcard: daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length,
     subsave:  daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15).length,
+    retailer: daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15)).length,
   };
   const ssEl = document.getElementById('daCountSS'); if (ssEl) ssEl.textContent = counts.subsave;
-  [['daPillAll','all'],['daPillGreen','green'],['daPillAmber','amber'],['daPillRed','red'],['daPillGC','giftcard'],['daPillSS','subsave']].forEach(([id, key]) => {
+  const r15El = document.getElementById('daCountR15'); if (r15El) r15El.textContent = counts.retailer;
+  [['daPillAll','all'],['daPillGreen','green'],['daPillAmber','amber'],['daPillRed','red'],['daPillGC','giftcard'],['daPillSS','subsave'],['daPillR15','retailer']].forEach(([id, key]) => {
     const el = document.getElementById(id); if (!el) return;
     let span = el.querySelector('.pill-count');
     if (!span) { span = document.createElement('span'); span.className = 'pill-count'; el.appendChild(span); }
@@ -4964,6 +4989,7 @@ function daReset() {
   document.getElementById('daCountRed').textContent = '0';
   const gcResetEl = document.getElementById('daCountGC'); if(gcResetEl) gcResetEl.textContent = '0';
   const ssResetEl = document.getElementById('daCountSS'); if(ssResetEl) ssResetEl.textContent = '0';
+  const r15ResetEl = document.getElementById('daCountR15'); if(r15ResetEl) r15ResetEl.textContent = '0';
   document.getElementById('daGoBtn').classList.remove('ready');
   document.getElementById('daTableBody').innerHTML = '';
   document.querySelectorAll('#daFilters .a2a-fpill').forEach((b, i) => b.classList.toggle('active', i === 0));

@@ -1122,6 +1122,8 @@ input::placeholder { color: var(--text-4); }
   white-space: nowrap; margin-left: 4px;
 }
 .a2a-calc-divider { border: none; border-top: 1px solid var(--border); margin: 5px 0; }
+.td-disc-price { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+.td-disc-roi   { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 1px; }
 
 /* Upload zone */
 .a2a-upload-zone {
@@ -5055,17 +5057,28 @@ function daRenderTable() {
     const spikeWarn = deal.spikeFlag === 'bb_spike'
       ? `<div class="row-warn spike">⚡ price outlier</div>` : '';
     // Extra cells — only rendered for the relevant filter pill
+    // Each shows discounted buy price (large) + ROI % (small below)
+    const discCell = (price, roi, roiColFn) => {
+      const col = roiColFn(roi);
+      const priceStr = price != null ? `£${price.toFixed(2)}` : '—';
+      const roiStr   = roi   != null ? fmtP(roi) : '—';
+      return `<td class="td-num" style="color:${col};"><div class="td-disc-price">${priceStr}</div><div class="td-disc-roi">${roiStr}</div></td>`;
+    };
+    const gcColour   = r => r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--amber)' : r > 0 ? 'var(--text-2)' : 'var(--red)';
+    const ssColour   = r => r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--purple)' : 'var(--red)';
+    const r15Colour  = r => r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--blue)' : r > 0 ? 'var(--text-2)' : 'var(--red)';
     let extraCells = '';
     if (daFilter === 'giftcard') {
-      const gc = deal.gcRoi;
-      extraCells = `<td class="td-num" style="${gc != null ? (gc >= 0.20 ? 'color:var(--green);font-weight:700;' : gc >= 0.15 ? 'color:var(--amber);font-weight:600;' : gc > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${gc != null ? fmtP(gc) : '—'}</td>`;
+      const price = deal.buyIncVat != null ? deal.buyIncVat * 0.90 : null;
+      extraCells = discCell(price, deal.gcRoi, gcColour);
     } else if (daFilter === 'subsave') {
-      const ss2 = deal.ssRoi, gcss = deal.gcssRoi;
-      extraCells = `<td class="td-num" style="${ss2 != null ? (ss2 >= 0.20 ? 'color:var(--green);font-weight:700;' : ss2 >= 0.15 ? 'color:var(--purple);font-weight:600;' : 'color:var(--red);') : ''}">${ss2 != null ? fmtP(ss2) : '—'}</td>
-      <td class="td-num" style="${gcss != null ? (gcss >= 0.20 ? 'color:var(--green);font-weight:700;' : gcss >= 0.15 ? 'color:var(--amber);font-weight:600;' : gcss > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${gcss != null ? fmtP(gcss) : '—'}</td>`;
+      // buyIncVat already has S&S 15% applied; S&S+GC is that price minus another 10%
+      const ssPrice   = deal.buyIncVat;
+      const gcssPrice = deal.buyIncVat != null ? deal.buyIncVat * 0.90 : null;
+      extraCells = discCell(ssPrice, deal.ssRoi, ssColour) + discCell(gcssPrice, deal.gcssRoi, gcColour);
     } else if (daFilter === 'retailer') {
-      const r15 = deal.r15Roi;
-      extraCells = `<td class="td-num" style="${r15 != null ? (r15 >= 0.20 ? 'color:var(--green);font-weight:700;' : r15 >= 0.15 ? 'color:var(--blue);font-weight:600;' : r15 > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${r15 != null ? fmtP(r15) : '—'}</td>`;
+      const price = deal.buyIncVat != null ? deal.buyIncVat * 0.85 : null;
+      extraCells = discCell(price, deal.r15Roi, r15Colour);
     }
     tr.dataset.asin = deal.asin;
     tr.innerHTML = `

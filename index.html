@@ -4476,7 +4476,7 @@ function daRecalcR15() {
   const vat = FEES.vat;
   const multiplier = 0.15 * (1 - vat); // ~0.12 at 20% VAT
   daDeals.forEach(d => {
-    const match = r15Brands.length === 0 || r15Brands.some(b => d.title.toLowerCase().includes(b.toLowerCase()));
+    const match = !d.ss && (r15Brands.length === 0 || r15Brands.some(b => d.title.toLowerCase().includes(b.toLowerCase())));
     if (!match || d.profit == null || d.buyExVat == null) { d.r15Profit = null; d.r15Roi = null; return; }
     d.r15Profit = d.profit + d.buyExVat * multiplier;
     d.r15Roi    = d.r15Profit / (d.buyExVat * 0.85);
@@ -4731,7 +4731,8 @@ function daAnalyseRow(row) {
 
   // Retailer 15% gift card (Currys / Argos / Shark / Vax): 15% off buy price, price-matched to Amazon
   // Only applies if product title matches the user-configured brand list
-  const r15Match = r15Brands.length === 0 || r15Brands.some(b => title.toLowerCase().includes(b.toLowerCase()));
+  // S&S products have their own dedicated pill — exclude from retailer route
+  const r15Match = !ss && (r15Brands.length === 0 || r15Brands.some(b => title.toLowerCase().includes(b.toLowerCase())));
   const r15BuyExVat  = r15Match && buyExVat ? buyExVat * 0.85 : null;
   const r15BuyIncVat = r15Match && buyIncVat ? buyIncVat * 0.85 : null;
   let r15Profit = null, r15Roi = null;

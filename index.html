@@ -1039,8 +1039,28 @@ input::placeholder { color: var(--text-4); }
 .a2a-retailer-strip {
   display: flex; align-items: center; gap: 10px;
   background: var(--surface2); border: 1px solid var(--border2);
-  border-radius: var(--r-sm); margin-bottom: 12px; padding: 7px 14px;
+  border-radius: var(--r-sm); margin-bottom: 0; padding: 7px 14px;
+  cursor: pointer; user-select: none; transition: border-color 0.15s;
 }
+.a2a-retailer-strip:hover { border-color: var(--border3); }
+.a2a-retailer-strip.open { border-radius: var(--r-sm) var(--r-sm) 0 0; border-bottom-color: transparent; margin-bottom: 0; }
+.a2a-retailer-count {
+  font-family: var(--mono); font-size: 9px; color: var(--text-3);
+  background: var(--surface3); border: 1px solid var(--border2);
+  padding: 1px 6px; border-radius: 3px;
+}
+.a2a-retailer-chevron {
+  font-size: 10px; color: var(--text-3); margin-left: auto;
+  transition: transform 0.2s;
+}
+.a2a-retailer-strip.open .a2a-retailer-chevron { transform: rotate(90deg); }
+.a2a-retailer-expanded {
+  display: none; background: var(--surface2);
+  border: 1px solid var(--border2); border-top: none;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  padding: 10px 14px; margin-bottom: 12px;
+}
+.a2a-retailer-expanded.open { display: block; }
 .a2a-retailer-label {
   font-family: var(--mono); font-size: 9px; font-weight: 700;
   letter-spacing: 0.14em; text-transform: uppercase;
@@ -1062,8 +1082,8 @@ input::placeholder { color: var(--text-4); }
 .a2a-retailer-edit-btn:hover { border-color: var(--border3); color: var(--text-2); }
 .a2a-retailer-edit-wrap {
   display: none; align-items: center; gap: 8px;
-  background: var(--surface2); border: 1px solid rgba(77,142,245,0.25);
-  border-radius: var(--r-sm); margin-bottom: 12px; padding: 10px 14px;
+  border: 1px solid rgba(77,142,245,0.25);
+  border-radius: var(--r-sm); padding: 8px 12px;
 }
 .a2a-retailer-edit-wrap.open { display: flex; }
 .a2a-retailer-edit-hint { font-size: 10px; color: var(--text-3); white-space: nowrap; flex-shrink: 0; }
@@ -2565,17 +2585,21 @@ input::placeholder { color: var(--text-4); }
     </div>
 
     <!-- RETAILER BRAND FILTER -->
-    <div class="a2a-retailer-strip">
+    <div class="a2a-retailer-strip" id="daRetailerStrip" onclick="daToggleRetailerExpand()">
       <span class="a2a-retailer-label">🏪 Retailer brands</span>
-      <div class="a2a-retailer-tags" id="daRetailerTagsEl"></div>
-      <button class="a2a-retailer-edit-btn" id="daRetailerEditBtn" onclick="daToggleRetailerEdit()">Edit</button>
+      <span class="a2a-retailer-count" id="daRetailerCount"></span>
+      <span class="a2a-retailer-chevron">▸</span>
     </div>
-    <div class="a2a-retailer-edit-wrap" id="daRetailerEditWrap">
-      <span class="a2a-retailer-edit-hint">Brands (comma-separated):</span>
-      <input type="text" class="a2a-retailer-input" id="daRetailerInput"
-        placeholder="Shark, Vax, Samsung, LG, Sony…"
-        onkeydown="if(event.key==='Enter')daSaveRetailerBrands()">
-      <button class="a2a-retailer-save-btn" onclick="daSaveRetailerBrands()">Save</button>
+    <div class="a2a-retailer-expanded" id="daRetailerExpanded">
+      <div class="a2a-retailer-tags" id="daRetailerTagsEl" style="margin-bottom:8px;"></div>
+      <div class="a2a-retailer-edit-wrap" id="daRetailerEditWrap">
+        <span class="a2a-retailer-edit-hint">Brands (comma-separated):</span>
+        <input type="text" class="a2a-retailer-input" id="daRetailerInput"
+          placeholder="Shark, Vax, Samsung, LG, Sony…"
+          onkeydown="if(event.key==='Enter')daSaveRetailerBrands()">
+        <button class="a2a-retailer-save-btn" onclick="daSaveRetailerBrands()">Save</button>
+      </div>
+      <button class="a2a-retailer-edit-btn" id="daRetailerEditBtn" onclick="daToggleRetailerEdit()" style="margin-top:8px;">Edit brands</button>
     </div>
 
     <!-- FILE DROP ZONE -->
@@ -4446,8 +4470,23 @@ function daLoadRetailerBrands() {
 
 function daRenderRetailerTags() {
   const el = document.getElementById('daRetailerTagsEl'); if (!el) return;
-  if (!r15Brands.length) { el.innerHTML = '<span class="a2a-retailer-none">All products — add brands to filter</span>'; return; }
-  el.innerHTML = r15Brands.map(b => `<span class="a2a-retailer-tag">${b}</span>`).join('');
+  if (!r15Brands.length) { el.innerHTML = '<span class="a2a-retailer-none">No brands configured</span>'; }
+  else { el.innerHTML = r15Brands.map(b => `<span class="a2a-retailer-tag">${b}</span>`).join(''); }
+  const cnt = document.getElementById('daRetailerCount');
+  if (cnt) cnt.textContent = r15Brands.length ? `${r15Brands.length} brands` : 'none';
+}
+
+function daToggleRetailerExpand() {
+  const strip    = document.getElementById('daRetailerStrip');
+  const expanded = document.getElementById('daRetailerExpanded');
+  const open = expanded.classList.toggle('open');
+  strip.classList.toggle('open', open);
+  // Close the edit input if collapsing
+  if (!open) {
+    document.getElementById('daRetailerEditWrap')?.classList.remove('open');
+    const btn = document.getElementById('daRetailerEditBtn');
+    if (btn) btn.textContent = 'Edit brands';
+  }
 }
 
 function daToggleRetailerEdit() {
@@ -4455,7 +4494,7 @@ function daToggleRetailerEdit() {
   const btn  = document.getElementById('daRetailerEditBtn');
   const inp  = document.getElementById('daRetailerInput');
   const open = wrap.classList.toggle('open');
-  if (btn) btn.textContent = open ? 'Close' : 'Edit';
+  if (btn) btn.textContent = open ? 'Cancel' : 'Edit brands';
   if (open && inp) { inp.value = r15Brands.join(', '); inp.focus(); }
 }
 

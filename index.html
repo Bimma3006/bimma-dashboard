@@ -1080,6 +1080,49 @@ input::placeholder { color: var(--text-4); }
 }
 .a2a-retailer-save-btn:hover { background: #6ba5f7; }
 
+/* Price calculator widget */
+.a2a-price-calc {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--r); padding: 12px 16px; min-width: 230px;
+}
+.a2a-price-calc-label {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 9px;
+}
+.a2a-price-calc-input-row {
+  display: flex; align-items: center; gap: 5px; margin-bottom: 10px;
+}
+.a2a-price-calc-prefix {
+  font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--text-2);
+}
+.a2a-price-calc-input {
+  font-family: var(--mono); font-size: 18px; font-weight: 700;
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: var(--r-xs); color: var(--text);
+  padding: 5px 8px; width: 120px; outline: none;
+}
+.a2a-price-calc-input:focus { border-color: var(--green); box-shadow: 0 0 0 2px rgba(0,232,138,0.12); }
+.a2a-price-calc-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.a2a-calc-results { display: none; border-top: 1px solid var(--border); padding-top: 9px; }
+.a2a-calc-results.has-value { display: block; }
+.a2a-calc-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 3px 0;
+}
+.a2a-calc-lbl {
+  font-family: var(--mono); font-size: 9px; color: var(--text-3);
+  white-space: nowrap; letter-spacing: 0.04em;
+}
+.a2a-calc-price {
+  font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text);
+}
+.a2a-calc-save {
+  font-family: var(--mono); font-size: 9px; color: var(--green);
+  white-space: nowrap; margin-left: 4px;
+}
+.a2a-calc-divider { border: none; border-top: 1px solid var(--border); margin: 5px 0; }
+
 /* Upload zone */
 .a2a-upload-zone {
   background: var(--surface2);
@@ -2444,6 +2487,33 @@ input::placeholder { color: var(--text-4); }
         <div class="page-header-label">Deal Analysis</div>
         <div class="page-header-title">Deal Analyser</div>
         <div class="page-header-sub">Score bulk Keepa exports for profitability — EU→UK, UK→UK, and Used LN modes</div>
+      </div>
+      <div class="a2a-price-calc">
+        <div class="a2a-price-calc-label">Quick Price Breakdown</div>
+        <div class="a2a-price-calc-input-row">
+          <span class="a2a-price-calc-prefix">£</span>
+          <input type="number" class="a2a-price-calc-input" id="daPriceCalcInput"
+            placeholder="0.00" step="0.01" min="0" oninput="daPriceCalc()">
+        </div>
+        <div class="a2a-calc-results" id="daPriceCalcResults">
+          <div class="a2a-calc-row">
+            <span class="a2a-calc-lbl">🎁 10% Gift Card</span>
+            <span><span class="a2a-calc-price" id="daPcGc10"></span><span class="a2a-calc-save" id="daPcGc10Save"></span></span>
+          </div>
+          <div class="a2a-calc-row">
+            <span class="a2a-calc-lbl">🏪 Currys/Argos 15% GC</span>
+            <span><span class="a2a-calc-price" id="daPcGc15"></span><span class="a2a-calc-save" id="daPcGc15Save"></span></span>
+          </div>
+          <hr class="a2a-calc-divider">
+          <div class="a2a-calc-row">
+            <span class="a2a-calc-lbl">♻ S&amp;S (15% sub discount)</span>
+            <span><span class="a2a-calc-price" id="daPcSS"></span><span class="a2a-calc-save" id="daPcSSSave"></span></span>
+          </div>
+          <div class="a2a-calc-row">
+            <span class="a2a-calc-lbl">♻🎁 S&amp;S + 10% GC</span>
+            <span><span class="a2a-calc-price" id="daPcGcSS"></span><span class="a2a-calc-save" id="daPcGcSSSave"></span></span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -5118,6 +5188,27 @@ function daExportApproved() {
 // ════════════════════════════════════════
 // RESET
 // ════════════════════════════════════════
+function daPriceCalc() {
+  const raw = parseFloat(document.getElementById('daPriceCalcInput').value);
+  const results = document.getElementById('daPriceCalcResults');
+  if (!raw || raw <= 0) { results.classList.remove('has-value'); return; }
+  results.classList.add('has-value');
+  const fmt  = v => '£' + v.toFixed(2);
+  const save = v => ' −£' + (raw - v).toFixed(2);
+  const gc10  = raw * 0.90;
+  const gc15  = raw * 0.85;
+  const ss    = raw * 0.85;
+  const gcss  = raw * 0.85 * 0.90;
+  document.getElementById('daPcGc10').textContent    = fmt(gc10);
+  document.getElementById('daPcGc10Save').textContent = save(gc10);
+  document.getElementById('daPcGc15').textContent    = fmt(gc15);
+  document.getElementById('daPcGc15Save').textContent = save(gc15);
+  document.getElementById('daPcSS').textContent      = fmt(ss);
+  document.getElementById('daPcSSSave').textContent  = save(ss);
+  document.getElementById('daPcGcSS').textContent    = fmt(gcss);
+  document.getElementById('daPcGcSSSave').textContent = save(gcss);
+}
+
 function daReset() {
   daDeals = []; daFilter = 'all'; daSort = { col: null, dir: 1 };
   daSlotFiles = { 1: null, 2: null, 3: null };

@@ -4361,6 +4361,13 @@ function daParseCSV(text) {
 
 // isSpiked retired — spike detection now handled as soft flags inside daAnalyseRow for all modes
 
+function parseUKDate(str) {
+  if (!str) return null;
+  const m = String(str).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if (m) return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+  return new Date(str);
+}
+
 // ════════════════════════════════════════
 // ANALYSE ROW
 // ════════════════════════════════════════
@@ -4529,7 +4536,28 @@ setTimeout(() => {
     if (savedDeals) {
       const parsed = JSON.parse(savedDeals);
       if (parsed && parsed.length > 0) {
-        daDeals = parsed;
+        // Re-annotate boughtDaysAgo against current purchase data
+        const _sixtyAgo = new Date(); _sixtyAgo.setDate(_sixtyAgo.getDate() - 60);
+        const _nowMs = Date.now();
+        const _purchMap = new Map();
+        (typeof allRows !== 'undefined' ? allRows : []).forEach(r => {
+          try {
+            const d = parseUKDate(r.date);
+            if (!d || d < _sixtyAgo) return;
+            const asin = (r.asin || '').trim().toUpperCase();
+            if (!asin) return;
+            const prev = _purchMap.get(asin);
+            if (!prev || d > prev) _purchMap.set(asin, d);
+          } catch {}
+        });
+        daDeals = parsed
+          .filter(d => !(d.ss && d.ssRoi !== null && d.ssRoi < 0.15))
+          .map(d => {
+            const pd = _purchMap.get((d.asin || '').toUpperCase());
+            if (pd) d.boughtDaysAgo = Math.floor((_nowMs - pd.getTime()) / 86400000);
+            else delete d.boughtDaysAgo;
+            return d;
+          });
         currentMode = savedMode;
         document.querySelectorAll('.a2a-mode-btn').forEach(b => {
           b.classList.toggle('active', (b.getAttribute('onclick')||'').includes("'"+savedMode+"'"));
@@ -4627,21 +4655,20 @@ function daRunAnalysis() {
         });
       }
 
-      // Build inventory set — ASINs purchased in last 30 days from Google Sheets data
-      const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      // Parse DD/MM/YYYY date format from purchases
-      function parseUKDate(str) {
-        if (!str) return null;
-        const m = String(str).match(/(\d{2})\/(\d{2})\/(\d{4})/);
-        if (m) return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
-        return new Date(str); // fallback
-      }
-      const recentInventoryAsins = new Set(
-        (typeof allRows !== 'undefined' ? allRows : [])
-          .filter(r => { try { const d = parseUKDate(r.date); return d && d >= thirtyDaysAgo; } catch { return false; } })
-          .map(r => (r.asin || '').trim().toUpperCase())
-          .filter(Boolean)
-      );
+      // Build purchase map — ASIN -> most recent purchase date within 60 days
+      const sixtyDaysAgo = new Date(); sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+      const nowMs = Date.now();
+      const recentPurchaseMap = new Map();
+      (typeof allRows !== 'undefined' ? allRows : []).forEach(r => {
+        try {
+          const d = parseUKDate(r.date);
+          if (!d || d < sixtyDaysAgo) return;
+          const asin = (r.asin || '').trim().toUpperCase();
+          if (!asin) return;
+          const prev = recentPurchaseMap.get(asin);
+          if (!prev || d > prev) recentPurchaseMap.set(asin, d);
+        } catch {}
+      });
 
       // Filter out ASINs previously rejected — unless price has moved >5% since rejection
       const priceChangedAsins = new Set();
@@ -4677,9 +4704,11 @@ function daRunAnalysis() {
         const asin = (row['ASIN'] || '').trim();
         const deal = daAnalyseRow(row);
         if (priceChangedAsins.has(asin)) deal.priceChanged = true;
-        if (recentInventoryAsins.has(asin.toUpperCase())) deal.inInventory = true;
+        const purchDate = recentPurchaseMap.get(asin.toUpperCase());
+        if (purchDate) deal.boughtDaysAgo = Math.floor((nowMs - purchDate.getTime()) / 86400000);
         return deal;
-      }).sort((a, b) => a.sortOrder - b.sortOrder);
+      }).filter(d => !(d.ss && d.ssRoi !== null && d.ssRoi < 0.15))
+        .sort((a, b) => a.sortOrder - b.sortOrder);
       document.getElementById('daCountGreen').textContent = daDeals.filter(d => d.colour === 'green').length;
       const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
       document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
@@ -4779,7 +4808,7 @@ function daRenderTable() {
     tr.dataset.asin = deal.asin;
     tr.innerHTML = `
       <td class="td-product">
-        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.inInventory ? ' <span class="inv-badge">📦 bought &lt;30d</span>' : ''}${deal.priceChanged ? ' <span class="pc-badge">↓ PRICE DROP</span>' : ''}${daViewedList.has(deal.asin) ? ' <span class="viewed-badge">SEEN</span>' : ''}</div>
+        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.boughtDaysAgo != null ? ` <span class="inv-badge">📦 bought ${deal.boughtDaysAgo}d ago</span>` : ''}${deal.priceChanged ? ' <span class="pc-badge">↓ PRICE DROP</span>' : ''}${daViewedList.has(deal.asin) ? ' <span class="viewed-badge">SEEN</span>' : ''}</div>
         <div class="td-asin-row">
           <a href="https://www.amazon.co.uk/dp/${deal.asin}" target="_blank" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">${deal.asin}</a>
           <a href="https://www.keepa.com/#product/2-${deal.asin}" target="_blank" class="keepa-link" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">Keepa ↗</a>

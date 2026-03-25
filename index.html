@@ -2137,6 +2137,7 @@ input::placeholder { color: var(--text-4); }
     <div class="sidebar-section-label">Intelligence</div>
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
     <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage</div>
+    <div class="nav-item" data-page="retailscout" onclick="showPage('retailscout',this)"><span class="nav-icon">🛒</span>Retailer Scout</div>
   </div>
   <div class="sidebar-footer">
     <div class="sidebar-version">v5.1 · 21 Mar 26</div>
@@ -3004,6 +3005,10 @@ input::placeholder { color: var(--text-4); }
           <div class="rp-setting-label">JPY / GBP</div>
           <input id="scoutJpyGbp" type="number" value="0.0051" step="0.0001" min="0.001" max="0.1" class="rp-input">
         </div>
+        <div style="display:flex;align-items:flex-end;gap:6px;">
+          <button onclick="scoutRefreshFx()" id="scoutFxRefreshBtn" style="font-family:var(--mono);font-size:10px;padding:5px 10px;background:rgba(77,142,245,0.12);border:1px solid var(--blue);color:var(--blue);border-radius:var(--r-sm);cursor:pointer;white-space:nowrap;">↻ Live rates</button>
+          <span id="scoutFxTs" style="font-family:var(--mono);font-size:9px;color:var(--text-3);line-height:1.2;"></span>
+        </div>
         <div>
           <div class="rp-setting-label">Min ROI %</div>
           <input id="scoutMinRoi" type="number" value="15" step="1" min="0" class="rp-input">
@@ -3380,6 +3385,99 @@ input::placeholder { color: var(--text-4); }
   </div>
 </div>
 
+<!-- ════════════════════════════════════════ -->
+<!-- RETAILER SCOUT PAGE                    -->
+<!-- ════════════════════════════════════════ -->
+<div class="page" id="page-retailscout">
+  <div class="page-header">
+    <div>
+      <div class="page-header-label">Intelligence</div>
+      <div class="page-header-title">Retailer Scout</div>
+      <div class="page-header-sub">Scrape Currys &amp; Argos sale prices · match via Keepa EAN · calculate 15% gift card arbitrage ROI</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="rp-run-btn" onclick="rsRun()" id="rsRunBtn"><span class="rp-run-icon">🛒</span> Run Scout</button>
+      <button class="scout-clear-btn" onclick="rsStop()" id="rsStopBtn" style="display:none;background:rgba(240,59,80,0.15);border-color:var(--red);color:var(--red);">⏹ Stop</button>
+    </div>
+  </div>
+
+  <!-- CONFIG PANEL -->
+  <div class="rp-settings-panel" style="margin-bottom:20px;">
+    <div style="margin-bottom:14px;">
+      <div class="rp-setting-label" style="margin-bottom:8px;">Retailers</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="a2a-fpill active" id="rsPillArgos" onclick="rsToggleRetailer('argos',this)">🛒 Argos</button>
+        <button class="a2a-fpill active" id="rsPillCurrys" onclick="rsToggleRetailer('currys',this)">⚡ Currys</button>
+      </div>
+    </div>
+    <div class="rp-settings-grid" style="gap:12px 24px;">
+      <div>
+        <div class="rp-setting-label">Keepa API Key</div>
+        <input id="rsKeepaKey" type="password" class="rp-input" style="width:180px;" placeholder="Keepa key" oninput="localStorage.setItem('bimma_keepa_key',this.value.trim())">
+      </div>
+      <div>
+        <div class="rp-setting-label">Min ROI %</div>
+        <input id="rsMinRoi" type="number" value="15" step="1" min="0" class="rp-input">
+      </div>
+      <div>
+        <div class="rp-setting-label">Min Discount %</div>
+        <input id="rsMinDisc" type="number" value="10" step="1" min="0" class="rp-input">
+      </div>
+      <div>
+        <div class="rp-setting-label">Max Pages</div>
+        <input id="rsMaxPages" type="number" value="5" step="1" min="1" max="20" class="rp-input">
+      </div>
+      <div>
+        <div class="rp-setting-label">CORS Proxy</div>
+        <input id="rsCorsProxy" type="text" value="https://corsproxy.io/?url=" class="rp-input" style="width:230px;">
+      </div>
+    </div>
+    <div style="margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--text-3);line-height:1.7;">
+      ℹ Scrapes Argos &amp; Currys sale pages via CORS proxy · looks up EAN codes on Keepa · calculates ROI at 15% gift card discount.<br>
+      If Currys fails, try the Argos-only mode first to verify the proxy is working.
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div id="rsStatus" style="display:none;" class="scout-progress-bar-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span id="rsStatusText" style="font-family:var(--mono);font-size:11px;color:var(--text-2);">Starting…</span>
+      <span id="rsStatusPct" style="font-family:var(--mono);font-size:11px;color:var(--text-3);">0%</span>
+    </div>
+    <div style="height:3px;background:var(--border2);border-radius:2px;overflow:hidden;">
+      <div id="rsStatusBar" style="height:100%;width:0%;background:var(--green);transition:width 0.3s;"></div>
+    </div>
+  </div>
+
+  <!-- SUMMARY STATS -->
+  <div id="rsStats" style="display:none;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+    <div class="stat-card"><div class="stat-label">Products Scraped</div><div class="stat-value" id="rsStatProducts">0</div></div>
+    <div class="stat-card"><div class="stat-label">Matched on Amazon</div><div class="stat-value" id="rsStatMatched">0</div></div>
+    <div class="stat-card"><div class="stat-label">Profitable Deals</div><div class="stat-value" style="color:var(--green);" id="rsStatProfit">0</div></div>
+    <div class="stat-card"><div class="stat-label">Best ROI</div><div class="stat-value" id="rsStatBestRoi">—</div></div>
+  </div>
+
+  <!-- RESULTS TABLE -->
+  <div id="rsTableWrap" style="display:none;" class="da-table-wrap">
+    <table class="da-table" id="rsTable">
+      <thead>
+        <tr>
+          <th style="min-width:220px;">Product</th>
+          <th>Retailer</th>
+          <th class="td-num">Sale Price</th>
+          <th class="td-num">GC Price −15%</th>
+          <th class="td-num">Amazon SP</th>
+          <th class="td-num">Profit</th>
+          <th class="td-num">ROI</th>
+          <th class="td-num">BSR</th>
+          <th class="td-num">% Off</th>
+        </tr>
+      </thead>
+      <tbody id="rsTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
 <!-- REFUND MODAL -->
 <div class="modal-overlay" id="rmModal">
   <div class="modal">
@@ -3405,7 +3503,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker', leakage:'Leakage Tracker' };
+  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker', leakage:'Leakage Tracker', retailscout:'Retailer Scout' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   document.dispatchEvent(new CustomEvent('bimma:pagechange', { detail: name }));
 }
@@ -7254,6 +7352,354 @@ function scoutStop() {
   scoutShouldStop = true;
   document.getElementById('scoutStopBtn').textContent = '⏹ Stopping…';
 }
+
+async function scoutRefreshFx() {
+  const btn = document.getElementById('scoutFxRefreshBtn');
+  const ts  = document.getElementById('scoutFxTs');
+  if (btn) { btn.disabled = true; btn.textContent = '↻ Fetching…'; }
+  try {
+    const res  = await fetch('https://open.er-api.com/v6/latest/GBP');
+    const data = await res.json();
+    if (data.result !== 'success') throw new Error('API error');
+    const r = data.rates;
+    // API gives rates as X per 1 GBP; we want 1 foreign = Y GBP → invert
+    const eurGbp = r.EUR ? (1 / r.EUR) : null;
+    const usdGbp = r.USD ? (1 / r.USD) : null;
+    const jpyGbp = r.JPY ? (1 / r.JPY) : null;
+    if (eurGbp) document.getElementById('scoutEurGbp').value = eurGbp.toFixed(4);
+    if (usdGbp) document.getElementById('scoutUsdGbp').value = usdGbp.toFixed(4);
+    if (jpyGbp) document.getElementById('scoutJpyGbp').value = jpyGbp.toFixed(6);
+    const now = new Date();
+    if (ts) ts.textContent = `Updated\n${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+    toast('Exchange rates updated', 'success');
+  } catch(e) {
+    if (ts) ts.textContent = 'Failed';
+    toast('FX fetch failed: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Live rates'; }
+  }
+}
+
+document.addEventListener('bimma:pagechange', e => {
+  if (e.detail === 'scout') scoutRefreshFx();
+});
+
+// ── RETAILER SCOUT ──────────────────────────────────────────────────────────
+let rsResults = [];
+let rsShouldStop = false;
+const rsActiveRetailers = new Set(['argos', 'currys']);
+
+function rsToggleRetailer(r, btn) {
+  if (rsActiveRetailers.has(r)) {
+    if (rsActiveRetailers.size <= 1) return; // keep at least one active
+    rsActiveRetailers.delete(r);
+    btn.classList.remove('active');
+  } else {
+    rsActiveRetailers.add(r);
+    btn.classList.add('active');
+  }
+}
+
+function rsSetStatus(text, pct) {
+  const t = document.getElementById('rsStatusText');
+  const p = document.getElementById('rsStatusPct');
+  const b = document.getElementById('rsStatusBar');
+  if (t) t.textContent = text;
+  if (p) p.textContent = Math.round(pct) + '%';
+  if (b) b.style.width = pct + '%';
+}
+
+async function rsRun() {
+  const apiKey = (document.getElementById('rsKeepaKey')?.value || localStorage.getItem('bimma_keepa_key') || '').trim();
+  if (!apiKey) { toast('Enter a Keepa API key', 'error'); return; }
+
+  const proxy    = (document.getElementById('rsCorsProxy')?.value || 'https://corsproxy.io/?url=').trim();
+  const minRoi   = parseFloat(document.getElementById('rsMinRoi')?.value  || '15') / 100;
+  const minDisc  = parseFloat(document.getElementById('rsMinDisc')?.value || '10') / 100;
+  const maxPages = parseInt(document.getElementById('rsMaxPages')?.value  || '5');
+
+  rsShouldStop = false;
+  rsResults    = [];
+
+  document.getElementById('rsRunBtn').disabled = true;
+  document.getElementById('rsStopBtn').style.display = 'inline-flex';
+  document.getElementById('rsStatus').style.display  = 'block';
+  document.getElementById('rsStats').style.display   = 'none';
+  document.getElementById('rsTableWrap').style.display = 'none';
+
+  try {
+    // ── Phase 1: scrape retailer pages ───────────────────────
+    const scraped  = [];
+    const retailers = [...rsActiveRetailers];
+
+    for (let ri = 0; ri < retailers.length; ri++) {
+      const retailer = retailers[ri];
+      if (rsShouldStop) break;
+
+      for (let page = 1; page <= maxPages; page++) {
+        if (rsShouldStop) break;
+        rsSetStatus(`Scraping ${retailer} — page ${page}/${maxPages}…`, ((ri / retailers.length) + (page / maxPages / retailers.length)) * 45);
+
+        try {
+          const products = await rsFetchRetailer(retailer, proxy, page);
+          if (!products.length) break; // no more pages
+
+          // filter by minimum discount
+          scraped.push(...products.filter(p => {
+            if (!p.wasPrice || !p.price || p.wasPrice <= p.price) return true;
+            return (p.wasPrice - p.price) / p.wasPrice >= minDisc;
+          }));
+        } catch (e) {
+          console.warn(`rs ${retailer} p${page}:`, e.message);
+          if (page === 1) toast(`${retailer} scrape failed: ${e.message}`, 'error');
+          break;
+        }
+        await new Promise(r => setTimeout(r, 350));
+      }
+    }
+
+    if (!scraped.length) {
+      toast('No products scraped — check CORS proxy URL', 'error');
+      return;
+    }
+
+    // ── Phase 2: Keepa EAN lookup ─────────────────────────────
+    rsSetStatus(`Scraped ${scraped.length} products. Running Keepa lookup…`, 48);
+
+    const withEan = scraped.filter(p => p.ean && p.ean.length >= 8);
+    const eanMap  = new Map(withEan.map(p => [p.ean, p])); // ean → scraped product
+    const eans    = [...eanMap.keys()];
+    const keepaMap = new Map(); // ean → keepa data
+    const chunkSize = 50;
+
+    for (let i = 0; i < eans.length; i += chunkSize) {
+      if (rsShouldStop) break;
+      rsSetStatus(`Keepa: ${i}/${eans.length} EANs…`, 48 + (i / Math.max(eans.length, 1)) * 44);
+
+      try {
+        const chunk = eans.slice(i, i + chunkSize);
+        const url   = `https://api.keepa.com/product?key=${apiKey}&domain=2&code=${chunk.join(',')}`;
+        const data  = await fetch(url).then(r => r.json());
+
+        if (data.error) { toast(`Keepa: ${data.error.message}`, 'error'); break; }
+
+        (data.products || []).forEach(kp => {
+          const priceArr = kp.csv?.[1];
+          const rawSp    = priceArr?.[priceArr.length - 1];
+          if (!rawSp || rawSp <= 0) return;
+
+          const fbaArr   = kp.csv?.[10];
+          const rawFba   = fbaArr?.[fbaArr.length - 1];
+          const bsrArr   = kp.csv?.[3];
+          const rawBsr   = bsrArr?.[bsrArr.length - 1];
+
+          const kd = {
+            asin:   kp.asin,
+            sp:     rawSp / 100,
+            fbaFee: rawFba && rawFba > 0 ? rawFba / 100 : 2.50,
+            bsr:    rawBsr && rawBsr > 0 ? rawBsr : null,
+            title:  kp.title
+          };
+          // match back all EANs on this product
+          (kp.eanList || []).forEach(ean => { if (eanMap.has(ean)) keepaMap.set(ean, kd); });
+        });
+      } catch (e) {
+        console.warn('Keepa chunk error:', e.message);
+      }
+      await new Promise(r => setTimeout(r, 200));
+    }
+
+    // ── Phase 3: ROI calculation ──────────────────────────────
+    rsSetStatus('Calculating ROI…', 94);
+
+    const all = [];
+    scraped.forEach(product => {
+      const kd = product.ean ? keepaMap.get(product.ean) : null;
+      if (!kd) return;
+      const { profit, roi, gcBuyPrice } = rsCalcRoi(product.price, kd.sp, kd.fbaFee);
+      const discPct = (product.wasPrice && product.wasPrice > product.price)
+        ? (product.wasPrice - product.price) / product.wasPrice : null;
+      all.push({ ...product, asin: kd.asin, amazonSp: kd.sp, bsr: kd.bsr, amazonTitle: kd.title, gcBuyPrice, profit, roi, discPct });
+    });
+
+    rsResults = all.filter(d => d.roi >= minRoi).sort((a, b) => b.roi - a.roi);
+
+    rsSetStatus(`Done — ${rsResults.length} profitable deals`, 100);
+    rsRenderStats(scraped.length, keepaMap.size);
+    rsRenderTable();
+
+  } catch (e) {
+    toast('Retailer Scout error: ' + e.message, 'error');
+    console.error(e);
+  } finally {
+    document.getElementById('rsRunBtn').disabled = false;
+    document.getElementById('rsStopBtn').style.display = 'none';
+    setTimeout(() => { document.getElementById('rsStatus').style.display = 'none'; }, 2500);
+  }
+}
+
+async function rsFetchRetailer(retailer, proxy, page) {
+  if (retailer === 'argos')  return rsFetchArgos(proxy, page);
+  if (retailer === 'currys') return rsFetchCurrys(proxy, page);
+  return [];
+}
+
+async function rsFetchArgos(proxy, page) {
+  // Argos internal finder API — returns JSON directly
+  const url  = `https://www.argos.co.uk/finder-api/product?page=${page}&size=48&sortBy=sa&inStockOnly=false`;
+  const resp = await fetch(proxy + encodeURIComponent(url), { headers: { 'Accept': 'application/json' } });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+  const raw  = await resp.text();
+  let json;
+  try { json = JSON.parse(raw); }
+  catch { throw new Error('Argos returned non-JSON (proxy may not be working)'); }
+
+  // Try multiple known response shapes
+  const products = json?.data?.products
+    || json?.products
+    || json?.response?.data?.products
+    || json?.response?.products
+    || [];
+
+  if (!products.length) return [];
+
+  return products.map(p => ({
+    retailer: 'Argos',
+    name:     p.name || p.title || '',
+    price:    parseFloat(p.price?.now ?? p.price ?? 0),
+    wasPrice: p.price?.was ? parseFloat(p.price.was) : null,
+    ean:      String(p.attributes?.ean || p.ean || p.gtin || '').replace(/\D/g, '') || null,
+    retailUrl: `https://www.argos.co.uk/product/${p.id || ''}`
+  })).filter(p => p.name && p.price > 0);
+}
+
+async function rsFetchCurrys(proxy, page) {
+  // Try Currys internal search API first
+  const start   = (page - 1) * 24;
+  const apiUrl  = `https://www.currys.co.uk/api/2.0/page/search?start=${start}&count=24&sortBy=RELEVANCE&features=showOnSale%3Atrue&lang=en&currency=GBP&inStock=true`;
+
+  try {
+    const resp = await fetch(proxy + encodeURIComponent(apiUrl), { headers: { 'Accept': 'application/json' } });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+    const json = JSON.parse(text);
+    const products = json?.products || json?.response?.products || json?.data?.products || [];
+
+    if (products.length) {
+      return products.map(p => ({
+        retailer: 'Currys',
+        name:     p.name || p.title || (p.brand ? p.brand + ' ' + (p.productTitle || '') : '') || '',
+        price:    parseFloat(p.price?.current || p.currentPrice || p.salePrice || p.price || 0),
+        wasPrice: p.price?.was ? parseFloat(p.price.was) : (p.wasPrice ? parseFloat(p.wasPrice) : null),
+        ean:      String(p.ean || p.gtin || p.barcode || '').replace(/\D/g, '') || null,
+        retailUrl: p.url ? `https://www.currys.co.uk${p.url}` : 'https://www.currys.co.uk/deals'
+      })).filter(p => p.name && p.price > 0);
+    }
+  } catch { /* fall through to HTML parse */ }
+
+  // Fallback: parse HTML of deals page for JSON-LD product data
+  const htmlUrl  = page === 1 ? 'https://www.currys.co.uk/deals' : `https://www.currys.co.uk/deals?start=${start}`;
+  const htmlResp = await fetch(proxy + encodeURIComponent(htmlUrl));
+  const html     = await htmlResp.text();
+  const products = [];
+
+  // Extract all JSON-LD blocks
+  for (const m of html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) {
+    try {
+      const ld    = JSON.parse(m[1]);
+      const items = Array.isArray(ld) ? ld : (ld['@graph'] || [ld]);
+      items.forEach(item => {
+        if (item['@type'] !== 'Product' && item['@type'] !== 'product') return;
+        const offer = Array.isArray(item.offers) ? item.offers[0] : item.offers;
+        const price = parseFloat(offer?.price || 0);
+        if (!price || !item.name) return;
+        products.push({
+          retailer: 'Currys',
+          name:     item.name,
+          price,
+          wasPrice: null,
+          ean:      String(item.gtin13 || item.gtin || '').replace(/\D/g, '') || null,
+          retailUrl: item.url || 'https://www.currys.co.uk/deals'
+        });
+      });
+    } catch { /* skip malformed block */ }
+  }
+
+  return products;
+}
+
+function rsCalcRoi(buyPrice, amazonSp, fbaFee = 2.50) {
+  const vat        = FEES.vat;
+  const buyIncVat  = buyPrice * 0.85;            // 15% GC
+  const buyExVat   = buyIncVat / (1 + vat);
+  const spExVat    = amazonSp / (1 + vat);
+  const refFee     = spExVat * FEES.referralPct;
+  const fbaExVat   = fbaFee  / (1 + vat);
+  const prepFee    = FEES.prepFee;
+  const vatDue     = (amazonSp * vat / (1 + vat)) - (buyIncVat * vat / (1 + vat));
+  const profit     = spExVat - buyExVat - refFee - fbaExVat - prepFee - vatDue;
+  return { profit, roi: profit / buyExVat, gcBuyPrice: buyIncVat };
+}
+
+function rsRenderStats(totalScraped, totalMatched) {
+  document.getElementById('rsStatProducts').textContent = totalScraped;
+  document.getElementById('rsStatMatched').textContent  = totalMatched;
+  document.getElementById('rsStatProfit').textContent   = rsResults.length;
+  const best = rsResults[0]?.roi;
+  document.getElementById('rsStatBestRoi').textContent  = best != null ? (best * 100).toFixed(1) + '%' : '—';
+  document.getElementById('rsStats').style.display = 'grid';
+}
+
+function rsRenderTable() {
+  const tbody = document.getElementById('rsTableBody');
+  if (!rsResults.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-3);font-family:var(--mono);">No profitable deals found</td></tr>';
+    document.getElementById('rsTableWrap').style.display = 'block';
+    return;
+  }
+
+  const roiCol = roi => roi >= 0.30 ? 'var(--green)' : roi >= 0.15 ? 'var(--text)' : 'var(--amber)';
+  const fmtP   = v    => (v * 100).toFixed(1) + '%';
+  const fmtGbp = v    => v != null ? '£' + v.toFixed(2) : '—';
+
+  tbody.innerHTML = rsResults.map(d => `
+    <tr>
+      <td class="td-product">
+        <div class="td-product-title">
+          <a href="${d.retailUrl}" target="_blank" style="color:var(--text);text-decoration:none;">${d.name}</a>
+        </div>
+        <div class="td-asin-row">
+          <a href="https://www.amazon.co.uk/dp/${d.asin}" target="_blank">${d.asin}</a>
+        </div>
+      </td>
+      <td style="font-family:var(--mono);font-size:11px;color:${d.retailer === 'Argos' ? 'var(--red)' : 'var(--blue)'};">${d.retailer}</td>
+      <td class="td-num">${fmtGbp(d.price)}${d.wasPrice ? `<div style="font-size:9px;color:var(--text-3);text-decoration:line-through;">${fmtGbp(d.wasPrice)}</div>` : ''}</td>
+      <td class="td-num" style="color:var(--green);">${fmtGbp(d.gcBuyPrice)}</td>
+      <td class="td-num">${fmtGbp(d.amazonSp)}</td>
+      <td class="td-num" style="color:${d.profit >= 0 ? 'var(--green)' : 'var(--red)'};">${fmtGbp(d.profit)}</td>
+      <td class="td-num" style="color:${roiCol(d.roi)};font-weight:700;">${fmtP(d.roi)}</td>
+      <td class="td-num">${d.bsr ? d.bsr.toLocaleString() : '—'}</td>
+      <td class="td-num" style="color:var(--amber);">${d.discPct != null ? fmtP(d.discPct) + ' off' : '—'}</td>
+    </tr>
+  `).join('');
+
+  document.getElementById('rsTableWrap').style.display = 'block';
+}
+
+function rsStop() {
+  rsShouldStop = true;
+  const btn = document.getElementById('rsStopBtn');
+  if (btn) btn.textContent = '⏹ Stopping…';
+}
+
+// Pre-fill Keepa key when page opens
+document.addEventListener('bimma:pagechange', e => {
+  if (e.detail !== 'retailscout') return;
+  const k  = localStorage.getItem('bimma_keepa_key') || localStorage.getItem('bimma_stalker_key') || '';
+  const el = document.getElementById('rsKeepaKey');
+  if (el && k) el.value = k;
+});
 
 
 function scoutRenderPartial(asins, ukMap, euData, markets, marketFx, shipping, prep, minRoi, csvHasBB) {

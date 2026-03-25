@@ -3365,26 +3365,6 @@ input::placeholder { color: var(--text-4); }
   </div>
 </div><!-- /page-stalker -->
 
-
-<div class="modal-overlay" id="setupModal">
-  <div class="modal">
-    <div class="modal-title">Connect Google Sheets</div>
-    <div class="modal-sub">You need a Google OAuth Client ID to read and write your spreadsheet. Setup takes ~2 minutes.</div>
-    <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);line-height:2;margin-bottom:16px;">
-      1. Go to console.cloud.google.com → create/select a project<br>
-      2. Enable the Google Sheets API<br>
-      3. Create OAuth 2.0 credentials → Web Application<br>
-      4. Add <code style="color:var(--green);">https://claude.ai</code> as an Authorised origin<br>
-      5. Copy your Client ID below
-    </div>
-    <input class="modal-input" id="clientIdInput" type="text" placeholder="xxxxxxxx.apps.googleusercontent.com">
-    <div class="modal-actions">
-      <button class="btn-sm btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn-sm btn-green" onclick="saveAndConnect()">Save & Connect</button>
-    </div>
-  </div>
-</div>
-
 <!-- ════════════════════════════════════════ -->
 <!-- RETAILER SCOUT PAGE                    -->
 <!-- ════════════════════════════════════════ -->
@@ -3434,7 +3414,7 @@ input::placeholder { color: var(--text-4); }
     </div>
     <div style="margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--text-3);line-height:1.7;">
       ℹ Scrapes Argos &amp; Currys sale pages via CORS proxy · looks up EAN codes on Keepa · calculates ROI at 15% gift card discount.<br>
-      If Currys fails, try the Argos-only mode first to verify the proxy is working.
+      If Currys fails, try Argos-only first to verify the proxy is working.
     </div>
   </div>
 
@@ -3475,6 +3455,26 @@ input::placeholder { color: var(--text-4); }
       </thead>
       <tbody id="rsTableBody"></tbody>
     </table>
+  </div>
+</div><!-- /page-retailscout -->
+
+
+<div class="modal-overlay" id="setupModal">
+  <div class="modal">
+    <div class="modal-title">Connect Google Sheets</div>
+    <div class="modal-sub">You need a Google OAuth Client ID to read and write your spreadsheet. Setup takes ~2 minutes.</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);line-height:2;margin-bottom:16px;">
+      1. Go to console.cloud.google.com → create/select a project<br>
+      2. Enable the Google Sheets API<br>
+      3. Create OAuth 2.0 credentials → Web Application<br>
+      4. Add <code style="color:var(--green);">https://claude.ai</code> as an Authorised origin<br>
+      5. Copy your Client ID below
+    </div>
+    <input class="modal-input" id="clientIdInput" type="text" placeholder="xxxxxxxx.apps.googleusercontent.com">
+    <div class="modal-actions">
+      <button class="btn-sm btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-sm btn-green" onclick="saveAndConnect()">Save & Connect</button>
+    </div>
   </div>
 </div>
 

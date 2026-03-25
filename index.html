@@ -1034,6 +1034,51 @@ input::placeholder { color: var(--text-4); }
 }
 .a2a-info-desc strong { color: var(--text-2); font-weight: 600; }
 
+/* Retailer brand filter strip */
+.a2a-retailer-strip {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--r-sm); margin-bottom: 12px; padding: 7px 14px;
+}
+.a2a-retailer-label {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--blue); white-space: nowrap; flex-shrink: 0;
+}
+.a2a-retailer-tags { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; min-width: 0; }
+.a2a-retailer-tag {
+  font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 3px;
+  background: rgba(77,142,245,0.08); color: var(--blue);
+  border: 1px solid rgba(77,142,245,0.18);
+}
+.a2a-retailer-none { font-family: var(--mono); font-size: 10px; color: var(--text-3); font-style: italic; }
+.a2a-retailer-edit-btn {
+  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 4px 10px; border-radius: var(--r-xs);
+  border: 1px solid var(--border2); background: var(--surface3); color: var(--text-3);
+  cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+}
+.a2a-retailer-edit-btn:hover { border-color: var(--border3); color: var(--text-2); }
+.a2a-retailer-edit-wrap {
+  display: none; align-items: center; gap: 8px;
+  background: var(--surface2); border: 1px solid rgba(77,142,245,0.25);
+  border-radius: var(--r-sm); margin-bottom: 12px; padding: 10px 14px;
+}
+.a2a-retailer-edit-wrap.open { display: flex; }
+.a2a-retailer-edit-hint { font-size: 10px; color: var(--text-3); white-space: nowrap; flex-shrink: 0; }
+.a2a-retailer-input {
+  flex: 1; font-family: var(--mono); font-size: 11px; min-width: 0;
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: var(--r-xs); color: var(--text); padding: 6px 10px; outline: none;
+}
+.a2a-retailer-input:focus { border-color: var(--blue); }
+.a2a-retailer-save-btn {
+  font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; padding: 7px 14px; border-radius: var(--r-xs); border: none;
+  background: var(--blue); color: #fff; cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+}
+.a2a-retailer-save-btn:hover { background: #6ba5f7; }
+
 /* Upload zone */
 .a2a-upload-zone {
   background: var(--surface2);
@@ -2444,6 +2489,20 @@ input::placeholder { color: var(--text-4); }
       <div class="a2a-info-mode" id="modePill">EU → UK</div>
       <div class="a2a-info-divider"></div>
       <div class="a2a-info-desc" id="modeDesc">Buy price: <strong>EU Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>+£2.00 shipping</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong></div>
+    </div>
+
+    <!-- RETAILER BRAND FILTER -->
+    <div class="a2a-retailer-strip">
+      <span class="a2a-retailer-label">🏪 Retailer brands</span>
+      <div class="a2a-retailer-tags" id="daRetailerTagsEl"></div>
+      <button class="a2a-retailer-edit-btn" id="daRetailerEditBtn" onclick="daToggleRetailerEdit()">Edit</button>
+    </div>
+    <div class="a2a-retailer-edit-wrap" id="daRetailerEditWrap">
+      <span class="a2a-retailer-edit-hint">Brands (comma-separated):</span>
+      <input type="text" class="a2a-retailer-input" id="daRetailerInput"
+        placeholder="Shark, Vax, Samsung, LG, Sony…"
+        onkeydown="if(event.key==='Enter')daSaveRetailerBrands()">
+      <button class="a2a-retailer-save-btn" onclick="daSaveRetailerBrands()">Save</button>
     </div>
 
     <!-- FILE DROP ZONE -->
@@ -4273,6 +4332,65 @@ const FEES = {
 // ════════════════════════════════════════
 let currentMode = 'eu';
 let daDeals = [], daFilter = 'all', daSort = { col: null, dir: 1 };
+
+// ════════════════════════════════════════
+// RETAILER BRAND LIST (Currys / Argos / Shark / Vax)
+// ════════════════════════════════════════
+const R15_DEFAULT_BRANDS = [
+  'Shark','Vax','Dyson','Hoover','Karcher','Miele',
+  'Samsung','LG','Sony','Panasonic','Philips','Bose','JBL','Jabra','Sennheiser',
+  'Apple','HP','Dell','Lenovo','Asus','Acer','Microsoft','Garmin','Fitbit',
+  'Ninja','Nespresso','De\'Longhi','Kenwood','Breville','Sage','Tefal','KitchenAid','Instant Pot',
+  'Nintendo','Lego'
+];
+let r15Brands = [];
+
+function daLoadRetailerBrands() {
+  try {
+    const saved = localStorage.getItem('bimma_r15_brands');
+    r15Brands = saved ? JSON.parse(saved) : [...R15_DEFAULT_BRANDS];
+  } catch { r15Brands = [...R15_DEFAULT_BRANDS]; }
+  daRenderRetailerTags();
+}
+
+function daRenderRetailerTags() {
+  const el = document.getElementById('daRetailerTagsEl'); if (!el) return;
+  if (!r15Brands.length) { el.innerHTML = '<span class="a2a-retailer-none">All products — add brands to filter</span>'; return; }
+  el.innerHTML = r15Brands.map(b => `<span class="a2a-retailer-tag">${b}</span>`).join('');
+}
+
+function daToggleRetailerEdit() {
+  const wrap = document.getElementById('daRetailerEditWrap');
+  const btn  = document.getElementById('daRetailerEditBtn');
+  const inp  = document.getElementById('daRetailerInput');
+  const open = wrap.classList.toggle('open');
+  if (btn) btn.textContent = open ? 'Close' : 'Edit';
+  if (open && inp) { inp.value = r15Brands.join(', '); inp.focus(); }
+}
+
+function daSaveRetailerBrands() {
+  const inp = document.getElementById('daRetailerInput'); if (!inp) return;
+  r15Brands = inp.value.split(',').map(s => s.trim()).filter(Boolean);
+  try { localStorage.setItem('bimma_r15_brands', JSON.stringify(r15Brands)); } catch {}
+  daRenderRetailerTags();
+  daToggleRetailerEdit();
+  toast('Retailer brands saved', 'success');
+  // Re-compute r15Roi for any existing results without needing a re-upload
+  if (daDeals.length) { daRecalcR15(); daRenderTable(); daUpdatePillCounts(); }
+}
+
+// Re-derive r15Roi from stored deal values (avoids re-upload when brand list changes).
+// Formula: r15Profit = profit + buyExVat * 0.15 * (1 - vat) — exact algebraic inverse of daAnalyseRow.
+function daRecalcR15() {
+  const vat = FEES.vat;
+  const multiplier = 0.15 * (1 - vat); // ~0.12 at 20% VAT
+  daDeals.forEach(d => {
+    const match = r15Brands.length === 0 || r15Brands.some(b => d.title.toLowerCase().includes(b.toLowerCase()));
+    if (!match || d.profit == null || d.buyExVat == null) { d.r15Profit = null; d.r15Roi = null; return; }
+    d.r15Profit = d.profit + d.buyExVat * multiplier;
+    d.r15Roi    = d.r15Profit / (d.buyExVat * 0.85);
+  });
+}
 let daSlotFiles = { 1: null, 2: null, 3: null };
 let daSlotTexts = { 1: null, 2: null, 3: null };
 try { [1,2,3].forEach(n => { const t=localStorage.getItem('bimma_da_slot'+n+'_text'); if(t) daSlotTexts[n]=t; }); } catch(e) {}
@@ -4510,10 +4628,12 @@ function daAnalyseRow(row) {
   }
 
   // Retailer 15% gift card (Currys / Argos / Shark / Vax): 15% off buy price, price-matched to Amazon
-  const r15BuyExVat  = buyExVat ? buyExVat * 0.85 : null;
-  const r15BuyIncVat = buyIncVat ? buyIncVat * 0.85 : null;
+  // Only applies if product title matches the user-configured brand list
+  const r15Match = r15Brands.length === 0 || r15Brands.some(b => title.toLowerCase().includes(b.toLowerCase()));
+  const r15BuyExVat  = r15Match && buyExVat ? buyExVat * 0.85 : null;
+  const r15BuyIncVat = r15Match && buyIncVat ? buyIncVat * 0.85 : null;
   let r15Profit = null, r15Roi = null;
-  if (sp && r15BuyExVat && refFee !== null && fbaExVat !== null) {
+  if (r15Match && sp && r15BuyExVat && refFee !== null && fbaExVat !== null) {
     const r15VatDue = (spIncVat * vat / (1 + vat)) - (r15BuyIncVat ? r15BuyIncVat * vat / (1 + vat) : 0);
     r15Profit = sp - r15BuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - r15VatDue;
     r15Roi    = r15Profit / r15BuyExVat;
@@ -4530,6 +4650,7 @@ function daDragLeave(el) { el.classList.remove('drag-over'); }
 function daDrop(e, num) { e.preventDefault(); document.getElementById('daSlot' + num).classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) daFileChosen(num, f); }
 
 // Restore A2A file UI from cached text
+daLoadRetailerBrands();
 setTimeout(() => {
   [1,2,3].forEach(n => {
     const name = localStorage.getItem('bimma_da_slot'+n+'_name');

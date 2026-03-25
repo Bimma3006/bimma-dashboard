@@ -2977,6 +2977,14 @@ input::placeholder { color: var(--text-4); }
           <input type="checkbox" id="scoutES" checked onchange="scoutToggleMarket('ES',this)">
           <span class="scout-market-flag">🇪🇸</span><span class="scout-market-code">ES</span>
         </label>
+        <label class="scout-market-btn" id="scoutLabelUS">
+          <input type="checkbox" id="scoutUS" onchange="scoutToggleMarket('US',this)">
+          <span class="scout-market-flag">🇺🇸</span><span class="scout-market-code">US</span>
+        </label>
+        <label class="scout-market-btn" id="scoutLabelJP">
+          <input type="checkbox" id="scoutJP" onchange="scoutToggleMarket('JP',this)">
+          <span class="scout-market-flag">🇯🇵</span><span class="scout-market-code">JP</span>
+        </label>
       </div>
     </div>
 
@@ -2986,7 +2994,15 @@ input::placeholder { color: var(--text-4); }
       <div class="rp-settings-grid">
         <div>
           <div class="rp-setting-label">EUR / GBP</div>
-          <input id="scoutEurGbp" type="number" value="0.86" step="0.01" min="0.5" max="1.5" class="rp-input">
+          <input id="scoutEurGbp" type="number" value="0.86" step="0.001" min="0.1" max="2" class="rp-input">
+        </div>
+        <div>
+          <div class="rp-setting-label">USD / GBP</div>
+          <input id="scoutUsdGbp" type="number" value="0.79" step="0.001" min="0.1" max="2" class="rp-input">
+        </div>
+        <div>
+          <div class="rp-setting-label">JPY / GBP</div>
+          <input id="scoutJpyGbp" type="number" value="0.0051" step="0.0001" min="0.001" max="0.1" class="rp-input">
         </div>
         <div>
           <div class="rp-setting-label">Min ROI %</div>
@@ -5688,7 +5704,7 @@ function rpShowError(msg){const e=document.getElementById('rp-error');if(e){e.te
 // ════════════════════════════════════════
 // DEAL SCOUT
 // ════════════════════════════════════════
-const SCOUT_DOMAINS = { DE:{id:3,label:'DE'}, FR:{id:4,label:'FR'}, IT:{id:8,label:'IT'}, ES:{id:9,label:'ES'} };
+const SCOUT_DOMAINS = { DE:{id:3,label:'DE'}, FR:{id:4,label:'FR'}, IT:{id:8,label:'IT'}, ES:{id:9,label:'ES'}, US:{id:1,label:'US'}, JP:{id:5,label:'JP'} };
 const SCOUT_UK_DOMAIN = 2;
 let scoutResults = [];
 let scoutCurrentTab = 'csv';
@@ -5705,7 +5721,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.value = saved;
   }
   // Init market button states
-  ['DE','FR','IT','ES'].forEach(m => scoutToggleMarket(m, document.getElementById('scout'+m)));
+  ['DE','FR','IT','ES','US','JP'].forEach(m => scoutToggleMarket(m, document.getElementById('scout'+m)));
 
   // Restore cached scout results (max 24h old)
   const scoutCacheRaw = localStorage.getItem('bimma_scout_cache');
@@ -6079,10 +6095,13 @@ async function scoutRun() {
   if (!asins.length) { toast('No valid ASINs found', 'error'); return; }
 
   const eurGbp   = parseFloat(document.getElementById('scoutEurGbp')?.value   || '0.86');
+  const usdGbp   = parseFloat(document.getElementById('scoutUsdGbp')?.value   || '0.79');
+  const jpyGbp   = parseFloat(document.getElementById('scoutJpyGbp')?.value   || '0.0051');
   const shipping = parseFloat(document.getElementById('scoutShipping')?.value  || '2.00');
   const prep     = parseFloat(document.getElementById('scoutPrep')?.value      || '0.45');
   const minRoi   = parseFloat(document.getElementById('scoutMinRoi')?.value    || '15');
   const markets  = Object.keys(SCOUT_DOMAINS).filter(k => document.getElementById('scout'+k)?.checked);
+  const marketFx = { DE:eurGbp, FR:eurGbp, IT:eurGbp, ES:eurGbp, US:usdGbp, JP:jpyGbp };
 
   if (!markets.length) { toast('Select at least one source market', 'error'); return; }
 
@@ -6181,7 +6200,7 @@ async function scoutRun() {
             });
           } catch(e) { console.warn(`${market} batch ${i}:`, e.message); }
           // Render partial results after each batch
-          scoutRenderPartial(asins, ukMap, euData, markets, eurGbp, shipping, prep, minRoi, csvHasBB);
+          scoutRenderPartial(asins, ukMap, euData, markets, marketFx, shipping, prep, minRoi, csvHasBB);
         }
         totalScraped += marketScraped;
         await new Promise(r => setTimeout(r, 200));
@@ -6199,7 +6218,7 @@ async function scoutRun() {
       for (const market of markets) {
         const euPrice = euForAsin[market];
         if (!euPrice) continue;
-        const calc = ukBB ? scoutCalcProfit(euPrice, ukBB, eurGbp, shipping, prep) : null;
+        const calc = ukBB ? scoutCalcProfit(euPrice, ukBB, marketFx[market], shipping, prep) : null;
         if (!bestCalc || (calc && calc.profit > bestCalc.profit)) {
           bestMarket = market; bestEuPrice = euPrice; bestCalc = calc;
         }
@@ -6360,9 +6379,14 @@ function scoutRenderTable() {
   if (countEl) { countEl.textContent = badge; countEl.className = 'rp-table-badge'; }
 
   const f2  = v => v != null ? '£' + v.toFixed(2) : '—';
-  const fEu = v => v != null ? '€' + v.toFixed(2) : '—';
+  const srcCurrencySymbol = { DE:'€', FR:'€', IT:'€', ES:'€', US:'$', JP:'¥' };
+  const fEu = (v, mkt) => {
+    if (v == null) return '—';
+    const sym = srcCurrencySymbol[mkt] || '€';
+    return sym + (sym === '¥' ? Math.round(v).toLocaleString() : v.toFixed(2));
+  };
   const fPct= v => v != null ? v.toFixed(1) + '%' : '—';
-  const srcFlag = { DE:'🇩🇪', FR:'🇫🇷', IT:'🇮🇹', ES:'🇪🇸' };
+  const srcFlag = { DE:'🇩🇪', FR:'🇫🇷', IT:'🇮🇹', ES:'🇪🇸', US:'🇺🇸', JP:'🇯🇵' };
 
   let lastGroup = null;
   tbody.innerHTML = filtered.map(r => {
@@ -6395,7 +6419,7 @@ function scoutRenderTable() {
       <td style="text-align:center;">
         ${r.bestMarket ? `<span class="rp-tag">${srcFlag[r.bestMarket]||''} ${r.bestMarket}</span>` : '<span style="color:var(--text-3)">—</span>'}
       </td>
-      <td style="text-align:right;font-family:var(--mono);">${fEu(r.bestEuPrice)}</td>
+      <td style="text-align:right;font-family:var(--mono);">${fEu(r.bestEuPrice, r.bestMarket)}</td>
       <td style="text-align:right;font-family:var(--mono);">${f2(r.calc?.landed)}</td>
       <td style="text-align:right;font-family:var(--mono);font-weight:600;">${f2(r.ukBB)}<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);">${r.ukBBSource||''}</div></td>
       <td style="text-align:right;font-family:var(--mono);color:var(--text-3);">${f2(r.calc?.fba)}</td>
@@ -7232,7 +7256,7 @@ function scoutStop() {
 }
 
 
-function scoutRenderPartial(asins, ukMap, euData, markets, eurGbp, shipping, prep, minRoi, csvHasBB) {
+function scoutRenderPartial(asins, ukMap, euData, markets, marketFx, shipping, prep, minRoi, csvHasBB) {
   // Build results from whatever EU data we have so far
   const partial = asins.map(asin => {
     const ukProd     = ukMap[asin];
@@ -7243,7 +7267,7 @@ function scoutRenderPartial(asins, ukMap, euData, markets, eurGbp, shipping, pre
     for (const market of markets) {
       const euPrice = euData[asin]?.[market];
       if (!euPrice) continue;
-      const calc = ukBB ? scoutCalcProfit(euPrice, ukBB, eurGbp, shipping, prep) : null;
+      const calc = ukBB ? scoutCalcProfit(euPrice, ukBB, marketFx[market] ?? 0.86, shipping, prep) : null;
       if (!bestCalc || (calc && calc.profit > bestCalc.profit)) {
         bestMarket = market; bestEuPrice = euPrice; bestCalc = calc;
       }

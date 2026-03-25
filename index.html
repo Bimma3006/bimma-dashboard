@@ -4995,14 +4995,22 @@ function daRenderHeaders() {
   const cfg = MODES[currentMode];
   const buyLabel = cfg.condition === 'used' ? 'Buy LN<br>inc-VAT' : 'Buy Price<br>inc-VAT';
   const spLabel  = cfg.condition === 'used' ? 'SP Used LN<br>180d avg' : 'SP 180d avg<br>inc-VAT';
+  let extraCols = '';
+  if (daFilter === 'giftcard') {
+    extraCols = `<th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI buying with a 10% discounted gift card">🎁 10% GC ROI</th>`;
+  } else if (daFilter === 'subsave') {
+    extraCols = `<th data-col="ssRoi" data-type="num" style="color:var(--purple);" title="ROI at Subscribe & Save subscriber price (15% off your buy price)">♻ S&S ROI</th>
+    <th data-col="gcssRoi" data-type="num" style="color:var(--amber);" title="ROI buying via S&S subscriber price then also using a 10% gift card (~23.5% off total)">♻🎁 S&S + GC</th>`;
+  } else if (daFilter === 'retailer') {
+    extraCols = `<th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys / Argos / Shark / Vax with 15% gift card — these retailers price-match Amazon">🏪 Currys/Argos ROI<br><span style='font-size:8px;font-weight:400;opacity:0.7;'>15% GC</span></th>`;
+  }
   document.getElementById('daTableHead').innerHTML = `<tr>
     <th class="no-sort th-left" style="min-width:220px;max-width:300px;">Product</th>
     <th data-col="buyIncVat" data-type="num">${buyLabel}</th>
     <th data-col="spIncVat" data-type="num">${spLabel}</th>
     <th data-col="profit" data-type="num">Profit</th>
     <th data-col="roi" data-type="num">ROI</th>
-    <th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI if you buy using a 10% gift card discount">🎁 10% GC</th>
-    <th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys / Argos / Shark / Vax using a 15% discounted gift card — these retailers price-match Amazon">🏪 Currys/Argos<br><span style='font-size:8px;font-weight:400;opacity:0.7;'>15% GC</span></th>
+    ${extraCols}
     <th data-col="boughtPerMonth" data-type="num">Bought/mo</th>
     <th class="no-sort th-left" style="min-width:200px;">Rating</th>
     <th class="no-sort" style="min-width:150px;"></th>
@@ -5046,10 +5054,19 @@ function daRenderTable() {
       ? `<div class="row-warn">↘ trending down ${(deal.priceTrendWarning*100).toFixed(1)}%</div>` : '';
     const spikeWarn = deal.spikeFlag === 'bb_spike'
       ? `<div class="row-warn spike">⚡ price outlier</div>` : '';
-    const ssLine = deal.ss && deal.ssRoi != null
-      ? `<div class="row-ss-roi" style="color:${deal.ssRoi >= 0.20 ? 'var(--green)' : deal.ssRoi >= 0.15 ? 'var(--purple)' : 'var(--red)'};">♻ S&S: <strong>${fmtP(deal.ssRoi)}</strong></div>` : '';
-    const gcssLine = deal.gcssRoi != null
-      ? `<div class="row-gcss-roi" style="color:${deal.gcssRoi >= 0.20 ? 'var(--green)' : deal.gcssRoi >= 0.15 ? 'var(--amber)' : 'var(--text-3)'};">♻🎁 S&S+GC: <strong>${fmtP(deal.gcssRoi)}</strong></div>` : '';
+    // Extra cells — only rendered for the relevant filter pill
+    let extraCells = '';
+    if (daFilter === 'giftcard') {
+      const gc = deal.gcRoi;
+      extraCells = `<td class="td-num" style="${gc != null ? (gc >= 0.20 ? 'color:var(--green);font-weight:700;' : gc >= 0.15 ? 'color:var(--amber);font-weight:600;' : gc > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${gc != null ? fmtP(gc) : '—'}</td>`;
+    } else if (daFilter === 'subsave') {
+      const ss2 = deal.ssRoi, gcss = deal.gcssRoi;
+      extraCells = `<td class="td-num" style="${ss2 != null ? (ss2 >= 0.20 ? 'color:var(--green);font-weight:700;' : ss2 >= 0.15 ? 'color:var(--purple);font-weight:600;' : 'color:var(--red);') : ''}">${ss2 != null ? fmtP(ss2) : '—'}</td>
+      <td class="td-num" style="${gcss != null ? (gcss >= 0.20 ? 'color:var(--green);font-weight:700;' : gcss >= 0.15 ? 'color:var(--amber);font-weight:600;' : gcss > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${gcss != null ? fmtP(gcss) : '—'}</td>`;
+    } else if (daFilter === 'retailer') {
+      const r15 = deal.r15Roi;
+      extraCells = `<td class="td-num" style="${r15 != null ? (r15 >= 0.20 ? 'color:var(--green);font-weight:700;' : r15 >= 0.15 ? 'color:var(--blue);font-weight:600;' : r15 > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${r15 != null ? fmtP(r15) : '—'}</td>`;
+    }
     tr.dataset.asin = deal.asin;
     tr.innerHTML = `
       <td class="td-product">
@@ -5063,13 +5080,12 @@ function daRenderTable() {
       <td class="td-num">${fmtN(deal.spIncVat)}${spTag}</td>
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
-      <td class="td-num" style="${deal.gcRoi != null ? (deal.gcRoi >= 0.20 ? 'color:var(--green);font-weight:700;' : deal.gcRoi >= 0.15 ? 'color:var(--amber);font-weight:600;' : deal.gcRoi > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${deal.gcRoi != null ? (deal.gcRoi >= 0.15 && (deal.roi == null || deal.roi < 0.15) ? '🎁 ' : '') + fmtP(deal.gcRoi) : '—'}</td>
-      <td class="td-num" style="${deal.r15Roi != null ? (deal.r15Roi >= 0.20 ? 'color:var(--green);font-weight:700;' : deal.r15Roi >= 0.15 ? 'color:var(--blue);font-weight:600;' : deal.r15Roi > 0 ? 'color:var(--text-2);' : 'color:var(--red);') : ''}">${deal.r15Roi != null ? (deal.r15Roi >= 0.15 && (deal.roi == null || deal.roi < 0.15) ? '🏪 ' : '') + fmtP(deal.r15Roi) : '—'}</td>
+      ${extraCells}
       <td class="td-num td-center">${deal.boughtPerMonth ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
       <td class="td-rating">
         <div class="rating-strength ${deal.colour}">${deal.strength}</div>
         <div class="rating-reason">${deal.reason}</div>
-        ${trendWarn}${spikeWarn}${ssLine}${gcssLine}
+        ${trendWarn}${spikeWarn}
         <div class="rating-bar ${deal.colour}" style="margin-top:5px;"></div>
       </td>
       <td class="td-actions">
@@ -5135,6 +5151,9 @@ function daSetFilter(f, btn) {
   daFilter = f;
   document.querySelectorAll('#daFilters .a2a-fpill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  daSort = { col: null, dir: 1 }; // reset sort so new columns don't inherit stale sort state
+  daRenderHeaders();
+  daInitSort();
   daRenderTable();
 }
 

@@ -892,7 +892,8 @@ input::placeholder { color: var(--text-4); }
 .rating-bar.red { background: rgba(240,59,80,0.3); }
 .row-warn { font-family: var(--mono); font-size: 9px; color: var(--red); margin-top: 4px; }
 .row-warn.spike { color: var(--amber); }
-.row-ss-roi { font-family: var(--mono); font-size: 9px; font-weight: 600; margin-top: 4px; letter-spacing: 0.04em; }
+.row-ss-roi { font-family: var(--mono); font-size: 11px; font-weight: 700; margin-top: 5px; letter-spacing: 0.03em; }
+.row-gcss-roi { font-family: var(--mono); font-size: 11px; font-weight: 700; margin-top: 3px; letter-spacing: 0.03em; }
 
 /* Action buttons */
 .td-actions { white-space: nowrap; padding: 11px 10px; }
@@ -4645,6 +4646,17 @@ function daAnalyseRow(row) {
     ssRoi    = ssProfit / ssBuyExVat;
   }
 
+  // S&S + Gift Card combined: 10% GC on top of already S&S-discounted buy price (~23.5% off total)
+  // buyIncVat already has S&S 15% baked in, so applying 0.90 gives the combined scenario
+  let gcssRoi = null;
+  if (ss && sp && buyExVat && buyIncVat && refFee !== null && fbaExVat !== null) {
+    const gcssBuyIncVat = buyIncVat * 0.90;
+    const gcssBuyExVat  = gcssBuyIncVat / (1 + vat);
+    const gcssVatDue    = (spIncVat * vat / (1 + vat)) - (gcssBuyIncVat * vat / (1 + vat));
+    const gcssProfit    = sp - gcssBuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - gcssVatDue;
+    gcssRoi = gcssProfit / gcssBuyExVat;
+  }
+
   // Retailer 15% gift card (Currys / Argos / Shark / Vax): 15% off buy price, price-matched to Amazon
   // Only applies if product title matches the user-configured brand list
   const r15Match = r15Brands.length === 0 || r15Brands.some(b => title.toLowerCase().includes(b.toLowerCase()));
@@ -4657,7 +4669,7 @@ function daAnalyseRow(row) {
     r15Roi    = r15Profit / r15BuyExVat;
   }
 
-  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, decision: null };
+  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, gcssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, decision: null };
 }
 
 // ════════════════════════════════════════
@@ -4919,8 +4931,8 @@ function daRenderHeaders() {
     <th data-col="spIncVat" data-type="num">${spLabel}</th>
     <th data-col="profit" data-type="num">Profit</th>
     <th data-col="roi" data-type="num">ROI</th>
-    <th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI if you buy with 10% gift card discount">🎁 GC ROI</th>
-    <th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys / Argos / Shark / Vax with 15% gift card discount (price-matched to Amazon)">🏪 15% GC</th>
+    <th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI if you buy using a 10% gift card discount">🎁 10% GC</th>
+    <th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys / Argos / Shark / Vax using a 15% discounted gift card — these retailers price-match Amazon">🏪 Currys/Argos<br><span style='font-size:8px;font-weight:400;opacity:0.7;'>15% GC</span></th>
     <th data-col="boughtPerMonth" data-type="num">Bought/mo</th>
     <th class="no-sort th-left" style="min-width:200px;">Rating</th>
     <th class="no-sort" style="min-width:150px;"></th>
@@ -4965,7 +4977,9 @@ function daRenderTable() {
     const spikeWarn = deal.spikeFlag === 'bb_spike'
       ? `<div class="row-warn spike">⚡ price outlier</div>` : '';
     const ssLine = deal.ss && deal.ssRoi != null
-      ? `<div class="row-ss-roi" style="color:${deal.ssRoi >= 0.20 ? 'var(--green)' : deal.ssRoi >= 0.15 ? 'var(--purple)' : 'var(--text-3)'};">♻ S&S: ${fmtP(deal.ssRoi)}</div>` : '';
+      ? `<div class="row-ss-roi" style="color:${deal.ssRoi >= 0.20 ? 'var(--green)' : deal.ssRoi >= 0.15 ? 'var(--purple)' : 'var(--red)'};">♻ S&S: <strong>${fmtP(deal.ssRoi)}</strong></div>` : '';
+    const gcssLine = deal.gcssRoi != null
+      ? `<div class="row-gcss-roi" style="color:${deal.gcssRoi >= 0.20 ? 'var(--green)' : deal.gcssRoi >= 0.15 ? 'var(--amber)' : 'var(--text-3)'};">♻🎁 S&S+GC: <strong>${fmtP(deal.gcssRoi)}</strong></div>` : '';
     tr.dataset.asin = deal.asin;
     tr.innerHTML = `
       <td class="td-product">
@@ -4985,7 +4999,7 @@ function daRenderTable() {
       <td class="td-rating">
         <div class="rating-strength ${deal.colour}">${deal.strength}</div>
         <div class="rating-reason">${deal.reason}</div>
-        ${trendWarn}${spikeWarn}${ssLine}
+        ${trendWarn}${spikeWarn}${ssLine}${gcssLine}
         <div class="rating-bar ${deal.colour}" style="margin-top:5px;"></div>
       </td>
       <td class="td-actions">

@@ -4742,28 +4742,6 @@ function daAnalyseRow(row) {
     if (bbCurrent > avg180 + (sd365 * 3)) spikeFlag = 'bb_spike';
   }
 
-  // Rating
-  let strength, colour, reason;
-  if (spikeFlag === 'bb_spike') {
-    strength = 'SPIKED'; colour = 'red';
-    const pct = avg180 ? (((bbCurrent - avg180) / avg180) * 100).toFixed(0) : '?';
-    reason = `BB ${pct}% above 180d avg — inflated spike`;
-  } else if (roi === null) {
-    strength = 'NO DATA'; colour = 'grey'; reason = 'Missing price data';
-  } else if (roi >= cfg.strongROI) {
-    strength = 'STRONG'; colour = 'green';
-    reason = recoveries ? `ROI ${(roi*100).toFixed(1)}% · ${recoveries} recover${recoveries > 1 ? 'ies' : 'y'}` : `ROI ${(roi*100).toFixed(1)}% — strong return`;
-  } else if (roi >= cfg.minROI) {
-    strength = 'MARGINAL'; colour = 'amber';
-    reason = `ROI ${(roi*100).toFixed(1)}% — verify on Keepa`;
-  } else {
-    strength = 'REJECT'; colour = 'red';
-    reason = `ROI ${(roi*100).toFixed(1)}% — below minimum`;
-  }
-
-  if (fbaFeeEst && reason && colour !== 'grey') reason += ' · FBA est.';
-  const sortOrder = colour === 'green' ? 0 : colour === 'amber' ? 1 : spikeFlag ? 4 : colour === 'red' ? 2 : 3;
-
   // Gift card: 10% off buy price
   const gcBuyExVat = buyExVat ? buyExVat * 0.90 : null;
   const gcBuyIncVat = buyIncVat ? buyIncVat * 0.90 : null;
@@ -4807,6 +4785,34 @@ function daAnalyseRow(row) {
     r15Profit = sp - r15BuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - r15VatDue;
     r15Roi    = r15Profit / r15BuyExVat;
   }
+
+  // Rating — computed after GC/retailer ROIs so we can promote via discounted routes
+  let strength, colour, reason;
+  if (spikeFlag === 'bb_spike') {
+    strength = 'SPIKED'; colour = 'red';
+    const pct = avg180 ? (((bbCurrent - avg180) / avg180) * 100).toFixed(0) : '?';
+    reason = `BB ${pct}% above 180d avg — inflated spike`;
+  } else if (roi === null) {
+    strength = 'NO DATA'; colour = 'grey'; reason = 'Missing price data';
+  } else if (roi >= cfg.strongROI) {
+    strength = 'STRONG'; colour = 'green';
+    reason = recoveries ? `ROI ${(roi*100).toFixed(1)}% · ${recoveries} recover${recoveries > 1 ? 'ies' : 'y'}` : `ROI ${(roi*100).toFixed(1)}% — strong return`;
+  } else if (roi >= cfg.minROI) {
+    strength = 'MARGINAL'; colour = 'amber';
+    reason = `ROI ${(roi*100).toFixed(1)}% — verify on Keepa`;
+  } else if (gcRoi != null && gcRoi >= 0.15) {
+    strength = 'STRONG'; colour = 'green';
+    reason = `GC ROI ${(gcRoi*100).toFixed(1)}% — needs 10% gift card`;
+  } else if (r15Roi != null && r15Roi >= 0.15) {
+    strength = 'STRONG'; colour = 'green';
+    reason = `Retailer ROI ${(r15Roi*100).toFixed(1)}% — needs 15% gift card`;
+  } else {
+    strength = 'REJECT'; colour = 'red';
+    reason = roi !== null ? `ROI ${(roi*100).toFixed(1)}% — below minimum` : 'Below minimum';
+  }
+
+  if (fbaFeeEst && reason && colour !== 'grey') reason += ' · FBA est.';
+  const sortOrder = colour === 'green' ? 0 : colour === 'amber' ? 1 : spikeFlag ? 4 : colour === 'red' ? 2 : 3;
 
   return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, gcssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, decision: null };
 }
@@ -4857,7 +4863,7 @@ setTimeout(() => {
           } catch {}
         });
         daDeals = parsed
-          .filter(d => !(d.ss && d.ssRoi !== null && d.ssRoi < 0.15))
+          .filter(d => !(d.ss && (d.ssRoi == null || d.ssRoi < 0.15) && (d.gcssRoi == null || d.gcssRoi < 0.15)))
           .map(d => {
             const asinUp = (d.asin || '').toUpperCase();
             const pd = _purchMap.get(asinUp);
@@ -4877,7 +4883,7 @@ setTimeout(() => {
         const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
         document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
         const gcEl = document.getElementById('daCountGC'); if(gcEl) gcEl.textContent = daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
-        const ssEl2 = document.getElementById('daCountSS'); if(ssEl2) ssEl2.textContent = daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15).length;
+        const ssEl2 = document.getElementById('daCountSS'); if(ssEl2) ssEl2.textContent = daDeals.filter(d => d.ss && ((d.ssRoi != null && d.ssRoi >= 0.15) || (d.gcssRoi != null && d.gcssRoi >= 0.15))).length;
         const r15El2 = document.getElementById('daCountR15'); if(r15El2) r15El2.textContent = daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
         daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
       }
@@ -5027,13 +5033,13 @@ function daRunAnalysis() {
           }
         }
         return deal;
-      }).filter(d => !(d.ss && d.ssRoi !== null && d.ssRoi < 0.15))
+      }).filter(d => !(d.ss && (d.ssRoi == null || d.ssRoi < 0.15) && (d.gcssRoi == null || d.gcssRoi < 0.15)))
         .sort((a, b) => a.sortOrder - b.sortOrder);
       document.getElementById('daCountGreen').textContent = daDeals.filter(d => d.colour === 'green').length;
       const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
       document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
       const gcEl = document.getElementById('daCountGC'); if(gcEl) gcEl.textContent = daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
-      const ssElRun = document.getElementById('daCountSS'); if(ssElRun) ssElRun.textContent = daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15).length;
+      const ssElRun = document.getElementById('daCountSS'); if(ssElRun) ssElRun.textContent = daDeals.filter(d => d.ss && ((d.ssRoi != null && d.ssRoi >= 0.15) || (d.gcssRoi != null && d.gcssRoi >= 0.15))).length;
       const r15ElRun = document.getElementById('daCountR15'); if(r15ElRun) r15ElRun.textContent = daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
 
       const softSpiked = daDeals.filter(d => d.spikeFlag).length;
@@ -5103,7 +5109,7 @@ function daRenderTable() {
   let filtered = daFilter === 'giftcard'
     ? daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15))
     : daFilter === 'subsave'
-    ? daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15)
+    ? daDeals.filter(d => d.ss && ((d.ssRoi != null && d.ssRoi >= 0.15) || (d.gcssRoi != null && d.gcssRoi >= 0.15)))
     : daFilter === 'retailer'
     ? daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15))
     : daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter);
@@ -5178,7 +5184,7 @@ function daUpdatePillCounts() {
     amber:    daDeals.filter(d => d.colour === 'amber').length,
     red:      daDeals.filter(d => d.colour === 'red').length,
     giftcard: daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length,
-    subsave:  daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15).length,
+    subsave:  daDeals.filter(d => d.ss && ((d.ssRoi != null && d.ssRoi >= 0.15) || (d.gcssRoi != null && d.gcssRoi >= 0.15))).length,
     retailer: daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15)).length,
   };
   const ssEl = document.getElementById('daCountSS'); if (ssEl) ssEl.textContent = counts.subsave;

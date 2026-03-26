@@ -4762,11 +4762,10 @@ function daAnalyseRow(row) {
     ssRoi    = ssProfit / ssBuyExVat;
   }
 
-  // S&S + Gift Card combined: 10% GC on top of already S&S-discounted buy price (~23.5% off total)
-  // buyIncVat already has S&S 15% baked in, so applying 0.90 gives the combined scenario
+  // S&S + Gift Card combined: S&S 15% off, then 10% GC on top (~23.5% off total: 0.85 * 0.90 = 0.765)
   let gcssRoi = null;
   if (ss && sp && buyExVat && buyIncVat && refFee !== null && fbaExVat !== null) {
-    const gcssBuyIncVat = buyIncVat * 0.90;
+    const gcssBuyIncVat = buyIncVat * 0.85 * 0.90;
     const gcssBuyExVat  = gcssBuyIncVat / (1 + vat);
     const gcssVatDue    = (spIncVat * vat / (1 + vat)) - (gcssBuyIncVat * vat / (1 + vat));
     const gcssProfit    = sp - gcssBuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - gcssVatDue;

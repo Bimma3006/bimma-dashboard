@@ -2546,6 +2546,17 @@ input::placeholder { color: var(--text-4); }
 
     <!-- MODE SELECTOR -->
     <div class="a2a-mode-bar">
+      <button class="a2a-mode-btn a2a-mode-uk active" onclick="setMode('uk',this)">
+        <div class="a2a-mode-top">
+          <span class="a2a-mode-icon">🇬🇧</span>
+          <span class="a2a-mode-badge">UK → UK</span>
+        </div>
+        <span class="a2a-mode-desc">Buy and sell within UK Amazon</span>
+        <div class="a2a-mode-tags">
+          <span class="a2a-mtag">UK Buy Box</span>
+          <span class="a2a-mtag">New</span>
+        </div>
+      </button>
       <button class="a2a-mode-btn a2a-mode-eu" onclick="setMode('eu',this)">
         <div class="a2a-mode-top">
           <span class="a2a-mode-icon">🌍</span>
@@ -2555,17 +2566,6 @@ input::placeholder { color: var(--text-4); }
         <div class="a2a-mode-tags">
           <span class="a2a-mtag">EU Buy Box</span>
           <span class="a2a-mtag">+£2 ship</span>
-          <span class="a2a-mtag">New</span>
-        </div>
-      </button>
-      <button class="a2a-mode-btn a2a-mode-uk active" onclick="setMode('uk',this)">
-        <div class="a2a-mode-top">
-          <span class="a2a-mode-icon">🇬🇧</span>
-          <span class="a2a-mode-badge">UK → UK</span>
-        </div>
-        <span class="a2a-mode-desc">Buy and sell within UK Amazon</span>
-        <div class="a2a-mode-tags">
-          <span class="a2a-mtag">UK Buy Box</span>
           <span class="a2a-mtag">New</span>
         </div>
       </button>

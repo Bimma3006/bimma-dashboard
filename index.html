@@ -2546,7 +2546,7 @@ input::placeholder { color: var(--text-4); }
 
     <!-- MODE SELECTOR -->
     <div class="a2a-mode-bar">
-      <button class="a2a-mode-btn a2a-mode-eu active" onclick="setMode('eu',this)">
+      <button class="a2a-mode-btn a2a-mode-eu" onclick="setMode('eu',this)">
         <div class="a2a-mode-top">
           <span class="a2a-mode-icon">🌍</span>
           <span class="a2a-mode-badge">EU → UK</span>
@@ -2558,7 +2558,7 @@ input::placeholder { color: var(--text-4); }
           <span class="a2a-mtag">New</span>
         </div>
       </button>
-      <button class="a2a-mode-btn a2a-mode-uk" onclick="setMode('uk',this)">
+      <button class="a2a-mode-btn a2a-mode-uk active" onclick="setMode('uk',this)">
         <div class="a2a-mode-top">
           <span class="a2a-mode-icon">🇬🇧</span>
           <span class="a2a-mode-badge">UK → UK</span>
@@ -2584,9 +2584,9 @@ input::placeholder { color: var(--text-4); }
 
     <!-- MODE INFO STRIP -->
     <div class="a2a-info-strip" id="modeBanner">
-      <div class="a2a-info-mode" id="modePill">EU → UK</div>
+      <div class="a2a-info-mode" id="modePill">UK → UK</div>
       <div class="a2a-info-divider"></div>
-      <div class="a2a-info-desc" id="modeDesc">Buy price: <strong>EU Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>+£2.00 shipping</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong></div>
+      <div class="a2a-info-desc" id="modeDesc">Buy price: <strong>Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong> &nbsp;·&nbsp; Slots: <strong>2× UK exports (deduped)</strong></div>
     </div>
 
     <!-- RETAILER BRAND FILTER -->
@@ -2624,8 +2624,8 @@ input::placeholder { color: var(--text-4); }
           <input type="file" id="daFileInput1" accept=".csv" onchange="daFileChosen(1,this.files[0])">
           <div class="a2a-slot-num">01</div>
           <div class="a2a-slot-icon" id="daSlot1Icon">↑</div>
-          <div class="a2a-slot-label" id="daSlot1Label">Primary export</div>
-          <div class="a2a-slot-sub" id="daSlot1Sub" style="display:none;"></div>
+          <div class="a2a-slot-label" id="daSlot1Label">File 1 — UK Keepa export (1–5k)</div>
+          <div class="a2a-slot-sub" id="daSlot1Sub">REQUIRED</div>
           <div class="a2a-slot-name" id="daSlot1Name"></div>
           <button class="a2a-slot-clear" id="daSlot1Clear" onclick="daClearSlot(event,1)">✕</button>
         </div>
@@ -2633,12 +2633,12 @@ input::placeholder { color: var(--text-4); }
           <input type="file" id="daFileInput2" accept=".csv" onchange="daFileChosen(2,this.files[0])">
           <div class="a2a-slot-num">02</div>
           <div class="a2a-slot-icon" id="daSlot2Icon">↑</div>
-          <div class="a2a-slot-label" id="daSlot2Label">Second export</div>
-          <div class="a2a-slot-sub" id="daSlot2Sub" style="display:none;"></div>
+          <div class="a2a-slot-label" id="daSlot2Label">File 2 — UK Keepa export (5k–10k)</div>
+          <div class="a2a-slot-sub" id="daSlot2Sub">OPTIONAL — second batch</div>
           <div class="a2a-slot-name" id="daSlot2Name"></div>
           <button class="a2a-slot-clear" id="daSlot2Clear" onclick="daClearSlot(event,2)">✕</button>
         </div>
-        <div class="a2a-slot" id="daSlot3" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,3)">
+        <div class="a2a-slot" id="daSlot3" style="display:none;" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,3)">
           <input type="file" id="daFileInput3" accept=".csv" onchange="daFileChosen(3,this.files[0])">
           <div class="a2a-slot-num">03</div>
           <div class="a2a-slot-icon" id="daSlot3Icon">↑</div>
@@ -4447,7 +4447,7 @@ const FEES = {
 // ════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════
-let currentMode = 'eu';
+let currentMode = 'uk';
 let daDeals = [], daFilter = 'all', daSort = { col: null, dir: 1 };
 
 // ════════════════════════════════════════
@@ -7284,6 +7284,15 @@ async function scoutRefreshFx() {
 
 document.addEventListener('bimma:pagechange', e => {
   if (e.detail === 'scout') scoutRefreshFx();
+});
+
+// Re-enforce slot labels/visibility whenever the A2A page is navigated to,
+// so switching tabs or returning after other pages never leaves stale EU/ULN state.
+document.addEventListener('bimma:pagechange', e => {
+  if (e.detail === 'a2a') {
+    const btn = document.querySelector('.a2a-mode-btn.a2a-mode-' + currentMode);
+    if (btn) setMode(currentMode, btn);
+  }
 });
 
 

@@ -888,34 +888,27 @@ input::placeholder { color: var(--text-4); }
 .sp-tag.st { background: rgba(240,165,0,0.08); color: var(--amber); border-color: rgba(240,165,0,0.25); }
 
 /* Rating cell */
-.td-rating { min-width: 160px; max-width: 210px; padding: 11px 10px; }
-.rating-strength {
-  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
-  text-transform: uppercase; margin-bottom: 3px;
-}
-.rating-strength.green { color: var(--green); }
-.rating-strength.amber { color: var(--amber); }
-.rating-strength.red { color: var(--red); }
-.rating-strength.grey { color: var(--text-3); }
-.rating-reason { font-family: var(--mono); font-size: 9.5px; color: var(--text-2); line-height: 1.55; }
-.rating-bar { height: 2px; border-radius: 1px; max-width: 100px; margin-top: 5px; }
-.rating-bar.green { background: linear-gradient(90deg, var(--green), rgba(0,229,132,0.3)); }
-.rating-bar.amber { background: linear-gradient(90deg, var(--amber), rgba(240,165,0,0.3)); }
-.rating-bar.red { background: rgba(240,59,80,0.3); }
-.row-warn { font-family: var(--mono); font-size: 9px; color: var(--red); margin-top: 4px; }
-.row-warn.spike { color: var(--amber); }
-.row-ss-roi { font-family: var(--mono); font-size: 11px; font-weight: 700; margin-top: 5px; letter-spacing: 0.03em; }
-.row-gcss-roi { font-family: var(--mono); font-size: 11px; font-weight: 700; margin-top: 3px; letter-spacing: 0.03em; }
-
 /* Action buttons */
-.td-actions { white-space: nowrap; padding: 11px 10px; }
-.action-btns { display: flex; flex-direction: column; gap: 5px; }
-.btn-approve, .btn-reject {
-  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
-  padding: 5px 12px; border-radius: 4px; border: 1px solid;
-  background: transparent; cursor: pointer; transition: all 0.15s; white-space: nowrap;
-  text-align: left; width: 100%;
+.td-actions { white-space: nowrap; padding: 8px 6px; display: flex; gap: 4px; align-items: center; }
+.da-pill-strong, .da-pill-mod, .da-pill-reject {
+  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+  padding: 3px 7px; border-radius: 4px; white-space: nowrap; cursor: default;
 }
+.da-pill-strong { background: rgba(0,217,126,0.1); color: var(--green); border: 1px solid rgba(0,217,126,0.25); }
+.da-pill-mod    { background: rgba(240,165,0,0.1); color: var(--amber); border: 1px solid rgba(240,165,0,0.25); }
+.da-pill-reject { background: rgba(240,59,80,0.1); color: var(--red);   border: 1px solid rgba(240,59,80,0.25); }
+.row-warn-inline {
+  font-family: var(--mono); font-size: 8px; font-weight: 600;
+  padding: 1px 5px; border-radius: 3px; margin-left: 3px;
+  background: rgba(240,165,0,0.1); color: var(--amber); border: 1px solid rgba(240,165,0,0.2);
+}
+.row-warn-inline.spike { background: rgba(240,59,80,0.1); color: var(--red); border-color: rgba(240,59,80,0.2); }
+.btn-approve, .btn-reject {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  padding: 4px 7px; border-radius: 4px; border: 1px solid;
+  background: transparent; cursor: pointer; transition: all 0.15s;
+}
+.td-actions { white-space: nowrap; }
 .btn-approve { color: var(--green); border-color: rgba(0,229,132,0.2); }
 .btn-approve:hover { background: rgba(0,229,132,0.08); border-color: rgba(0,229,132,0.5); }
 .btn-approve.active { background: var(--green); color: var(--bg); border-color: var(--green); }
@@ -5088,27 +5081,23 @@ function daRunAnalysis() {
 // ════════════════════════════════════════
 function daRenderHeaders() {
   const cfg = MODES[currentMode];
-  const buyLabel = cfg.condition === 'used' ? 'Buy LN<br>inc-VAT' : 'Buy Price<br>inc-VAT';
-  const spLabel  = cfg.condition === 'used' ? 'SP Used LN<br>180d avg' : 'SP 180d avg<br>inc-VAT';
-  let extraCols = '';
-  if (daFilter === 'giftcard') {
-    extraCols = `<th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI buying with a 10% discounted gift card">🎁 10% GC ROI</th>`;
-  } else if (daFilter === 'subsave') {
-    extraCols = `<th data-col="ssRoi" data-type="num" style="color:var(--purple);" title="ROI at Subscribe & Save subscriber price (15% off your buy price)">♻ S&S ROI</th>
-    <th data-col="gcssRoi" data-type="num" style="color:var(--amber);" title="ROI buying via S&S subscriber price then also using a 10% gift card (~23.5% off total)">♻🎁 S&S + GC</th>`;
-  } else if (daFilter === 'retailer') {
-    extraCols = `<th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys / Argos / Shark / Vax with 15% gift card — these retailers price-match Amazon">🏪 Currys/Argos ROI<br><span style='font-size:8px;font-weight:400;opacity:0.7;'>15% GC</span></th>`;
-  }
+  const buyLabel = cfg.condition === 'used' ? 'Buy LN' : 'Buy';
+  const spLabel  = cfg.condition === 'used' ? 'SP Used' : 'SP 180d';
+  const ssCols = daFilter === 'subsave'
+    ? `<th data-col="ssRoi" data-type="num" style="color:var(--purple);" title="ROI at Subscribe & Save price">♻ S&S</th>
+       <th data-col="gcssRoi" data-type="num" style="color:var(--amber);" title="ROI at S&S + 10% gift card">♻🎁 S&S+GC</th>` : '';
   document.getElementById('daTableHead').innerHTML = `<tr>
     <th class="no-sort th-left" style="min-width:220px;max-width:300px;">Product</th>
     <th data-col="buyIncVat" data-type="num">${buyLabel}</th>
     <th data-col="spIncVat" data-type="num">${spLabel}</th>
     <th data-col="profit" data-type="num">Profit</th>
     <th data-col="roi" data-type="num">ROI</th>
-    ${extraCols}
-    <th data-col="boughtPerMonth" data-type="num">Bought/mo</th>
-    <th class="no-sort th-left" style="min-width:200px;">Rating</th>
-    <th class="no-sort" style="min-width:150px;"></th>
+    <th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI with 10% gift card">🎁 GC</th>
+    <th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys/Argos with 15% gift card">🏪 15%</th>
+    ${ssCols}
+    <th data-col="boughtPerMonth" data-type="num">Sold/mo</th>
+    <th class="no-sort" style="width:80px;">Rating</th>
+    <th class="no-sort" style="width:56px;"></th>
   </tr>`;
 }
 
@@ -5146,37 +5135,21 @@ function daRenderTable() {
     const roiColour = deal.roi !== null && deal.roi >= 0.20 ? 'var(--green)' : deal.roi !== null && deal.roi >= 0.15 ? 'var(--amber)' : deal.colour === 'red' ? 'var(--red)' : 'var(--text-3)';
     const spTag = deal.spSource === 'ST' ? '<span class="sp-tag st">ST</span>' : deal.spSource === '365d' ? '<span class="sp-tag">365d</span>' : '';
     const trendWarn = !deal.spikeFlag && deal.priceTrendWarning
-      ? `<div class="row-warn">↘ trending down ${(deal.priceTrendWarning*100).toFixed(1)}%</div>` : '';
+      ? ` <span class="row-warn-inline">↘ ${(deal.priceTrendWarning*100).toFixed(1)}%</span>` : '';
     const spikeWarn = deal.spikeFlag === 'bb_spike'
-      ? `<div class="row-warn spike">⚡ price outlier</div>` : '';
-    // Extra cells — only rendered for the relevant filter pill
-    // Each shows discounted buy price (large) + ROI % (small below)
-    const discCell = (price, roi, roiColFn) => {
-      const col = roiColFn(roi);
-      const priceStr = price != null ? `£${price.toFixed(2)}` : '—';
-      const roiStr   = roi   != null ? fmtP(roi) : '—';
-      return `<td class="td-num" style="color:${col};"><div class="td-disc-price">${priceStr}</div><div class="td-disc-roi">${roiStr}</div></td>`;
-    };
-    const gcColour   = r => r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--amber)' : r > 0 ? 'var(--text-2)' : 'var(--red)';
-    const ssColour   = r => r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--purple)' : 'var(--red)';
-    const r15Colour  = r => r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--blue)' : r > 0 ? 'var(--text-2)' : 'var(--red)';
-    let extraCells = '';
-    if (daFilter === 'giftcard') {
-      const price = deal.buyIncVat != null ? deal.buyIncVat * 0.90 : null;
-      extraCells = discCell(price, deal.gcRoi, gcColour);
-    } else if (daFilter === 'subsave') {
-      // buyIncVat already has S&S 15% applied; S&S+GC is that price minus another 10%
-      const ssPrice   = deal.buyIncVat;
-      const gcssPrice = deal.buyIncVat != null ? deal.buyIncVat * 0.90 : null;
-      extraCells = discCell(ssPrice, deal.ssRoi, ssColour) + discCell(gcssPrice, deal.gcssRoi, gcColour);
-    } else if (daFilter === 'retailer') {
-      const price = deal.buyIncVat != null ? deal.buyIncVat * 0.85 : null;
-      extraCells = discCell(price, deal.r15Roi, r15Colour);
-    }
+      ? ` <span class="row-warn-inline spike">⚡ outlier</span>` : '';
+    const gcColour  = r => r == null ? 'var(--text-4)' : r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--amber)' : r > 0 ? 'var(--text-3)' : 'var(--red)';
+    const r15Colour = r => r == null ? 'var(--text-4)' : r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--blue)' : r > 0 ? 'var(--text-3)' : 'var(--red)';
+    const ssColour  = r => r == null ? 'var(--text-4)' : r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--purple)' : 'var(--red)';
+    const ssCells = daFilter === 'subsave'
+      ? `<td class="td-num" style="color:${ssColour(deal.ssRoi)}">${fmtP(deal.ssRoi)}</td><td class="td-num" style="color:${gcColour(deal.gcssRoi)}">${fmtP(deal.gcssRoi)}</td>` : '';
+    const pillClass = deal.colour === 'green' ? 'da-pill-strong' : deal.colour === 'amber' ? 'da-pill-mod' : 'da-pill-reject';
+    const pillLabel = deal.colour === 'green' ? 'STRONG' : deal.colour === 'amber' ? 'MOD' : 'REJECT';
+    const idx = daDeals.indexOf(deal);
     tr.dataset.asin = deal.asin;
     tr.innerHTML = `
       <td class="td-product">
-        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.boughtDaysAgo != null ? ` <span class="inv-badge">📦 bought ${deal.boughtDaysAgo}d ago</span>` : ''}${deal.toHouse ? ` <span class="to-house-badge">🏠 To house${deal.maxDim ? ' '+deal.maxDim.toFixed(0)+'cm' : ''}</span>` : ''}${deal.priceChanged ? ' <span class="pc-badge">↓ PRICE DROP</span>' : ''}${deal.priceMoved === 'down' ? ` <span class="pc-badge">↓ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% cheaper</span>` : deal.priceMoved === 'up' ? ` <span class="price-up-badge">↑ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% pricier</span>` : ''}${daViewedList.has(deal.asin) ? ' <span class="viewed-badge">SEEN</span>' : ''}</div>
+        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.boughtDaysAgo != null ? ` <span class="inv-badge">📦 bought ${deal.boughtDaysAgo}d ago</span>` : ''}${deal.toHouse ? ` <span class="to-house-badge">🏠 To house${deal.maxDim ? ' '+deal.maxDim.toFixed(0)+'cm' : ''}</span>` : ''}${deal.priceChanged ? ' <span class="pc-badge">↓ PRICE DROP</span>' : ''}${deal.priceMoved === 'down' ? ` <span class="pc-badge">↓ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% cheaper</span>` : deal.priceMoved === 'up' ? ` <span class="price-up-badge">↑ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% pricier</span>` : ''}${trendWarn}${spikeWarn}${daViewedList.has(deal.asin) ? ' <span class="viewed-badge">SEEN</span>' : ''}</div>
         <div class="td-asin-row">
           <a href="https://www.amazon.co.uk/dp/${deal.asin}" target="_blank" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">${deal.asin}</a>
           <a href="https://www.keepa.com/#product/2-${deal.asin}" target="_blank" class="keepa-link" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">Keepa ↗</a>
@@ -5186,19 +5159,14 @@ function daRenderTable() {
       <td class="td-num">${fmtN(deal.spIncVat)}${spTag}</td>
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
-      ${extraCells}
+      <td class="td-num" style="color:${gcColour(deal.gcRoi)}">${fmtP(deal.gcRoi)}</td>
+      <td class="td-num" style="color:${r15Colour(deal.r15Roi)}">${fmtP(deal.r15Roi)}</td>
+      ${ssCells}
       <td class="td-num td-center">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
-      <td class="td-rating">
-        <div class="rating-strength ${deal.colour}">${deal.strength}</div>
-        <div class="rating-reason">${deal.reason}</div>
-        ${trendWarn}${spikeWarn}
-        <div class="rating-bar ${deal.colour}" style="margin-top:5px;"></div>
-      </td>
+      <td class="td-num td-center"><span class="${pillClass}" title="${deal.reason || ''}">${pillLabel}</span></td>
       <td class="td-actions">
-        <div class="action-btns">
-          <button class="btn-approve ${deal.decision==='approved'?'active':''}" onclick="daSetDecision(${daDeals.indexOf(deal)},'approved',this)">✓ Approve</button>
-          <button class="btn-reject ${deal.decision==='rejected'?'active':''}" onclick="daSetDecision(${daDeals.indexOf(deal)},'rejected',this)">✕ Reject</button>
-        </div>
+        <button class="btn-approve ${deal.decision==='approved'?'active':''}" onclick="daSetDecision(${idx},'approved',this)" title="Approve">✓</button>
+        <button class="btn-reject ${deal.decision==='rejected'?'active':''}" onclick="daSetDecision(${idx},'rejected',this)" title="Reject">✕</button>
       </td>`;
     tbody.appendChild(tr);
   }

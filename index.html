@@ -824,9 +824,13 @@ input::placeholder { color: var(--text-4); }
 .td-product { max-width: 280px; min-width: 190px; }
 .td-product-title {
   font-size: 12px; font-weight: 500; color: var(--text);
-  line-height: 1.45; margin-bottom: 5px;
+  line-height: 1.45; margin-bottom: 3px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
+.td-product-badges {
+  display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 4px;
+}
+.td-product-badges:empty { display: none; }
 .td-asin-row {
   font-family: var(--mono); font-size: 9px; color: var(--text-3);
   display: flex; gap: 8px; align-items: center;
@@ -5111,7 +5115,7 @@ function daRenderTable() {
     ? daDeals.filter(d => d.ss && ((d.ssRoi != null && d.ssRoi >= 0.15) || (d.gcssRoi != null && d.gcssRoi >= 0.15)))
     : daFilter === 'retailer'
     ? daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15))
-    : daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter);
+    : daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter && !d.ss);
   if (daSearchQ) filtered = filtered.filter(d => d.asin.toLowerCase().includes(daSearchQ) || d.title.toLowerCase().includes(daSearchQ));
   if (daSort.col) {
     filtered = [...filtered].sort((a, b) => {
@@ -5145,7 +5149,8 @@ function daRenderTable() {
     tr.dataset.asin = deal.asin;
     tr.innerHTML = `
       <td class="td-product">
-        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.boughtDaysAgo != null ? ` <span class="inv-badge">📦 bought ${deal.boughtDaysAgo}d ago</span>` : ''}${deal.toHouse ? ` <span class="to-house-badge">🏠 To house${deal.maxDim ? ' '+deal.maxDim.toFixed(0)+'cm' : ''}</span>` : ''}${deal.priceChanged ? ' <span class="pc-badge">↓ PRICE DROP</span>' : ''}${deal.priceMoved === 'down' ? ` <span class="pc-badge">↓ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% cheaper</span>` : deal.priceMoved === 'up' ? ` <span class="price-up-badge">↑ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% pricier</span>` : ''}${trendWarn}${spikeWarn}${daViewedList.has(deal.asin) ? ' <span class="viewed-badge">SEEN</span>' : ''}</div>
+        <div class="td-product-title">${deal.title}</div>
+        <div class="td-product-badges">${deal.ss ? '<span class="ss-badge">S&S</span> ' : ''}${deal.boughtDaysAgo != null ? `<span class="inv-badge">📦 bought ${deal.boughtDaysAgo}d ago</span> ` : ''}${deal.toHouse ? `<span class="to-house-badge">🏠 To house${deal.maxDim ? ' '+deal.maxDim.toFixed(0)+'cm' : ''}</span> ` : ''}${deal.priceChanged ? '<span class="pc-badge">↓ PRICE DROP</span> ' : ''}${deal.priceMoved === 'down' ? `<span class="pc-badge">↓ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% cheaper</span> ` : deal.priceMoved === 'up' ? `<span class="price-up-badge">↑ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% pricier</span> ` : ''}${trendWarn}${spikeWarn}${daViewedList.has(deal.asin) ? '<span class="viewed-badge">SEEN</span>' : ''}</div>
         <div class="td-asin-row">
           <a href="https://www.amazon.co.uk/dp/${deal.asin}" target="_blank" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">${deal.asin}</a>
           <a href="https://www.keepa.com/#product/2-${deal.asin}" target="_blank" class="keepa-link" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">Keepa ↗</a>
@@ -7437,9 +7442,9 @@ function daMarkViewed(asin) {
   try { localStorage.setItem('bimma-a2a-viewed', JSON.stringify([...daViewedList])); } catch {}
   document.querySelectorAll(`#daTableBody tr[data-asin="${asin}"]`).forEach(tr => {
     tr.classList.add('viewed');
-    const titleDiv = tr.querySelector('.td-product-title');
-    if (titleDiv && !titleDiv.querySelector('.viewed-badge')) {
-      titleDiv.insertAdjacentHTML('beforeend', ' <span class="viewed-badge">SEEN</span>');
+    const badgesDiv = tr.querySelector('.td-product-badges');
+    if (badgesDiv && !badgesDiv.querySelector('.viewed-badge')) {
+      badgesDiv.insertAdjacentHTML('beforeend', '<span class="viewed-badge">SEEN</span>');
     }
   });
 }

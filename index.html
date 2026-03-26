@@ -853,6 +853,18 @@ input::placeholder { color: var(--text-4); }
   background: rgba(0,217,126,0.10); color: var(--green);
   letter-spacing: 0.05em; border: 1px solid rgba(0,217,126,0.25);
 }
+.price-up-badge {
+  font-family: var(--mono); font-size: 8px; font-weight: 700;
+  padding: 1px 6px; border-radius: 3px;
+  background: rgba(240,59,80,0.12); color: var(--red);
+  letter-spacing: 0.05em; border: 1px solid rgba(240,59,80,0.25);
+}
+.to-house-badge {
+  font-family: var(--mono); font-size: 8px; font-weight: 700;
+  padding: 1px 6px; border-radius: 3px;
+  background: rgba(139,92,246,0.12); color: #a78bfa;
+  letter-spacing: 0.05em; border: 1px solid rgba(139,92,246,0.25);
+}
 
 /* Number cells */
 .td-num { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--text-2); white-space: nowrap; padding: 11px 10px; }
@@ -1444,8 +1456,8 @@ input::placeholder { color: var(--text-4); }
 .viewed-badge {
   font-family: var(--mono); font-size: 8px; font-weight: 700;
   letter-spacing: 0.1em; padding: 1px 6px; border-radius: 3px;
-  background: rgba(255,255,255,0.06); color: var(--text-4);
-  border: 1px solid var(--border2); margin-left: 5px; vertical-align: middle;
+  background: rgba(77,142,245,0.10); color: var(--blue);
+  border: 1px solid rgba(77,142,245,0.25); margin-left: 5px; vertical-align: middle;
   text-transform: uppercase;
 }
 .pill-count {
@@ -2137,7 +2149,6 @@ input::placeholder { color: var(--text-4); }
     <div class="sidebar-section-label">Intelligence</div>
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
     <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage</div>
-    <div class="nav-item" data-page="retailscout" onclick="showPage('retailscout',this)"><span class="nav-icon">🛒</span>Retailer Scout</div>
   </div>
   <div class="sidebar-footer">
     <div class="sidebar-version">v5.1 · 21 Mar 26</div>
@@ -2205,7 +2216,7 @@ input::placeholder { color: var(--text-4); }
           <span class="activity-sub" id="s-tokens-sub">remaining</span>
         </div>
       </div>
-      <div id="bulkUploadBanner" class="bulk-banner" style="display:none;">
+<div id="bulkUploadBanner" class="bulk-banner" style="display:none;">
         <div><div style="font-weight:600;font-size:13px;color:var(--amber)" id="bulkBannerText">—</div><div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:3px">Mark all existing purchases as uploaded so only new deals go into the Listing loader queue</div></div>
         <button class="btn-sm btn-ghost" id="bulkMarkBtn" onclick="bulkMarkUploaded()">MARK ALL AS UPLOADED</button>
       </div>
@@ -3365,98 +3376,6 @@ input::placeholder { color: var(--text-4); }
   </div>
 </div><!-- /page-stalker -->
 
-<!-- ════════════════════════════════════════ -->
-<!-- RETAILER SCOUT PAGE                    -->
-<!-- ════════════════════════════════════════ -->
-<div class="page" id="page-retailscout">
-  <div class="page-header">
-    <div>
-      <div class="page-header-label">Intelligence</div>
-      <div class="page-header-title">Retailer Scout</div>
-      <div class="page-header-sub">Scrape Currys &amp; Argos sale prices · match via Keepa EAN · calculate 15% gift card arbitrage ROI</div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button class="rp-run-btn" onclick="rsRun()" id="rsRunBtn"><span class="rp-run-icon">🛒</span> Run Scout</button>
-      <button class="scout-clear-btn" onclick="rsStop()" id="rsStopBtn" style="display:none;background:rgba(240,59,80,0.15);border-color:var(--red);color:var(--red);">⏹ Stop</button>
-    </div>
-  </div>
-
-  <!-- CONFIG PANEL -->
-  <div class="rp-settings-panel" style="margin-bottom:20px;">
-    <div style="margin-bottom:14px;">
-      <div class="rp-setting-label" style="margin-bottom:8px;">Retailers</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="a2a-fpill active" id="rsPillArgos" onclick="rsToggleRetailer('argos',this)">🛒 Argos</button>
-        <button class="a2a-fpill active" id="rsPillCurrys" onclick="rsToggleRetailer('currys',this)">⚡ Currys</button>
-      </div>
-    </div>
-    <div class="rp-settings-grid" style="gap:12px 24px;">
-      <div>
-        <div class="rp-setting-label">Keepa API Key</div>
-        <input id="rsKeepaKey" type="password" class="rp-input" style="width:180px;" placeholder="Keepa key" oninput="localStorage.setItem('bimma_keepa_key',this.value.trim())">
-      </div>
-      <div>
-        <div class="rp-setting-label">Min ROI %</div>
-        <input id="rsMinRoi" type="number" value="15" step="1" min="0" class="rp-input">
-      </div>
-      <div>
-        <div class="rp-setting-label">Min Discount %</div>
-        <input id="rsMinDisc" type="number" value="10" step="1" min="0" class="rp-input">
-      </div>
-      <div>
-        <div class="rp-setting-label">Max Pages</div>
-        <input id="rsMaxPages" type="number" value="5" step="1" min="1" max="20" class="rp-input">
-      </div>
-      <div>
-        <div class="rp-setting-label">CORS Proxy</div>
-        <input id="rsCorsProxy" type="text" value="https://api.allorigins.win/get?url=" class="rp-input" style="width:230px;">
-      </div>
-    </div>
-    <div style="margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--text-3);line-height:1.7;">
-      ℹ Scrapes Argos &amp; Currys clearance pages · matches products to Amazon via Keepa EAN lookup · calculates ROI at 15% gift card discount.<br>
-      Proxy alternatives if one fails: <code style="color:var(--green);">https://api.allorigins.win/get?url=</code> &nbsp;|&nbsp; <code style="color:var(--green);">https://corsproxy.io/?url=</code>
-    </div>
-  </div>
-
-  <!-- PROGRESS -->
-  <div id="rsStatus" style="display:none;" class="scout-progress-bar-wrap">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <span id="rsStatusText" style="font-family:var(--mono);font-size:11px;color:var(--text-2);">Starting…</span>
-      <span id="rsStatusPct" style="font-family:var(--mono);font-size:11px;color:var(--text-3);">0%</span>
-    </div>
-    <div style="height:3px;background:var(--border2);border-radius:2px;overflow:hidden;">
-      <div id="rsStatusBar" style="height:100%;width:0%;background:var(--green);transition:width 0.3s;"></div>
-    </div>
-  </div>
-
-  <!-- SUMMARY STATS -->
-  <div id="rsStats" style="display:none;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
-    <div class="stat-card"><div class="stat-label">Products Scraped</div><div class="stat-value" id="rsStatProducts">0</div></div>
-    <div class="stat-card"><div class="stat-label">Matched on Amazon</div><div class="stat-value" id="rsStatMatched">0</div></div>
-    <div class="stat-card"><div class="stat-label">Profitable Deals</div><div class="stat-value" style="color:var(--green);" id="rsStatProfit">0</div></div>
-    <div class="stat-card"><div class="stat-label">Best ROI</div><div class="stat-value" id="rsStatBestRoi">—</div></div>
-  </div>
-
-  <!-- RESULTS TABLE -->
-  <div id="rsTableWrap" style="display:none;" class="da-table-wrap">
-    <table class="da-table" id="rsTable">
-      <thead>
-        <tr>
-          <th style="min-width:220px;">Product</th>
-          <th>Retailer</th>
-          <th class="td-num">Sale Price</th>
-          <th class="td-num">GC Price −15%</th>
-          <th class="td-num">Amazon SP</th>
-          <th class="td-num">Profit</th>
-          <th class="td-num">ROI</th>
-          <th class="td-num">BSR</th>
-          <th class="td-num">% Off</th>
-        </tr>
-      </thead>
-      <tbody id="rsTableBody"></tbody>
-    </table>
-  </div>
-</div><!-- /page-retailscout -->
 
 
 <div class="modal-overlay" id="setupModal">
@@ -3503,7 +3422,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker', leakage:'Leakage Tracker', retailscout:'Retailer Scout' };
+  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker', leakage:'Leakage Tracker' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   document.dispatchEvent(new CustomEvent('bimma:pagechange', { detail: name }));
 }
@@ -4765,8 +4684,15 @@ function daAnalyseRow(row) {
   const fbaFeeEst = fbaFeeRaw === null; // flag that we estimated
   // fbaFee assigned below after spIncVat is calculated
   const rankDrops = daParseNum(row['Sales Rank: Drops last 30 days']);
-  const boughtPerMonth = daParseNum(row['Bought in past month']);
+  const boughtPerMonth = daParseNum(row['Bought in past month']) ?? daParseNum(row['Bought in past 30 days']) ?? daParseNum(row['Bought in past 60 days']) ?? daParseNum(row['Bought in past 90 days']);
   const ss = (row['Buy Box: Subscribe & Save'] || '').toLowerCase() === 'yes';
+  // Dimensions — check package dims first, fall back to item dims
+  const _dims = [
+    daParseNum(row['Package: Length (cm)']), daParseNum(row['Package: Width (cm)']), daParseNum(row['Package: Height (cm)']),
+    daParseNum(row['Item: Length (cm)']),    daParseNum(row['Item: Width (cm)']),    daParseNum(row['Item: Height (cm)'])
+  ].filter(v => v !== null);
+  const maxDim = _dims.length ? Math.max(..._dims) : null;
+  const toHouse = maxDim !== null && maxDim > 63;
   const title = row['Title'] || '';
   const asin  = row['ASIN'] || '';
 
@@ -4895,7 +4821,7 @@ function daAnalyseRow(row) {
     r15Roi    = r15Profit / r15BuyExVat;
   }
 
-  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, gcssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, decision: null };
+  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, gcssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, decision: null };
 }
 
 // ════════════════════════════════════════
@@ -4931,13 +4857,12 @@ setTimeout(() => {
       const parsed = JSON.parse(savedDeals);
       if (parsed && parsed.length > 0) {
         // Re-annotate boughtDaysAgo against current purchase data
-        const _sixtyAgo = new Date(); _sixtyAgo.setDate(_sixtyAgo.getDate() - 60);
         const _nowMs = Date.now();
         const _purchMap = new Map();
         (typeof allRows !== 'undefined' ? allRows : []).forEach(r => {
           try {
             const d = parseUKDate(r.date);
-            if (!d || d < _sixtyAgo) return;
+            if (!d) return;
             const asin = (r.asin || '').trim().toUpperCase();
             if (!asin) return;
             const prev = _purchMap.get(asin);
@@ -4947,7 +4872,8 @@ setTimeout(() => {
         daDeals = parsed
           .filter(d => !(d.ss && d.ssRoi !== null && d.ssRoi < 0.15))
           .map(d => {
-            const pd = _purchMap.get((d.asin || '').toUpperCase());
+            const asinUp = (d.asin || '').toUpperCase();
+            const pd = _purchMap.get(asinUp);
             if (pd) d.boughtDaysAgo = Math.floor((_nowMs - pd.getTime()) / 86400000);
             else delete d.boughtDaysAgo;
             return d;
@@ -5050,14 +4976,13 @@ function daRunAnalysis() {
         });
       }
 
-      // Build purchase map — ASIN -> most recent purchase date within 60 days
-      const sixtyDaysAgo = new Date(); sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+      // Build purchase map — ASIN -> most recent purchase date (all time)
       const nowMs = Date.now();
       const recentPurchaseMap = new Map();
       (typeof allRows !== 'undefined' ? allRows : []).forEach(r => {
         try {
           const d = parseUKDate(r.date);
-          if (!d || d < sixtyDaysAgo) return;
+          if (!d) return;
           const asin = (r.asin || '').trim().toUpperCase();
           if (!asin) return;
           const prev = recentPurchaseMap.get(asin);
@@ -5095,12 +5020,25 @@ function daRunAnalysis() {
       });
       const noDataCount = preFiltered.length - priceable.length;
 
+      // Load price snapshot from previous run
+      const prevPriceSnap = (() => { try { return JSON.parse(localStorage.getItem('bimma_da_price_snap') || '{}'); } catch { return {}; } })();
+
       daDeals = priceable.map(row => {
         const asin = (row['ASIN'] || '').trim();
         const deal = daAnalyseRow(row);
         if (priceChangedAsins.has(asin)) deal.priceChanged = true;
         const purchDate = recentPurchaseMap.get(asin.toUpperCase());
         if (purchDate) deal.boughtDaysAgo = Math.floor((nowMs - purchDate.getTime()) / 86400000);
+        // Flag price movement vs last run
+        const prev = prevPriceSnap[asin.toUpperCase()];
+        if (prev != null && deal.buyIncVat != null) {
+          const diff = deal.buyIncVat - prev;
+          const pct = diff / prev;
+          if (Math.abs(pct) >= 0.01) { // >1% move
+            deal.priceMoved = pct < 0 ? 'down' : 'up';
+            deal.priceMovePct = pct;
+          }
+        }
         return deal;
       }).filter(d => !(d.ss && d.ssRoi !== null && d.ssRoi < 0.15))
         .sort((a, b) => a.sortOrder - b.sortOrder);
@@ -5128,6 +5066,7 @@ function daRunAnalysis() {
         document.getElementById('daResetBtn').style.display = '';
         daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
         try { localStorage.setItem('bimma_da_results', JSON.stringify(daDeals)); localStorage.setItem('bimma_da_results_mode', currentMode); } catch(e) {}
+        try { const snap = {}; daDeals.forEach(d => { if (d.asin && d.buyIncVat != null) snap[d.asin.toUpperCase()] = d.buyIncVat; }); localStorage.setItem('bimma_da_price_snap', JSON.stringify(snap)); } catch(e) {}
       } catch(err) {
         document.getElementById('daLoading').classList.remove('visible');
         document.getElementById('daDropzone').style.display = '';
@@ -5237,7 +5176,7 @@ function daRenderTable() {
     tr.dataset.asin = deal.asin;
     tr.innerHTML = `
       <td class="td-product">
-        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.boughtDaysAgo != null ? ` <span class="inv-badge">📦 bought ${deal.boughtDaysAgo}d ago</span>` : ''}${deal.priceChanged ? ' <span class="pc-badge">↓ PRICE DROP</span>' : ''}${daViewedList.has(deal.asin) ? ' <span class="viewed-badge">SEEN</span>' : ''}</div>
+        <div class="td-product-title">${deal.title}${deal.ss ? ' <span class="ss-badge">S&S</span>' : ''}${deal.boughtDaysAgo != null ? ` <span class="inv-badge">📦 bought ${deal.boughtDaysAgo}d ago</span>` : ''}${deal.toHouse ? ` <span class="to-house-badge">🏠 To house${deal.maxDim ? ' '+deal.maxDim.toFixed(0)+'cm' : ''}</span>` : ''}${deal.priceChanged ? ' <span class="pc-badge">↓ PRICE DROP</span>' : ''}${deal.priceMoved === 'down' ? ` <span class="pc-badge">↓ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% cheaper</span>` : deal.priceMoved === 'up' ? ` <span class="price-up-badge">↑ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% pricier</span>` : ''}${daViewedList.has(deal.asin) ? ' <span class="viewed-badge">SEEN</span>' : ''}</div>
         <div class="td-asin-row">
           <a href="https://www.amazon.co.uk/dp/${deal.asin}" target="_blank" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">${deal.asin}</a>
           <a href="https://www.keepa.com/#product/2-${deal.asin}" target="_blank" class="keepa-link" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">Keepa ↗</a>
@@ -5248,7 +5187,7 @@ function daRenderTable() {
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
       ${extraCells}
-      <td class="td-num td-center">${deal.boughtPerMonth ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
+      <td class="td-num td-center">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
       <td class="td-rating">
         <div class="rating-strength ${deal.colour}">${deal.strength}</div>
         <div class="rating-reason">${deal.reason}</div>
@@ -7384,374 +7323,6 @@ document.addEventListener('bimma:pagechange', e => {
   if (e.detail === 'scout') scoutRefreshFx();
 });
 
-// ── RETAILER SCOUT ──────────────────────────────────────────────────────────
-let rsResults = [];
-let rsShouldStop = false;
-const rsActiveRetailers = new Set(['argos', 'currys']);
-
-function rsToggleRetailer(r, btn) {
-  if (rsActiveRetailers.has(r)) {
-    if (rsActiveRetailers.size <= 1) return; // keep at least one active
-    rsActiveRetailers.delete(r);
-    btn.classList.remove('active');
-  } else {
-    rsActiveRetailers.add(r);
-    btn.classList.add('active');
-  }
-}
-
-function rsSetStatus(text, pct) {
-  const t = document.getElementById('rsStatusText');
-  const p = document.getElementById('rsStatusPct');
-  const b = document.getElementById('rsStatusBar');
-  if (t) t.textContent = text;
-  if (p) p.textContent = Math.round(pct) + '%';
-  if (b) b.style.width = pct + '%';
-}
-
-async function rsRun() {
-  const apiKey = (document.getElementById('rsKeepaKey')?.value || localStorage.getItem('bimma_keepa_key') || '').trim();
-  if (!apiKey) { toast('Enter a Keepa API key', 'error'); return; }
-
-  const proxy    = (document.getElementById('rsCorsProxy')?.value || 'https://api.allorigins.win/get?url=').trim();
-  const minRoi   = parseFloat(document.getElementById('rsMinRoi')?.value  || '15') / 100;
-  const minDisc  = parseFloat(document.getElementById('rsMinDisc')?.value || '10') / 100;
-  const maxPages = parseInt(document.getElementById('rsMaxPages')?.value  || '5');
-
-  rsShouldStop = false;
-  rsResults    = [];
-
-  document.getElementById('rsRunBtn').disabled = true;
-  document.getElementById('rsStopBtn').style.display = 'inline-flex';
-  document.getElementById('rsStatus').style.display  = 'block';
-  document.getElementById('rsStats').style.display   = 'none';
-  document.getElementById('rsTableWrap').style.display = 'none';
-
-  try {
-    // ── Phase 1: scrape retailer pages ───────────────────────
-    const scraped  = [];
-    const retailers = [...rsActiveRetailers];
-
-    for (let ri = 0; ri < retailers.length; ri++) {
-      const retailer = retailers[ri];
-      if (rsShouldStop) break;
-
-      for (let page = 1; page <= maxPages; page++) {
-        if (rsShouldStop) break;
-        rsSetStatus(`Scraping ${retailer} — page ${page}/${maxPages}…`, ((ri / retailers.length) + (page / maxPages / retailers.length)) * 45);
-
-        try {
-          const products = await rsFetchRetailer(retailer, proxy, page);
-          if (!products.length) break; // no more pages
-
-          // filter by minimum discount
-          scraped.push(...products.filter(p => {
-            if (!p.wasPrice || !p.price || p.wasPrice <= p.price) return true;
-            return (p.wasPrice - p.price) / p.wasPrice >= minDisc;
-          }));
-        } catch (e) {
-          console.warn(`rs ${retailer} p${page}:`, e.message);
-          if (page === 1) toast(`${retailer} scrape failed: ${e.message}`, 'error');
-          break;
-        }
-        await new Promise(r => setTimeout(r, 350));
-      }
-    }
-
-    if (!scraped.length) {
-      toast('No products scraped — check CORS proxy URL', 'error');
-      return;
-    }
-
-    // ── Phase 2: Keepa EAN lookup ─────────────────────────────
-    rsSetStatus(`Scraped ${scraped.length} products. Running Keepa lookup…`, 48);
-
-    const withEan = scraped.filter(p => p.ean && p.ean.length >= 8);
-    const eanMap  = new Map(withEan.map(p => [p.ean, p])); // ean → scraped product
-    const eans    = [...eanMap.keys()];
-    const keepaMap = new Map(); // ean → keepa data
-    const chunkSize = 50;
-
-    for (let i = 0; i < eans.length; i += chunkSize) {
-      if (rsShouldStop) break;
-      rsSetStatus(`Keepa: ${i}/${eans.length} EANs…`, 48 + (i / Math.max(eans.length, 1)) * 44);
-
-      try {
-        const chunk = eans.slice(i, i + chunkSize);
-        const url   = `https://api.keepa.com/product?key=${apiKey}&domain=2&code=${chunk.join(',')}`;
-        const data  = await fetch(url).then(r => r.json());
-
-        if (data.error) { toast(`Keepa: ${data.error.message}`, 'error'); break; }
-
-        (data.products || []).forEach(kp => {
-          const priceArr = kp.csv?.[1];
-          const rawSp    = priceArr?.[priceArr.length - 1];
-          if (!rawSp || rawSp <= 0) return;
-
-          const fbaArr   = kp.csv?.[10];
-          const rawFba   = fbaArr?.[fbaArr.length - 1];
-          const bsrArr   = kp.csv?.[3];
-          const rawBsr   = bsrArr?.[bsrArr.length - 1];
-
-          const kd = {
-            asin:   kp.asin,
-            sp:     rawSp / 100,
-            fbaFee: rawFba && rawFba > 0 ? rawFba / 100 : 2.50,
-            bsr:    rawBsr && rawBsr > 0 ? rawBsr : null,
-            title:  kp.title
-          };
-          // match back all EANs on this product
-          (kp.eanList || []).forEach(ean => { if (eanMap.has(ean)) keepaMap.set(ean, kd); });
-        });
-      } catch (e) {
-        console.warn('Keepa chunk error:', e.message);
-      }
-      await new Promise(r => setTimeout(r, 200));
-    }
-
-    // ── Phase 3: ROI calculation ──────────────────────────────
-    rsSetStatus('Calculating ROI…', 94);
-
-    const all = [];
-    scraped.forEach(product => {
-      const kd = product.ean ? keepaMap.get(product.ean) : null;
-      if (!kd) return;
-      const { profit, roi, gcBuyPrice } = rsCalcRoi(product.price, kd.sp, kd.fbaFee);
-      const discPct = (product.wasPrice && product.wasPrice > product.price)
-        ? (product.wasPrice - product.price) / product.wasPrice : null;
-      all.push({ ...product, asin: kd.asin, amazonSp: kd.sp, bsr: kd.bsr, amazonTitle: kd.title, gcBuyPrice, profit, roi, discPct });
-    });
-
-    rsResults = all.filter(d => d.roi >= minRoi).sort((a, b) => b.roi - a.roi);
-
-    rsSetStatus(`Done — ${rsResults.length} profitable deals`, 100);
-    rsRenderStats(scraped.length, keepaMap.size);
-    rsRenderTable();
-
-  } catch (e) {
-    toast('Retailer Scout error: ' + e.message, 'error');
-    console.error(e);
-  } finally {
-    document.getElementById('rsRunBtn').disabled = false;
-    document.getElementById('rsStopBtn').style.display = 'none';
-    setTimeout(() => { document.getElementById('rsStatus').style.display = 'none'; }, 2500);
-  }
-}
-
-async function rsFetchRetailer(retailer, proxy, page) {
-  if (retailer === 'argos')  return rsFetchArgos(proxy, page);
-  if (retailer === 'currys') return rsFetchCurrys(proxy, page);
-  return [];
-}
-
-// Fetch HTML via proxy, handling both allorigins ({contents}) and raw proxies
-async function rsProxyFetch(proxy, url) {
-  const resp = await fetch(proxy + encodeURIComponent(url));
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  const text = await resp.text();
-  // allorigins.win returns { contents: "...", status: {...} }
-  try {
-    const j = JSON.parse(text);
-    if (j.contents !== undefined) return j.contents;
-  } catch {}
-  return text;
-}
-
-// Walk an object trying a list of dot-notation paths, return first array found
-function rsDeepFind(obj, ...paths) {
-  for (const path of paths) {
-    try {
-      const val = path.split('.').reduce((o, k) => o?.[k], obj);
-      if (Array.isArray(val) && val.length) return val;
-    } catch {}
-  }
-  return [];
-}
-
-async function rsFetchArgos(proxy, page) {
-  // Argos is a Next.js app — fetch the HTML clearance/sale page and parse __NEXT_DATA__
-  const url  = page === 1
-    ? 'https://www.argos.co.uk/list/clearance/'
-    : `https://www.argos.co.uk/list/clearance/?page=${page}`;
-
-  const html = await rsProxyFetch(proxy, url);
-
-  // Extract __NEXT_DATA__ JSON blob
-  const m = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-  if (!m) throw new Error('Argos: __NEXT_DATA__ not found (proxy may be blocked)');
-
-  let nd;
-  try { nd = JSON.parse(m[1]); }
-  catch { throw new Error('Argos: could not parse page data'); }
-
-  // Try every plausible path to the products array
-  const products = rsDeepFind(nd,
-    'props.pageProps.productData.products',
-    'props.pageProps.searchProducts.products',
-    'props.pageProps.data.products',
-    'props.pageProps.products',
-    'props.pageProps.categoryData.products',
-    'props.pageProps.listingData.products'
-  );
-
-  if (!products.length) {
-    // Page may have ended — not an error, just no more products
-    return [];
-  }
-
-  return products.map(p => {
-    const priceNow  = parseFloat(p.price?.now ?? p.price?.current ?? p.price ?? 0);
-    const priceWas  = p.price?.was ? parseFloat(p.price.was) : null;
-    const ean       = String(p.attributes?.ean || p.attributes?.barcode || p.ean || p.gtin || '').replace(/\D/g, '');
-    const id        = p.id || p.productId || '';
-    return {
-      retailer:  'Argos',
-      name:      p.name || p.title || '',
-      price:     priceNow,
-      wasPrice:  priceWas,
-      ean:       ean.length >= 8 ? ean : null,
-      retailUrl: id ? `https://www.argos.co.uk/product/${id}` : 'https://www.argos.co.uk/list/clearance/'
-    };
-  }).filter(p => p.name && p.price > 0);
-}
-
-async function rsFetchCurrys(proxy, page) {
-  // Currys is also Next.js — scrape their deals/clearance page HTML
-  const url  = page === 1
-    ? 'https://www.currys.co.uk/clearance'
-    : `https://www.currys.co.uk/clearance?page=${page}`;
-
-  const html = await rsProxyFetch(proxy, url);
-
-  // Try __NEXT_DATA__ first
-  const m = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-  if (m) {
-    try {
-      const nd = JSON.parse(m[1]);
-      const products = rsDeepFind(nd,
-        'props.pageProps.productData.products',
-        'props.pageProps.products',
-        'props.pageProps.data.products',
-        'props.pageProps.categoryData.products',
-        'props.pageProps.searchData.products',
-        'props.pageProps.results'
-      );
-      if (products.length) {
-        return products.map(p => {
-          const priceNow = parseFloat(p.price?.current ?? p.price?.now ?? p.currentPrice ?? p.price ?? 0);
-          const priceWas = p.price?.was ? parseFloat(p.price.was) : (p.wasPrice ? parseFloat(p.wasPrice) : null);
-          const ean      = String(p.ean || p.gtin || p.barcode || p.attributes?.ean || '').replace(/\D/g, '');
-          return {
-            retailer:  'Currys',
-            name:      p.name || p.title || (p.brand ? `${p.brand} ${p.productTitle || ''}`.trim() : '') || '',
-            price:     priceNow,
-            wasPrice:  priceWas,
-            ean:       ean.length >= 8 ? ean : null,
-            retailUrl: p.url ? `https://www.currys.co.uk${p.url}` : 'https://www.currys.co.uk/clearance'
-          };
-        }).filter(p => p.name && p.price > 0);
-      }
-    } catch { /* fall through */ }
-  }
-
-  // Fallback: JSON-LD product structured data
-  const products = [];
-  for (const lm of html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) {
-    try {
-      const ld    = JSON.parse(lm[1]);
-      const items = Array.isArray(ld) ? ld : (ld['@graph'] || [ld]);
-      items.forEach(item => {
-        if (!['Product','product'].includes(item['@type'])) return;
-        const offer = Array.isArray(item.offers) ? item.offers[0] : item.offers;
-        const price = parseFloat(offer?.price || 0);
-        if (!price || !item.name) return;
-        const ean = String(item.gtin13 || item.gtin || '').replace(/\D/g, '');
-        products.push({
-          retailer:  'Currys',
-          name:      item.name,
-          price,
-          wasPrice:  null,
-          ean:       ean.length >= 8 ? ean : null,
-          retailUrl: item.url || 'https://www.currys.co.uk/clearance'
-        });
-      });
-    } catch {}
-  }
-
-  return products;
-}
-
-function rsCalcRoi(buyPrice, amazonSp, fbaFee = 2.50) {
-  const vat        = FEES.vat;
-  const buyIncVat  = buyPrice * 0.85;            // 15% GC
-  const buyExVat   = buyIncVat / (1 + vat);
-  const spExVat    = amazonSp / (1 + vat);
-  const refFee     = spExVat * FEES.referralPct;
-  const fbaExVat   = fbaFee  / (1 + vat);
-  const prepFee    = FEES.prepFee;
-  const vatDue     = (amazonSp * vat / (1 + vat)) - (buyIncVat * vat / (1 + vat));
-  const profit     = spExVat - buyExVat - refFee - fbaExVat - prepFee - vatDue;
-  return { profit, roi: profit / buyExVat, gcBuyPrice: buyIncVat };
-}
-
-function rsRenderStats(totalScraped, totalMatched) {
-  document.getElementById('rsStatProducts').textContent = totalScraped;
-  document.getElementById('rsStatMatched').textContent  = totalMatched;
-  document.getElementById('rsStatProfit').textContent   = rsResults.length;
-  const best = rsResults[0]?.roi;
-  document.getElementById('rsStatBestRoi').textContent  = best != null ? (best * 100).toFixed(1) + '%' : '—';
-  document.getElementById('rsStats').style.display = 'grid';
-}
-
-function rsRenderTable() {
-  const tbody = document.getElementById('rsTableBody');
-  if (!rsResults.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-3);font-family:var(--mono);">No profitable deals found</td></tr>';
-    document.getElementById('rsTableWrap').style.display = 'block';
-    return;
-  }
-
-  const roiCol = roi => roi >= 0.30 ? 'var(--green)' : roi >= 0.15 ? 'var(--text)' : 'var(--amber)';
-  const fmtP   = v    => (v * 100).toFixed(1) + '%';
-  const fmtGbp = v    => v != null ? '£' + v.toFixed(2) : '—';
-
-  tbody.innerHTML = rsResults.map(d => `
-    <tr>
-      <td class="td-product">
-        <div class="td-product-title">
-          <a href="${d.retailUrl}" target="_blank" style="color:var(--text);text-decoration:none;">${d.name}</a>
-        </div>
-        <div class="td-asin-row">
-          <a href="https://www.amazon.co.uk/dp/${d.asin}" target="_blank">${d.asin}</a>
-        </div>
-      </td>
-      <td style="font-family:var(--mono);font-size:11px;color:${d.retailer === 'Argos' ? 'var(--red)' : 'var(--blue)'};">${d.retailer}</td>
-      <td class="td-num">${fmtGbp(d.price)}${d.wasPrice ? `<div style="font-size:9px;color:var(--text-3);text-decoration:line-through;">${fmtGbp(d.wasPrice)}</div>` : ''}</td>
-      <td class="td-num" style="color:var(--green);">${fmtGbp(d.gcBuyPrice)}</td>
-      <td class="td-num">${fmtGbp(d.amazonSp)}</td>
-      <td class="td-num" style="color:${d.profit >= 0 ? 'var(--green)' : 'var(--red)'};">${fmtGbp(d.profit)}</td>
-      <td class="td-num" style="color:${roiCol(d.roi)};font-weight:700;">${fmtP(d.roi)}</td>
-      <td class="td-num">${d.bsr ? d.bsr.toLocaleString() : '—'}</td>
-      <td class="td-num" style="color:var(--amber);">${d.discPct != null ? fmtP(d.discPct) + ' off' : '—'}</td>
-    </tr>
-  `).join('');
-
-  document.getElementById('rsTableWrap').style.display = 'block';
-}
-
-function rsStop() {
-  rsShouldStop = true;
-  const btn = document.getElementById('rsStopBtn');
-  if (btn) btn.textContent = '⏹ Stopping…';
-}
-
-// Pre-fill Keepa key when page opens
-document.addEventListener('bimma:pagechange', e => {
-  if (e.detail !== 'retailscout') return;
-  const k  = localStorage.getItem('bimma_keepa_key') || localStorage.getItem('bimma_stalker_key') || '';
-  const el = document.getElementById('rsKeepaKey');
-  if (el && k) el.value = k;
-});
 
 
 function scoutRenderPartial(asins, ukMap, euData, markets, marketFx, shipping, prep, minRoi, csvHasBB) {

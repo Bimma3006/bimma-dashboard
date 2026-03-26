@@ -41,6 +41,7 @@ showPage(name, el)
 | `a2a` | A2A Analyser | 3-mode: EU / UK / ULN; CSV upload; Keepa enrichment |
 | `scout` | Deal Scout | Keepa-based deal finder |
 | `purchases` | Purchases | Google Sheets read/write |
+
 | `listing` | Listing Uploader | Google Sheets append |
 | `add` | Add Purchase | Form; writes to Sheets |
 | `expenses` | Expenses | Card grid; values stored in localStorage |
@@ -48,6 +49,7 @@ showPage(name, el)
 | `leakage` | Leakage Tracker | CSV upload |
 
 ---
+
 
 ## CSS Custom Properties (`:root`)
 

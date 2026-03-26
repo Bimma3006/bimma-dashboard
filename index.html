@@ -889,7 +889,7 @@ input::placeholder { color: var(--text-4); }
 
 /* Rating cell */
 /* Action buttons */
-.td-actions { white-space: nowrap; padding: 8px 6px; display: flex; gap: 4px; align-items: center; }
+.td-actions { white-space: nowrap; padding: 8px 6px; vertical-align: middle; }
 .da-pill-strong, .da-pill-mod, .da-pill-reject {
   font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
   padding: 3px 7px; border-radius: 4px; white-space: nowrap; cursor: default;
@@ -2669,14 +2669,8 @@ input::placeholder { color: var(--text-4); }
         <button class="a2a-fpill fp-red" id="daPillRed" onclick="daSetFilter('red',this)">
           <span class="a2a-fpill-dot fp-red-dot"></span>Reject
         </button>
-        <button class="a2a-fpill fp-amber" id="daPillGC" onclick="daSetFilter('giftcard',this)">
-          <span class="a2a-fpill-dot fp-amber-dot"></span>🎁 Gift Card
-        </button>
         <button class="a2a-fpill fp-purple" id="daPillSS" onclick="daSetFilter('subsave',this)">
           <span class="a2a-fpill-dot fp-purple-dot"></span>♻ Sub &amp; Save
-        </button>
-        <button class="a2a-fpill fp-blue" id="daPillR15" onclick="daSetFilter('retailer',this)">
-          <span class="a2a-fpill-dot fp-blue-dot"></span>🏪 Currys/Argos
         </button>
         <span class="a2a-spike-notice" id="spikeNotice" style="display:none;margin-left:4px;"></span>
       </div>
@@ -5096,7 +5090,6 @@ function daRenderHeaders() {
     <th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys/Argos with 15% gift card">🏪 15%</th>
     ${ssCols}
     <th data-col="boughtPerMonth" data-type="num">Sold/mo</th>
-    <th class="no-sort" style="width:80px;">Rating</th>
     <th class="no-sort" style="width:56px;"></th>
   </tr>`;
 }
@@ -5143,8 +5136,6 @@ function daRenderTable() {
     const ssColour  = r => r == null ? 'var(--text-4)' : r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--purple)' : 'var(--red)';
     const ssCells = daFilter === 'subsave'
       ? `<td class="td-num" style="color:${ssColour(deal.ssRoi)}">${fmtP(deal.ssRoi)}</td><td class="td-num" style="color:${gcColour(deal.gcssRoi)}">${fmtP(deal.gcssRoi)}</td>` : '';
-    const pillClass = deal.colour === 'green' ? 'da-pill-strong' : deal.colour === 'amber' ? 'da-pill-mod' : 'da-pill-reject';
-    const pillLabel = deal.colour === 'green' ? 'STRONG' : deal.colour === 'amber' ? 'MOD' : 'REJECT';
     const idx = daDeals.indexOf(deal);
     tr.dataset.asin = deal.asin;
     tr.innerHTML = `
@@ -5163,7 +5154,6 @@ function daRenderTable() {
       <td class="td-num" style="color:${r15Colour(deal.r15Roi)}">${fmtP(deal.r15Roi)}</td>
       ${ssCells}
       <td class="td-num td-center">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
-      <td class="td-num td-center"><span class="${pillClass}" title="${deal.reason || ''}">${pillLabel}</span></td>
       <td class="td-actions">
         <button class="btn-approve ${deal.decision==='approved'?'active':''}" onclick="daSetDecision(${idx},'approved',this)" title="Approve">✓</button>
         <button class="btn-reject ${deal.decision==='rejected'?'active':''}" onclick="daSetDecision(${idx},'rejected',this)" title="Reject">✕</button>

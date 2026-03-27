@@ -5987,10 +5987,10 @@ function scoutCalcProfit(euPriceEur, ukBB, eurGbp, shipping, prep) {
 }
 
 // ── Keepa fetch ──
-// isUK=true  → stats=180 only (1 token) — only used if CSV doesn't have BB
-// isUK=false → stats=1 + history=0 (1 token) — EU current buy box price
+// isUK=true  → stats=365 + history=1 — gets 180d/365d avg + Was Price (strikethrough) for UK sell price
+// isUK=false → stats=180 + buybox=1  — EU current buy box price
 async function scoutFetchKeepa(asins, domainId, apiKey, isUK = false) {
-  const params = isUK ? 'stats=180&history=0' : 'stats=180&buybox=1';
+  const params = isUK ? 'stats=365&history=1' : 'stats=180&buybox=1';
   const batchSize = 100;
   const results = [];
   for (let i = 0; i < asins.length; i += batchSize) {
@@ -6037,12 +6037,45 @@ async function scoutWaitForTokens(needed) {
   }
 }
 function scoutGetBB180(product) {
+  // Returns { price, source } matching UK→UK A2A/CSV logic, or null if no data
   const stats = product.stats;
+  const csv   = product.csv;
   if (!stats) return null;
-  const bb = stats.avg180?.[18];
-  if (bb && bb > 0) return bb / 100;
+
+  const avg180 = stats.avg180?.[18];
+  const avg365 = stats.avg365?.[18];
+
+  // Base: prefer 365d if higher than 180d (same as CSV/A2A path)
+  const valid180 = avg180 && avg180 > 0;
+  const valid365 = avg365 && avg365 > 0;
+  const base = (valid365 && valid180 && avg365 > avg180)
+    ? avg365 / 100
+    : (valid180 ? avg180 / 100 : null);
+  const baseSource = (valid365 && valid180 && avg365 > avg180) ? '365d' : '180d';
+
+  // Strikethrough from csv[10] (Was Price) — most recent positive value
+  let stPrice = null;
+  try {
+    if (csv && csv[10] && csv[10].length >= 2) {
+      for (let i = csv[10].length - 1; i >= 1; i -= 2) {
+        const raw = csv[10][i];
+        if (raw > 0) { stPrice = raw / 100; break; }
+        if (raw === -1) break;
+      }
+    }
+  } catch(_) {}
+
+  // Strikethrough override: use if > base but within 130% (filters stale RRPs)
+  const ST_CAP = 1.30;
+  if (stPrice && base && stPrice > base && stPrice <= base * ST_CAP) {
+    return { price: stPrice, source: 'ST' };
+  }
+
+  if (base) return { price: base, source: baseSource };
+
+  // Fallback to current buy box
   const cur = stats.current?.[18];
-  if (cur && cur > 0) return cur / 100;
+  if (cur && cur > 0) return { price: cur / 100, source: 'cur' };
   return null;
 }
 function scoutGetCurrentBB(product) {
@@ -6217,9 +6250,10 @@ async function scoutRun() {
 
     scoutSetStatus('Computing best deals…', 85);
     scoutResults = asins.map(asin => {
-      const ukProd = ukMap[asin];
-      const ukBB       = csvHasBB ? (scoutCsvBBMap[asin] || null) : (ukProd ? scoutGetBB180(ukProd) : null);
-      const ukBBSource = csvHasBB ? (scoutCsvBBSourceMap[asin] || '180d') : '180d';
+      const ukProd     = ukMap[asin];
+      const ukResult   = !csvHasBB && ukProd ? scoutGetBB180(ukProd) : null;
+      const ukBB       = csvHasBB ? (scoutCsvBBMap[asin] || null) : (ukResult?.price || null);
+      const ukBBSource = csvHasBB ? (scoutCsvBBSourceMap[asin] || '180d') : (ukResult?.source || '180d');
       const title      = (csvHasBB ? scoutCsvTitleMap[asin] : null) || ukProd?.title || '—';
       let bestMarket = null, bestEuPrice = null, bestCalc = null;
       const euForAsin = euData[asin] || {};
@@ -7309,8 +7343,9 @@ function scoutRenderPartial(asins, ukMap, euData, markets, marketFx, shipping, p
   // Build results from whatever EU data we have so far
   const partial = asins.map(asin => {
     const ukProd     = ukMap[asin];
-    const ukBB       = csvHasBB ? (scoutCsvBBMap[asin] || null) : (ukProd ? scoutGetBB180(ukProd) : null);
-    const ukBBSource = csvHasBB ? (scoutCsvBBSourceMap[asin] || '180d') : '180d';
+    const ukResult   = !csvHasBB && ukProd ? scoutGetBB180(ukProd) : null;
+    const ukBB       = csvHasBB ? (scoutCsvBBMap[asin] || null) : (ukResult?.price || null);
+    const ukBBSource = csvHasBB ? (scoutCsvBBSourceMap[asin] || '180d') : (ukResult?.source || '180d');
     const title      = (csvHasBB ? scoutCsvTitleMap[asin] : null) || ukProd?.title || '—';
     let bestMarket = null, bestEuPrice = null, bestCalc = null;
     for (const market of markets) {

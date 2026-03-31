@@ -1984,7 +1984,7 @@ input::placeholder { color: var(--text-4); }
 .stalker-status-dot.error { background:var(--red); }
 .stalker-status-dot.baseline { background:var(--blue); }
 /* product rows - compact like Seller Fuse */
-.stalker-product-row { display:grid; grid-template-columns:44px minmax(0,1fr) 140px 100px 160px; gap:14px; align-items:center; padding:10px 20px; border-bottom:1px solid var(--border); transition:background 0.15s; }
+.stalker-product-row { display:grid; grid-template-columns:44px minmax(0,260px) 1fr 110px 150px; gap:14px; align-items:center; padding:10px 20px; border-bottom:1px solid var(--border); transition:background 0.15s; }
 .stalker-product-row:hover { background:rgba(255,255,255,0.015); }
 .stalker-product-title { font-size:13px; color:var(--text); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; margin-bottom:2px; }
 .stalker-product-fees { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:2px; }
@@ -7026,7 +7026,7 @@ function stalkerRenderFeed() {
           <div>
             ${item.price
               ? `<div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);">£${item.price}</div>
-                 <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px;">~Fees: £${feeEstimate}</div>`
+                 <div style="font-family:var(--mono);font-size:10px;color:${(item.priceLabel||'Buy Box')==='Buy Box'?'var(--text-3)':'var(--amber)'};margin-top:2px;letter-spacing:0.04em;">${item.priceLabel||'Buy Box'}</div>`
               : `<div style="font-family:var(--mono);font-size:12px;color:var(--text-3);">—</div>`}
           </div>
           <div style="display:flex;gap:7px;justify-content:flex-end;align-items:center;">
@@ -7212,11 +7212,11 @@ function stalkerRenderProductFeed(products, seller) {
 
   const header = `<div class="stalker-product-header">
     <span>${flag} ${seller.name} — <span class="stalker-product-count">${products.length} products</span></span>
-    <span style="display:grid;grid-template-columns:44px minmax(0,1fr) 140px 100px 160px;gap:14px;width:100%;margin-top:10px;padding:0 20px;box-sizing:border-box;">
+    <span style="display:grid;grid-template-columns:44px minmax(0,260px) 1fr 110px 150px;gap:14px;width:100%;margin-top:10px;padding:0 20px;box-sizing:border-box;">
       <span></span>
       <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);">Product</span>
       <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);">Seller</span>
-      <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);">Price</span>
+      <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);">Buy Box</span>
       <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);text-align:right;">Actions</span>
     </span>
   </div>`;
@@ -7279,7 +7279,7 @@ function stalkerRenderProductFeed(products, seller) {
       <div>
         ${price
           ? `<div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);">£${price}</div>
-             <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:2px;">Fees: £${feeEstimate}</div>`
+             <div style="font-family:var(--mono);font-size:10px;color:${priceLabel==='Buy Box'?'var(--text-3)':'var(--amber)'};margin-top:2px;letter-spacing:0.04em;">${priceLabel}</div>`
           : `<div style="font-family:var(--mono);font-size:12px;color:var(--text-3);">—</div>`}
       </div>
       <div style="display:flex;gap:7px;justify-content:flex-end;align-items:center;">

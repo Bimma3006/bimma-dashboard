@@ -212,6 +212,18 @@ body::before {
   border-color: rgba(77,142,245,0.4);
   box-shadow: 0 0 12px rgba(77,142,245,0.1);
 }
+.sync-row { display:flex; gap:6px; margin-top:6px; }
+.btn-sync {
+  flex: 1;
+  background: transparent;
+  color: var(--text-3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 6px 8px;
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.05em; cursor: pointer; transition: all var(--transition);
+}
+.btn-sync:hover { color: var(--green); border-color: rgba(0,232,138,0.35); background: rgba(0,232,138,0.06); }
 
 /* ═══════════════════════════════════════
    LAYOUT
@@ -2154,6 +2166,10 @@ input::placeholder { color: var(--text-4); }
       <span class="auth-label" id="authLabel">Not connected</span>
     </div>
     <button class="btn-auth" id="authBtn" onclick="handleAuth()">Connect Sheets</button>
+    <div class="sync-row" id="syncRow" style="display:none;">
+      <button class="btn-sync" onclick="driveSave()" title="Save data to Google Drive">↑ Save</button>
+      <button class="btn-sync" onclick="driveLoad()" title="Load data from Google Drive">↓ Load</button>
+    </div>
   </div>
 </nav>
 
@@ -3427,7 +3443,7 @@ function showPage(name, el) {
 const SHEET_ID = '17woLJlpqKBV6TEDROTVuNSTxvvCASlja_cCNmBSXtV0';
 const PURCH_TAB = 'Purchasing sheet';
 const LISTING_TAB = 'Listing loader';
-const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.appdata';
 let tokenClient = null, accessToken = null, allRows = [];
 
 // ── Global config (editable via Settings panel on Add Purchase page) ─────────
@@ -3486,6 +3502,7 @@ function setConnected() {
   document.getElementById('authBtn').textContent = 'SIGN OUT';
   document.getElementById('refreshBtn').disabled = false;
   document.getElementById('addBtn').disabled = false;
+  document.getElementById('syncRow').style.display = 'flex';
 }
 function signOut() {
   google.accounts.oauth2.revoke(accessToken);
@@ -3495,8 +3512,67 @@ function signOut() {
   document.getElementById('authBtn').textContent = 'CONNECT SHEETS';
   document.getElementById('refreshBtn').disabled = true;
   document.getElementById('addBtn').disabled = true;
+  document.getElementById('syncRow').style.display = 'none';
   toast('Signed out');
 }
+// ── Google Drive appdata sync ─────────────────────────────────────────────────
+const DRIVE_SYNC_KEYS = [
+  'bimma_prep','bimma_expenses','bimma_exp_items','bimma_returnRequests',
+  'bimma_customWindows','bimma-a2a-veto','bimma-a2a-viewed','bimma-a2a-rejected',
+  'bimma_keepa_key','bimma_stalker_key','bimma_scout_viewed',
+  'bimma_stalker_sellers','bimma_stalker_snaps','bimma_stalker_feed','bimma_cfg'
+];
+const DRIVE_FILE_NAME = 'bimma-sync.json';
+
+async function driveFindFile() {
+  const r = await gFetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name%3D'${DRIVE_FILE_NAME}'&fields=files(id)`);
+  return (r.files && r.files[0]) ? r.files[0].id : null;
+}
+
+async function driveSave() {
+  if (!accessToken) { toast('Connect Google first', 'error'); return; }
+  const payload = {};
+  DRIVE_SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) payload[k] = v; });
+  const body = JSON.stringify(payload);
+  const boundary = 'bimma_boundary';
+  const meta = JSON.stringify({ name: DRIVE_FILE_NAME, parents: ['appDataFolder'] });
+  const multipart = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${boundary}--`;
+  try {
+    const fileId = await driveFindFile();
+    if (fileId) {
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body
+      });
+    } else {
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': `multipart/related; boundary=${boundary}` },
+        body: multipart
+      });
+    }
+    toast('Saved to cloud ✓');
+  } catch(e) { toast('Save failed: ' + e.message, 'error'); }
+}
+
+async function driveLoad() {
+  if (!accessToken) { toast('Connect Google first', 'error'); return; }
+  try {
+    const fileId = await driveFindFile();
+    if (!fileId) { toast('No cloud save found', 'error'); return; }
+    const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+      headers: { 'Authorization': 'Bearer ' + accessToken }
+    });
+    const payload = await r.json();
+    let count = 0;
+    DRIVE_SYNC_KEYS.forEach(k => { if (payload[k] !== undefined) { localStorage.setItem(k, payload[k]); count++; } });
+    // apply Keepa key immediately
+    if (payload['bimma_keepa_key']) document.querySelectorAll('.keepa-key-input').forEach(el => el.value = payload['bimma_keepa_key']);
+    toast(`Loaded from cloud (${count} keys) — reload to apply all settings`);
+  } catch(e) { toast('Load failed: ' + e.message, 'error'); }
+}
+
 function cleanNum(v) { if (!v && v !== 0) return 0; return parseFloat(String(v).replace(/[£$,\s]/g,'')) || 0; }
 function cleanDate(v) {
   if (!v) return '';

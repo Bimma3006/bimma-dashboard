@@ -1863,8 +1863,8 @@ input::placeholder { color: var(--text-4); }
 
 /* ── STOREFRONT STALKER ─────────────────── */
 .stalker-page { display:flex; flex-direction:column; gap:0; }
-.stalker-top { display:grid; grid-template-columns:380px 1fr; gap:20px; margin-bottom:16px; }
-.stalker-panel { background:var(--surface); border:1px solid var(--border2); border-radius:var(--r-lg); padding:22px 24px; }
+.stalker-top { display:grid; grid-template-columns:300px 1fr; gap:16px; margin-bottom:14px; }
+.stalker-panel { background:var(--surface); border:1px solid var(--border2); border-radius:var(--r-lg); padding:16px 18px; }
 .stalker-panel-title { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-3); margin-bottom:16px; }
 .stalker-input { width:100%; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-sm); padding:11px 14px; color:var(--text); font-family:var(--mono); font-size:13px; outline:none; box-sizing:border-box; transition:border-color 0.15s; }
 .stalker-input:focus { border-color:var(--green); }
@@ -1939,7 +1939,7 @@ input::placeholder { color: var(--text-4); }
 /* ── STALKER PRODUCT FEED ───────────────── */
 .stalker-product-header { padding:10px 22px 8px; font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-3); border-bottom:1px solid var(--border); background:var(--surface2); position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; }
 .stalker-product-count { color:var(--text-2); }
-.stalker-product-row { display:grid; grid-template-columns:52px 1fr 160px 100px 160px; gap:14px; align-items:center; padding:12px 20px; border-bottom:1px solid var(--border); transition:background 0.15s; }
+.stalker-product-row { display:grid; grid-template-columns:44px minmax(0,260px) 130px 110px 1fr; gap:14px; align-items:center; padding:10px 20px; border-bottom:1px solid var(--border); transition:background 0.15s; }
 .stalker-product-row:hover { background:rgba(255,255,255,0.02); }
 .stalker-product-row:last-child { border-bottom:none; }
 .stalker-product-img { width:48px; height:48px; object-fit:contain; border-radius:6px; background:var(--surface2); border:1px solid var(--border); }
@@ -1984,7 +1984,7 @@ input::placeholder { color: var(--text-4); }
 .stalker-status-dot.error { background:var(--red); }
 .stalker-status-dot.baseline { background:var(--blue); }
 /* product rows - compact like Seller Fuse */
-.stalker-product-row { display:grid; grid-template-columns:44px minmax(0,260px) 1fr 110px 150px; gap:14px; align-items:center; padding:10px 20px; border-bottom:1px solid var(--border); transition:background 0.15s; }
+.stalker-product-row { display:grid; grid-template-columns:44px minmax(0,260px) 130px 110px 1fr; gap:14px; align-items:center; padding:10px 20px; border-bottom:1px solid var(--border); transition:background 0.15s; }
 .stalker-product-row:hover { background:rgba(255,255,255,0.015); }
 .stalker-product-title { font-size:13px; color:var(--text); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; margin-bottom:2px; }
 .stalker-product-fees { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:2px; }
@@ -7212,7 +7212,7 @@ function stalkerRenderProductFeed(products, seller) {
 
   const header = `<div class="stalker-product-header">
     <span>${flag} ${seller.name} — <span class="stalker-product-count">${products.length} products</span></span>
-    <span style="display:grid;grid-template-columns:44px minmax(0,260px) 1fr 110px 150px;gap:14px;width:100%;margin-top:10px;padding:0 20px;box-sizing:border-box;">
+    <span style="display:grid;grid-template-columns:44px minmax(0,260px) 130px 110px 1fr;gap:14px;width:100%;margin-top:10px;padding:0 20px;box-sizing:border-box;">
       <span></span>
       <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);">Product</span>
       <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);">Seller</span>

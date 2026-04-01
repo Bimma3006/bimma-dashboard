@@ -6621,6 +6621,7 @@ let stalkerFeedItems = [];
 let stalkerLoaded    = false;
 let stalkerAutoInterval = null;
 let stalkerNextCheckAt  = null;
+let stalkerCheckAllRunning = false;
 
 const STALKER_MARKETS = { '1':'com','2':'co.uk','3':'de','4':'fr','8':'it','9':'es' };
 const STALKER_FLAGS   = { '1':'🇺🇸','2':'🇬🇧','3':'🇩🇪','4':'🇫🇷','8':'🇮🇹','9':'🇪🇸' };
@@ -6734,8 +6735,14 @@ function stalkerRemoveSeller(uid) {
 }
 
 async function stalkerCheckAll() {
-  for (const s of stalkerSellers) {
-    await stalkerCheckSeller(s);
+  if (stalkerCheckAllRunning) return;
+  stalkerCheckAllRunning = true;
+  try {
+    for (const s of stalkerSellers) {
+      await stalkerCheckSeller(s);
+    }
+  } finally {
+    stalkerCheckAllRunning = false;
   }
 }
 
@@ -6782,10 +6789,11 @@ async function stalkerCheckSeller(seller) {
       if (data.error) throw new Error(data.error.message || 'Keepa API error');
 
       const pageAsins = data.asinList || [];
-      allAsins.push(...pageAsins);
+      for (const a of pageAsins) allAsins.push(a);
 
       if (totalExpected === null) totalExpected = data.totalResults || 0;
-      if (pageAsins.length < 100 || allAsins.length >= totalExpected) break;
+      const uniqueSoFar = new Set(allAsins).size;
+      if (pageAsins.length < 100 || uniqueSoFar >= totalExpected) break;
       page++;
     }
 
@@ -6806,7 +6814,7 @@ async function stalkerCheckSeller(seller) {
       }
     }
 
-    const currentAsinList = allAsins;
+    const currentAsinList = [...new Set(allAsins)];
     const currentAsins    = new Set(currentAsinList);
     const lastSeenDate    = null;
 

@@ -3088,6 +3088,7 @@ input::placeholder { color: var(--text-4); }
             <button onclick="scoutSetFilter('noprice')" id="scoutFilterNoprice"  class="scout-filter-btn">— No EU Price</button>
             <button onclick="scoutSetFilter('giftcard')" id="scoutFilterGiftcard" class="scout-filter-btn">🎁 GC Only</button>
           </span>
+          <button onclick="scoutClearAllViewed()" id="scoutClearViewedBtn" class="scout-filter-btn" style="display:none;border-color:rgba(240,59,80,0.35);color:var(--red);" title="Remove the 👁 viewed badge from all deals">👁 Clear all viewed</button>
         </div>
       </div>
     </div>
@@ -5806,6 +5807,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // Init market button states
   ['DE','FR','IT','ES','US','JP'].forEach(m => scoutToggleMarket(m, document.getElementById('scout'+m)));
+  // Show "Clear all viewed" button if there are already viewed ASINs from a previous session
+  scoutUpdateViewedBtn();
 
   // Restore cached scout results (max 24h old)
   const scoutCacheRaw = localStorage.getItem('bimma_scout_cache');
@@ -6524,7 +6527,7 @@ function scoutRenderTable() {
     return groupRow + `<tr style="border-left:3px solid ${cls==='strong'?'var(--green)':cls==='moderate'?'var(--amber)':'transparent'};">
       <td style="font-family:var(--mono);font-size:11px;color:var(--text-2);">
         <a href="https://keepa.com/#!product/2-${r.asin}" target="_blank" onclick="setTimeout(()=>scoutMarkViewed('${r.asin}'),0)" style="color:var(--text-2);text-decoration:none;border-bottom:1px dashed var(--border2);">${r.asin}</a>
-        <span id="sv_${r.asin}">${scoutViewedAsins.has(r.asin) ? '<span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:4px;">👁 viewed</span>' : ''}</span>
+        <span id="sv_${r.asin}">${scoutViewedAsins.has(r.asin) ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:4px;display:inline-flex;align-items:center;gap:3px;">👁 viewed<span onclick="event.stopPropagation();scoutUnmarkViewed('${r.asin}')" style="cursor:pointer;color:var(--red);font-size:11px;line-height:1;" title="Unmark as viewed">×</span></span>` : ''}</span>
         ${(typeof allRows !== 'undefined' && allRows.some(p => p.asin === r.asin)) ? `<div style="font-family:var(--mono);font-size:9px;background:rgba(240,165,0,0.15);color:var(--amber);border:1px solid rgba(240,165,0,0.3);border-radius:3px;padding:1px 5px;margin-top:2px;display:inline-block;">🛒 Bought</div>` : ''}
       </td>
       <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(r.title||'').replace(/"/g,'&quot;')}">${r.title}</td>
@@ -7571,7 +7574,36 @@ function scoutMarkViewed(asin, el) {
   try { localStorage.setItem('bimma_scout_viewed', JSON.stringify([...scoutViewedAsins])); } catch {}
   const badge = document.getElementById('sv_' + asin);
   if (badge) {
-    badge.innerHTML = '<span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:4px;">👁 viewed</span>';
+    badge.innerHTML = `<span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:4px;display:inline-flex;align-items:center;gap:3px;">👁 viewed<span onclick="event.stopPropagation();scoutUnmarkViewed('${asin}')" style="cursor:pointer;color:var(--red);font-size:11px;line-height:1;" title="Unmark as viewed">×</span></span>`;
+  }
+  scoutUpdateViewedBtn();
+}
+
+function scoutUnmarkViewed(asin) {
+  scoutViewedAsins.delete(asin);
+  try { localStorage.setItem('bimma_scout_viewed', JSON.stringify([...scoutViewedAsins])); } catch {}
+  const badge = document.getElementById('sv_' + asin);
+  if (badge) badge.innerHTML = '';
+  scoutUpdateViewedBtn();
+}
+
+function scoutClearAllViewed() {
+  if (!scoutViewedAsins.size) return;
+  if (!confirm(`Remove the 👁 viewed badge from all ${scoutViewedAsins.size} deal(s)?`)) return;
+  scoutViewedAsins.clear();
+  try { localStorage.setItem('bimma_scout_viewed', JSON.stringify([])); } catch {}
+  document.querySelectorAll('[id^="sv_"]').forEach(el => { el.innerHTML = ''; });
+  scoutUpdateViewedBtn();
+}
+
+function scoutUpdateViewedBtn() {
+  const btn = document.getElementById('scoutClearViewedBtn');
+  if (!btn) return;
+  if (scoutViewedAsins.size > 0) {
+    btn.style.display = '';
+    btn.textContent = `👁 Clear all viewed (${scoutViewedAsins.size})`;
+  } else {
+    btn.style.display = 'none';
   }
 }
 

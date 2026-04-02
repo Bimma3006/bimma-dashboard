@@ -2702,6 +2702,7 @@ input::placeholder { color: var(--text-4); }
         <input type="text" id="daSearch" class="da-search" placeholder="Search ASIN or title…" oninput="daRenderTable()">
         <span class="a2a-rejected-badge" id="daRejectedCount" style="display:none;"></span>
         <button class="a2a-action-btn" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;">Clear rejected</button>
+        <button class="a2a-action-btn" id="daClearViewedBtn" onclick="daClearAllViewed()" style="display:none;color:var(--red);border-color:rgba(240,59,80,0.35);" title="Remove SEEN badge from all deals">👁 Clear all viewed</button>
         <button class="a2a-action-btn" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
         <button class="a2a-action-btn a2a-action-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export CSV</button>
       </div>
@@ -3463,6 +3464,8 @@ window.onload = () => {
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
   cogsSetLast30();
   if (clientId) { document.getElementById('clientIdInput').value = clientId; loadGIS(); }
+  // Show "Clear all viewed" button in A2A if there are already viewed ASINs from a previous session
+  daUpdateViewedBtn();
 };
 
 function loadGIS() {
@@ -5230,7 +5233,7 @@ function daRenderTable() {
     tr.innerHTML = `
       <td class="td-product">
         <div class="td-product-title">${deal.title}</div>
-        <div class="td-product-badges">${deal.ss ? '<span class="ss-badge">S&S</span> ' : ''}${deal.boughtDaysAgo != null ? `<span class="inv-badge">📦 bought ${deal.boughtDaysAgo}d ago</span> ` : ''}${deal.toHouse ? `<span class="to-house-badge">🏠 To house${deal.maxDim ? ' '+deal.maxDim.toFixed(0)+'cm' : ''}</span> ` : ''}${deal.priceChanged ? '<span class="pc-badge">↓ PRICE DROP</span> ' : ''}${deal.priceMoved === 'down' ? `<span class="pc-badge">↓ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% cheaper</span> ` : deal.priceMoved === 'up' ? `<span class="price-up-badge">↑ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% pricier</span> ` : ''}${trendWarn}${spikeWarn}${daViewedList.has(deal.asin) ? '<span class="viewed-badge">SEEN</span>' : ''}</div>
+        <div class="td-product-badges">${deal.ss ? '<span class="ss-badge">S&S</span> ' : ''}${deal.boughtDaysAgo != null ? `<span class="inv-badge">📦 bought ${deal.boughtDaysAgo}d ago</span> ` : ''}${deal.toHouse ? `<span class="to-house-badge">🏠 To house${deal.maxDim ? ' '+deal.maxDim.toFixed(0)+'cm' : ''}</span> ` : ''}${deal.priceChanged ? '<span class="pc-badge">↓ PRICE DROP</span> ' : ''}${deal.priceMoved === 'down' ? `<span class="pc-badge">↓ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% cheaper</span> ` : deal.priceMoved === 'up' ? `<span class="price-up-badge">↑ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% pricier</span> ` : ''}${trendWarn}${spikeWarn}${daViewedList.has(deal.asin) ? `<span class="viewed-badge">SEEN<span onclick="event.stopPropagation();daUnmarkViewed('${deal.asin}')" style="cursor:pointer;color:var(--red);margin-left:3px;font-size:10px;line-height:1;" title="Unmark as viewed">×</span></span>` : ''}</div>
         <div class="td-asin-row">
           <a href="https://www.amazon.co.uk/dp/${deal.asin}" target="_blank" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">${deal.asin}</a>
           <a href="https://www.keepa.com/#product/2-${deal.asin}" target="_blank" class="keepa-link" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">Keepa ↗</a>
@@ -7563,9 +7566,43 @@ function daMarkViewed(asin) {
     tr.classList.add('viewed');
     const badgesDiv = tr.querySelector('.td-product-badges');
     if (badgesDiv && !badgesDiv.querySelector('.viewed-badge')) {
-      badgesDiv.insertAdjacentHTML('beforeend', '<span class="viewed-badge">SEEN</span>');
+      badgesDiv.insertAdjacentHTML('beforeend', `<span class="viewed-badge">SEEN<span onclick="event.stopPropagation();daUnmarkViewed('${asin}')" style="cursor:pointer;color:var(--red);margin-left:3px;font-size:10px;line-height:1;" title="Unmark as viewed">×</span></span>`);
     }
   });
+  daUpdateViewedBtn();
+}
+
+function daUnmarkViewed(asin) {
+  daViewedList.delete(asin);
+  try { localStorage.setItem('bimma-a2a-viewed', JSON.stringify([...daViewedList])); } catch {}
+  document.querySelectorAll(`#daTableBody tr[data-asin="${asin}"]`).forEach(tr => {
+    tr.classList.remove('viewed');
+    tr.querySelector('.viewed-badge')?.remove();
+  });
+  daUpdateViewedBtn();
+}
+
+function daClearAllViewed() {
+  if (!daViewedList.size) return;
+  if (!confirm(`Remove the SEEN badge from all ${daViewedList.size} deal(s)?`)) return;
+  daViewedList.clear();
+  try { localStorage.setItem('bimma-a2a-viewed', JSON.stringify([])); } catch {}
+  document.querySelectorAll('#daTableBody tr.viewed').forEach(tr => {
+    tr.classList.remove('viewed');
+    tr.querySelector('.viewed-badge')?.remove();
+  });
+  daUpdateViewedBtn();
+}
+
+function daUpdateViewedBtn() {
+  const btn = document.getElementById('daClearViewedBtn');
+  if (!btn) return;
+  if (daViewedList.size > 0) {
+    btn.style.display = '';
+    btn.textContent = `👁 Clear all viewed (${daViewedList.size})`;
+  } else {
+    btn.style.display = 'none';
+  }
 }
 
 

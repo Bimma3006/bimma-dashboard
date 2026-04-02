@@ -2535,6 +2535,21 @@ input::placeholder { color: var(--text-4); }
         <div class="page-header-title">Deal Analyser</div>
         <div class="page-header-sub">Score bulk Keepa exports for profitability — EU→UK, UK→UK, and Used LN modes</div>
       </div>
+      <!-- EUR → GBP converter widget -->
+      <div class="a2a-price-calc" style="min-width:190px;">
+        <div class="a2a-price-calc-label" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>EUR → GBP</span>
+          <button onclick="daRefreshFx()" id="daFxRefreshBtn" style="font-family:var(--mono);font-size:9px;padding:2px 7px;background:rgba(77,142,245,0.12);border:1px solid var(--blue);color:var(--blue);border-radius:var(--r-xs);cursor:pointer;letter-spacing:0.04em;">↻ live</button>
+        </div>
+        <div class="a2a-price-calc-input-row">
+          <span class="a2a-price-calc-prefix" style="color:var(--text-3);">€</span>
+          <input type="number" class="a2a-price-calc-input" id="daFxEurInput"
+            placeholder="0.00" step="0.01" min="0" oninput="fxConvertUpdate()">
+        </div>
+        <div style="font-family:var(--mono);font-size:24px;font-weight:700;color:var(--green);min-height:30px;line-height:1;" id="daFxGbpOut">—</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:6px;">1€ = £<span id="daFxRateDisplay">0.8600</span></div>
+      </div>
+
       <div class="a2a-price-calc">
         <div class="a2a-price-calc-label">Quick Price Breakdown</div>
         <div class="a2a-price-calc-input-row">
@@ -3017,7 +3032,7 @@ input::placeholder { color: var(--text-4); }
       <div class="rp-settings-grid">
         <div>
           <div class="rp-setting-label">EUR / GBP</div>
-          <input id="scoutEurGbp" type="number" value="0.86" step="0.001" min="0.1" max="2" class="rp-input">
+          <input id="scoutEurGbp" type="number" value="0.86" step="0.001" min="0.1" max="2" class="rp-input" oninput="fxConvertUpdate()">
         </div>
         <div>
           <div class="rp-setting-label">USD / GBP</div>
@@ -3047,6 +3062,18 @@ input::placeholder { color: var(--text-4); }
       <div style="margin-top:10px;">
         <div class="rp-setting-label">Max ASINs</div>
         <input id="scoutMaxAsins" type="number" value="10000" step="100" min="1" max="10000" class="rp-input rp-input-sm" oninput="scoutCountASINs()">
+      </div>
+      <!-- EUR → GBP quick converter -->
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <div class="rp-setting-label" style="margin-bottom:7px;">€ → £ Quick Converter</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text-3);">€</span>
+          <input type="number" id="scoutFxEurInput" placeholder="0.00" step="0.01" min="0"
+            class="rp-input" style="width:100px;" oninput="fxConvertUpdate()">
+          <span style="font-family:var(--mono);font-size:13px;color:var(--text-3);">→</span>
+          <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green);min-width:80px;" id="scoutFxGbpOut">—</span>
+        </div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:5px;">Uses EUR/GBP rate above · live as you type</div>
       </div>
     </div>
 
@@ -3466,6 +3493,9 @@ window.onload = () => {
   if (clientId) { document.getElementById('clientIdInput').value = clientId; loadGIS(); }
   // Show "Clear all viewed" button in A2A if there are already viewed ASINs from a previous session
   daUpdateViewedBtn();
+  // Initialise EUR/GBP rate display
+  const daFxRateEl = document.getElementById('daFxRateDisplay');
+  if (daFxRateEl) daFxRateEl.textContent = bimmaEurGbpRate.toFixed(4);
 };
 
 function loadGIS() {
@@ -7381,6 +7411,60 @@ function scoutStop() {
   document.getElementById('scoutStopBtn').textContent = '⏹ Stopping…';
 }
 
+// ── Shared EUR/GBP converter ──────────────────────────────────────────────────
+let bimmaEurGbpRate = parseFloat(localStorage.getItem('bimma_eur_gbp_rate')) || 0.86;
+
+function fxConvertUpdate() {
+  const rate = bimmaEurGbpRate;
+  // Scout converter
+  const scoutIn  = document.getElementById('scoutFxEurInput');
+  const scoutOut = document.getElementById('scoutFxGbpOut');
+  if (scoutIn && scoutOut) {
+    const v = parseFloat(scoutIn.value);
+    scoutOut.textContent = (!isNaN(v) && v > 0) ? '£' + (v * rate).toFixed(2) : '—';
+  }
+  // A2A converter
+  const daIn  = document.getElementById('daFxEurInput');
+  const daOut = document.getElementById('daFxGbpOut');
+  if (daIn && daOut) {
+    const v = parseFloat(daIn.value);
+    daOut.textContent = (!isNaN(v) && v > 0) ? '£' + (v * rate).toFixed(2) : '—';
+  }
+}
+
+function fxApplyRate(eurGbp) {
+  bimmaEurGbpRate = eurGbp;
+  try { localStorage.setItem('bimma_eur_gbp_rate', eurGbp.toFixed(4)); } catch {}
+  const rateEl = document.getElementById('daFxRateDisplay');
+  if (rateEl) rateEl.textContent = eurGbp.toFixed(4);
+  fxConvertUpdate();
+}
+
+async function daRefreshFx() {
+  const btn = document.getElementById('daFxRefreshBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  try {
+    const res  = await fetch('https://open.er-api.com/v6/latest/GBP');
+    const data = await res.json();
+    if (data.result !== 'success') throw new Error('API error');
+    const eurGbp = data.rates.EUR ? (1 / data.rates.EUR) : null;
+    const usdGbp = data.rates.USD ? (1 / data.rates.USD) : null;
+    const jpyGbp = data.rates.JPY ? (1 / data.rates.JPY) : null;
+    if (eurGbp) {
+      fxApplyRate(eurGbp);
+      const scoutEl = document.getElementById('scoutEurGbp');
+      if (scoutEl) scoutEl.value = eurGbp.toFixed(4);
+    }
+    if (usdGbp) { const el = document.getElementById('scoutUsdGbp'); if (el) el.value = usdGbp.toFixed(4); }
+    if (jpyGbp) { const el = document.getElementById('scoutJpyGbp'); if (el) el.value = jpyGbp.toFixed(6); }
+    toast('EUR/GBP rate updated', 'success');
+  } catch(e) {
+    toast('FX fetch failed: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ live'; }
+  }
+}
+
 async function scoutRefreshFx() {
   const btn = document.getElementById('scoutFxRefreshBtn');
   const ts  = document.getElementById('scoutFxTs');
@@ -7394,7 +7478,7 @@ async function scoutRefreshFx() {
     const eurGbp = r.EUR ? (1 / r.EUR) : null;
     const usdGbp = r.USD ? (1 / r.USD) : null;
     const jpyGbp = r.JPY ? (1 / r.JPY) : null;
-    if (eurGbp) document.getElementById('scoutEurGbp').value = eurGbp.toFixed(4);
+    if (eurGbp) { document.getElementById('scoutEurGbp').value = eurGbp.toFixed(4); fxApplyRate(eurGbp); }
     if (usdGbp) document.getElementById('scoutUsdGbp').value = usdGbp.toFixed(4);
     if (jpyGbp) document.getElementById('scoutJpyGbp').value = jpyGbp.toFixed(6);
     const now = new Date();
@@ -7410,6 +7494,12 @@ async function scoutRefreshFx() {
 
 document.addEventListener('bimma:pagechange', e => {
   if (e.detail === 'scout') scoutRefreshFx();
+  if (e.detail === 'a2a') {
+    // Update A2A rate display from persisted/shared rate
+    const rateEl = document.getElementById('daFxRateDisplay');
+    if (rateEl) rateEl.textContent = bimmaEurGbpRate.toFixed(4);
+    fxConvertUpdate();
+  }
 });
 
 // Re-enforce slot labels/visibility whenever the A2A page is navigated to,

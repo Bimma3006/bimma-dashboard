@@ -427,64 +427,78 @@ input::placeholder { color: var(--text-4); }
 }
 
 /* ═══════════════════════════════════════
-   DROP ZONES
+   DROP ZONES — premium
 ═══════════════════════════════════════ */
+@keyframes dz-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(0,232,138,0.28), 0 10px 36px rgba(0,232,138,0.12); }
+  65%  { box-shadow: 0 0 0 7px rgba(0,232,138,0),    0 10px 36px rgba(0,232,138,0.06); }
+  100% { box-shadow: 0 0 0 0   rgba(0,232,138,0),    0 10px 36px rgba(0,232,138,0); }
+}
 .drop-zone {
   position: relative;
-  border: 1px dashed rgba(255,255,255,0.07);
+  border: 1px dashed rgba(255,255,255,0.08);
   border-radius: var(--r);
-  padding: 28px 20px;
+  padding: 32px 20px 26px;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
-  background: linear-gradient(160deg, var(--surface2) 0%, var(--surface3) 100%);
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.18s;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.022) 0%, transparent 68%),
+    linear-gradient(170deg, var(--surface2) 0%, var(--surface3) 100%);
   overflow: hidden;
 }
-.drop-zone::after {
+.drop-zone::before {
   content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.055) 50%, transparent 100%);
-  pointer-events: none;
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,232,138,0.1) 0%, transparent 68%);
+  opacity: 0; transition: opacity 0.25s; pointer-events: none;
 }
+.drop-zone:hover::before, .drop-zone.drag-over::before { opacity: 1; }
 .drop-zone:hover {
-  border-color: rgba(0,232,138,0.45);
-  background: linear-gradient(160deg, rgba(0,232,138,0.04) 0%, var(--surface3) 100%);
-  box-shadow: 0 0 0 1px rgba(0,232,138,0.1), 0 6px 28px rgba(0,232,138,0.07);
-  transform: translateY(-1px);
+  border-color: rgba(0,232,138,0.38);
+  box-shadow: 0 0 0 1px rgba(0,232,138,0.07), 0 8px 30px rgba(0,232,138,0.09);
+  transform: translateY(-2px);
 }
 .drop-zone.drag-over {
-  border-color: var(--green);
-  border-style: solid;
-  background: linear-gradient(160deg, rgba(0,232,138,0.08) 0%, rgba(0,232,138,0.03) 100%);
-  box-shadow: 0 0 0 2px rgba(0,232,138,0.18), 0 8px 32px rgba(0,232,138,0.12);
-  transform: translateY(-1px) scale(1.005);
+  border-color: var(--green); border-style: solid;
+  transform: translateY(-2px);
+  animation: dz-pulse 1.5s ease-out infinite;
 }
 .drop-zone.loaded {
-  border-style: solid;
-  border-color: rgba(0,232,138,0.3);
-  background: linear-gradient(160deg, rgba(0,232,138,0.05) 0%, rgba(0,232,138,0.02) 100%);
-  box-shadow: 0 0 0 1px rgba(0,232,138,0.08);
+  border-style: solid; border-color: rgba(0,232,138,0.26);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0,232,138,0.07) 0%, transparent 65%),
+    linear-gradient(170deg, rgba(0,232,138,0.04) 0%, var(--surface3) 100%);
+  box-shadow: inset 0 1px 0 rgba(0,232,138,0.14);
+}
+.drop-zone.loaded::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green) 0%, rgba(0,232,138,0.2) 100%);
+  border-radius: var(--r) var(--r) 0 0;
 }
 .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .drop-icon {
-  width: 42px; height: 42px;
+  width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 11px;
-  background: var(--surface4);
+  margin: 0 auto 12px;
+  background: linear-gradient(145deg, var(--surface4) 0%, rgba(255,255,255,0.018) 100%);
   border: 1px solid var(--border2);
-  border-radius: 11px;
-  font-size: 18px;
-  transition: all 0.2s ease;
+  border-radius: 12px;
+  font-size: 19px;
+  transition: all 0.22s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04);
 }
-.drop-zone:hover .drop-icon {
-  background: rgba(0,232,138,0.1);
-  border-color: rgba(0,232,138,0.3);
+.drop-zone:hover .drop-icon, .drop-zone.drag-over .drop-icon {
+  background: linear-gradient(145deg, rgba(0,232,138,0.13) 0%, rgba(0,232,138,0.04) 100%);
+  border-color: rgba(0,232,138,0.35);
+  box-shadow: 0 2px 12px rgba(0,232,138,0.22), inset 0 1px 0 rgba(0,232,138,0.1);
 }
 .drop-zone.loaded .drop-icon {
-  background: rgba(0,232,138,0.12);
-  border-color: rgba(0,232,138,0.35);
+  background: linear-gradient(145deg, rgba(0,232,138,0.15) 0%, rgba(0,232,138,0.05) 100%);
+  border-color: rgba(0,232,138,0.4);
+  box-shadow: 0 2px 10px rgba(0,232,138,0.18), inset 0 1px 0 rgba(0,232,138,0.12);
 }
 .drop-text { font-size: 13px; color: var(--text-3); line-height: 1.55; }
 .drop-text strong { color: var(--text-2); font-weight: 500; }
@@ -1248,75 +1262,77 @@ input::placeholder { color: var(--text-4); }
 }
 .a2a-slot {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 24px 14px 20px;
-  background: linear-gradient(160deg, var(--surface2) 0%, var(--surface3) 100%);
-  border: 1px dashed rgba(255,255,255,0.07);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 7px; padding: 28px 14px 22px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.022) 0%, transparent 68%),
+    linear-gradient(170deg, var(--surface2) 0%, var(--surface3) 100%);
+  border: 1px dashed rgba(255,255,255,0.08);
   border-radius: var(--r);
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
-  min-height: 130px;
-  text-align: center;
-  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.18s;
+  min-height: 136px;
+  text-align: center; overflow: hidden;
 }
-.a2a-slot::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.055) 50%, transparent 100%);
-  pointer-events: none;
+.a2a-slot::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,232,138,0.1) 0%, transparent 68%);
+  opacity: 0; transition: opacity 0.25s; pointer-events: none;
 }
+.a2a-slot:hover::before, .a2a-slot.drag-over::before { opacity: 1; }
 .a2a-slot input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .a2a-slot:hover {
-  border-color: rgba(0,232,138,0.45);
-  background: linear-gradient(160deg, rgba(0,232,138,0.04) 0%, var(--surface3) 100%);
-  box-shadow: 0 0 0 1px rgba(0,232,138,0.1), 0 6px 28px rgba(0,232,138,0.07);
-  transform: translateY(-1px);
+  border-color: rgba(0,232,138,0.38);
+  box-shadow: 0 0 0 1px rgba(0,232,138,0.07), 0 8px 30px rgba(0,232,138,0.09);
+  transform: translateY(-2px);
 }
-.a2a-slot.loaded {
-  border-style: solid;
-  border-color: rgba(0,232,138,0.3);
-  background: linear-gradient(160deg, rgba(0,232,138,0.05) 0%, rgba(0,232,138,0.02) 100%);
-  box-shadow: 0 0 0 1px rgba(0,232,138,0.08);
+.a2a-slot.loaded, .a2a-slot.has-file {
+  border-style: solid; border-color: rgba(0,232,138,0.26);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0,232,138,0.07) 0%, transparent 65%),
+    linear-gradient(170deg, rgba(0,232,138,0.04) 0%, var(--surface3) 100%);
+  box-shadow: inset 0 1px 0 rgba(0,232,138,0.14);
+}
+.a2a-slot.loaded::after, .a2a-slot.has-file::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green) 0%, rgba(0,232,138,0.2) 100%);
+  border-radius: var(--r) var(--r) 0 0;
 }
 .a2a-slot.drag-over {
-  border-color: var(--green);
-  border-style: solid;
-  background: linear-gradient(160deg, rgba(0,232,138,0.1) 0%, rgba(0,232,138,0.04) 100%);
-  box-shadow: 0 0 0 2px rgba(0,232,138,0.2), 0 8px 32px rgba(0,232,138,0.12);
-  transform: translateY(-1px) scale(1.005);
+  border-color: var(--green); border-style: solid;
+  transform: translateY(-2px);
+  animation: dz-pulse 1.5s ease-out infinite;
 }
 .a2a-slot-num {
-  position: absolute;
-  top: 9px; left: 11px;
-  font-family: var(--mono);
-  font-size: 8px;
-  font-weight: 700;
-  color: var(--text-3);
-  letter-spacing: 0.14em;
-  opacity: 0.4;
+  position: absolute; top: 9px; left: 11px;
+  font-family: var(--mono); font-size: 8px; font-weight: 700;
+  color: var(--text-3); letter-spacing: 0.14em;
+  background: var(--surface4); border: 1px solid var(--border);
+  border-radius: 3px; padding: 1px 5px;
 }
 .a2a-slot-icon {
-  width: 40px; height: 40px;
+  width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--surface4);
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  font-size: 17px;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
+  background: linear-gradient(145deg, var(--surface4) 0%, rgba(255,255,255,0.018) 100%);
+  border: 1px solid var(--border2); border-radius: 12px;
+  font-size: 18px; transition: all 0.22s; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04);
 }
-.a2a-slot:hover .a2a-slot-icon { background: rgba(0,232,138,0.1); border-color: rgba(0,232,138,0.3); }
-.a2a-slot.loaded .a2a-slot-icon { background: rgba(0,232,138,0.12); border-color: rgba(0,232,138,0.35); }
+.a2a-slot:hover .a2a-slot-icon, .a2a-slot.drag-over .a2a-slot-icon {
+  background: linear-gradient(145deg, rgba(0,232,138,0.13) 0%, rgba(0,232,138,0.04) 100%);
+  border-color: rgba(0,232,138,0.35);
+  box-shadow: 0 2px 12px rgba(0,232,138,0.22), inset 0 1px 0 rgba(0,232,138,0.1);
+}
+.a2a-slot.loaded .a2a-slot-icon, .a2a-slot.has-file .a2a-slot-icon {
+  background: linear-gradient(145deg, rgba(0,232,138,0.15) 0%, rgba(0,232,138,0.05) 100%);
+  border-color: rgba(0,232,138,0.4);
+  box-shadow: 0 2px 10px rgba(0,232,138,0.18), inset 0 1px 0 rgba(0,232,138,0.12);
+}
 .a2a-slot-label { font-family: var(--mono); font-size: 10px; color: var(--text-2); letter-spacing: 0.04em; line-height: 1.4; }
-.a2a-slot.loaded .a2a-slot-label { color: var(--text); }
-.a2a-slot-sub { font-family: var(--mono); font-size: 8px; color: var(--blue); letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.8; }
-.a2a-slot-name { font-family: var(--mono); font-size: 9px; color: var(--green); word-break: break-all; max-width: 92%; margin-top: 1px; line-height: 1.3; }
+.a2a-slot.loaded .a2a-slot-label, .a2a-slot.has-file .a2a-slot-label { color: var(--text); }
+.a2a-slot-sub { font-family: var(--mono); font-size: 8px; color: var(--blue); letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; }
+.a2a-slot-name { font-family: var(--mono); font-size: 9px; color: var(--green); word-break: break-all; max-width: 92%; line-height: 1.3; }
 .a2a-slot-clear {
   position: absolute; top: 7px; right: 9px;
   background: none; border: none; color: var(--text-3); cursor: pointer;
@@ -1324,7 +1340,7 @@ input::placeholder { color: var(--text-4); }
   display: none; border-radius: 4px; transition: all 0.12s;
 }
 .a2a-slot-clear:hover { color: var(--red); background: rgba(240,59,80,0.12); }
-.a2a-slot.loaded .a2a-slot-clear { display: block; }
+.a2a-slot.loaded .a2a-slot-clear, .a2a-slot.has-file .a2a-slot-clear { display: block; }
 
 /* Go button */
 .a2a-go-btn {
@@ -1682,61 +1698,65 @@ input::placeholder { color: var(--text-4); }
 
 .rp-dropzone {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 22px 14px;
-  background: linear-gradient(160deg, var(--surface2) 0%, var(--surface3) 100%);
-  border: 1px dashed rgba(255,255,255,0.07);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px; padding: 24px 14px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.022) 0%, transparent 68%),
+    linear-gradient(170deg, var(--surface2) 0%, var(--surface3) 100%);
+  border: 1px dashed rgba(255,255,255,0.08);
   border-radius: var(--r);
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
-  text-align: center;
-  min-height: 100px;
-  margin-bottom: 10px;
-  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.18s;
+  text-align: center; min-height: 108px; margin-bottom: 10px; overflow: hidden;
 }
-.rp-dropzone::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.055) 50%, transparent 100%);
-  pointer-events: none;
+.rp-dropzone::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,232,138,0.1) 0%, transparent 68%);
+  opacity: 0; transition: opacity 0.25s; pointer-events: none;
 }
+.rp-dropzone:hover::before, .rp-dropzone.drag-over::before { opacity: 1; }
 .rp-dropzone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .rp-dropzone:hover {
-  border-color: rgba(0,232,138,0.45);
-  background: linear-gradient(160deg, rgba(0,232,138,0.04) 0%, var(--surface3) 100%);
-  box-shadow: 0 0 0 1px rgba(0,232,138,0.1), 0 6px 28px rgba(0,232,138,0.07);
-  transform: translateY(-1px);
+  border-color: rgba(0,232,138,0.38);
+  box-shadow: 0 0 0 1px rgba(0,232,138,0.07), 0 8px 30px rgba(0,232,138,0.09);
+  transform: translateY(-2px);
 }
 .rp-dropzone.loaded {
-  border-style: solid;
-  border-color: rgba(0,232,138,0.3);
-  background: linear-gradient(160deg, rgba(0,232,138,0.05) 0%, rgba(0,232,138,0.02) 100%);
-  box-shadow: 0 0 0 1px rgba(0,232,138,0.08);
+  border-style: solid; border-color: rgba(0,232,138,0.26);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0,232,138,0.07) 0%, transparent 65%),
+    linear-gradient(170deg, rgba(0,232,138,0.04) 0%, var(--surface3) 100%);
+  box-shadow: inset 0 1px 0 rgba(0,232,138,0.14);
+}
+.rp-dropzone.loaded::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green) 0%, rgba(0,232,138,0.2) 100%);
+  border-radius: var(--r) var(--r) 0 0;
 }
 .rp-dropzone.drag-over {
-  border-color: var(--green);
-  border-style: solid;
-  background: linear-gradient(160deg, rgba(0,232,138,0.1) 0%, rgba(0,232,138,0.04) 100%);
-  box-shadow: 0 0 0 2px rgba(0,232,138,0.2), 0 8px 32px rgba(0,232,138,0.12);
-  transform: translateY(-1px) scale(1.005);
+  border-color: var(--green); border-style: solid;
+  transform: translateY(-2px);
+  animation: dz-pulse 1.5s ease-out infinite;
 }
 .rp-dz-icon {
-  width: 38px; height: 38px;
+  width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--surface4);
-  border: 1px solid var(--border2);
-  border-radius: 9px;
-  font-size: 16px;
-  transition: all 0.2s ease;
+  background: linear-gradient(145deg, var(--surface4) 0%, rgba(255,255,255,0.018) 100%);
+  border: 1px solid var(--border2); border-radius: 11px; font-size: 17px;
+  transition: all 0.22s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04);
 }
-.rp-dropzone:hover .rp-dz-icon { background: rgba(0,232,138,0.1); border-color: rgba(0,232,138,0.3); }
-.rp-dropzone.loaded .rp-dz-icon { background: rgba(0,232,138,0.12); border-color: rgba(0,232,138,0.35); }
+.rp-dropzone:hover .rp-dz-icon, .rp-dropzone.drag-over .rp-dz-icon {
+  background: linear-gradient(145deg, rgba(0,232,138,0.13) 0%, rgba(0,232,138,0.04) 100%);
+  border-color: rgba(0,232,138,0.35);
+  box-shadow: 0 2px 12px rgba(0,232,138,0.22), inset 0 1px 0 rgba(0,232,138,0.1);
+}
+.rp-dropzone.loaded .rp-dz-icon {
+  background: linear-gradient(145deg, rgba(0,232,138,0.15) 0%, rgba(0,232,138,0.05) 100%);
+  border-color: rgba(0,232,138,0.4);
+  box-shadow: 0 2px 10px rgba(0,232,138,0.18), inset 0 1px 0 rgba(0,232,138,0.12);
+}
 .rp-dz-text { font-size: 12px; color: var(--text-2); line-height: 1.5; }
 .rp-dz-browse { color: var(--green); text-decoration: none; border-bottom: 1px dashed rgba(0,232,138,0.4); }
 .rp-dz-hint { font-family: var(--mono); font-size: 9px; color: var(--text-3); letter-spacing: 0.08em; }
@@ -1873,59 +1893,64 @@ input::placeholder { color: var(--text-4); }
 
 .scout-dropzone {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 26px 16px 22px;
-  background: linear-gradient(160deg, var(--surface2) 0%, var(--surface3) 100%);
-  border: 1px dashed rgba(255,255,255,0.07);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 7px; padding: 28px 16px 24px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.022) 0%, transparent 68%),
+    linear-gradient(170deg, var(--surface2) 0%, var(--surface3) 100%);
+  border: 1px dashed rgba(255,255,255,0.08);
   border-radius: var(--r);
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
-  text-align: center;
-  min-height: 130px;
-  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.18s;
+  text-align: center; min-height: 138px; overflow: hidden;
 }
-.scout-dropzone::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.055) 50%, transparent 100%);
-  pointer-events: none;
+.scout-dropzone::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,232,138,0.1) 0%, transparent 68%);
+  opacity: 0; transition: opacity 0.25s; pointer-events: none;
 }
+.scout-dropzone:hover::before, .scout-dropzone.drag-over::before { opacity: 1; }
 .scout-dropzone:hover {
-  border-color: rgba(0,232,138,0.45);
-  background: linear-gradient(160deg, rgba(0,232,138,0.04) 0%, var(--surface3) 100%);
-  box-shadow: 0 0 0 1px rgba(0,232,138,0.1), 0 6px 28px rgba(0,232,138,0.07);
-  transform: translateY(-1px);
+  border-color: rgba(0,232,138,0.38);
+  box-shadow: 0 0 0 1px rgba(0,232,138,0.07), 0 8px 30px rgba(0,232,138,0.09);
+  transform: translateY(-2px);
 }
 .scout-dropzone.loaded {
-  border-style: solid;
-  border-color: rgba(0,232,138,0.3);
-  background: linear-gradient(160deg, rgba(0,232,138,0.05) 0%, rgba(0,232,138,0.02) 100%);
-  box-shadow: 0 0 0 1px rgba(0,232,138,0.08);
+  border-style: solid; border-color: rgba(0,232,138,0.26);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0,232,138,0.07) 0%, transparent 65%),
+    linear-gradient(170deg, rgba(0,232,138,0.04) 0%, var(--surface3) 100%);
+  box-shadow: inset 0 1px 0 rgba(0,232,138,0.14);
+}
+.scout-dropzone.loaded::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green) 0%, rgba(0,232,138,0.2) 100%);
+  border-radius: var(--r) var(--r) 0 0;
 }
 .scout-dropzone.drag-over {
-  border-color: var(--green);
-  border-style: solid;
-  background: linear-gradient(160deg, rgba(0,232,138,0.1) 0%, rgba(0,232,138,0.04) 100%);
-  box-shadow: 0 0 0 2px rgba(0,232,138,0.2), 0 8px 32px rgba(0,232,138,0.12);
-  transform: translateY(-1px) scale(1.005);
+  border-color: var(--green); border-style: solid;
+  transform: translateY(-2px);
+  animation: dz-pulse 1.5s ease-out infinite;
 }
 .scout-drop-icon {
-  width: 42px; height: 42px;
+  width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--surface4);
-  border: 1px solid var(--border2);
-  border-radius: 11px;
-  font-size: 18px;
-  transition: all 0.2s ease;
+  background: linear-gradient(145deg, var(--surface4) 0%, rgba(255,255,255,0.018) 100%);
+  border: 1px solid var(--border2); border-radius: 12px; font-size: 18px;
+  transition: all 0.22s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04);
 }
-.scout-dropzone:hover .scout-drop-icon { background: rgba(0,232,138,0.1); border-color: rgba(0,232,138,0.3); }
-.scout-dropzone.loaded .scout-drop-icon { background: rgba(0,232,138,0.12); border-color: rgba(0,232,138,0.35); }
+.scout-dropzone:hover .scout-drop-icon, .scout-dropzone.drag-over .scout-drop-icon {
+  background: linear-gradient(145deg, rgba(0,232,138,0.13) 0%, rgba(0,232,138,0.04) 100%);
+  border-color: rgba(0,232,138,0.35);
+  box-shadow: 0 2px 12px rgba(0,232,138,0.22), inset 0 1px 0 rgba(0,232,138,0.1);
+}
+.scout-dropzone.loaded .scout-drop-icon {
+  background: linear-gradient(145deg, rgba(0,232,138,0.15) 0%, rgba(0,232,138,0.05) 100%);
+  border-color: rgba(0,232,138,0.4);
+  box-shadow: 0 2px 10px rgba(0,232,138,0.18), inset 0 1px 0 rgba(0,232,138,0.12);
+}
 .scout-drop-label { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-2); letter-spacing: 0.04em; }
 .scout-drop-sub { font-family: var(--mono); font-size: 9px; color: var(--text-3); letter-spacing: 0.04em; line-height: 1.5; }
 .scout-drop-filename { font-family: var(--mono); font-size: 10px; color: var(--green); word-break: break-all; max-width: 100%; line-height: 1.3; }
@@ -2156,46 +2181,54 @@ input::placeholder { color: var(--text-4); }
 
 .leak-upload-box {
   position: relative;
-  background: linear-gradient(160deg, var(--surface2) 0%, var(--surface3) 100%);
-  border: 1px dashed rgba(255,255,255,0.07);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.022) 0%, transparent 68%),
+    linear-gradient(170deg, var(--surface2) 0%, var(--surface3) 100%);
+  border: 1px dashed rgba(255,255,255,0.08);
   border-radius: var(--r);
-  padding: 28px 20px;
+  padding: 32px 20px 26px;
   text-align: center;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.18s;
   overflow: hidden;
 }
-.leak-upload-box::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.055) 50%, transparent 100%);
-  pointer-events: none;
+.leak-upload-box::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,232,138,0.1) 0%, transparent 68%);
+  opacity: 0; transition: opacity 0.25s; pointer-events: none;
 }
+.leak-upload-box:hover::before { opacity: 1; }
 .leak-upload-box:hover {
-  border-color: rgba(0,232,138,0.45);
-  background: linear-gradient(160deg, rgba(0,232,138,0.04) 0%, var(--surface3) 100%);
-  box-shadow: 0 0 0 1px rgba(0,232,138,0.1), 0 6px 28px rgba(0,232,138,0.07);
-  transform: translateY(-1px);
+  border-color: rgba(0,232,138,0.38);
+  box-shadow: 0 0 0 1px rgba(0,232,138,0.07), 0 8px 30px rgba(0,232,138,0.09);
+  transform: translateY(-2px);
 }
 .leak-upload-box.loaded {
-  border-style: solid;
-  border-color: rgba(0,232,138,0.3);
-  background: linear-gradient(160deg, rgba(0,232,138,0.05) 0%, rgba(0,232,138,0.02) 100%);
-  box-shadow: 0 0 0 1px rgba(0,232,138,0.08);
+  border-style: solid; border-color: rgba(0,232,138,0.26);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0,232,138,0.07) 0%, transparent 65%),
+    linear-gradient(170deg, rgba(0,232,138,0.04) 0%, var(--surface3) 100%);
+  box-shadow: inset 0 1px 0 rgba(0,232,138,0.14);
+}
+.leak-upload-box.loaded::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green) 0%, rgba(0,232,138,0.2) 100%);
+  border-radius: var(--r) var(--r) 0 0;
 }
 .leak-upload-icon {
   width: 46px; height: 46px;
   display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 12px;
-  background: var(--surface4);
-  border: 1px solid var(--border2);
-  border-radius: 13px;
-  font-size: 20px;
-  transition: all 0.2s ease;
+  margin: 0 auto 14px;
+  background: linear-gradient(145deg, var(--surface4) 0%, rgba(255,255,255,0.018) 100%);
+  border: 1px solid var(--border2); border-radius: 13px; font-size: 20px;
+  transition: all 0.22s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04);
 }
-.leak-upload-box:hover .leak-upload-icon { background: rgba(0,232,138,0.1); border-color: rgba(0,232,138,0.3); }
-.leak-upload-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+.leak-upload-box:hover .leak-upload-icon {
+  background: linear-gradient(145deg, rgba(0,232,138,0.13) 0%, rgba(0,232,138,0.04) 100%);
+  border-color: rgba(0,232,138,0.35);
+  box-shadow: 0 2px 12px rgba(0,232,138,0.22), inset 0 1px 0 rgba(0,232,138,0.1);
+}
+.leak-upload-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
 .leak-upload-sub { font-family: var(--mono); font-size: 10px; color: var(--text-3); line-height: 1.65; margin-bottom: 16px; }
 .leak-upload-btn {
   background: var(--surface3); border: 1px solid var(--border2);
@@ -2716,18 +2749,26 @@ input::placeholder { color: var(--text-4); }
       <div style="display:flex;align-items:flex-end;gap:10px;">
 
       <!-- EUR → GBP converter widget -->
-      <div class="a2a-price-calc" style="min-width:196px;">
-        <div class="a2a-price-calc-label" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div class="a2a-price-calc">
+        <div class="a2a-price-calc-label" style="display:flex;align-items:center;justify-content:space-between;">
           <span>EUR → GBP</span>
           <button onclick="daRefreshFx()" id="daFxRefreshBtn" style="font-family:var(--mono);font-size:9px;padding:3px 8px;background:rgba(77,142,245,0.12);border:1px solid rgba(77,142,245,0.4);color:var(--blue);border-radius:var(--r-xs);cursor:pointer;letter-spacing:0.04em;transition:all 0.15s;">↻ live</button>
         </div>
-        <div class="a2a-price-calc-input-row" style="margin-bottom:10px;">
+        <div class="a2a-price-calc-input-row">
           <span class="a2a-price-calc-prefix" style="color:var(--text-3);">€</span>
           <input type="number" class="a2a-price-calc-input" id="daFxEurInput"
             placeholder="0.00" step="0.01" min="0" oninput="fxConvertUpdate()">
         </div>
-        <div style="font-family:var(--mono);font-size:26px;font-weight:700;color:var(--green);line-height:1;min-height:26px;margin-bottom:8px;" id="daFxGbpOut">—</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);letter-spacing:0.04em;">1€ = £<span id="daFxRateDisplay">0.8600</span></div>
+        <div class="a2a-calc-results has-value">
+          <div class="a2a-calc-row">
+            <span class="a2a-calc-lbl">£ GBP</span>
+            <span class="a2a-calc-price" id="daFxGbpOut" style="color:var(--green);">—</span>
+          </div>
+          <div class="a2a-calc-row" style="margin-top:2px;">
+            <span class="a2a-calc-lbl" style="color:var(--text-3);">Rate</span>
+            <span class="a2a-calc-price" style="color:var(--text-3);font-size:11px;">£<span id="daFxRateDisplay">0.8600</span></span>
+          </div>
+        </div>
       </div>
 
       <div class="a2a-price-calc">
@@ -4842,7 +4883,8 @@ function daRecalcR15() {
 }
 let daSlotFiles = { 1: null, 2: null, 3: null };
 let daSlotTexts = { 1: null, 2: null, 3: null };
-try { [1,2,3].forEach(n => { const t=localStorage.getItem('bimma_da_slot'+n+'_text'); if(t) daSlotTexts[n]=t; }); } catch(e) {}
+// Slot CSV text is intentionally NOT restored from localStorage — slots always start
+// empty so stale exports from previous sessions never sneak into analysis.
 let daViewedList   = (() => { try { return new Set(JSON.parse(localStorage.getItem('bimma-a2a-viewed')   || '[]')); } catch { return new Set(); } })();
 // daRejectedList: Map of asin → { price, date } — price at time of rejection so we can un-reject if price changes
 let daRejectedList = (() => {
@@ -5131,24 +5173,9 @@ function daDragOver(e, el) { e.preventDefault(); el.classList.add('drag-over'); 
 function daDragLeave(el) { el.classList.remove('drag-over'); }
 function daDrop(e, num) { e.preventDefault(); document.getElementById('daSlot' + num).classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) daFileChosen(num, f); }
 
-// Restore A2A file UI from cached text
+// Slots always start empty — no stale file names restored from previous sessions
 daLoadRetailerBrands();
 setTimeout(() => {
-  [1,2,3].forEach(n => {
-    const name = localStorage.getItem('bimma_da_slot'+n+'_name');
-    if (daSlotTexts[n] && name) {
-      document.getElementById('daSlot'+n)?.classList.add('has-file');
-      const icon = document.getElementById('daSlot'+n+'Icon'); if(icon){icon.textContent='✓';icon.style.cssText='font-size:18px;color:var(--green);opacity:1;font-family:var(--mono);font-weight:600';}
-      const lbl = document.getElementById('daSlot'+n+'Label'); if(lbl) lbl.style.display='none';
-      const nm = document.getElementById('daSlot'+n+'Name'); if(nm){nm.textContent=name;nm.style.display='block';}
-      const cl = document.getElementById('daSlot'+n+'Clear'); if(cl) cl.style.display='block';
-    }
-  });
-  const btn = document.getElementById('daGoBtn');
-  if (btn) {
-    const ready = currentMode==='eu' ? (daSlotTexts[1]||daSlotFiles[1]) && (daSlotTexts[3]||daSlotFiles[3]) : !!(daSlotTexts[1]||daSlotFiles[1]);
-    if (ready) btn.classList.add('ready', currentMode);
-  }
   // Restore last analysis results from localStorage
   try {
     const savedDeals = localStorage.getItem('bimma_da_results');
@@ -5201,7 +5228,7 @@ setTimeout(() => {
 function daFileChosen(num, file) {
   if (!file) return;
   daSlotFiles[num] = file;
-  const fr = new FileReader(); fr.onload = e => { daSlotTexts[num]=e.target.result; try{localStorage.setItem('bimma_da_slot'+num+'_text',e.target.result);localStorage.setItem('bimma_da_slot'+num+'_name',file.name);}catch(e){} }; fr.readAsText(file);
+  const fr = new FileReader(); fr.onload = e => { daSlotTexts[num]=e.target.result; }; fr.readAsText(file);
   document.getElementById('daSlot' + num).classList.add('has-file');
   document.getElementById('daSlot' + num + 'Icon').textContent = '✓';
   document.getElementById('daSlot' + num + 'Icon').style.cssText = 'font-size:18px;color:var(--green);opacity:1;font-family:var(--mono);font-weight:600';

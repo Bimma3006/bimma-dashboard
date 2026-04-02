@@ -4816,16 +4816,25 @@ function daAnalyseRow(row) {
   }
 
   // Sell price selection:
-  // 1. Base: 365d avg if recoveries >= 4, else 180d avg
+  // 1. Base: when recoveries >= 4, use the HIGHER of 365d and 180d avg (so a recent
+  //    price rise isn't penalised by a lower historical 365d figure); else use 180d avg.
   // 2. Strikethrough override: if strikethrough exists and is within 130% of base SP
   //    (capped to avoid stale/inflated strikethroughs on permanently-dropped products)
-  const spBase = (recoveries && recoveries >= 4 && avg365) ? avg365 : daParseNum(row[cfg.sellCol]);
+  const spBase = (() => {
+    if (recoveries && recoveries >= 4 && avg365) {
+      return (avg180 && avg180 > avg365) ? avg180 : avg365;
+    }
+    return daParseNum(row[cfg.sellCol]);
+  })();
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
   // Strikethrough: use if above avg base but within 130% of it (filters stale RRPs)
   const ST_CAP = 1.30;
   const useStrikethrough = cfg.condition !== 'used' && stPrice && spBase && stPrice > spBase && stPrice <= spBase * ST_CAP;
   const spIncVat = useStrikethrough ? stPrice : spBase;
-  const spSource = useStrikethrough ? 'ST' : (recoveries && recoveries >= 4 && avg365) ? '365d' : '180d';
+  const spSource = useStrikethrough ? 'ST'
+    : (recoveries && recoveries >= 4 && avg365)
+      ? (avg180 && avg180 > avg365 ? '180d' : '365d')
+      : '180d';
   const sp = spIncVat ? spIncVat / (1 + vat) : null;
 
   // FBA fee: use actual if present, otherwise estimate from sell price

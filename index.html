@@ -4827,8 +4827,8 @@ function daAnalyseRow(row) {
     return daParseNum(row[cfg.sellCol]);
   })();
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
-  // Strikethrough: use if above avg base but within 115% of it (filters stale RRPs)
-  const ST_CAP = 1.15;
+  // Strikethrough: use if above avg base but within 125% of it (filters stale RRPs)
+  const ST_CAP = 1.25;
   const useStrikethrough = cfg.condition !== 'used' && stPrice && spBase && stPrice > spBase && stPrice <= spBase * ST_CAP;
   const spIncVat = useStrikethrough ? stPrice : spBase;
   const spSource = useStrikethrough ? 'ST'

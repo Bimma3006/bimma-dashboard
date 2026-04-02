@@ -5041,24 +5041,31 @@ function daAnalyseRow(row) {
 
   // Sell price selection:
   // 1. Base: when recoveries >= 4, use the HIGHER of 365d and 180d avg (so a recent
-  //    price rise isn't penalised by a lower historical 365d figure); else use 180d avg.
+  //    price rise isn't penalised by a lower historical 365d figure).
+  //    When recoveries >= 3, apply a 10% uplift to 180d avg to reflect recovery potential.
+  //    Otherwise use 180d avg.
   // 2. Strikethrough override: if strikethrough exists and is within 130% of base SP
   //    (capped to avoid stale/inflated strikethroughs on permanently-dropped products)
   const spBase = (() => {
     if (recoveries && recoveries >= 4 && avg365) {
       return (avg180 && avg180 > avg365) ? avg180 : avg365;
     }
+    if (recoveries && recoveries >= 3 && avg180) {
+      return avg180 * 1.10;
+    }
     return daParseNum(row[cfg.sellCol]);
   })();
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
-  // Strikethrough: use if above avg base but within 125% of it (filters stale RRPs)
-  const ST_CAP = 1.25;
+  // Strikethrough: use if above avg base but within 130% of it (filters stale RRPs)
+  const ST_CAP = 1.30;
   const useStrikethrough = cfg.condition !== 'used' && stPrice && spBase && stPrice > spBase && stPrice <= spBase * ST_CAP;
   const spIncVat = useStrikethrough ? stPrice : spBase;
   const spSource = useStrikethrough ? 'ST'
     : (recoveries && recoveries >= 4 && avg365)
       ? (avg180 && avg180 > avg365 ? '180d' : '365d')
-      : '180d';
+      : (recoveries && recoveries >= 3 && avg180)
+        ? '180d+10%'
+        : '180d';
   const sp = spIncVat ? spIncVat / (1 + vat) : null;
 
   // FBA fee: use actual if present, otherwise estimate from sell price
@@ -5085,11 +5092,17 @@ function daAnalyseRow(row) {
     roi = profit / buyExVat;
   }
 
-  // Spike detection: BB current is more than 3×SD above 180d avg — artificially inflated
+  // Spike detection:
+  // bb_spike: BB current is more than 3×SD above 180d avg — live inflated price
+  // avg_skew: 180d avg is 30%+ above 365d avg AND current price has dropped below 180d avg
+  //           — means a past spike inflated the 180d avg, skewing the sell price projection
   let spikeFlag = null;
   const bbCurrent = daParseNum(row['Buy Box: Current']);
   if (bbCurrent && avg180 && sd365) {
     if (bbCurrent > avg180 + (sd365 * 3)) spikeFlag = 'bb_spike';
+  }
+  if (!spikeFlag && avg180 && avg365 && bbCurrent) {
+    if (avg180 > avg365 * 1.30 && bbCurrent < avg180) spikeFlag = 'avg_skew';
   }
 
   // Gift card: 10% off buy price
@@ -5141,6 +5154,10 @@ function daAnalyseRow(row) {
     strength = 'SPIKED'; colour = 'red';
     const pct = avg180 ? (((bbCurrent - avg180) / avg180) * 100).toFixed(0) : '?';
     reason = `BB ${pct}% above 180d avg — inflated spike`;
+  } else if (spikeFlag === 'avg_skew') {
+    strength = 'SPIKED'; colour = 'red';
+    const pct = avg365 ? (((avg180 - avg365) / avg365) * 100).toFixed(0) : '?';
+    reason = `180d avg ${pct}% above 365d — past spike skewing sell price`;
   } else if (roi === null) {
     strength = 'NO DATA'; colour = 'grey'; reason = 'Missing price data';
   } else if (roi >= cfg.strongROI) {

@@ -2366,6 +2366,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses',this)"><span class="nav-icon">£</span>Expenses</div>
     <div class="nav-divider"></div>
     <div class="sidebar-section-label">Intelligence</div>
+    <div class="nav-item" data-page="hub" onclick="showPage('hub',this)"><span class="nav-icon">🏠</span>Business Hub</div>
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
     <div class="nav-item" data-page="leakage" onclick="showPage('leakage',this)"><span class="nav-icon">🔴</span>Leakage</div>
   </div>
@@ -3499,6 +3500,394 @@ input::placeholder { color: var(--text-4); }
 
 </div>
 
+<!-- ═══════════════════════════════════════
+     BUSINESS HEALTH HUB  ·  CSS
+═══════════════════════════════════════ -->
+<style>
+.hub-kpi-banner{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;position:sticky;top:0;z-index:10;background:var(--bg);padding:12px 0 14px;margin-bottom:16px;border-bottom:1px solid var(--border);}
+.hub-kpi-tile{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;}
+.hub-kpi-label{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.hub-kpi-value{font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green);}
+.hub-module{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;}
+.hub-module-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none;gap:12px;}
+.hub-module-hdr:hover{background:var(--surface3);}
+.hub-module-hdr-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;flex-wrap:wrap;}
+.hub-module-num{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 5px;border-radius:6px;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
+.hub-module-title{font-weight:600;font-size:14.5px;}
+.hub-module-summary{font-size:12px;color:var(--text-3);}
+.hub-module-chevron{font-size:13px;color:var(--text-3);flex-shrink:0;}
+.hub-module-body{padding:0 18px 18px;border-top:1px solid var(--border);}
+.hub-report-grid{display:flex;flex-direction:column;gap:8px;}
+.hub-report-slot{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 14px;}
+.hub-report-info{flex:1;min-width:0;}
+.hub-report-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.hub-upload-btn-sm{background:var(--surface4);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap;font-family:var(--sans);}
+.hub-upload-btn-sm:hover{background:var(--border2);}
+.hub-table-wrap{overflow-x:auto;border-radius:var(--r-sm);border:1px solid var(--border);}
+.hub-table{width:100%;border-collapse:collapse;font-size:13px;}
+.hub-table th{background:var(--surface3);color:var(--text-3);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:9px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);}
+.hub-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.hub-table tbody tr:last-child td{border-bottom:none;}
+.hub-table tbody tr:hover{background:var(--surface3);}
+.hub-aq-table td{vertical-align:top;padding-top:10px;}
+.hub-empty-state{text-align:center;color:var(--text-3);padding:32px 16px;font-size:13px;line-height:1.7;}
+.hub-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:14px 0 14px;}
+.hub-scoreboard{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px;padding-top:18px;border-top:1px solid var(--border);}
+.hub-score-tile{text-align:center;background:var(--surface3);border-radius:var(--r-sm);padding:12px;}
+.hub-score-val{font-size:22px;font-weight:700;font-family:var(--mono);}
+.hub-score-lbl{font-size:11px;color:var(--text-3);margin-top:4px;}
+.hub-mod-pill{display:inline-block;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;color:#fff;}
+.hub-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-3);padding:8px 16px;cursor:pointer;font-size:13px;font-family:var(--sans);transition:var(--transition);}
+.hub-tab.active,.hub-tab:hover{color:var(--text);border-bottom-color:var(--accent);}
+.hub-btn-xs{background:var(--surface4);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:var(--sans);white-space:nowrap;}
+.hub-btn-xs:hover,.hub-btn-xs.active{background:var(--border2);}
+.hub-upload-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:32px 20px;text-align:center;cursor:pointer;transition:var(--transition);margin-top:8px;}
+.hub-upload-zone:hover{border-color:var(--accent);background:var(--accent-glow);}
+.hub-info-box{background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px 14px;font-size:13px;color:var(--text-2);line-height:1.6;}
+.hub-info-box code{font-family:var(--mono);font-size:12px;background:var(--surface4);padding:1px 5px;border-radius:3px;}
+.hub-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.hub-modal{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:22px 24px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;}
+.hub-modal-hdr{display:flex;justify-content:space-between;align-items:center;}
+.hub-ev-wrap{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+.hub-ev-thumb{width:36px;height:36px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid var(--border2);}
+.hub-ev-add{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--surface4);border:1px dashed var(--border2);border-radius:4px;cursor:pointer;font-size:16px;color:var(--text-3);}
+.hub-inv-badge{display:inline-block;background:rgba(0,217,126,.15);color:var(--green);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;cursor:pointer;text-align:center;line-height:1.4;}
+.hub-status-sel{background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:3px 6px;font-size:12px;font-family:var(--sans);cursor:pointer;}
+.hub-m6-summary-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.hub-m6-col{background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:14px;font-size:13px;display:flex;flex-direction:column;gap:4px;}
+.hub-m6-col-title{font-weight:600;margin-bottom:6px;}
+.hub-m6-filter{background:var(--surface3);border:1px solid var(--border2);color:var(--text-3);border-radius:4px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:var(--sans);}
+.hub-m6-filter.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.hub-pl-banner{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.hub-pl-stat{background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:14px;text-align:center;}
+.hub-pl-val{font-size:20px;font-weight:700;font-family:var(--mono);}
+.hub-pl-lbl{font-size:11px;color:var(--text-3);margin-top:4px;}
+@media(max-width:900px){.hub-kpi-banner{grid-template-columns:repeat(3,1fr);}.hub-scoreboard{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:600px){.hub-kpi-banner{grid-template-columns:repeat(2,1fr);}.hub-scoreboard{grid-template-columns:repeat(2,1fr);}.hub-m6-summary-cols{grid-template-columns:1fr;}.hub-pl-banner{grid-template-columns:1fr;}}
+</style>
+
+<!-- ═══════════════════════════════════════
+     BUSINESS HEALTH HUB  ·  PAGE
+═══════════════════════════════════════ -->
+<div class="page" id="page-hub">
+
+  <!-- Page Header -->
+  <div class="page-header" style="margin-bottom:0;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div class="page-header-label">Intelligence</div>
+      <div class="page-header-title">Business Health Hub</div>
+      <div class="page-header-sub">Cross-reference 14 Amazon Seller Central reports to surface reimbursement opportunities, manage recovery cases &amp; monitor business health.</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
+      <span style="color:var(--text-3);font-size:13px;">Date range</span>
+      <input type="date" id="hubDateStart" style="background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);padding:5px 10px;font-family:var(--mono);font-size:13px;">
+      <span style="color:var(--text-3);">to</span>
+      <input type="date" id="hubDateEnd" style="background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);padding:5px 10px;font-family:var(--mono);font-size:13px;">
+      <button onclick="hub_refreshAll()" style="background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);padding:6px 14px;cursor:pointer;font-size:13px;font-family:var(--sans);">↻ Refresh All</button>
+    </div>
+  </div>
+
+  <!-- KPI Banner -->
+  <div class="hub-kpi-banner">
+    <div class="hub-kpi-tile">
+      <div class="hub-kpi-label">£ Total Identified</div>
+      <div class="hub-kpi-value" id="hubKpi1">£0.00</div>
+    </div>
+    <div class="hub-kpi-tile">
+      <div class="hub-kpi-label">£ Cases Opened</div>
+      <div class="hub-kpi-value" id="hubKpi2">£0.00</div>
+    </div>
+    <div class="hub-kpi-tile">
+      <div class="hub-kpi-label">£ Recovered</div>
+      <div class="hub-kpi-value" id="hubKpi3">£0.00</div>
+    </div>
+    <div class="hub-kpi-tile">
+      <div class="hub-kpi-label">Win Rate</div>
+      <div class="hub-kpi-value" id="hubKpi4">0%</div>
+    </div>
+    <div class="hub-kpi-tile">
+      <div class="hub-kpi-label">£ Fee Risk</div>
+      <div class="hub-kpi-value" id="hubKpi5">£0.00</div>
+    </div>
+  </div>
+
+  <!-- Reports Manager -->
+  <div class="hub-module" id="hubModuleReports">
+    <div class="hub-module-hdr" onclick="hub_toggleModule('reports')">
+      <div class="hub-module-hdr-left">
+        <span style="font-size:16px;flex-shrink:0;">⚙</span>
+        <span class="hub-module-title">Reports Manager</span>
+        <span class="hub-module-summary" id="hubReportsSummary">0 of 14 reports loaded</span>
+      </div>
+      <span class="hub-module-chevron" id="hubChevronReports">▾</span>
+    </div>
+    <div class="hub-module-body" id="hubBodyReports">
+      <p style="color:var(--text-3);font-size:13px;margin:14px 0 16px;">Upload each report from Amazon Seller Central. Data is stored locally in your browser and persists between sessions.</p>
+      <div class="hub-report-grid" id="hubReportGrid"></div>
+    </div>
+  </div>
+
+  <!-- Module 1 -->
+  <div class="hub-module" id="hubModuleM1">
+    <div class="hub-module-hdr" onclick="hub_toggleModule('m1')">
+      <div class="hub-module-hdr-left">
+        <span class="hub-module-num" style="background:#4d8ef5;">1</span>
+        <span class="hub-module-title">Missing Returns</span>
+        <span class="hub-module-summary" id="hubSummaryM1">Upload returns, adjustments &amp; reimbursements to enable</span>
+      </div>
+      <span class="hub-module-chevron" id="hubChevronM1">▸</span>
+    </div>
+    <div class="hub-module-body" id="hubBodyM1" style="display:none;">
+      <div id="hubContentM1"><div class="hub-empty-state">Upload <strong>FBA Customer Returns</strong>, <strong>Inventory Adjustments</strong> and <strong>FBA Reimbursements</strong> reports to enable this module.</div></div>
+    </div>
+  </div>
+
+  <!-- Module 2 -->
+  <div class="hub-module" id="hubModuleM2">
+    <div class="hub-module-hdr" onclick="hub_toggleModule('m2')">
+      <div class="hub-module-hdr-left">
+        <span class="hub-module-num" style="background:#f0a500;">2</span>
+        <span class="hub-module-title">Lost &amp; Damaged Inventory</span>
+        <span class="hub-module-summary" id="hubSummaryM2">Upload adjustments &amp; reimbursements to enable</span>
+      </div>
+      <span class="hub-module-chevron" id="hubChevronM2">▸</span>
+    </div>
+    <div class="hub-module-body" id="hubBodyM2" style="display:none;">
+      <div id="hubContentM2"><div class="hub-empty-state">Upload <strong>Inventory Adjustments</strong> and <strong>FBA Reimbursements</strong> reports to enable this module.</div></div>
+    </div>
+  </div>
+
+  <!-- Module 3 -->
+  <div class="hub-module" id="hubModuleM3">
+    <div class="hub-module-hdr" onclick="hub_toggleModule('m3')">
+      <div class="hub-module-hdr-left">
+        <span class="hub-module-num" style="background:#9b6dff;">3</span>
+        <span class="hub-module-title">Shipment Discrepancies</span>
+        <span class="hub-module-summary" id="hubSummaryM3">Upload shipment reconciliation to enable</span>
+      </div>
+      <span class="hub-module-chevron" id="hubChevronM3">▸</span>
+    </div>
+    <div class="hub-module-body" id="hubBodyM3" style="display:none;">
+      <div id="hubContentM3"><div class="hub-empty-state">Upload <strong>FBA Shipment Reconciliation</strong> report to enable this module.</div></div>
+    </div>
+  </div>
+
+  <!-- Module 4 -->
+  <div class="hub-module" id="hubModuleM4">
+    <div class="hub-module-hdr" onclick="hub_toggleModule('m4')">
+      <div class="hub-module-hdr-left">
+        <span class="hub-module-num" style="background:#26c6da;">4</span>
+        <span class="hub-module-title">Undervalued Reimbursements</span>
+        <span class="hub-module-summary" id="hubSummaryM4">Upload reimbursements &amp; COGS to enable</span>
+      </div>
+      <span class="hub-module-chevron" id="hubChevronM4">▸</span>
+    </div>
+    <div class="hub-module-body" id="hubBodyM4" style="display:none;">
+      <div id="hubContentM4"><div class="hub-empty-state">Upload <strong>FBA Reimbursements</strong> report and add <strong>Purchases COGS</strong> data to enable this module.</div></div>
+    </div>
+  </div>
+
+  <!-- Module 5 -->
+  <div class="hub-module" id="hubModuleM5">
+    <div class="hub-module-hdr" onclick="hub_toggleModule('m5')">
+      <div class="hub-module-hdr-left">
+        <span class="hub-module-num" style="background:#f03b50;">5</span>
+        <span class="hub-module-title">Fee Overcharges</span>
+        <span class="hub-module-summary" id="hubSummaryM5">Upload fee preview &amp; storage fees to enable</span>
+      </div>
+      <span class="hub-module-chevron" id="hubChevronM5">▸</span>
+    </div>
+    <div class="hub-module-body" id="hubBodyM5" style="display:none;">
+      <div id="hubContentM5"><div class="hub-empty-state">Upload <strong>Fee Payments Preview</strong>, <strong>Monthly Storage Fees</strong> and <strong>Sales &amp; Traffic</strong> reports to enable this module.</div></div>
+    </div>
+  </div>
+
+  <!-- Module 6 -->
+  <div class="hub-module" id="hubModuleM6">
+    <div class="hub-module-hdr" onclick="hub_toggleModule('m6')">
+      <div class="hub-module-hdr-left">
+        <span class="hub-module-num" style="background:#00d97e;color:#000;">6</span>
+        <span class="hub-module-title">Stock Situation</span>
+        <span class="hub-module-summary" id="hubSummaryM6">Upload inventory reports to enable</span>
+      </div>
+      <span class="hub-module-chevron" id="hubChevronM6">▸</span>
+    </div>
+    <div class="hub-module-body" id="hubBodyM6" style="display:none;">
+      <div id="hubContentM6"><div class="hub-empty-state">Upload <strong>Manage FBA Inventory</strong>, <strong>Inventory Ledger Summary</strong>, <strong>Reserved Inventory</strong> and <strong>Removal Order Detail</strong> reports to enable this module.</div></div>
+    </div>
+  </div>
+
+  <!-- Module 7 -->
+  <div class="hub-module" id="hubModuleM7">
+    <div class="hub-module-hdr" onclick="hub_toggleModule('m7')">
+      <div class="hub-module-hdr-left">
+        <span class="hub-module-num" style="background:#f0a500;">7</span>
+        <span class="hub-module-title">Inventory Age &amp; Fee Risk</span>
+        <span class="hub-module-summary" id="hubSummaryM7">Upload inventory age report to enable</span>
+      </div>
+      <span class="hub-module-chevron" id="hubChevronM7">▸</span>
+    </div>
+    <div class="hub-module-body" id="hubBodyM7" style="display:none;">
+      <div id="hubContentM7"><div class="hub-empty-state">Upload <strong>Inventory Age (FBA)</strong> report to enable this module.</div></div>
+    </div>
+  </div>
+
+  <!-- Module 8 -->
+  <div class="hub-module" id="hubModuleM8">
+    <div class="hub-module-hdr" onclick="hub_toggleModule('m8')">
+      <div class="hub-module-hdr-left">
+        <span class="hub-module-num" style="background:#9b6dff;">8</span>
+        <span class="hub-module-title">Refund Rate by ASIN</span>
+        <span class="hub-module-summary" id="hubSummaryM8">Upload sales/traffic &amp; returns to enable</span>
+      </div>
+      <span class="hub-module-chevron" id="hubChevronM8">▸</span>
+    </div>
+    <div class="hub-module-body" id="hubBodyM8" style="display:none;">
+      <div id="hubContentM8"><div class="hub-empty-state">Upload <strong>Sales &amp; Traffic by Child ASIN</strong> and <strong>FBA Customer Returns</strong> reports to enable this module.</div></div>
+    </div>
+  </div>
+
+  <!-- Module 9: Action Queue (expanded by default) -->
+  <div class="hub-module" id="hubModuleM9">
+    <div class="hub-module-hdr" onclick="hub_toggleModule('m9')">
+      <div class="hub-module-hdr-left">
+        <span class="hub-module-num" style="background:#00d97e;color:#000;">9</span>
+        <span class="hub-module-title">Action Queue</span>
+        <span class="hub-module-summary" id="hubSummaryM9">All open opportunities from Modules 1–4</span>
+      </div>
+      <span class="hub-module-chevron" id="hubChevronM9">▾</span>
+    </div>
+    <div class="hub-module-body" id="hubBodyM9">
+      <div class="hub-filter-bar">
+        <select id="hubAqFilterStatus" onchange="hub_renderM9()" class="hub-status-sel"><option value="">All Statuses</option><option>Identified</option><option>Case Opened</option><option>Chasing</option><option>Escalated</option><option>Won</option><option>Lost</option><option>Duplicate</option></select>
+        <select id="hubAqFilterModule" onchange="hub_renderM9()" class="hub-status-sel"><option value="">All Modules</option><option value="1">Module 1</option><option value="2">Module 2</option><option value="3">Module 3</option><option value="4">Module 4</option></select>
+        <input type="number" id="hubAqFilterMin" placeholder="Min £" onchange="hub_renderM9()" style="background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:5px 10px;font-size:13px;width:90px;">
+        <select id="hubAqFilterInvoice" onchange="hub_renderM9()" class="hub-status-sel"><option value="">Invoice: Any</option><option value="yes">Has Invoice</option><option value="no">No Invoice</option></select>
+        <select id="hubAqFilterEvidence" onchange="hub_renderM9()" class="hub-status-sel"><option value="">Evidence: Any</option><option value="yes">Has Evidence</option><option value="no">No Evidence</option></select>
+      </div>
+      <div id="hubAqContent"><div class="hub-empty-state">No opportunities yet — upload reports and run Modules 1–4.</div></div>
+      <div class="hub-scoreboard">
+        <div class="hub-score-tile"><div class="hub-score-val" id="hsTotal">0</div><div class="hub-score-lbl">Total Identified</div></div>
+        <div class="hub-score-tile"><div class="hub-score-val" id="hsOpened">0</div><div class="hub-score-lbl">Cases Opened</div></div>
+        <div class="hub-score-tile"><div class="hub-score-val" id="hsWon">0</div><div class="hub-score-lbl">Won</div></div>
+        <div class="hub-score-tile"><div class="hub-score-val" id="hsWinRate">0%</div><div class="hub-score-lbl">Win Rate</div></div>
+        <div class="hub-score-tile"><div class="hub-score-val" id="hsAvgDays">—</div><div class="hub-score-lbl">Avg Days to Resolution</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module 10 -->
+  <div class="hub-module" id="hubModuleM10">
+    <div class="hub-module-hdr" onclick="hub_toggleModule('m10')">
+      <div class="hub-module-hdr-left">
+        <span class="hub-module-num" style="background:#4d8ef5;">10</span>
+        <span class="hub-module-title">True P&amp;L by ASIN</span>
+        <span class="hub-module-summary" id="hubSummaryM10">Upload sales, settlement &amp; storage to enable</span>
+      </div>
+      <span class="hub-module-chevron" id="hubChevronM10">▸</span>
+    </div>
+    <div class="hub-module-body" id="hubBodyM10" style="display:none;">
+      <div id="hubContentM10"><div class="hub-empty-state">Upload <strong>Sales &amp; Traffic</strong>, <strong>Settlement Report</strong> and <strong>Monthly Storage Fees</strong> reports plus Purchases COGS data to enable this module.</div></div>
+    </div>
+  </div>
+
+  <!-- Module 11 -->
+  <div class="hub-module" id="hubModuleM11">
+    <div class="hub-module-hdr" onclick="hub_toggleModule('m11')">
+      <div class="hub-module-hdr-left">
+        <span class="hub-module-num" style="background:#f03b50;">11</span>
+        <span class="hub-module-title">Invoice Library</span>
+        <span class="hub-module-summary" id="hubSummaryM11">Manage Amazon &amp; manual invoices</span>
+      </div>
+      <span class="hub-module-chevron" id="hubChevronM11">▸</span>
+    </div>
+    <div class="hub-module-body" id="hubBodyM11" style="display:none;">
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;">
+        <button class="hub-tab active" id="hubInvTab1" onclick="hub_setInvTab(1)">📄 Amazon Invoices</button>
+        <button class="hub-tab" id="hubInvTab2" onclick="hub_setInvTab(2)">✏ Manual Invoices</button>
+      </div>
+      <!-- Amazon tab -->
+      <div id="hubInvPanel1">
+        <div class="hub-info-box" style="margin-bottom:16px;"><strong>How to get your Amazon invoices:</strong> Amazon account → Manage Your Data → Request Your Data → Select 'Orders' → Submit → Download emailed ZIP → Open folder: <code>Retail.TransactionalInvoicing</code> → Upload all PDFs here.</div>
+        <div class="hub-upload-zone" onclick="document.getElementById('hubAmazonInvFile').click()">
+          <div style="font-size:28px;margin-bottom:8px;">📄</div>
+          <div style="font-weight:600;margin-bottom:4px;">Upload Amazon Invoice PDFs</div>
+          <div style="color:var(--text-3);font-size:13px;">Select multiple PDF files from your Retail.TransactionalInvoicing folder</div>
+          <input type="file" id="hubAmazonInvFile" accept=".pdf" multiple style="display:none" onchange="hub_onAmazonInvoiceUpload(this)">
+        </div>
+        <div id="hubAmazonInvStats" style="margin-top:12px;font-size:13px;color:var(--text-3);">No invoices loaded.</div>
+        <div id="hubAmazonInvTable" style="margin-top:16px;"></div>
+      </div>
+      <!-- Manual tab -->
+      <div id="hubInvPanel2" style="display:none;">
+        <div style="background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r);padding:14px;margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:13px;color:var(--text-2);">Anthropic API Key (for AI Parse):</span>
+          <input type="password" id="hubAnthropicKey" placeholder="sk-ant-..." onchange="hub_saveAnthropicKey()" style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);padding:5px 10px;font-family:var(--mono);font-size:13px;">
+          <span id="hubAiKeyStatus" style="font-size:12px;color:var(--text-3);">Not set</span>
+        </div>
+        <div class="hub-upload-zone" onclick="document.getElementById('hubManualInvFile').click()">
+          <div style="font-size:28px;margin-bottom:8px;">📎</div>
+          <div style="font-weight:600;margin-bottom:4px;">Upload Invoice Files</div>
+          <div style="color:var(--text-3);font-size:13px;">PDF or image — single or multiple files for bulk processing</div>
+          <input type="file" id="hubManualInvFile" accept=".pdf,image/*" multiple style="display:none" onchange="hub_onManualInvoiceUpload(this)">
+        </div>
+        <div id="hubManualQueue" style="margin-top:16px;display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <strong>Invoice Queue</strong>
+            <div style="display:flex;gap:8px;">
+              <button onclick="hub_parseAllInvoices()" class="hub-btn-xs" style="background:var(--accent);color:#fff;border-color:var(--accent);">⚡ Parse All (AI)</button>
+              <button onclick="hub_saveAllManualInvoices()" class="hub-btn-xs" style="background:var(--green);color:#000;border-color:var(--green);font-weight:600;">Save All</button>
+            </div>
+          </div>
+          <div id="hubManualQueueProgress" style="display:none;margin-bottom:12px;">
+            <div style="background:var(--surface3);border-radius:99px;height:6px;overflow:hidden;"><div id="hubManualQueueBar" style="background:var(--green);height:100%;width:0%;transition:width .3s;"></div></div>
+            <div id="hubManualQueueStatus" style="font-size:12px;color:var(--text-3);margin-top:4px;"></div>
+          </div>
+          <div id="hubManualQueueItems"></div>
+        </div>
+        <div id="hubManualInvTable" style="margin-top:16px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Case Text Modal -->
+  <div class="hub-modal-overlay" id="hubCaseModal" style="display:none;" onclick="if(event.target===this)hub_closeCaseModal()">
+    <div class="hub-modal">
+      <div class="hub-modal-hdr">
+        <strong id="hubCaseModalTitle">Case Text</strong>
+        <button onclick="hub_closeCaseModal()" style="background:none;border:none;color:var(--text-3);font-size:22px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <textarea id="hubCaseModalText" rows="12" style="width:100%;background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);padding:12px;font-family:var(--mono);font-size:13px;resize:vertical;margin-top:12px;line-height:1.6;"></textarea>
+      <button onclick="hub_copyCase()" style="margin-top:10px;background:var(--green);color:#000;border:none;border-radius:var(--r-sm);padding:8px 20px;cursor:pointer;font-weight:600;font-family:var(--sans);">Copy to Clipboard</button>
+    </div>
+  </div>
+
+  <!-- Invoice / Evidence Preview Modal -->
+  <div class="hub-modal-overlay" id="hubInvPreviewModal" style="display:none;" onclick="if(event.target===this)hub_closeInvPreview()">
+    <div class="hub-modal" style="max-width:700px;">
+      <div class="hub-modal-hdr">
+        <strong id="hubInvPreviewTitle">Preview</strong>
+        <button onclick="hub_closeInvPreview()" style="background:none;border:none;color:var(--text-3);font-size:22px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div id="hubInvPreviewContent" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div style="margin-top:40px;border-top:1px solid var(--border);padding-top:24px;padding-bottom:40px;">
+    <div style="font-size:13px;font-weight:600;color:var(--text-2);letter-spacing:.05em;text-transform:uppercase;margin-bottom:16px;">⚙ Settings</div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:20px;max-width:420px;">
+      <div style="font-weight:600;margin-bottom:6px;color:var(--red);">Clear All Hub Data</div>
+      <div style="font-size:13px;color:var(--text-3);margin-bottom:12px;">Permanently deletes all uploaded reports, cases, invoices and settings. Type <strong>CONFIRM</strong> to proceed.</div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="hubClearConfirm" placeholder='Type "CONFIRM"' style="flex:1;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);padding:7px 12px;font-size:13px;font-family:var(--sans);">
+        <button onclick="hub_clearAll()" style="background:var(--red);color:#fff;border:none;border-radius:var(--r-sm);padding:7px 18px;cursor:pointer;font-weight:600;font-size:13px;font-family:var(--sans);">Clear</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
 
 <div class="page" id="page-stalker">
   <div class="page-header" style="margin-bottom:20px;">
@@ -3684,7 +4073,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker', leakage:'Leakage Tracker' };
+  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker', leakage:'Leakage Tracker', hub:'Business Health Hub' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   document.dispatchEvent(new CustomEvent('bimma:pagechange', { detail: name }));
 }
@@ -8370,6 +8759,1530 @@ function leakExportReturns() {
   a.download = 'bimma-returns-claims-' + new Date().toISOString().slice(0,10) + '.tsv';
   a.click();
 }
+</script>
+
+<script>
+// ════════════════════════════════════════
+// BUSINESS HEALTH HUB  ·  hub_ namespace
+// ════════════════════════════════════════
+
+// ── Core Utilities ──────────────────────
+
+function hub_parseCurrency(str) {
+  if (str === null || str === undefined || str === '') return 0;
+  if (typeof str === 'number') return isNaN(str) ? 0 : str;
+  return parseFloat(String(str).replace(/[£$€,\s]/g, '')) || 0;
+}
+
+function hub_formatGBP(n) {
+  if (isNaN(n) || n === null || n === undefined) return '£0.00';
+  const abs = Math.abs(n);
+  const formatted = abs.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (n < 0 ? '-' : '') + '£' + formatted;
+}
+
+function hub_daysBetween(d1, d2) {
+  const a = (d1 instanceof Date) ? d1 : new Date(d1);
+  const b = (d2 instanceof Date) ? d2 : new Date(d2);
+  if (isNaN(a) || isNaN(b)) return 0;
+  return Math.round(Math.abs(b - a) / 86400000);
+}
+
+function hub_parseDate(str) {
+  if (!str) return null;
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function hub_wordOverlap(a, b) {
+  if (!a || !b) return 0;
+  const wa = new Set(a.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+  const wb = new Set(b.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+  let common = 0;
+  wa.forEach(w => { if (wb.has(w)) common++; });
+  return common / Math.max(wa.size, wb.size, 1);
+}
+
+function hub_generateCaseId(module, asin, refId) {
+  return ('m' + module + '_' + (asin || 'noasin') + '_' + (refId || 'noref'))
+    .replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80);
+}
+
+// ── localStorage helpers ─────────────────
+
+function hub_getReport(key) {
+  try {
+    var raw = localStorage.getItem('hub_report_' + key);
+    if (!raw) return null;
+    var obj = JSON.parse(raw);
+    return obj.data || null;
+  } catch(e) { return null; }
+}
+
+function hub_saveReport(key, data, filename) {
+  localStorage.setItem('hub_report_' + key, JSON.stringify({
+    data: data, uploadedAt: new Date().toISOString(), filename: filename
+  }));
+}
+
+function hub_getReportMeta(key) {
+  try {
+    var raw = localStorage.getItem('hub_report_' + key);
+    if (!raw) return null;
+    var obj = JSON.parse(raw);
+    return { uploadedAt: obj.uploadedAt, filename: obj.filename, count: (obj.data || []).length };
+  } catch(e) { return null; }
+}
+
+function hub_getCase(id) {
+  try {
+    return JSON.parse(localStorage.getItem('hub_case_' + id) || 'null') ||
+      { status: 'Identified', notes: '', createdAt: null, resolvedAt: null };
+  } catch(e) { return { status: 'Identified', notes: '', createdAt: null, resolvedAt: null }; }
+}
+
+function hub_saveCase(id, obj) {
+  localStorage.setItem('hub_case_' + id, JSON.stringify(obj));
+}
+
+function hub_getEvidence(id) {
+  try { return JSON.parse(localStorage.getItem('hub_case_evidence_' + id) || '[]'); }
+  catch(e) { return []; }
+}
+
+function hub_saveEvidence(id, arr) {
+  try { localStorage.setItem('hub_case_evidence_' + id, JSON.stringify(arr)); }
+  catch(e) { alert('Evidence storage failed — files may be too large.'); }
+}
+
+function hub_loadSettings() {
+  try { return JSON.parse(localStorage.getItem('hub_settings') || '{}'); }
+  catch(e) { return {}; }
+}
+
+function hub_saveSettings(obj) {
+  localStorage.setItem('hub_settings', JSON.stringify(obj));
+}
+
+function hub_getCogsMap() {
+  var raw = localStorage.getItem('purchases') || localStorage.getItem('bimma_purchases');
+  if (!raw) return {};
+  try {
+    var arr = JSON.parse(raw);
+    var map = {};
+    arr.forEach(function(r) {
+      var asin = (r.asin || r.ASIN || r['ASIN'] || '').toUpperCase();
+      if (!asin) return;
+      var cost = hub_parseCurrency(r.cost_price || r.cogs || r.unit_cost || r.cost || r.unitCost || r.costPrice || r.buyPrice || 0);
+      if (cost > 0) map[asin] = cost;
+    });
+    return map;
+  } catch(e) { return {}; }
+}
+
+function hub_getAnthropicKey() {
+  return (localStorage.getItem('hub_anthropic_key') || '').trim();
+}
+
+// ── CSV / TSV Parser ─────────────────────
+
+function hub_parseFile(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var text = e.target.result;
+        var delim = text.indexOf('\t') !== -1 ? '\t' : ',';
+        var lines = text.split(/\r?\n/);
+        var headerIdx = 0;
+        while (headerIdx < Math.min(5, lines.length) && !lines[headerIdx].trim()) headerIdx++;
+        if (headerIdx >= lines.length) { resolve([]); return; }
+        var rawHeaders = lines[headerIdx].split(delim);
+        var headers = rawHeaders.map(function(h) {
+          return h.trim().replace(/^"|"$/g,'').toLowerCase()
+            .replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+        });
+        var rows = [];
+        for (var i = headerIdx + 1; i < lines.length; i++) {
+          var line = lines[i];
+          if (!line.trim()) continue;
+          var cells = hub_splitCsvLine(line, delim);
+          if (cells.every(function(c){ return !c.trim(); })) continue;
+          var obj = {};
+          headers.forEach(function(h, idx) { obj[h] = (cells[idx] || '').trim().replace(/^"|"$/g,''); });
+          rows.push(obj);
+        }
+        resolve(rows);
+      } catch(err) { reject(err); }
+    };
+    reader.onerror = function() { reject(new Error('File read error')); };
+    reader.readAsText(file, 'UTF-8');
+  });
+}
+
+function hub_splitCsvLine(line, delim) {
+  if (delim === '\t') return line.split('\t');
+  var cells = [], cur = '', inQ = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
+    if (c === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (c === delim && !inQ) { cells.push(cur); cur = ''; }
+    else cur += c;
+  }
+  cells.push(cur);
+  return cells;
+}
+
+// ── Date Range ───────────────────────────
+
+function hub_setDefaultDateRange() {
+  var end = new Date();
+  var start = new Date();
+  start.setDate(start.getDate() - 90);
+  var fmt = function(d) { return d.toISOString().slice(0,10); };
+  var ds = document.getElementById('hubDateStart');
+  var de = document.getElementById('hubDateEnd');
+  if (ds && !ds.value) ds.value = fmt(start);
+  if (de && !de.value) de.value = fmt(end);
+}
+
+function hub_getDateRange() {
+  var ds = document.getElementById('hubDateStart');
+  var de = document.getElementById('hubDateEnd');
+  var start = (ds && ds.value) ? new Date(ds.value) : new Date(Date.now() - 90*86400000);
+  var end = (de && de.value) ? new Date(de.value) : new Date();
+  end.setHours(23,59,59,999);
+  return { start: start, end: end };
+}
+
+// ── Module Toggle ────────────────────────
+
+function hub_toggleModule(id) {
+  var cap = id.charAt(0).toUpperCase() + id.slice(1);
+  var body = document.getElementById('hubBody' + cap);
+  var chev = document.getElementById('hubChevron' + cap);
+  if (!body) return;
+  var hidden = body.style.display === 'none';
+  body.style.display = hidden ? '' : 'none';
+  if (chev) chev.textContent = hidden ? '▾' : '▸';
+  var s = hub_loadSettings();
+  if (!s.collapsed) s.collapsed = {};
+  s.collapsed[id] = !hidden;
+  hub_saveSettings(s);
+}
+
+// ── Reports Manager ──────────────────────
+
+var HUB_REPORTS = [
+  { key:'reimbursements', name:'FBA Reimbursements',          path:'Reports → Fulfillment → Payments → Reimbursements' },
+  { key:'adjustments',    name:'Inventory Adjustments',       path:'Reports → Fulfillment → Inventory → Inventory Adjustments' },
+  { key:'returns',        name:'FBA Customer Returns',        path:'Reports → Fulfillment → Customer Concessions → Returns' },
+  { key:'shipment_recon', name:'FBA Shipment Reconciliation', path:'Reports → Fulfillment → Inventory → Shipment Reconciliation' },
+  { key:'ledger_detail',  name:'Inventory Ledger Detail',     path:'Reports → Fulfillment → Inventory → Inventory Ledger → Detailed View' },
+  { key:'ledger_summary', name:'Inventory Ledger Summary',    path:'Reports → Fulfillment → Inventory → Inventory Ledger → Summary View' },
+  { key:'fba_inventory',  name:'Manage FBA Inventory',        path:'Reports → Fulfillment → Inventory → Manage FBA Inventory' },
+  { key:'inventory_age',  name:'Inventory Age (FBA)',          path:'Reports → Fulfillment → Inventory → Inventory Age' },
+  { key:'reserved',       name:'Reserved Inventory',           path:'Reports → Fulfillment → Inventory → Reserved Inventory' },
+  { key:'storage_fees',   name:'Monthly Storage Fees',        path:'Reports → Fulfillment → Payments → Monthly Storage Fees' },
+  { key:'fee_preview',    name:'Fee Payments Preview',         path:'Reports → Fulfillment → Payments → Fee Previews' },
+  { key:'settlement',     name:'Settlement Report',            path:'Reports → Payments → All Statements → Download' },
+  { key:'sales_traffic',  name:'Sales & Traffic by Child ASIN',path:'Reports → Business Reports → Detail Page Sales and Traffic by Child Item' },
+  { key:'removals',       name:'Removal Order Detail',         path:'Reports → Fulfillment → Removals → Removal Order Detail' }
+];
+
+function hub_renderReportsManager() {
+  var grid = document.getElementById('hubReportGrid');
+  if (!grid) return;
+  var loaded = 0;
+  grid.innerHTML = HUB_REPORTS.map(function(r) {
+    var meta = hub_getReportMeta(r.key);
+    if (meta) loaded++;
+    var ts = meta ? new Date(meta.uploadedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+    var statusIcon = meta
+      ? '<span style="color:var(--green);font-size:16px;" title="Loaded">✓</span>'
+      : '<span style="color:var(--red);font-size:16px;" title="Not loaded">✗</span>';
+    var countStr = meta ? ' · ' + meta.count.toLocaleString() + ' rows · ' + meta.filename : '';
+    return '<div class="hub-report-slot">' +
+      '<div class="hub-report-info">' +
+        '<div style="font-weight:600;font-size:14px;">' + r.name + '</div>' +
+        '<div style="font-size:12px;color:var(--text-3);margin-top:2px;">' + r.path + '</div>' +
+        (meta ? '<div style="font-size:11px;color:var(--text-3);margin-top:3px;">Uploaded ' + ts + countStr + '</div>' : '') +
+      '</div>' +
+      '<div class="hub-report-actions">' +
+        statusIcon +
+        '<label class="hub-upload-btn-sm">' + (meta ? 'Re-upload' : 'Upload') +
+          '<input type="file" accept=".csv,.tsv,.txt" style="display:none" onchange="hub_onReportUpload(\'' + r.key + '\',this)">' +
+        '</label>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  var summary = document.getElementById('hubReportsSummary');
+  if (summary) summary.textContent = loaded + ' of 14 reports loaded';
+
+  var body = document.getElementById('hubBodyReports');
+  var chev = document.getElementById('hubChevronReports');
+  if (loaded === 14) {
+    if (body && body.style.display !== 'none') { body.style.display = 'none'; if (chev) chev.textContent = '▸'; }
+  } else {
+    if (body && body.style.display === 'none') { body.style.display = ''; if (chev) chev.textContent = '▾'; }
+  }
+}
+
+function hub_onReportUpload(key, inputEl) {
+  var file = inputEl.files[0];
+  if (!file) return;
+  hub_parseFile(file).then(function(data) {
+    hub_saveReport(key, data, file.name);
+    hub_renderReportsManager();
+    hub_refreshAll();
+    inputEl.value = '';
+  }).catch(function(err) { alert('Error parsing file: ' + err.message); });
+}
+
+// ── KPI Banner ───────────────────────────
+
+function hub_updateKPI() {
+  var all = (window._hubOpportunities || []);
+  var totalId = 0, totalOpen = 0, totalWon = 0, totalLost = 0;
+  all.forEach(function(o) {
+    var v = o.value || 0;
+    var c = hub_getCase(o.id);
+    totalId += v;
+    if (c.status === 'Case Opened' || c.status === 'Chasing' || c.status === 'Escalated') totalOpen += v;
+    if (c.status === 'Won') totalWon += v;
+    if (c.status === 'Lost') totalLost += v;
+  });
+  var winRate = (totalWon + totalLost) > 0 ? Math.round(totalWon / (totalWon + totalLost) * 100) : 0;
+  var feeRisk = hub_calcFeeRisk();
+  var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+  set('hubKpi1', hub_formatGBP(totalId));
+  set('hubKpi2', hub_formatGBP(totalOpen));
+  set('hubKpi3', hub_formatGBP(totalWon));
+  set('hubKpi4', winRate + '%');
+  set('hubKpi5', hub_formatGBP(feeRisk));
+}
+
+function hub_calcFeeRisk() {
+  var ageData = hub_getReport('inventory_age');
+  if (!ageData) return 0;
+  var risk = 0;
+  ageData.forEach(function(r) {
+    var b2 = parseInt(r.inv_age_181_to_270_days || r['inv_age_181-270'] || r.aged_181_270 || 0);
+    var b3 = parseInt(r.inv_age_271_to_365_days || r['inv_age_271-365'] || r.aged_271_365 || 0);
+    var b4 = parseInt(r.inv_age_365_plus_days  || r['inv_age_365+']   || r.aged_365_plus || 0);
+    risk += (b2 + b3 + b4) * 0.30;
+  });
+  return risk;
+}
+
+// ── Module 1: Missing Returns ────────────
+
+function hub_runM1() {
+  var returns = hub_getReport('returns');
+  var adjustments = hub_getReport('adjustments');
+  var reimbursements = hub_getReport('reimbursements');
+  var cogs = hub_getCogsMap();
+  var settings = hub_loadSettings();
+  var manualValues = settings.manual_values || {};
+  if (!returns) return [];
+
+  var now = new Date();
+  var reimbMap = {};
+  if (reimbursements) {
+    reimbursements.forEach(function(r) {
+      var key = (r.order_id || r.orderId || r.original_order_id || '') + '|' + (r.asin || r.ASIN || '').toUpperCase();
+      if (!reimbMap[key]) reimbMap[key] = [];
+      reimbMap[key].push(r);
+    });
+  }
+
+  var adjByAsin = {};
+  if (adjustments) {
+    adjustments.forEach(function(r) {
+      var asin = (r.asin || r.fnsku || r.ASIN || '').toUpperCase();
+      if (!asin) return;
+      if (!adjByAsin[asin]) adjByAsin[asin] = [];
+      adjByAsin[asin].push(r);
+    });
+  }
+
+  var opps = [];
+  returns.forEach(function(row) {
+    var asin = (row.asin || row.ASIN || '').toUpperCase();
+    var orderId = row.order_id || row.orderId || row.order_number || '';
+    var dateStr = row.return_date || row.date || row.returnDate || row.returned_date || '';
+    var returnDate = hub_parseDate(dateStr);
+    if (!returnDate) return;
+    var daysSince = hub_daysBetween(returnDate, now);
+    if (daysSince < 30) return;
+
+    var rKey = orderId + '|' + asin;
+    if (reimbMap[rKey] && reimbMap[rKey].length > 0) return;
+
+    var adjList = adjByAsin[asin] || [];
+    var hasAdj = adjList.some(function(a) {
+      var adjDate = hub_parseDate(a.date || a.adjusted_date || a.transaction_date || '');
+      if (!adjDate) return false;
+      var diff = hub_daysBetween(returnDate, adjDate);
+      var qty = parseInt(a.quantity || a.qty || a.transferred_quantity || 0);
+      return diff <= 45 && qty > 0;
+    });
+    if (hasAdj) return;
+
+    var id = hub_generateCaseId(1, asin, orderId || dateStr);
+    var value = manualValues[id] || 0;
+    if (!value && reimbursements) {
+      var asinReimbs = reimbursements.filter(function(r){ return (r.asin||'').toUpperCase() === asin && hub_parseCurrency(r.amount_total||r.amount||r.reimbursement_total||0) > 0; });
+      if (asinReimbs.length > 0) {
+        value = asinReimbs.reduce(function(s,r){ return s + hub_parseCurrency(r.amount_total||r.amount||r.reimbursement_total||0); }, 0) / asinReimbs.length;
+      }
+    }
+    if (!value && cogs[asin]) value = cogs[asin];
+
+    opps.push({
+      id: id, module: 1, asin: asin, orderId: orderId, date: dateStr,
+      returnReason: row.return_reason || row.reason || '',
+      disposition: row.disposition || '',
+      daysSince: daysSince, value: value,
+      urgency: daysSince > 45 ? 'urgent' : 'warning',
+      needsManualValue: !value
+    });
+  });
+  return opps.sort(function(a,b){ return b.value - a.value; });
+}
+
+function hub_renderM1() {
+  var content = document.getElementById('hubContentM1');
+  var summary = document.getElementById('hubSummaryM1');
+  if (!content) return;
+  if (!hub_getReport('returns')) {
+    content.innerHTML = '<div class="hub-empty-state">Upload <strong>FBA Customer Returns</strong>, <strong>Inventory Adjustments</strong> and <strong>FBA Reimbursements</strong> reports to enable this module.</div>';
+    if (summary) summary.textContent = 'Upload returns, adjustments & reimbursements to enable';
+    return;
+  }
+  var opps = hub_runM1();
+  var urgent = opps.filter(function(o){ return o.urgency === 'urgent'; }).length;
+  var total = opps.reduce(function(s,o){ return s + (o.value||0); }, 0);
+  if (summary) summary.textContent = opps.length + ' missing · ' + hub_formatGBP(total) + ' · ' + urgent + ' urgent';
+  if (!opps.length) { content.innerHTML = '<div class="hub-empty-state" style="color:var(--green);">✓ No missing returns detected in the selected date range.</div>'; return; }
+  var rows = opps.map(function(o) {
+    var urgStyle = o.daysSince > 45 ? 'color:var(--red);' : 'color:var(--amber);';
+    var urgLabel = o.daysSince > 45 ? ' ⚠ URGENT' : ' ⚠';
+    var valDisplay = o.needsManualValue
+      ? '<input type="number" placeholder="Enter £" style="width:80px;background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:2px 6px;font-size:12px;" onchange="hub_setOpportunityValue(\'' + o.id + '\',this.value)">'
+      : hub_formatGBP(o.value);
+    return '<tr><td><code>' + o.asin + '</code></td>' +
+      '<td><code style="font-size:11px;">' + (o.orderId||'—') + '</code></td>' +
+      '<td>' + o.date + '</td><td>' + (o.returnReason||'—') + '</td><td>' + (o.disposition||'—') + '</td>' +
+      '<td style="' + urgStyle + 'font-weight:600;">' + o.daysSince + 'd' + urgLabel + '</td>' +
+      '<td style="text-align:right;">' + valDisplay + '</td>' +
+      '<td>' + hub_statusPill(hub_getCase(o.id).status) + '</td>' +
+      '<td><button class="hub-btn-xs" onclick="hub_openQueue(\'' + o.id + '\')">→ Queue</button></td></tr>';
+  }).join('');
+  content.innerHTML = '<div class="hub-table-wrap"><table class="hub-table" id="hubTableM1"><thead><tr><th>ASIN</th><th>Order ID</th><th>Return Date</th><th>Return Reason</th><th>Disposition</th><th>Days Out</th><th>Est. Value £</th><th>Status</th><th>Action</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  hub_initSortableTable('hubTableM1');
+}
+
+// ── Module 2: Lost & Damaged ─────────────
+
+function hub_runM2() {
+  var adjustments = hub_getReport('adjustments');
+  var reimbursements = hub_getReport('reimbursements');
+  var cogs = hub_getCogsMap();
+  if (!adjustments) return [];
+  var lossKeys = ['lost','damaged','disposed','destroyed','warehouse_damaged','warehouse_lost','misplaced'];
+
+  var reimbByAsin = {};
+  if (reimbursements) {
+    reimbursements.forEach(function(r) {
+      var asin = (r.asin||r.ASIN||'').toUpperCase();
+      if (!reimbByAsin[asin]) reimbByAsin[asin] = [];
+      reimbByAsin[asin].push(r);
+    });
+  }
+
+  var opps = [];
+  adjustments.forEach(function(row) {
+    var reason = (row.reason||row.disposition||row.event_type||row.transaction_type||row.adjustment_type||'').toLowerCase();
+    if (!lossKeys.some(function(lr){ return reason.indexOf(lr) !== -1; })) return;
+    var asin = (row.asin||row.fnsku||row.ASIN||'').toUpperCase();
+    if (!asin) return;
+    var qty = Math.abs(parseInt(row.quantity||row.qty||row.transferred_quantity||row.units||1)||1);
+    var dateStr = row.date||row.adjusted_date||row.transaction_date||row.adjustment_date||'';
+    var adjDate = hub_parseDate(dateStr);
+    var cogsVal = cogs[asin] || 0;
+    var totalOwed = cogsVal * qty;
+    var reimbTotal = 0;
+    (reimbByAsin[asin]||[]).forEach(function(r) {
+      var rd = hub_parseDate(r.approval_date||r.date||'');
+      if (!rd || !adjDate || hub_daysBetween(adjDate, rd) > 60) return;
+      var amt = hub_parseCurrency(r.amount_total||r.amount||r.reimbursement_total||0);
+      if (amt > 0) reimbTotal += amt;
+    });
+    var shortfall = totalOwed - reimbTotal;
+    if (reimbTotal > 0 && shortfall <= 0.01) return;
+    var id = hub_generateCaseId(2, asin, dateStr.slice(0,10) + '_' + reason.replace(/\s+/g,'').slice(0,12));
+    opps.push({
+      id:id, module:2, asin:asin, date:dateStr, qty:qty, reason:row.reason||reason,
+      unitValue:cogsVal, totalOwed:totalOwed, reimbursed:reimbTotal,
+      shortfall:Math.max(0,shortfall), value:Math.max(0,shortfall)
+    });
+  });
+  return opps.sort(function(a,b){ return b.shortfall - a.shortfall; });
+}
+
+function hub_renderM2() {
+  var content = document.getElementById('hubContentM2');
+  var summary = document.getElementById('hubSummaryM2');
+  if (!content) return;
+  if (!hub_getReport('adjustments')) {
+    content.innerHTML = '<div class="hub-empty-state">Upload <strong>Inventory Adjustments</strong> and <strong>FBA Reimbursements</strong> reports to enable this module.</div>';
+    if (summary) summary.textContent = 'Upload adjustments & reimbursements to enable';
+    return;
+  }
+  var opps = hub_runM2();
+  var total = opps.reduce(function(s,o){ return s+(o.shortfall||0); }, 0);
+  if (summary) summary.textContent = opps.length + ' unreimbursed · ' + hub_formatGBP(total) + ' owed';
+  if (!opps.length) { content.innerHTML = '<div class="hub-empty-state" style="color:var(--green);">✓ No unreimbursed lost/damaged adjustments found.</div>'; return; }
+  var rows = opps.map(function(o) {
+    return '<tr><td><code>' + o.asin + '</code></td><td>' + o.date + '</td><td>' + o.qty + '</td><td>' + o.reason + '</td>' +
+      '<td style="text-align:right;">' + hub_formatGBP(o.unitValue) + '</td>' +
+      '<td style="text-align:right;">' + hub_formatGBP(o.totalOwed) + '</td>' +
+      '<td style="text-align:right;">' + hub_formatGBP(o.reimbursed) + '</td>' +
+      '<td style="text-align:right;color:var(--red);font-weight:600;">' + hub_formatGBP(o.shortfall) + '</td>' +
+      '<td>' + hub_statusPill(hub_getCase(o.id).status) + '</td>' +
+      '<td><button class="hub-btn-xs" onclick="hub_openQueue(\'' + o.id + '\')">→ Queue</button></td></tr>';
+  }).join('');
+  content.innerHTML = '<div class="hub-table-wrap"><table class="hub-table" id="hubTableM2"><thead><tr><th>ASIN</th><th>Date</th><th>Qty</th><th>Reason Code</th><th>Unit Value £</th><th>Total Owed £</th><th>Reimbursed £</th><th>Shortfall £</th><th>Status</th><th>Action</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  hub_initSortableTable('hubTableM2');
+}
+
+// ── Module 3: Shipment Discrepancies ─────
+
+function hub_runM3() {
+  var shipment = hub_getReport('shipment_recon');
+  var cogs = hub_getCogsMap();
+  if (!shipment) return [];
+  var now = new Date();
+  var opps = [];
+  shipment.forEach(function(row) {
+    var sent = parseInt(row.shipped_quantity||row.units_shipped||row.quantity_shipped||row.sent||row.shipment_quantity||0);
+    var received = parseInt(row.received_quantity||row.units_received||row.quantity_received||row.received||sent);
+    var disc = sent - received;
+    if (disc <= 0) return;
+    var asin = (row.asin||row.ASIN||row.merchant_sku||'').toUpperCase();
+    var shipId = row.shipment_id||row.fba_shipment_id||row.shipment_name||row.reference_id||'';
+    var dateStr = row.shipped_date||row.date||row.shipment_date||row.created_date||'';
+    var d = hub_parseDate(dateStr);
+    var daysSince = d ? hub_daysBetween(d, now) : 0;
+    var unitVal = cogs[asin] || 0;
+    var value = disc * unitVal;
+    var urgency = daysSince > 60 ? 'urgent' : daysSince > 45 ? 'warning' : 'ok';
+    var id = hub_generateCaseId(3, asin, shipId||dateStr.slice(0,10));
+    opps.push({ id:id, module:3, asin:asin, shipmentId:shipId, date:dateStr, sent:sent, received:received, discrepancy:disc, value:value, daysSince:daysSince, urgency:urgency });
+  });
+  return opps.sort(function(a,b){ return b.value - a.value; });
+}
+
+function hub_renderM3() {
+  var content = document.getElementById('hubContentM3');
+  var summary = document.getElementById('hubSummaryM3');
+  if (!content) return;
+  if (!hub_getReport('shipment_recon')) {
+    content.innerHTML = '<div class="hub-empty-state">Upload <strong>FBA Shipment Reconciliation</strong> report to enable this module.</div>';
+    if (summary) summary.textContent = 'Upload shipment reconciliation to enable';
+    return;
+  }
+  var opps = hub_runM3();
+  var urgent = opps.filter(function(o){ return o.urgency==='urgent'; }).length;
+  var total = opps.reduce(function(s,o){ return s+(o.value||0); }, 0);
+  if (summary) summary.textContent = opps.length + ' discrepancies · ' + hub_formatGBP(total) + ' · ' + urgent + ' urgent';
+  if (!opps.length) { content.innerHTML = '<div class="hub-empty-state" style="color:var(--green);">✓ No shipment discrepancies found.</div>'; return; }
+  var rows = opps.map(function(o) {
+    var urgStyle = o.urgency==='urgent' ? 'color:var(--red);font-weight:600;' : o.urgency==='warning' ? 'color:var(--amber);' : '';
+    var urgLabel = o.urgency==='urgent' ? ' ⚠' : '';
+    return '<tr><td><code style="font-size:11px;">' + (o.shipmentId||'—') + '</code></td><td>' + o.date + '</td>' +
+      '<td><code>' + (o.asin||'—') + '</code></td>' +
+      '<td style="text-align:right;">' + o.sent + '</td><td style="text-align:right;">' + o.received + '</td>' +
+      '<td style="text-align:right;color:var(--red);font-weight:600;">' + o.discrepancy + '</td>' +
+      '<td style="text-align:right;">' + hub_formatGBP(o.value) + '</td>' +
+      '<td style="' + urgStyle + '">' + o.daysSince + 'd' + urgLabel + '</td>' +
+      '<td>' + hub_statusPill(hub_getCase(o.id).status) + '</td>' +
+      '<td><button class="hub-btn-xs" onclick="hub_openQueue(\'' + o.id + '\')">→ Queue</button></td></tr>';
+  }).join('');
+  content.innerHTML = '<div class="hub-table-wrap"><table class="hub-table" id="hubTableM3"><thead><tr><th>Shipment ID</th><th>Date</th><th>ASIN</th><th>Units Sent</th><th>Units Rec\'d</th><th>Discrepancy</th><th>£ Value</th><th>Days Since</th><th>Status</th><th>Action</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  hub_initSortableTable('hubTableM3');
+}
+
+// ── Module 4: Undervalued Reimbursements ─
+
+function hub_runM4() {
+  var reimbursements = hub_getReport('reimbursements');
+  var cogs = hub_getCogsMap();
+  if (!reimbursements || !Object.keys(cogs).length) return [];
+  var opps = [];
+  reimbursements.forEach(function(row) {
+    var asin = (row.asin||row.ASIN||'').toUpperCase();
+    if (!asin || !cogs[asin]) return;
+    var cogsVal = cogs[asin];
+    var amazonPaid = hub_parseCurrency(row.amount_total||row.amount||row.reimbursement_total||row.quantity_reimbursed_cash||0);
+    var qty = Math.max(1, parseInt(row.quantity||row.qty||row.quantity_reimbursed_inventory||1)||1);
+    var owedTotal = cogsVal * qty;
+    var shortfall = owedTotal - amazonPaid;
+    if (shortfall <= 0.50) return;
+    var dateStr = row.approval_date||row.date||row.reimbursement_date||'';
+    var id = hub_generateCaseId(4, asin, dateStr.slice(0,10) + '_' + String(amazonPaid).replace('.','_'));
+    opps.push({ id:id, module:4, asin:asin, date:dateStr, amazonPaid:amazonPaid, cogsPerUnit:cogsVal, qty:qty, shortfall:shortfall, value:shortfall, reason:row.reason||row.reimb_type||row.reimbursement_type||'' });
+  });
+  return opps.sort(function(a,b){ return b.shortfall - a.shortfall; });
+}
+
+function hub_renderM4() {
+  var content = document.getElementById('hubContentM4');
+  var summary = document.getElementById('hubSummaryM4');
+  if (!content) return;
+  if (!hub_getReport('reimbursements')) {
+    content.innerHTML = '<div class="hub-empty-state">Upload <strong>FBA Reimbursements</strong> report and Purchases COGS data to enable this module.</div>';
+    if (summary) summary.textContent = 'Upload reimbursements & COGS to enable';
+    return;
+  }
+  var opps = hub_runM4();
+  var total = opps.reduce(function(s,o){ return s+(o.shortfall||0); }, 0);
+  if (summary) summary.textContent = opps.length + ' undervalued · ' + hub_formatGBP(total) + ' shortfall';
+  if (!opps.length) { content.innerHTML = '<div class="hub-empty-state" style="color:var(--green);">✓ No undervalued reimbursements found (or COGS data not available for these ASINs).</div>'; return; }
+  var rows = opps.map(function(o) {
+    return '<tr><td><code>' + o.asin + '</code></td><td>' + o.date + '</td>' +
+      '<td style="text-align:right;">' + hub_formatGBP(o.amazonPaid) + '</td>' +
+      '<td style="text-align:right;">' + hub_formatGBP(o.cogsPerUnit * o.qty) + '</td>' +
+      '<td style="text-align:right;color:var(--red);font-weight:600;">' + hub_formatGBP(o.shortfall) + '</td>' +
+      '<td>' + (o.reason||'—') + '</td>' +
+      '<td>' + hub_statusPill(hub_getCase(o.id).status) + '</td>' +
+      '<td><button class="hub-btn-xs" onclick="hub_openQueue(\'' + o.id + '\')">→ Queue</button></td></tr>';
+  }).join('');
+  content.innerHTML = '<div class="hub-table-wrap"><table class="hub-table" id="hubTableM4"><thead><tr><th>ASIN</th><th>Date</th><th>Amazon Paid £</th><th>My COGS £</th><th>Shortfall £</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  hub_initSortableTable('hubTableM4');
+}
+
+// ── Module 5: Fee Overcharges ────────────
+
+var _hub_m5_tab = 1;
+function hub_setM5Tab(n) {
+  _hub_m5_tab = n;
+  var t1 = document.getElementById('hubM5Tab1'), t2 = document.getElementById('hubM5Tab2');
+  var p1 = document.getElementById('hubM5Panel1'), p2 = document.getElementById('hubM5Panel2');
+  if (t1) t1.classList.toggle('active', n===1); if (t2) t2.classList.toggle('active', n===2);
+  if (p1) p1.style.display = n===1?'':'none'; if (p2) p2.style.display = n===2?'':'none';
+}
+
+function hub_renderM5() {
+  var content = document.getElementById('hubContentM5');
+  var summary = document.getElementById('hubSummaryM5');
+  if (!content) return;
+  var feePreview = hub_getReport('fee_preview');
+  var storageFees = hub_getReport('storage_fees');
+  var salesTraffic = hub_getReport('sales_traffic');
+  if (!feePreview && !storageFees) {
+    content.innerHTML = '<div class="hub-empty-state">Upload <strong>Fee Payments Preview</strong> and/or <strong>Monthly Storage Fees</strong> reports to enable this module.</div>';
+    if (summary) summary.textContent = 'Upload fee preview & storage fees to enable';
+    return;
+  }
+  var sizeFlags = [];
+  if (feePreview) {
+    feePreview.forEach(function(r) {
+      var asin = (r.asin||r.ASIN||'').toUpperCase();
+      var salePrice = hub_parseCurrency(r.price||r.sale_price||r.your_price||r.listed_price||0);
+      var fee = hub_parseCurrency(r.estimated_fee_total||r.fulfillment_fee||r.fba_fee||r.fee_total||r.total_fee||0);
+      if (!salePrice || !fee || fee <= 0) return;
+      var pct = fee / salePrice * 100;
+      if (pct > 35) sizeFlags.push({ asin:asin, salePrice:salePrice, fee:fee, pct:pct.toFixed(1) });
+    });
+  }
+  var storageFlags = [];
+  if (storageFees && salesTraffic) {
+    var salesMap = {};
+    salesTraffic.forEach(function(r) {
+      var asin = (r.asin||r.child_asin||r.ASIN||'').toUpperCase();
+      var units = parseInt(r.units_ordered||r.units_sold||r.quantity||0);
+      salesMap[asin] = (salesMap[asin]||0) + units;
+    });
+    storageFees.forEach(function(r) {
+      var asin = (r.asin||r.ASIN||'').toUpperCase();
+      var storeCost = hub_parseCurrency(r.estimated_monthly_storage_fee||r.storage_fee||r.monthly_storage_fee||r.fee||0);
+      if (!storeCost) return;
+      var unitsSold = salesMap[asin] || 0;
+      var cPerUnit = unitsSold > 0 ? storeCost / unitsSold : storeCost;
+      if (cPerUnit > 1.00) storageFlags.push({ asin:asin, storeCost:storeCost, unitsSold:unitsSold, costPerUnit:cPerUnit });
+    });
+  }
+  if (summary) summary.textContent = sizeFlags.length + ' fee flags · ' + storageFlags.length + ' storage inefficiencies';
+  var p1html = !feePreview ? '<div class="hub-empty-state">Upload Fee Payments Preview to enable size tier check.</div>' :
+    !sizeFlags.length ? '<div class="hub-empty-state" style="color:var(--green);">✓ No size tier fee overcharges detected (threshold: &gt;35%).</div>' :
+    '<div class="hub-table-wrap"><table class="hub-table" id="hubTableM5a"><thead><tr><th>ASIN</th><th>Sale Price £</th><th>Fee £</th><th>Fee %</th><th>Flag</th></tr></thead><tbody>' +
+    sizeFlags.map(function(r){ return '<tr><td><code>'+r.asin+'</code></td><td style="text-align:right;">'+hub_formatGBP(r.salePrice)+'</td><td style="text-align:right;">'+hub_formatGBP(r.fee)+'</td><td style="text-align:right;color:var(--red);font-weight:600;">'+r.pct+'%</td><td><span style="color:var(--red);">⚠ Fee &gt;35%</span></td></tr>'; }).join('') +
+    '</tbody></table></div>';
+  var p2html = !storageFees ? '<div class="hub-empty-state">Upload Monthly Storage Fees to enable storage efficiency check.</div>' :
+    !salesTraffic ? '<div class="hub-empty-state">Also upload Sales & Traffic report to calculate storage per unit sold.</div>' :
+    !storageFlags.length ? '<div class="hub-empty-state" style="color:var(--green);">✓ No storage inefficiencies detected (threshold: &gt;£1.00/unit sold).</div>' :
+    '<div class="hub-table-wrap"><table class="hub-table" id="hubTableM5b"><thead><tr><th>ASIN</th><th>Monthly Storage £</th><th>Units Sold</th><th>Storage/Unit Sold £</th><th>Flag</th></tr></thead><tbody>' +
+    storageFlags.map(function(r){ return '<tr><td><code>'+r.asin+'</code></td><td style="text-align:right;">'+hub_formatGBP(r.storeCost)+'</td><td style="text-align:right;">'+r.unitsSold+'</td><td style="text-align:right;color:var(--red);font-weight:600;">'+hub_formatGBP(r.costPerUnit)+'</td><td><span style="color:var(--red);">⚠ High storage cost</span></td></tr>'; }).join('') +
+    '</tbody></table></div>';
+  content.innerHTML = '<div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;">' +
+    '<button class="hub-tab active" id="hubM5Tab1" onclick="hub_setM5Tab(1)">Size Tier Check</button>' +
+    '<button class="hub-tab" id="hubM5Tab2" onclick="hub_setM5Tab(2)">Storage Efficiency</button></div>' +
+    '<div id="hubM5Panel1">' + p1html + '</div>' +
+    '<div id="hubM5Panel2" style="display:none;">' + p2html + '</div>';
+  hub_initSortableTable('hubTableM5a');
+  hub_initSortableTable('hubTableM5b');
+}
+
+// ── Module 6: Stock Situation ─────────────
+
+var _hub_m6_filter = 'all';
+function hub_setM6Filter(f) {
+  _hub_m6_filter = f;
+  document.querySelectorAll('.hub-m6-filter').forEach(function(b){ b.classList.toggle('active', b.dataset.filter===f); });
+  hub_renderM6();
+}
+
+function hub_renderM6() {
+  var content = document.getElementById('hubContentM6');
+  var summary = document.getElementById('hubSummaryM6');
+  if (!content) return;
+  var fbaInv = hub_getReport('fba_inventory');
+  if (!fbaInv) {
+    content.innerHTML = '<div class="hub-empty-state">Upload <strong>Manage FBA Inventory</strong> report to enable this module.</div>';
+    if (summary) summary.textContent = 'Upload inventory reports to enable';
+    return;
+  }
+  var cogs = hub_getCogsMap();
+  var now = new Date();
+  var reservedMap = {};
+  var resData = hub_getReport('reserved');
+  if (resData) resData.forEach(function(r){ var a=(r.asin||r.ASIN||'').toUpperCase(); reservedMap[a]=(reservedMap[a]||0)+parseInt(r.reserved_quantity||r.quantity||0); });
+  var homeMap = {};
+  var remData = hub_getReport('removals');
+  if (remData) remData.forEach(function(r){
+    var a=(r.asin||r.ASIN||'').toUpperCase();
+    var qty=parseInt(r.quantity||r.shipped_quantity||r.units||0);
+    var ds=r.last_updated_date||r.completion_date||r.removal_date||r.date||'';
+    var d=hub_parseDate(ds);
+    var days=d?hub_daysBetween(d,now):0;
+    if(!homeMap[a])homeMap[a]={qty:0,daysSince:0};
+    homeMap[a].qty+=qty;
+    homeMap[a].daysSince=Math.max(homeMap[a].daysSince,days);
+  });
+  var rows = [];
+  fbaInv.forEach(function(r) {
+    var asin=(r.asin||r.ASIN||'').toUpperCase();
+    var sellable=parseInt(r.afn_fulfillable_quantity||r.sellable_quantity||r.fulfillable_quantity||r.quantity||0);
+    var unfulfillable=parseInt(r.afn_unsellable_quantity||r.unfulfillable_quantity||r.unsellable_quantity||0);
+    var inbound=parseInt(r.afn_inbound_shipped_quantity||r.reserved_fc_transfers||r.inbound_shipped||0);
+    var stranded=(r.condition||'').toLowerCase().indexOf('strand')!==-1||(r.alert||'').toLowerCase().indexOf('strand')!==-1||parseInt(r.your_price||1)<=0;
+    var hd=homeMap[asin]||{qty:0,daysSince:0};
+    var cv=cogs[asin]||0;
+    rows.push({asin:asin,title:r.product_name||r.title||r.fnsku||asin,sellable:sellable,unfulfillable:unfulfillable,inbound:inbound,stranded:stranded,reserved:reservedMap[asin]||0,atHome:hd.qty,daysSince:hd.daysSince,homeValue:hd.qty*cv,stale:hd.daysSince>60&&hd.qty>0});
+  });
+  var filtered=rows;
+  if(_hub_m6_filter==='unfulfillable')filtered=rows.filter(function(r){return r.unfulfillable>0;});
+  else if(_hub_m6_filter==='stranded')filtered=rows.filter(function(r){return r.stranded;});
+  else if(_hub_m6_filter==='home')filtered=rows.filter(function(r){return r.atHome>0;});
+  var totUnf=rows.reduce(function(s,r){return s+r.unfulfillable;},0);
+  var totHome=rows.reduce(function(s,r){return s+r.atHome;},0);
+  var totHV=rows.reduce(function(s,r){return s+r.homeValue;},0);
+  if(summary)summary.textContent=rows.length+' ASINs · '+totUnf+' unfulfillable · '+totHome+' units at home · '+hub_formatGBP(totHV)+' at home';
+  var filterBtns=['all','unfulfillable','stranded','home'].map(function(f){
+    var lbl={all:'All',unfulfillable:'Unfulfillable',stranded:'Stranded',home:'At Home'}[f];
+    return '<button class="hub-m6-filter'+(_hub_m6_filter===f?' active':'')+'" data-filter="'+f+'" onclick="hub_setM6Filter(\''+f+'\')">'+lbl+'</button>';
+  }).join('');
+  var tableRows=filtered.map(function(r){
+    var flags='';
+    if(r.unfulfillable>0)flags+='<span style="color:var(--red);font-size:12px;">⚠ Unfulfil.</span> ';
+    if(r.stranded)flags+='<span style="color:var(--amber);font-size:12px;">⚠ Stranded</span> ';
+    if(r.stale)flags+='<span style="color:var(--amber);font-size:12px;">⚠ Stale &gt;60d</span>';
+    return '<tr><td><code>'+r.asin+'</code></td>' +
+      '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.title+'">'+r.title+'</td>' +
+      '<td style="text-align:right;">'+r.sellable+'</td>' +
+      '<td style="text-align:right;'+(r.unfulfillable>0?'color:var(--red);font-weight:600;':'')+'">'+( r.unfulfillable||'—')+'</td>' +
+      '<td style="text-align:right;">'+(r.reserved||'—')+'</td>' +
+      '<td style="text-align:right;">'+(r.inbound||'—')+'</td>' +
+      '<td style="text-align:right;">'+(r.atHome||'—')+'</td>' +
+      '<td style="text-align:right;">'+(r.homeValue?hub_formatGBP(r.homeValue):'—')+'</td>' +
+      '<td>'+(flags||'<span style="color:var(--text-3);">—</span>')+'</td></tr>';
+  }).join('');
+  content.innerHTML =
+    '<div class="hub-m6-summary-cols">' +
+      '<div class="hub-m6-col"><div class="hub-m6-col-title">📦 At Amazon</div>' +
+        '<div>Sellable: <strong>'+rows.reduce(function(s,r){return s+r.sellable;},0).toLocaleString()+'</strong></div>' +
+        '<div>Unfulfillable: <strong style="color:'+(totUnf>0?'var(--red)':'var(--text)')+';">'+totUnf+'</strong></div>' +
+        '<div>Reserved: <strong>'+rows.reduce(function(s,r){return s+r.reserved;},0).toLocaleString()+'</strong></div>' +
+      '</div>' +
+      '<div class="hub-m6-col"><div class="hub-m6-col-title">🚚 In Transit</div>' +
+        '<div>Inbound: <strong>'+rows.reduce(function(s,r){return s+r.inbound;},0).toLocaleString()+'</strong></div>' +
+      '</div>' +
+      '<div class="hub-m6-col"><div class="hub-m6-col-title">🏠 At Home</div>' +
+        '<div>Units: <strong>'+totHome.toLocaleString()+'</strong></div>' +
+        '<div>Value: <strong>'+hub_formatGBP(totHV)+'</strong></div>' +
+        (rows.filter(function(r){return r.stale;}).length?'<div style="color:var(--amber);">⚠ '+rows.filter(function(r){return r.stale;}).length+' ASINs stale &gt;60d</div>':'') +
+      '</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:6px;margin-bottom:12px;">'+filterBtns+'</div>' +
+    '<div class="hub-table-wrap"><table class="hub-table" id="hubTableM6"><thead><tr><th>ASIN</th><th>Title</th><th>Sellable</th><th>Unfulfil.</th><th>Reserved</th><th>Inbound</th><th>At Home</th><th>Home Value £</th><th>Flags</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+  hub_initSortableTable('hubTableM6');
+}
+
+// ── Module 7: Inventory Age ───────────────
+
+function hub_renderM7() {
+  var content = document.getElementById('hubContentM7');
+  var summary = document.getElementById('hubSummaryM7');
+  if (!content) return;
+  var invAge = hub_getReport('inventory_age');
+  if (!invAge) {
+    content.innerHTML = '<div class="hub-empty-state">Upload <strong>Inventory Age (FBA)</strong> report to enable this module.</div>';
+    if (summary) summary.textContent = 'Upload inventory age report to enable';
+    return;
+  }
+  var settings = hub_loadSettings();
+  var actions = settings.m7_actions || {};
+  var rows = invAge.map(function(r) {
+    var asin=(r.asin||r.ASIN||'').toUpperCase();
+    var title=r.product_name||r.title||r.fnsku||asin;
+    var b0=parseInt(r.inv_age_0_to_90_days||r['inv_age_0-to-90-days']||r.qty_0_90||r['0_90']||0);
+    var b1=parseInt(r.inv_age_91_to_180_days||r['inv_age_91-to-180-days']||r.qty_91_180||r['91_180']||0);
+    var b2=parseInt(r.inv_age_181_to_270_days||r['inv_age_181-to-270-days']||r.qty_181_270||r['181_270']||0);
+    var b3=parseInt(r.inv_age_271_to_365_days||r['inv_age_271-to-365-days']||r.qty_271_365||r['271_365']||0);
+    var b4=parseInt(r.inv_age_365_plus_days||r['inv_age_365-plus-days']||r.qty_365_plus||r['365_plus']||0);
+    var danger=b2+b3+b4;
+    var ltsFee=danger*0.30;
+    return {asin:asin,title:title,b0:b0,b1:b1,b2:b2,b3:b3,b4:b4,danger:danger,ltsFee:ltsFee};
+  }).filter(function(r){ return r.danger>0||r.b1>0; });
+  rows.sort(function(a,b){ return b.ltsFee-a.ltsFee; });
+  var totalRisk=rows.reduce(function(s,r){return s+r.ltsFee;},0);
+  var dangerCount=rows.filter(function(r){return r.danger>0;}).length;
+  if(summary)summary.textContent=hub_formatGBP(totalRisk)+' fee risk · '+dangerCount+' ASINs in danger zone';
+  var actionOpts=['Create Removal','Run Promotion','Lower Price','Monitor'];
+  var tableRows=rows.map(function(r){
+    var opts=actionOpts.map(function(a){ return '<option value="'+a+'"'+(actions[r.asin]===a?' selected':'')+'>'+a+'</option>'; }).join('');
+    return '<tr><td><code>'+r.asin+'</code></td>' +
+      '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.title+'">'+r.title+'</td>' +
+      '<td style="text-align:right;">'+(r.b0||'—')+'</td>' +
+      '<td style="text-align:right;">'+(r.b1||'—')+'</td>' +
+      '<td style="text-align:right;'+(r.b2>0?'color:var(--amber);':'')+'">'+( r.b2||'—')+'</td>' +
+      '<td style="text-align:right;'+(r.b3>0?'color:var(--red);':'')+'">'+( r.b3||'—')+'</td>' +
+      '<td style="text-align:right;'+(r.b4>0?'color:var(--red);font-weight:600;':'')+'">'+( r.b4||'—')+'</td>' +
+      '<td style="text-align:right;'+(r.ltsFee>0?'color:var(--red);':'')+'">'+( r.ltsFee>0?hub_formatGBP(r.ltsFee):'—')+'</td>' +
+      '<td><select class="hub-status-sel" onchange="hub_saveM7Action(\''+r.asin+'\',this.value)"><option value="">Select...</option>'+opts+'</select></td></tr>';
+  }).join('');
+  content.innerHTML='<div class="hub-table-wrap"><table class="hub-table" id="hubTableM7"><thead><tr><th>ASIN</th><th>Title</th><th>0–90d</th><th>91–180d</th><th>181–270d</th><th>271–365d</th><th>365d+</th><th>Est. LTS Fee £</th><th>Recommended Action</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+  hub_initSortableTable('hubTableM7');
+}
+
+function hub_saveM7Action(asin, action) {
+  var s=hub_loadSettings();
+  if(!s.m7_actions)s.m7_actions={};
+  s.m7_actions[asin]=action;
+  hub_saveSettings(s);
+}
+
+// ── Module 8: Refund Rate ─────────────────
+
+var _hub_m8_sort = 'lost';
+function hub_renderM8(sort) {
+  if (sort) _hub_m8_sort = sort;
+  var content = document.getElementById('hubContentM8');
+  var summary = document.getElementById('hubSummaryM8');
+  if (!content) return;
+  var sales = hub_getReport('sales_traffic');
+  var returns = hub_getReport('returns');
+  if (!sales || !returns) {
+    content.innerHTML = '<div class="hub-empty-state">Upload <strong>Sales & Traffic by Child ASIN</strong> and <strong>FBA Customer Returns</strong> reports to enable this module.</div>';
+    if (summary) summary.textContent = 'Upload sales/traffic & returns to enable';
+    return;
+  }
+  var cogs = hub_getCogsMap();
+  var salesMap = {};
+  sales.forEach(function(r) {
+    var asin=(r.asin||r.child_asin||r.ASIN||'').toUpperCase();
+    if(!asin)return;
+    var units=parseInt(r.units_ordered||r.units_sold||r.quantity||0);
+    var title=r.title||r.product_title||r.child_asin_title||asin;
+    if(!salesMap[asin])salesMap[asin]={orders:0,title:title};
+    salesMap[asin].orders+=units;
+  });
+  var returnsMap={}, returnsReasons={};
+  returns.forEach(function(r) {
+    var asin=(r.asin||r.ASIN||'').toUpperCase();
+    if(!asin)return;
+    returnsMap[asin]=(returnsMap[asin]||0)+1;
+    var reason=r.return_reason||r.reason||'Unknown';
+    if(!returnsReasons[asin])returnsReasons[asin]={};
+    returnsReasons[asin][reason]=(returnsReasons[asin][reason]||0)+1;
+  });
+  var rows=Object.keys(salesMap).map(function(asin) {
+    var orders=salesMap[asin].orders;
+    var title=salesMap[asin].title;
+    var retCount=returnsMap[asin]||0;
+    var rate=orders>0?retCount/orders*100:0;
+    var cv=cogs[asin]||0;
+    var lost=retCount*cv;
+    var topReason='';
+    if(returnsReasons[asin]){
+      var best=null,bestCt=0;
+      Object.keys(returnsReasons[asin]).forEach(function(k){if(returnsReasons[asin][k]>bestCt){bestCt=returnsReasons[asin][k];best=k;}});
+      topReason=best||'';
+    }
+    var flag=rate>15?'red':rate>5?'amber':'green';
+    return {asin:asin,title:title,orders:orders,retCount:retCount,rate:rate,lost:lost,topReason:topReason,flag:flag};
+  });
+  if(_hub_m8_sort==='lost')rows.sort(function(a,b){return b.lost-a.lost;});
+  else rows.sort(function(a,b){return b.rate-a.rate;});
+  var redCount=rows.filter(function(r){return r.flag==='red';}).length;
+  var totLost=rows.reduce(function(s,r){return s+r.lost;},0);
+  if(summary)summary.textContent=rows.length+' ASINs tracked · '+redCount+' high-refund · '+hub_formatGBP(totLost)+' lost to returns';
+  var flagCell=function(r){
+    var s=r.flag==='red'?'background:rgba(240,59,80,.18);color:var(--red);':r.flag==='amber'?'background:rgba(240,165,0,.15);color:var(--amber);':'background:rgba(0,217,126,.12);color:var(--green);';
+    var lbl=r.flag==='red'?'⚠ Review':r.flag==='amber'?'Monitor':'OK';
+    return '<span style="'+s+'border-radius:4px;padding:2px 7px;font-size:12px;font-weight:600;">'+lbl+'</span>'+(r.flag==='red'?'<div style="font-size:11px;color:var(--red);margin-top:3px;">⚠ Review listing / packaging / supplier</div>':'');
+  };
+  var tableRows=rows.map(function(r){
+    var rateStyle=r.rate>15?'color:var(--red);':r.rate>5?'color:var(--amber);':'color:var(--green);';
+    return '<tr><td><code>'+r.asin+'</code></td>' +
+      '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.title+'">'+r.title+'</td>' +
+      '<td style="text-align:right;">'+r.orders+'</td>' +
+      '<td style="text-align:right;">'+r.retCount+'</td>' +
+      '<td style="text-align:right;font-weight:600;'+rateStyle+'">'+r.rate.toFixed(1)+'%</td>' +
+      '<td style="text-align:right;">'+(r.lost?hub_formatGBP(r.lost):'—')+'</td>' +
+      '<td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+( r.topReason||'—')+'</td>' +
+      '<td>'+flagCell(r)+'</td></tr>';
+  }).join('');
+  content.innerHTML='<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">' +
+    '<span style="font-size:13px;color:var(--text-3);">Sort by:</span>' +
+    '<button class="hub-btn-xs'+(_hub_m8_sort==='lost'?' active':'')+'" onclick="hub_renderM8(\'lost\')">£ Lost</button>' +
+    '<button class="hub-btn-xs'+(_hub_m8_sort==='rate'?' active':'')+'" onclick="hub_renderM8(\'rate\')">Rate %</button></div>' +
+    '<div class="hub-table-wrap"><table class="hub-table" id="hubTableM8"><thead><tr><th>ASIN</th><th>Title</th><th>Orders</th><th>Returns</th><th>Rate %</th><th>£ Lost</th><th>Top Reason</th><th>Flag</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+  hub_initSortableTable('hubTableM8');
+}
+
+// ── Module 9: Action Queue ────────────────
+
+var _hubOppMap = {};
+
+function hub_buildAllOpps() {
+  var m1=hub_runM1(), m2=hub_runM2(), m3=hub_runM3(), m4=hub_runM4();
+  return m1.concat(m2).concat(m3).concat(m4);
+}
+
+function hub_urgencyMult(daysSince) {
+  if(daysSince>60)return 3; if(daysSince>45)return 2; if(daysSince>30)return 1.5; return 1;
+}
+
+function hub_buildAqRow(o) {
+  var priority=((o.value||0)*hub_urgencyMult(o.daysSince||0)).toFixed(0);
+  var cd=hub_getCase(o.id);
+  var ev=hub_getEvidence(o.id);
+  var inv=hub_findInvoice(o);
+  var modColors={1:'#4d8ef5',2:'#f0a500',3:'#9b6dff',4:'#26c6da'};
+  var statuses=['Identified','Case Opened','Chasing','Escalated','Won','Lost','Duplicate'];
+  var statusOpts=statuses.map(function(s){ return '<option value="'+s+'"'+(cd.status===s?' selected':'')+'>'+s+'</option>'; }).join('');
+  var invHtml=inv
+    ? '<span class="hub-inv-badge" onclick="hub_previewInvoice(\''+inv.key+'\',\''+inv.type+'\')" title="'+(inv.filename||'')+'">Invoice ✓<br><span style="font-size:10px;opacity:.7;">'+inv.type+'</span></span>'
+    : '<span style="color:var(--text-3);font-size:12px;">—</span>';
+  var evThumbs=ev.map(function(e,i){ return '<img src="'+e.data+'" class="hub-ev-thumb" onclick="hub_previewEvidence(\''+o.id+'\','+i+')" title="'+(e.name||'')+'">'}).join('');
+  var notes=(cd.notes||'').replace(/"/g,'&quot;');
+  return '<tr>' +
+    '<td><span class="hub-mod-pill" style="background:'+(modColors[o.module]||'#555')+';">M'+o.module+'</span></td>' +
+    '<td><code>'+(o.asin||'—')+'</code></td>' +
+    '<td><code style="font-size:11px;">'+(((o.orderId||o.shipmentId||'—')).slice(0,18))+'</code></td>' +
+    '<td style="text-align:right;font-weight:600;">'+hub_formatGBP(o.value)+'</td>' +
+    '<td style="text-align:right;color:var(--text-3);font-size:12px;">'+priority+'</td>' +
+    '<td><select class="hub-status-sel" onchange="hub_setStatus(\''+o.id+'\',this.value)">'+statusOpts+'</select></td>' +
+    '<td>'+invHtml+'</td>' +
+    '<td><div class="hub-ev-wrap">'+evThumbs+'<label class="hub-ev-add" title="Add evidence">+<input type="file" accept="image/*,.pdf" multiple style="display:none" onchange="hub_addEvidence(\''+o.id+'\',this)"></label></div></td>' +
+    '<td><input type="text" value="'+notes+'" placeholder="Notes..." onchange="hub_saveNote(\''+o.id+'\',this.value)" style="width:140px;background:var(--surface3);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:3px 6px;font-size:12px;"></td>' +
+    '<td><button class="hub-btn-xs" onclick="hub_genCaseText(\''+o.id+'\')">📋 Case Text</button></td>' +
+    '</tr>';
+}
+
+function hub_renderM9() {
+  var content = document.getElementById('hubAqContent');
+  if (!content) return;
+  var opps = hub_buildAllOpps();
+  window._hubOpportunities = opps;
+  _hubOppMap = {};
+  opps.forEach(function(o){ _hubOppMap[o.id]=o; });
+
+  var statusF=(document.getElementById('hubAqFilterStatus')||{}).value||'';
+  var moduleF=(document.getElementById('hubAqFilterModule')||{}).value||'';
+  var minF=parseFloat((document.getElementById('hubAqFilterMin')||{}).value||0)||0;
+  var invF=(document.getElementById('hubAqFilterInvoice')||{}).value||'';
+  var evF=(document.getElementById('hubAqFilterEvidence')||{}).value||'';
+
+  var filtered=opps.filter(function(o){
+    if(statusF&&hub_getCase(o.id).status!==statusF)return false;
+    if(moduleF&&String(o.module)!==moduleF)return false;
+    if(minF&&(o.value||0)<minF)return false;
+    if(invF){var hasInv=!!hub_findInvoice(o);if(invF==='yes'&&!hasInv)return false;if(invF==='no'&&hasInv)return false;}
+    if(evF){var evLen=hub_getEvidence(o.id).length;if(evF==='yes'&&evLen===0)return false;if(evF==='no'&&evLen>0)return false;}
+    return true;
+  });
+  filtered.sort(function(a,b){
+    return ((b.value||0)*hub_urgencyMult(b.daysSince||0)) - ((a.value||0)*hub_urgencyMult(a.daysSince||0));
+  });
+
+  var summary=document.getElementById('hubSummaryM9');
+  if(summary)summary.textContent=opps.length+' opportunities · '+hub_formatGBP(opps.reduce(function(s,o){return s+(o.value||0);},0));
+
+  if(!filtered.length){
+    content.innerHTML='<div class="hub-empty-state">No opportunities match the current filters.</div>';
+  } else {
+    content.innerHTML='<div class="hub-table-wrap"><table class="hub-table hub-aq-table" id="hubTableM9">' +
+      '<thead><tr><th>Module</th><th>ASIN</th><th>Ref</th><th>£ Opp</th><th>Priority</th><th>Status</th><th>Invoice</th><th>Evidence</th><th>Notes</th><th>Actions</th></tr></thead>' +
+      '<tbody>'+filtered.map(hub_buildAqRow).join('')+'</tbody></table></div>';
+  }
+  hub_updateScoreboard(opps);
+  hub_updateKPI();
+}
+
+function hub_setStatus(id, status) {
+  var c=hub_getCase(id);
+  var wasOpen=!(['Won','Lost','Duplicate'].indexOf(c.status)!==-1);
+  var isNowClosed=['Won','Lost','Duplicate'].indexOf(status)!==-1;
+  c.status=status;
+  if(!c.createdAt)c.createdAt=new Date().toISOString();
+  if(isNowClosed&&wasOpen)c.resolvedAt=new Date().toISOString();
+  hub_saveCase(id,c);
+  hub_updateKPI();
+  hub_updateScoreboard(window._hubOpportunities||[]);
+}
+
+function hub_saveNote(id, notes) {
+  var c=hub_getCase(id); c.notes=notes; hub_saveCase(id,c);
+}
+
+function hub_setOpportunityValue(id, val) {
+  var s=hub_loadSettings();
+  if(!s.manual_values)s.manual_values={};
+  s.manual_values[id]=parseFloat(val)||0;
+  hub_saveSettings(s);
+  if(_hubOppMap[id])_hubOppMap[id].value=parseFloat(val)||0;
+  hub_updateKPI();
+}
+
+function hub_openQueue(id) {
+  var body=document.getElementById('hubBodyM9');
+  var chev=document.getElementById('hubChevronM9');
+  if(body&&body.style.display==='none'){body.style.display='';if(chev)chev.textContent='▾';}
+  hub_renderM9();
+  setTimeout(function(){
+    var el=document.querySelector('[data-caseid="'+id+'"]');
+    if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+  },200);
+}
+
+function hub_addEvidence(id, inputEl) {
+  var files=Array.from(inputEl.files);
+  if(!files.length)return;
+  var ev=hub_getEvidence(id);
+  var done=0;
+  files.forEach(function(file){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      ev.push({data:e.target.result,name:file.name,type:file.type});
+      done++;
+      if(done===files.length){hub_saveEvidence(id,ev);hub_renderM9();}
+    };
+    reader.readAsDataURL(file);
+  });
+  inputEl.value='';
+}
+
+function hub_previewEvidence(id, idx) {
+  var ev=hub_getEvidence(id);
+  var item=ev[idx];
+  if(!item)return;
+  var modal=document.getElementById('hubInvPreviewModal');
+  var cont=document.getElementById('hubInvPreviewContent');
+  var title=document.getElementById('hubInvPreviewTitle');
+  if(!modal)return;
+  if(title)title.textContent=item.name||'Evidence';
+  if(cont){
+    if(item.type&&item.type.indexOf('image/')===0)cont.innerHTML='<img src="'+item.data+'" style="max-width:100%;border-radius:8px;">';
+    else cont.innerHTML='<iframe src="'+item.data+'" style="width:100%;height:500px;border:none;border-radius:8px;"></iframe>';
+  }
+  modal.style.display='flex';
+}
+
+function hub_findInvoice(opp) {
+  var orderId=opp.orderId||'';
+  if(orderId){
+    var ak='hub_invoice_amazon_'+orderId;
+    var ar=localStorage.getItem(ak);
+    if(ar){try{var ao=JSON.parse(ar);return {key:ak,type:'Amazon',filename:ao.filename||''};}catch(e){}}
+  }
+  for(var i=0;i<localStorage.length;i++){
+    var k=localStorage.key(i);
+    if(!k||k.indexOf('hub_invoice_manual_')!==0)continue;
+    try{
+      var inv=JSON.parse(localStorage.getItem(k));
+      if(orderId&&inv.orderNo&&inv.orderNo===orderId)return{key:k,type:'Manual',filename:inv.filename||''};
+      if(inv.asin&&inv.asin.toUpperCase()===(opp.asin||'').toUpperCase()){
+        var id2=hub_parseDate(inv.purchaseDate);
+        var od=hub_parseDate(opp.date);
+        if(id2&&od&&hub_daysBetween(id2,od)<=60)return{key:k,type:'Manual',filename:inv.filename||''};
+      }
+    }catch(e){}
+  }
+  return null;
+}
+
+function hub_previewInvoice(key, type) {
+  try{
+    var inv=JSON.parse(localStorage.getItem(key));
+    var modal=document.getElementById('hubInvPreviewModal');
+    var cont=document.getElementById('hubInvPreviewContent');
+    var title=document.getElementById('hubInvPreviewTitle');
+    if(!modal)return;
+    if(title)title.textContent=(inv.filename||'Invoice')+' ('+type+')';
+    if(cont){
+      if(inv.fileBase64){
+        if(inv.fileBase64.indexOf('data:image')===0)cont.innerHTML='<img src="'+inv.fileBase64+'" style="max-width:100%;border-radius:8px;">';
+        else cont.innerHTML='<iframe src="'+inv.fileBase64+'" style="width:100%;height:500px;border:none;border-radius:8px;"></iframe>';
+      }else cont.innerHTML='<div style="color:var(--text-3);padding:20px;">No preview available for this invoice.</div>';
+    }
+    modal.style.display='flex';
+  }catch(e){}
+}
+
+function hub_closeInvPreview() {
+  var m=document.getElementById('hubInvPreviewModal'); if(m)m.style.display='none';
+}
+
+function hub_genCaseText(id) {
+  var opp=_hubOppMap[id];
+  if(!opp){alert('Case not found. Try refreshing the module.');return;}
+  var asin=opp.asin||'[ASIN]';
+  var date=opp.date||'[DATE]';
+  var val=hub_formatGBP(opp.value||0);
+  var text='';
+  if(opp.module===1){
+    text='I am writing regarding order '+(opp.orderId||'[ORDER_ID]')+' for ASIN '+asin+'. A customer return was processed on '+date+' ('+(opp.returnReason||'[RETURN_REASON]')+') however this unit has not appeared in my FBA inventory as sellable or unfulfillable, nor have I received a reimbursement. As per Amazon policy, I am requesting a reimbursement of '+val+' for this unit. Please investigate and reimburse accordingly.';
+  } else if(opp.module===2){
+    text='I am writing regarding an inventory adjustment on '+date+' for ASIN '+asin+'. Amazon recorded a '+(opp.reason||'[REASON_CODE]')+' adjustment of '+(opp.qty||1)+' unit(s) however I have not received a corresponding reimbursement. The value of this inventory is '+val+'. I request immediate reimbursement per the FBA inventory reimbursement policy.';
+  } else if(opp.module===3){
+    text='I am writing regarding FBA shipment '+(opp.shipmentId||'[SHIPMENT_ID]')+' sent on '+date+'. I shipped '+(opp.sent||'[SENT]')+' units of ASIN '+asin+' however only '+(opp.received||'[RECEIVED]')+' units were received at the fulfilment centre, leaving a discrepancy of '+(opp.discrepancy||'[DISCREPANCY]')+' unit(s) valued at '+val+'. Please investigate and reimburse for the missing units.';
+  } else if(opp.module===4){
+    text='I am writing regarding reimbursement issued on '+date+' for ASIN '+asin+'. The reimbursement amount of '+hub_formatGBP(opp.amazonPaid||0)+' does not reflect the actual value of my inventory. My cost of goods for this ASIN is '+hub_formatGBP(opp.cogsPerUnit||0)+' per unit, resulting in a shortfall of '+hub_formatGBP(opp.shortfall||0)+'. I request a top-up reimbursement to cover the full cost of goods.';
+  }
+  var modal=document.getElementById('hubCaseModal');
+  var textarea=document.getElementById('hubCaseModalText');
+  var titleEl=document.getElementById('hubCaseModalTitle');
+  if(!modal)return;
+  if(titleEl)titleEl.textContent='Case Text — Module '+opp.module+' — '+asin;
+  if(textarea)textarea.value=text;
+  modal.style.display='flex';
+}
+
+function hub_closeCaseModal() {
+  var m=document.getElementById('hubCaseModal'); if(m)m.style.display='none';
+}
+
+function hub_copyCase() {
+  var t=document.getElementById('hubCaseModalText');
+  if(!t)return;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(t.value).then(function(){
+      var btn=document.querySelector('#hubCaseModal button:last-of-type');
+      if(btn){var orig=btn.textContent;btn.textContent='✓ Copied!';setTimeout(function(){btn.textContent=orig;},2000);}
+    });
+  } else { t.select(); document.execCommand('copy'); }
+}
+
+function hub_updateScoreboard(opps) {
+  var total=opps.length;
+  var opened=opps.filter(function(o){var s=hub_getCase(o.id).status;return s==='Case Opened'||s==='Chasing'||s==='Escalated';}).length;
+  var won=opps.filter(function(o){return hub_getCase(o.id).status==='Won';}).length;
+  var lost=opps.filter(function(o){return hub_getCase(o.id).status==='Lost';}).length;
+  var winRate=(won+lost)>0?Math.round(won/(won+lost)*100):0;
+  var resolved=opps.filter(function(o){var c=hub_getCase(o.id);return c.createdAt&&c.resolvedAt;});
+  var avgDays=resolved.length>0?Math.round(resolved.reduce(function(s,o){var c=hub_getCase(o.id);return s+hub_daysBetween(new Date(c.createdAt),new Date(c.resolvedAt));},0)/resolved.length):null;
+  var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+  set('hsTotal',total); set('hsOpened',opened); set('hsWon',won);
+  set('hsWinRate',winRate+'%'); set('hsAvgDays',avgDays!==null?avgDays+'d':'—');
+}
+
+// ── Module 10: True P&L ───────────────────
+
+function hub_renderM10() {
+  var content=document.getElementById('hubContentM10');
+  var summary=document.getElementById('hubSummaryM10');
+  if(!content)return;
+  var sales=hub_getReport('sales_traffic');
+  if(!sales){
+    content.innerHTML='<div class="hub-empty-state">Upload <strong>Sales & Traffic</strong>, <strong>Settlement Report</strong> and <strong>Monthly Storage Fees</strong> reports plus Purchases COGS data to enable this module.</div>';
+    if(summary)summary.textContent='Upload sales, settlement & storage to enable';
+    return;
+  }
+  var cogs=hub_getCogsMap();
+  var settlement=hub_getReport('settlement');
+  var storageFees=hub_getReport('storage_fees');
+  var returns=hub_getReport('returns');
+  var refundLossMap={};
+  if(returns)returns.forEach(function(r){var a=(r.asin||'').toUpperCase();refundLossMap[a]=(refundLossMap[a]||0)+(cogs[a]||0);});
+  var settlMap={};
+  if(settlement)settlement.forEach(function(r){
+    var asin=(r.asin||r.ASIN||'').toUpperCase();if(!asin)return;
+    var type=(r.type||r.transaction_type||r.amount_type||'').toLowerCase();
+    var amt=hub_parseCurrency(r.amount||r.total||0);
+    if(!settlMap[asin])settlMap[asin]={revenue:0,fees:0};
+    if(type.indexOf('product')!==-1||type.indexOf('principal')!==-1||type.indexOf('itemPrice')!==-1)settlMap[asin].revenue+=amt;
+    else if(type.indexOf('fee')!==-1||type.indexOf('commission')!==-1)settlMap[asin].fees+=Math.abs(amt);
+  });
+  var storeMap={};
+  if(storageFees)storageFees.forEach(function(r){var a=(r.asin||r.ASIN||'').toUpperCase();storeMap[a]=(storeMap[a]||0)+hub_parseCurrency(r.estimated_monthly_storage_fee||r.storage_fee||r.monthly_storage_fee||0);});
+  var rows=[];
+  sales.forEach(function(r){
+    var asin=(r.asin||r.child_asin||r.ASIN||'').toUpperCase();if(!asin)return;
+    var title=r.title||r.product_title||asin;
+    var units=parseInt(r.units_ordered||r.units_sold||0);
+    var revenue=(settlMap[asin]&&settlMap[asin].revenue)||hub_parseCurrency(r.ordered_product_sales||r.revenue||0);
+    var fees=(settlMap[asin]&&settlMap[asin].fees)||0;
+    var cogsTotal=(cogs[asin]||0)*units;
+    var refLoss=refundLossMap[asin]||0;
+    var store=storeMap[asin]||0;
+    var net=revenue-fees-cogsTotal-refLoss-store;
+    var margin=revenue>0?net/revenue*100:0;
+    rows.push({asin:asin,title:title,revenue:revenue,fees:fees,cogsTotal:cogsTotal,refLoss:refLoss,store:store,net:net,margin:margin});
+  });
+  rows.sort(function(a,b){return b.net-a.net;});
+  var totProfit=rows.reduce(function(s,r){return s+r.net;},0);
+  var negCount=rows.filter(function(r){return r.net<0;}).length;
+  var best=rows[0],worst=rows[rows.length-1];
+  if(summary)summary.textContent=rows.length+' ASINs · '+hub_formatGBP(totProfit)+' net profit · '+negCount+' loss-making';
+  var banner='<div class="hub-pl-banner">' +
+    '<div class="hub-pl-stat"><div class="hub-pl-val">'+hub_formatGBP(totProfit)+'</div><div class="hub-pl-lbl">Total Net Profit</div></div>' +
+    '<div class="hub-pl-stat"><div class="hub-pl-val" style="color:var(--green);">'+(best?best.asin:'—')+'</div><div class="hub-pl-lbl">Best ASIN</div></div>' +
+    '<div class="hub-pl-stat"><div class="hub-pl-val" style="color:var(--red);">'+(worst?worst.asin:'—')+'</div><div class="hub-pl-lbl">Worst ASIN</div></div>' +
+  '</div>';
+  var tableRows=rows.map(function(r){
+    return '<tr style="'+(r.net<0?'background:rgba(240,59,80,.05);':'')+'">'+
+      '<td><code>'+r.asin+'</code></td>' +
+      '<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+r.title+'">'+r.title+'</td>' +
+      '<td style="text-align:right;">'+hub_formatGBP(r.revenue)+'</td>' +
+      '<td style="text-align:right;">'+hub_formatGBP(r.fees)+'</td>' +
+      '<td style="text-align:right;">'+hub_formatGBP(r.cogsTotal)+'</td>' +
+      '<td style="text-align:right;">'+hub_formatGBP(r.refLoss)+'</td>' +
+      '<td style="text-align:right;">'+hub_formatGBP(r.store)+'</td>' +
+      '<td style="text-align:right;font-weight:700;'+(r.net<0?'color:var(--red);':'color:var(--green);')+'">'+hub_formatGBP(r.net)+'</td>' +
+      '<td style="text-align:right;'+(r.margin<0?'color:var(--red);':'color:var(--green);')+'">'+r.margin.toFixed(1)+'%</td>' +
+    '</tr>';
+  }).join('');
+  content.innerHTML=banner+'<div class="hub-table-wrap"><table class="hub-table" id="hubTableM10"><thead><tr><th>ASIN</th><th>Title</th><th>Revenue £</th><th>Fees £</th><th>COGS £</th><th>Refund Loss £</th><th>Storage £</th><th>Net Profit £</th><th>Margin %</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+  hub_initSortableTable('hubTableM10');
+}
+
+// ── Module 11: Invoice Library ────────────
+
+var _hub_inv_tab=1;
+function hub_setInvTab(n) {
+  _hub_inv_tab=n;
+  ['1','2'].forEach(function(i){
+    var t=document.getElementById('hubInvTab'+i),p=document.getElementById('hubInvPanel'+i);
+    if(t)t.classList.toggle('active',String(n)===i);
+    if(p)p.style.display=String(n)===i?'':'none';
+  });
+}
+
+function hub_onAmazonInvoiceUpload(inputEl) {
+  var files=Array.from(inputEl.files);
+  if(!files.length)return;
+  var re=/([0-9]{3}-[0-9]{7}-[0-9]{7}|[A-Z]{2}[0-9]{2,3}-[0-9A-Z]{6,})/i;
+  var done=0;
+  files.forEach(function(file){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var m=re.exec(file.name);
+      var oid=m?m[1]:file.name.replace(/\.pdf$/i,'');
+      try{localStorage.setItem('hub_invoice_amazon_'+oid,JSON.stringify({filename:file.name,orderID:oid,uploadedAt:new Date().toISOString(),fileBase64:e.target.result}));}catch(ex){alert('Storage error: '+ex.message);}
+      done++;
+      if(done===files.length){hub_renderAmazonInvLibrary();inputEl.value='';}
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function hub_renderAmazonInvLibrary() {
+  var stats=document.getElementById('hubAmazonInvStats');
+  var table=document.getElementById('hubAmazonInvTable');
+  if(!stats||!table)return;
+  var oppOrders=new Set((window._hubOpportunities||[]).filter(function(o){return o.orderId;}).map(function(o){return o.orderId;}));
+  var invoices=[];
+  for(var i=0;i<localStorage.length;i++){
+    var k=localStorage.key(i);
+    if(!k||k.indexOf('hub_invoice_amazon_')!==0)continue;
+    try{var inv=JSON.parse(localStorage.getItem(k));invoices.push(Object.assign({key:k,matched:oppOrders.has(inv.orderID)},inv));}catch(e){}
+  }
+  invoices.sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
+  var matched=invoices.filter(function(i){return i.matched;}).length;
+  stats.textContent=invoices.length+' invoice'+(invoices.length!==1?'s':'')+' loaded · '+matched+' matched to open cases · '+(invoices.length-matched)+' unmatched';
+  if(!invoices.length){table.innerHTML='';return;}
+  table.innerHTML='<div class="hub-table-wrap"><table class="hub-table"><thead><tr><th>Order ID</th><th>Filename</th><th>Upload Date</th><th>Matched</th><th>Preview</th></tr></thead><tbody>'+
+    invoices.map(function(inv){return '<tr><td><code style="font-size:11px;">'+inv.orderID+'</code></td><td style="font-size:12px;">'+inv.filename+'</td><td style="font-size:12px;">'+new Date(inv.uploadedAt).toLocaleDateString('en-GB')+'</td><td>'+(inv.matched?'<span style="color:var(--green);">✓ Yes</span>':'<span style="color:var(--text-3);">—</span>')+'</td><td><button class="hub-btn-xs" onclick="hub_previewInvoice(\''+inv.key+'\',\'Amazon\')">View</button></td></tr>';}).join('')+
+  '</tbody></table></div>';
+}
+
+var _hub_manual_queue=[];
+function hub_onManualInvoiceUpload(inputEl) {
+  var files=Array.from(inputEl.files);
+  if(!files.length)return;
+  files.forEach(function(file){
+    var qid=Date.now()+'_'+Math.random().toString(36).slice(2);
+    _hub_manual_queue.push({qid:qid,file:file,form:{supplier:'',orderNo:'',asin:'',purchaseDate:'',amount:'',giftCard:'',notes:''}});
+  });
+  var qd=document.getElementById('hubManualQueue');
+  if(qd)qd.style.display='';
+  hub_renderManualQueue();
+  inputEl.value='';
+}
+
+function hub_renderManualQueue() {
+  var itemsDiv=document.getElementById('hubManualQueueItems');
+  if(!itemsDiv)return;
+  var suppliers=['Currys','Argos','Amazon.de','Amazon.fr','Amazon.es','Amazon.it','Amazon.nl','John Lewis','eBay','Other'];
+  itemsDiv.innerHTML=_hub_manual_queue.map(function(q,idx){
+    var supOpts=suppliers.map(function(s){return '<option value="'+s+'"'+(q.form.supplier===s?' selected':'')+'>'+s+'</option>';}).join('');
+    var trueCog=q.form.giftCard?(parseFloat(q.form.amount||0)+parseFloat(q.form.giftCard||0)*0.90):0;
+    return '<div style="background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r);padding:14px;margin-bottom:10px;">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong style="font-size:13px;">'+q.file.name+'</strong>' +
+      '<div style="display:flex;gap:6px;"><button class="hub-btn-xs" onclick="hub_aiParseOne('+idx+')">⚡ AI Parse</button><button class="hub-btn-xs" onclick="_hub_manual_queue.splice('+idx+',1);hub_renderManualQueue()">✕ Remove</button></div></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' +
+        '<div><label style="font-size:11px;color:var(--text-3);">Supplier</label><select onchange="_hub_manual_queue['+idx+'].form.supplier=this.value" style="width:100%;margin-top:2px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 6px;font-size:13px;"><option value="">Select...</option>'+supOpts+'</select></div>' +
+        '<div><label style="font-size:11px;color:var(--text-3);">Order / Receipt No.</label><input type="text" value="'+q.form.orderNo+'" onchange="_hub_manual_queue['+idx+'].form.orderNo=this.value" style="width:100%;margin-top:2px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 6px;font-size:13px;"></div>' +
+        '<div><label style="font-size:11px;color:var(--text-3);">ASIN</label><input type="text" value="'+q.form.asin+'" onchange="_hub_manual_queue['+idx+'].form.asin=this.value" style="width:100%;margin-top:2px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 6px;font-size:13px;"></div>' +
+        '<div><label style="font-size:11px;color:var(--text-3);">Purchase Date</label><input type="date" value="'+q.form.purchaseDate+'" onchange="_hub_manual_queue['+idx+'].form.purchaseDate=this.value" style="width:100%;margin-top:2px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 6px;font-size:13px;"></div>' +
+        '<div><label style="font-size:11px;color:var(--text-3);">Amount Paid £</label><input type="number" step="0.01" value="'+q.form.amount+'" onchange="_hub_manual_queue['+idx+'].form.amount=this.value" style="width:100%;margin-top:2px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 6px;font-size:13px;"></div>' +
+        '<div><label style="font-size:11px;color:var(--text-3);">Gift Card £ <span style="opacity:.6;">(true COG = cash + GC×0.90)</span></label><input type="number" step="0.01" value="'+q.form.giftCard+'" onchange="_hub_manual_queue['+idx+'].form.giftCard=this.value;hub_renderManualQueue()" style="width:100%;margin-top:2px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 6px;font-size:13px;">' +
+        (q.form.giftCard?'<div style="font-size:11px;color:var(--amber);margin-top:2px;">True COG: '+hub_formatGBP(trueCog)+'</div>':'')+'</div>' +
+      '</div>' +
+      '<div style="margin-top:8px;"><label style="font-size:11px;color:var(--text-3);">Notes</label><input type="text" value="'+q.form.notes+'" onchange="_hub_manual_queue['+idx+'].form.notes=this.value" style="width:100%;margin-top:2px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 6px;font-size:13px;"></div>' +
+    '</div>';
+  }).join('');
+}
+
+async function hub_aiParseOne(idx) {
+  var q=_hub_manual_queue[idx];
+  if(!q)return;
+  var apiKey=hub_getAnthropicKey();
+  if(!apiKey){alert('Please enter your Anthropic API key in the field above.');return;}
+  var file=q.file;
+  var reader=new FileReader();
+  reader.onload=async function(e){
+    var b64=e.target.result.split(',')[1];
+    var mt=file.type||'image/jpeg';
+    var sysprompt='You are an invoice parser. Extract fields and return ONLY valid JSON:\n{"supplier":"string","order_number":"string or null","purchase_date":"YYYY-MM-DD or null","line_items":[{"description":"string","qty":1,"unit_price":0,"total_price":0}],"total":0,"payment_methods":[{"type":"gift_card|cash|card|other","amount":0}],"currency":"GBP|EUR|USD|other"}';
+    try{
+      var resp=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'x-api-key':apiKey,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1024,system:sysprompt,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:'Parse this invoice and return JSON only.'}]}]})
+      });
+      var data=await resp.json();
+      if(!resp.ok)throw new Error((data.error&&data.error.message)||resp.statusText);
+      var raw=data.content&&data.content[0]&&data.content[0].text||'{}';
+      var parsed=JSON.parse(raw.replace(/```json\n?|\n?```/g,'').trim());
+      _hub_manual_queue[idx].form.supplier=parsed.supplier||'';
+      _hub_manual_queue[idx].form.orderNo=parsed.order_number||'';
+      _hub_manual_queue[idx].form.purchaseDate=parsed.purchase_date||'';
+      _hub_manual_queue[idx].form.amount=String(parsed.total||'');
+      var gc=(parsed.payment_methods||[]).find(function(p){return p.type==='gift_card';});
+      if(gc)_hub_manual_queue[idx].form.giftCard=String(gc.amount||'');
+      // Fuzzy ASIN match
+      if(parsed.line_items&&parsed.line_items[0]){hub_fuzzyMatchAsin(parsed.line_items[0].description||'',idx);}
+      hub_renderManualQueue();
+    }catch(err){alert('AI Parse error: '+err.message);}
+  };
+  reader.readAsDataURL(file);
+}
+
+function hub_fuzzyMatchAsin(description, idx) {
+  if(!description)return;
+  var salesData=hub_getReport('sales_traffic')||[];
+  var best=null,bestScore=0;
+  salesData.forEach(function(r){
+    var title=r.title||r.product_title||'';
+    var asin=(r.asin||r.child_asin||'').toUpperCase();
+    if(!title||!asin)return;
+    var score=hub_wordOverlap(description,title);
+    if(score>bestScore){bestScore=score;best=asin;}
+  });
+  if(best&&bestScore>0.3)_hub_manual_queue[idx].form.asin=best;
+}
+
+async function hub_parseAllInvoices() {
+  var progressDiv=document.getElementById('hubManualQueueProgress');
+  var bar=document.getElementById('hubManualQueueBar');
+  var status=document.getElementById('hubManualQueueStatus');
+  if(progressDiv)progressDiv.style.display='';
+  var done=0,matched=0;
+  for(var i=0;i<_hub_manual_queue.length;i++){
+    if(bar)bar.style.width=Math.round(i/_hub_manual_queue.length*100)+'%';
+    if(status)status.textContent='Parsing '+(i+1)+' of '+_hub_manual_queue.length+'…';
+    await hub_aiParseOne(i);
+    done++;
+    if(_hub_manual_queue[i]&&_hub_manual_queue[i].form.asin)matched++;
+  }
+  if(bar)bar.style.width='100%';
+  if(status)status.textContent=done+' parsed · '+matched+' auto-matched · '+(done-matched)+' need review';
+}
+
+function hub_saveAllManualInvoices() {
+  _hub_manual_queue.forEach(function(q){
+    if(!q.form.orderNo&&!q.form.asin)return;
+    var id=((q.form.supplier||'')+'_'+(q.form.orderNo||'')+'_'+(q.form.purchaseDate||'')).replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,60)||('manual_'+Date.now());
+    var obj={filename:q.file.name,supplier:q.form.supplier,orderNo:q.form.orderNo,asin:q.form.asin,purchaseDate:q.form.purchaseDate,amount:parseFloat(q.form.amount)||0,giftCard:parseFloat(q.form.giftCard)||0,trueCog:(parseFloat(q.form.amount)||0)+(parseFloat(q.form.giftCard)||0)*0.90,notes:q.form.notes,uploadedAt:new Date().toISOString()};
+    var reader=new FileReader();
+    (function(key,data){
+      reader.onload=function(e){
+        data.fileBase64=e.target.result;
+        try{localStorage.setItem('hub_invoice_manual_'+key,JSON.stringify(data));}catch(ex){alert('Storage error: '+ex.message);}
+        hub_renderManualInvLibrary();
+      };
+    })(id,obj);
+    reader.readAsDataURL(q.file);
+  });
+  _hub_manual_queue=[];
+  var qd=document.getElementById('hubManualQueue');
+  if(qd)qd.style.display='none';
+}
+
+function hub_renderManualInvLibrary() {
+  var table=document.getElementById('hubManualInvTable');
+  if(!table)return;
+  var invoices=[];
+  for(var i=0;i<localStorage.length;i++){
+    var k=localStorage.key(i);
+    if(!k||k.indexOf('hub_invoice_manual_')!==0)continue;
+    try{invoices.push(Object.assign({key:k},JSON.parse(localStorage.getItem(k))));}catch(e){}
+  }
+  invoices.sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
+  if(!invoices.length){table.innerHTML='<div class="hub-empty-state">No manual invoices saved yet.</div>';return;}
+  table.innerHTML='<div class="hub-table-wrap"><table class="hub-table"><thead><tr><th>Supplier</th><th>Order No.</th><th>ASIN</th><th>Date</th><th>Amount £</th><th>True COG £</th><th>Notes</th><th>Preview</th></tr></thead><tbody>'+
+    invoices.map(function(inv){return '<tr><td>'+(inv.supplier||'—')+'</td><td><code style="font-size:11px;">'+(inv.orderNo||'—')+'</code></td><td><code>'+(inv.asin||'—')+'</code></td><td>'+(inv.purchaseDate||'—')+'</td><td style="text-align:right;">'+hub_formatGBP(inv.amount||0)+'</td><td style="text-align:right;font-weight:600;">'+hub_formatGBP(inv.trueCog||0)+'</td><td style="font-size:12px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(inv.notes||'—')+'</td><td><button class="hub-btn-xs" onclick="hub_previewInvoice(\''+inv.key+'\',\'Manual\')">View</button></td></tr>';}).join('')+
+  '</tbody></table></div>';
+}
+
+function hub_saveAnthropicKey() {
+  var inp=document.getElementById('hubAnthropicKey');
+  if(!inp)return;
+  var key=inp.value.trim();
+  localStorage.setItem('hub_anthropic_key',key);
+  var status=document.getElementById('hubAiKeyStatus');
+  if(status)status.textContent=key?'✓ Saved':'Not set';
+}
+
+function hub_renderM11() {
+  var summary=document.getElementById('hubSummaryM11');
+  var amz=0,man=0;
+  for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('hub_invoice_amazon_')===0)amz++;if(k&&k.indexOf('hub_invoice_manual_')===0)man++;}
+  if(summary)summary.textContent=amz+' Amazon · '+man+' manual invoices';
+  hub_renderAmazonInvLibrary();
+  hub_renderManualInvLibrary();
+  var ki=document.getElementById('hubAnthropicKey');
+  if(ki){var key=hub_getAnthropicKey();ki.value=key;var ks=document.getElementById('hubAiKeyStatus');if(ks)ks.textContent=key?'✓ Saved':'Not set';}
+}
+
+// ── Sortable Tables ───────────────────────
+
+function hub_initSortableTable(tableId) {
+  var table=document.getElementById(tableId);
+  if(!table)return;
+  var headers=table.querySelectorAll('thead th');
+  headers.forEach(function(th,col){
+    th.style.cursor='pointer';
+    th.style.userSelect='none';
+    var asc=true;
+    th.addEventListener('click',function(){
+      var tbody=table.querySelector('tbody');
+      if(!tbody)return;
+      var rows=Array.from(tbody.querySelectorAll('tr'));
+      rows.sort(function(a,b){
+        var av=(a.cells[col]&&a.cells[col].textContent||'').trim();
+        var bv=(b.cells[col]&&b.cells[col].textContent||'').trim();
+        var an=parseFloat(av.replace(/[£,%\s]/g,''));
+        var bn=parseFloat(bv.replace(/[£,%\s]/g,''));
+        if(!isNaN(an)&&!isNaN(bn))return asc?an-bn:bn-an;
+        return asc?av.localeCompare(bv):bv.localeCompare(av);
+      });
+      asc=!asc;
+      rows.forEach(function(r){tbody.appendChild(r);});
+      headers.forEach(function(h){h.textContent=h.textContent.replace(/ [▲▼]$/,'');});
+      th.textContent+=asc?' ▼':' ▲';
+    });
+  });
+}
+
+// ── Status Pills ──────────────────────────
+
+function hub_statusPill(status) {
+  var map={
+    'Identified':'background:#1e1e2e;color:#9898b8;',
+    'Case Opened':'background:rgba(77,142,245,.18);color:#4d8ef5;',
+    'Chasing':'background:rgba(240,165,0,.15);color:#f0a500;',
+    'Escalated':'background:rgba(240,59,80,.15);color:#f03b50;',
+    'Won':'background:rgba(0,217,126,.15);color:#00d97e;',
+    'Lost':'background:#181824;color:#656578;',
+    'Duplicate':'background:#111118;color:#404055;',
+    'Settled':'background:#181824;color:#656578;'
+  };
+  var style=map[status]||map['Identified'];
+  return '<span style="'+style+'border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;white-space:nowrap;">'+status+'</span>';
+}
+
+// ── Settings ──────────────────────────────
+
+function hub_clearAll() {
+  var inp=document.getElementById('hubClearConfirm');
+  if(!inp||inp.value.trim()!=='CONFIRM'){alert('Type CONFIRM in the box to clear all hub data.');return;}
+  var keys=[];
+  for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('hub_')===0)keys.push(k);}
+  keys.forEach(function(k){localStorage.removeItem(k);});
+  window.hubInitialised=false;
+  alert('Cleared '+keys.length+' hub data entries. Reloading…');
+  location.reload();
+}
+
+// ── Main Refresh ──────────────────────────
+
+function hub_refreshAll() {
+  hub_renderReportsManager();
+  hub_renderM1();
+  hub_renderM2();
+  hub_renderM3();
+  hub_renderM4();
+  hub_renderM5();
+  hub_renderM6();
+  hub_renderM7();
+  hub_renderM8();
+  hub_renderM9(); // updates KPI + scoreboard
+  hub_renderM10();
+  hub_renderM11();
+}
+
+// ── Init ──────────────────────────────────
+
+function hubInit() {
+  if(window.hubInitialised)return;
+  window.hubInitialised=true;
+  hub_setDefaultDateRange();
+  hub_renderReportsManager();
+  hub_refreshAll();
+}
+
+document.addEventListener('bimma:pagechange', function(e) {
+  if(e.detail==='hub') hubInit();
+});
 </script>
 </body>
 </html>

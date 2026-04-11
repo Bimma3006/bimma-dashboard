@@ -2361,6 +2361,7 @@ input::placeholder { color: var(--text-4); }
     <div class="sidebar-section-label">Inventory</div>
     <div class="nav-item" data-page="listing" onclick="showPage('listing',this)"><span class="nav-icon">↑</span>Listing Uploader</div>
     <div class="nav-item" data-page="purchases" onclick="showPage('purchases',this)"><span class="nav-icon">◈</span>Purchases</div>
+    <div class="nav-item" data-page="invoices" onclick="showPage('invoices',this)"><span class="nav-icon">⊞</span>Invoice Checker</div>
     <div class="nav-divider"></div>
     <div class="sidebar-section-label">Finance</div>
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses',this)"><span class="nav-icon">£</span>Expenses</div>
@@ -2991,8 +2992,9 @@ input::placeholder { color: var(--text-4); }
             <th>Supplier</th>
             <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="purchaseSetSort('roi')">ROI<span id="purchSort_roi" style="color:var(--green);font-size:9px;"></span></th>
             <th style="text-align:center;">Uploaded</th>
+            <th style="text-align:center;">Invoice</th>
           </tr></thead>
-          <tbody id="purchasesTbody"><tr><td colspan="11"><div class="empty-state">Connect to load purchases</div></td></tr></tbody>
+          <tbody id="purchasesTbody"><tr><td colspan="12"><div class="empty-state">Connect to load purchases</div></td></tr></tbody>
         </table>
       </div>
     </div>
@@ -3498,6 +3500,79 @@ input::placeholder { color: var(--text-4); }
     </div>
   </div>
 
+</div>
+
+<!-- ═══════════════════════════════════════
+     INVOICE CHECKER  ·  CSS + PAGE
+═══════════════════════════════════════ -->
+<style>
+.inv-api-bar{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:20px;flex-wrap:wrap;}
+.inv-api-bar input{flex:1;min-width:220px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;}
+.inv-api-bar input:focus{outline:none;border-color:var(--green);}
+.inv-drop-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:40px 24px;text-align:center;cursor:pointer;transition:border-color var(--transition),background var(--transition);margin-bottom:20px;}
+.inv-drop-zone:hover,.inv-drop-zone.drag-over{border-color:var(--green);background:rgba(0,217,126,0.04);}
+.inv-drop-icon{font-size:32px;margin-bottom:10px;color:var(--text-3);}
+.inv-drop-text{font-size:14px;color:var(--text-2);}
+.inv-drop-text label{color:var(--green);cursor:pointer;text-decoration:underline;}
+.inv-drop-text label input{display:none;}
+.inv-queue-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.inv-queue-hdr span{font-family:var(--mono);font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em;flex:1;}
+.inv-file-list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;}
+.inv-file-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.inv-file-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.inv-file-name{font-family:var(--mono);font-size:12px;color:var(--text-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.inv-status{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:var(--r-xs);text-transform:uppercase;letter-spacing:.06em;}
+.inv-status-pending{color:var(--text-3);background:var(--surface3);}
+.inv-status-analysing{color:var(--amber);background:var(--amber-glow);}
+.inv-status-matched{color:var(--blue);background:var(--accent-glow);}
+.inv-status-confirmed{color:var(--green);background:var(--green-glow);}
+.inv-status-unmatched{color:var(--amber);background:var(--amber-glow);}
+.inv-status-error{color:var(--red);background:var(--red-glow);}
+.inv-match-box{background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
+.inv-match-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.inv-match-title{font-size:13px;color:var(--text);flex:1;min-width:0;}
+.inv-match-meta{font-family:var(--mono);font-size:11px;color:var(--text-3);}
+.inv-conf{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:var(--r-xs);text-transform:uppercase;letter-spacing:.06em;}
+.inv-conf-high{color:var(--green);background:var(--green-glow);}
+.inv-conf-med{color:var(--amber);background:var(--amber-glow);}
+.inv-conf-low{color:var(--text-3);background:var(--surface4);}
+.inv-match-sel{background:var(--surface4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:6px 10px;color:var(--text);font-size:12px;width:100%;}
+.inv-match-actions{display:flex;gap:8px;}
+.inv-icon-btn{background:none;border:1px solid var(--border2);border-radius:var(--r-xs);color:var(--blue);cursor:pointer;font-size:13px;padding:2px 8px;transition:border-color var(--transition),color var(--transition);}
+.inv-icon-btn:hover{border-color:var(--blue);color:var(--text);}
+.inv-extracted{font-family:var(--mono);font-size:11px;color:var(--text-3);background:var(--surface4);border-radius:var(--r-xs);padding:6px 10px;}
+</style>
+
+<div class="page" id="page-invoices">
+  <div class="page-inner">
+    <div class="page-header">
+      <div class="page-header-label">Inventory</div>
+      <div class="page-header-title">Invoice Checker</div>
+      <div class="page-header-sub">Upload PDF invoices — Claude AI reads each one and links it to the matching purchase</div>
+    </div>
+
+    <!-- API Key -->
+    <div class="inv-api-bar">
+      <input id="invApiKey" type="password" placeholder="Paste Claude API key (sk-ant-…)" autocomplete="off">
+      <button class="btn-sm btn-green" onclick="invSaveKey()">Save Key</button>
+      <span id="invKeyStatus"></span>
+    </div>
+
+    <!-- Drop zone -->
+    <div class="inv-drop-zone" id="invDropZone"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="this.classList.remove('drag-over');invHandleDrop(event)">
+      <div class="inv-drop-icon">⊞</div>
+      <div class="inv-drop-text">
+        Drop PDF invoices here or <label>browse files<input type="file" accept=".pdf" multiple onchange="invHandleFiles(this.files);this.value=''"></label>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:8px;">Multiple files supported · PDFs only</div>
+    </div>
+
+    <!-- Queue + results -->
+    <div id="invQueue"></div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════
@@ -4073,7 +4148,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker', leakage:'Leakage Tracker', hub:'Business Health Hub' };
+  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker', leakage:'Leakage Tracker', hub:'Business Health Hub', invoices:'Invoice Checker' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   document.dispatchEvent(new CustomEvent('bimma:pagechange', { detail: name }));
 }
@@ -4108,6 +4183,7 @@ window.onload = () => {
   // Initialise EUR/GBP rate display
   const daFxRateEl = document.getElementById('daFxRateDisplay');
   if (daFxRateEl) daFxRateEl.textContent = bimmaEurGbpRate.toFixed(4);
+  invLoadAttached();
 };
 
 function loadGIS() {
@@ -4345,7 +4421,7 @@ function purchaseSetSort(col) {
 function renderPurchases(rows) {
   document.getElementById('purchaseCount').textContent = rows.length+' purchases';
   const tb=document.getElementById('purchasesTbody');
-  if(!rows.length){tb.innerHTML='<tr><td colspan="11"><div class="empty-state">No purchases</div></td></tr>';return;}
+  if(!rows.length){tb.innerHTML='<tr><td colspan="12"><div class="empty-state">No purchases</div></td></tr>';return;}
   const calcRoi = r => { const cost=r.buy/(1+BIMMA_CFG.vatRate), netRev=r.sell>0?r.sell-scoutReferral(r.sell)-scoutFbaFee(r.sell):0; return r.sell>0&&r.buy>0?((netRev-cost)/cost*100):null; };
   if (purchaseSortCol) {
     rows = [...rows].sort((a,b) => {
@@ -4359,7 +4435,8 @@ function renderPurchases(rows) {
   tb.innerHTML=rows.map(r=>{
     const roi=calcRoi(r);
     const roiHtml=roi!==null?`<span class="roi-pill ${roi>=20?'roi-green':roi>=15?'roi-amber':'roi-red'}">${roi.toFixed(1)}%</span>`:'—';
-    return `<tr><td class="td-date">${fmtDate(r.date)}</td><td class="td-sku">${esc(r.sku)}</td><td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td><td class="td-center mono">${esc(r.asin)}</td><td class="td-price">£${r.buy.toFixed(2)}</td><td class="td-price">£${r.sell.toFixed(2)}</td><td class="td-center">${r.qty}</td><td class="td-price">£${r.spend.toFixed(2)}</td><td style="font-size:11px;color:var(--text-3)">${esc(r.supplier)}</td><td style="text-align:right;">${roiHtml}</td><td class="toggle-wrap"><button class="toggle ${r.uploaded?'on':''}" onclick="toggleUpload(${r.rowIdx},this,'purchases')"></button></td></tr>`;
+    const hasInv=window.invAttachedRows&&window.invAttachedRows.has(r.rowIdx);
+    return `<tr><td class="td-date">${fmtDate(r.date)}</td><td class="td-sku">${esc(r.sku)}</td><td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td><td class="td-center mono">${esc(r.asin)}</td><td class="td-price">£${r.buy.toFixed(2)}</td><td class="td-price">£${r.sell.toFixed(2)}</td><td class="td-center">${r.qty}</td><td class="td-price">£${r.spend.toFixed(2)}</td><td style="font-size:11px;color:var(--text-3)">${esc(r.supplier)}</td><td style="text-align:right;">${roiHtml}</td><td class="toggle-wrap"><button class="toggle ${r.uploaded?'on':''}" onclick="toggleUpload(${r.rowIdx},this,'purchases')"></button></td><td class="td-center">${hasInv?`<button class="inv-icon-btn" onclick="invViewInvoice(${r.rowIdx})" title="View attached invoice">⊞</button>`:'<span style="color:var(--border2);">—</span>'}</td></tr>`;
   }).join('');
 }
 function updateSupplierList() {
@@ -10282,7 +10359,370 @@ function hubInit() {
 
 document.addEventListener('bimma:pagechange', function(e) {
   if(e.detail==='hub') hubInit();
+  if(e.detail==='invoices') invInit();
 });
+
+// ════════════════════════════════════════
+// INVOICE CHECKER
+// ════════════════════════════════════════
+
+// ── IndexedDB ────────────────────────────
+let invDB = null;
+function invOpenDB() {
+  return new Promise(function(resolve, reject) {
+    if (invDB) { resolve(invDB); return; }
+    var req = indexedDB.open('bimmaInvoicesDB', 1);
+    req.onupgradeneeded = function(e) {
+      var db = e.target.result;
+      if (!db.objectStoreNames.contains('invoices')) {
+        db.createObjectStore('invoices', { keyPath: 'rowIdx' });
+      }
+    };
+    req.onsuccess = function(e) { invDB = e.target.result; resolve(invDB); };
+    req.onerror = function(e) { reject(e.target.error); };
+  });
+}
+function invSaveRecord(rowIdx, fileName, pdfData, extractedData) {
+  return invOpenDB().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction('invoices', 'readwrite');
+      tx.objectStore('invoices').put({ rowIdx: rowIdx, fileName: fileName, pdfData: pdfData, extractedData: extractedData, attachedAt: new Date().toISOString() });
+      tx.oncomplete = resolve;
+      tx.onerror = function(e) { reject(e.target.error); };
+    });
+  });
+}
+function invGetRecord(rowIdx) {
+  return invOpenDB().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction('invoices', 'readonly');
+      var req = tx.objectStore('invoices').get(rowIdx);
+      req.onsuccess = function(e) { resolve(e.target.result); };
+      req.onerror = function(e) { reject(e.target.error); };
+    });
+  });
+}
+function invGetAllKeys() {
+  return invOpenDB().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction('invoices', 'readonly');
+      var req = tx.objectStore('invoices').getAllKeys();
+      req.onsuccess = function(e) { resolve(e.target.result); };
+      req.onerror = function(e) { reject(e.target.error); };
+    });
+  });
+}
+function invDeleteRecord(rowIdx) {
+  return invOpenDB().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction('invoices', 'readwrite');
+      tx.objectStore('invoices').delete(rowIdx);
+      tx.oncomplete = resolve;
+      tx.onerror = function(e) { reject(e.target.error); };
+    });
+  });
+}
+
+window.invAttachedRows = new Set();
+function invLoadAttached() {
+  invGetAllKeys().then(function(keys) {
+    window.invAttachedRows = new Set(keys);
+  }).catch(function() {});
+}
+
+// ── API Key ───────────────────────────────
+function invSaveKey() {
+  var key = (document.getElementById('invApiKey').value || '').trim();
+  if (!key.startsWith('sk-ant-')) { showToast('Invalid key — must start with sk-ant-'); return; }
+  localStorage.setItem('bimma_claude_key', key);
+  document.getElementById('invApiKey').value = '';
+  invRenderKeyStatus();
+  showToast('Claude API key saved');
+}
+function invRenderKeyStatus() {
+  var key = localStorage.getItem('bimma_claude_key');
+  var el = document.getElementById('invKeyStatus');
+  var input = document.getElementById('invApiKey');
+  if (!el) return;
+  if (key) {
+    el.innerHTML = '<span style="color:var(--green);font-family:var(--mono);font-size:11px;">✓ ' + key.slice(0,16) + '…</span>';
+    if (input) input.placeholder = 'Key saved — paste new key to replace';
+  } else {
+    el.innerHTML = '<span style="color:var(--text-3);font-family:var(--mono);font-size:11px;">No key saved</span>';
+  }
+}
+
+// ── File handling ─────────────────────────
+var invPending = [];
+
+function invHandleDrop(e) {
+  e.preventDefault();
+  var files = Array.from(e.dataTransfer.files).filter(function(f) { return f.type === 'application/pdf'; });
+  invAddFiles(files);
+}
+function invHandleFiles(fileList) {
+  invAddFiles(Array.from(fileList).filter(function(f) { return f.type === 'application/pdf'; }));
+}
+function invAddFiles(files) {
+  files.forEach(function(f) {
+    if (!invPending.find(function(p) { return p.name === f.name; })) {
+      invPending.push({ file: f, name: f.name, status: 'pending', extracted: null, candidates: null, chosenCandidate: 0, confirmedRowIdx: null, error: null });
+    }
+  });
+  invRenderQueue();
+}
+
+function invRenderQueue() {
+  var el = document.getElementById('invQueue');
+  if (!el) return;
+  if (!invPending.length) { el.innerHTML = ''; return; }
+  var hasPending = invPending.some(function(p) { return p.status === 'pending'; });
+  var html = '<div class="inv-queue-hdr"><span>' + invPending.length + ' file' + (invPending.length !== 1 ? 's' : '') + ' queued</span>';
+  if (hasPending) html += '<button class="btn-sm btn-green" onclick="invAnalyseAll()">▶ Analyse All</button>';
+  html += '<button class="btn-sm btn-ghost" onclick="invClearDone()">Clear Done</button></div>';
+  html += '<div class="inv-file-list">';
+  invPending.forEach(function(p, i) {
+    html += '<div class="inv-file-row">';
+    html += '<div class="inv-file-top">';
+    html += '<span class="inv-file-name">' + esc(p.name) + '</span>';
+    html += '<span class="inv-status inv-status-' + p.status + '">' + invStatusLabel(p.status) + '</span>';
+    html += '</div>';
+    if (p.status === 'analysing') {
+      html += '<div style="font-family:var(--mono);font-size:11px;color:var(--amber);">Sending to Claude…</div>';
+    }
+    if (p.extracted) {
+      html += '<div class="inv-extracted">Detected: ' + esc(p.extracted.product || '—') + ' · £' + (p.extracted.unitPrice||0).toFixed(2) + ' · ' + esc(p.extracted.supplier || '—') + ' · ' + esc(p.extracted.date || '—') + (p.extracted.asin ? ' · ' + esc(p.extracted.asin) : '') + '</div>';
+    }
+    if (p.status === 'matched' && p.candidates && p.candidates.length) {
+      var top = p.candidates[0];
+      html += '<div class="inv-match-box">';
+      html += '<div class="inv-match-row"><span class="inv-match-title">' + esc(top.r.title) + '</span><span class="inv-match-meta">' + esc(top.r.asin) + ' · £' + top.r.buy.toFixed(2) + ' · ' + fmtDate(top.r.date) + '</span><span class="inv-conf inv-conf-' + (top.score>=80?'high':top.score>=40?'med':'low') + '">' + (top.score>=80?'High':top.score>=40?'Medium':'Low') + ' match</span></div>';
+      if (p.candidates.length > 1) {
+        html += '<select class="inv-match-sel" onchange="invPending[' + i + '].chosenCandidate=parseInt(this.value)">';
+        p.candidates.forEach(function(c, ci) {
+          html += '<option value="' + ci + '"' + (ci===0?' selected':'') + '>' + esc(c.r.title) + ' — £' + c.r.buy.toFixed(2) + ' — ' + fmtDate(c.r.date) + '</option>';
+        });
+        html += '</select>';
+      }
+      html += '<div class="inv-match-actions"><button class="btn-sm btn-green" onclick="invConfirm(' + i + ')">✓ Confirm Match</button><button class="btn-sm btn-ghost" onclick="invSkip(' + i + ')">✕ Skip</button></div>';
+      html += '</div>';
+    }
+    if (p.status === 'unmatched') {
+      html += '<div style="font-size:12px;color:var(--amber);">No matching purchase found — check your purchases are loaded via Google Sheets.</div>';
+    }
+    if (p.status === 'confirmed') {
+      var matched = allRows.find(function(r) { return r.rowIdx === p.confirmedRowIdx; });
+      html += '<div style="color:var(--green);font-family:var(--mono);font-size:11px;">✓ Attached to: ' + esc(matched ? matched.title : 'Purchase #' + p.confirmedRowIdx) + '</div>';
+    }
+    if (p.status === 'error') {
+      html += '<div style="color:var(--red);font-size:12px;">' + esc(p.error || 'Unknown error') + '</div>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function invStatusLabel(s) {
+  return { pending:'Pending', analysing:'Analysing…', matched:'Matched', confirmed:'Confirmed', unmatched:'No match', error:'Error' }[s] || s;
+}
+
+// ── Analysis ──────────────────────────────
+function invAnalyseAll() {
+  var key = localStorage.getItem('bimma_claude_key');
+  if (!key) { showToast('Add your Claude API key first'); return; }
+  if (!allRows || !allRows.length) { showToast('Load your purchases first (connect Google Sheets)'); return; }
+  var chain = Promise.resolve();
+  invPending.forEach(function(p, i) {
+    if (p.status !== 'pending') return;
+    chain = chain.then(function() { return invAnalyseOne(i, key); });
+  });
+}
+
+function invAnalyseOne(i, key) {
+  var p = invPending[i];
+  p.status = 'analysing';
+  invRenderQueue();
+  return invFileToBase64(p.file).then(function(base64) {
+    return fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 512,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+            { type: 'text', text: 'Extract from this invoice: supplier/seller name, product description, ASIN (if present, usually starts with B0), quantity purchased, unit price in GBP, total amount in GBP, invoice or order date. Reply ONLY with valid JSON and nothing else: {"supplier":"","product":"","asin":"","qty":1,"unitPrice":0,"total":0,"date":"YYYY-MM-DD"}' }
+          ]
+        }]
+      })
+    });
+  }).then(function(resp) {
+    if (!resp.ok) {
+      return resp.json().catch(function() { return {}; }).then(function(err) {
+        throw new Error((err.error && err.error.message) || ('API error ' + resp.status));
+      });
+    }
+    return resp.json();
+  }).then(function(data) {
+    var text = (data.content && data.content[0] && data.content[0].text) || '';
+    var extracted;
+    try {
+      extracted = JSON.parse(text.replace(/```json|```/g, '').trim());
+    } catch(e) {
+      var m = text.match(/\{[\s\S]*\}/);
+      if (m) { try { extracted = JSON.parse(m[0]); } catch(e2) {} }
+    }
+    if (!extracted) throw new Error('Could not parse Claude response');
+    p.extracted = extracted;
+    p.candidates = invMatchPurchase(extracted);
+    p.chosenCandidate = 0;
+    p.status = p.candidates.length ? 'matched' : 'unmatched';
+    invRenderQueue();
+  }).catch(function(err) {
+    p.status = 'error';
+    p.error = err.message;
+    invRenderQueue();
+  });
+}
+
+function invFileToBase64(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var bytes = new Uint8Array(e.target.result);
+      var binary = '';
+      for (var j = 0; j < bytes.length; j++) binary += String.fromCharCode(bytes[j]);
+      resolve(btoa(binary));
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ── Matching ──────────────────────────────
+function invMatchPurchase(extracted) {
+  if (!allRows || !allRows.length) return [];
+  var candidates = allRows.map(function(r) { return { r: r, score: 0 }; });
+
+  if (extracted.asin && extracted.asin.length > 5) {
+    candidates.forEach(function(c) {
+      if (c.r.asin && c.r.asin.toUpperCase() === extracted.asin.toUpperCase()) c.score += 100;
+    });
+  }
+  if (extracted.unitPrice > 0) {
+    candidates.forEach(function(c) {
+      var diff = Math.abs(c.r.buy - extracted.unitPrice) / (extracted.unitPrice || 1);
+      if (diff < 0.03) c.score += 50;
+      else if (diff < 0.1) c.score += 20;
+    });
+  }
+  if (extracted.supplier) {
+    var sup = extracted.supplier.toLowerCase();
+    candidates.forEach(function(c) {
+      var rs = (c.r.supplier || '').toLowerCase();
+      if (rs && sup.includes(rs)) c.score += 30;
+      else if (rs && rs.includes(sup)) c.score += 20;
+    });
+  }
+  if (extracted.date) {
+    var invDate = new Date(extracted.date);
+    candidates.forEach(function(c) {
+      if (c.r.date) {
+        var diff = Math.abs(new Date(c.r.date) - invDate) / 86400000;
+        if (diff < 2) c.score += 25;
+        else if (diff < 7) c.score += 12;
+        else if (diff < 30) c.score += 4;
+      }
+    });
+  }
+  if (extracted.product) {
+    var words = extracted.product.toLowerCase().split(/\s+/).filter(function(w) { return w.length > 3; });
+    candidates.forEach(function(c) {
+      var title = c.r.title.toLowerCase();
+      var hits = words.filter(function(w) { return title.includes(w); }).length;
+      c.score += hits * 8;
+    });
+  }
+  return candidates.filter(function(c) { return c.score > 10; }).sort(function(a, b) { return b.score - a.score; }).slice(0, 3);
+}
+
+// ── Confirm / Skip ────────────────────────
+function invConfirm(i) {
+  var p = invPending[i];
+  var ci = p.chosenCandidate || 0;
+  var candidate = p.candidates && p.candidates[ci];
+  if (!candidate) return;
+  var rowIdx = candidate.r.rowIdx;
+  p.file.arrayBuffer().then(function(buf) {
+    return invSaveRecord(rowIdx, p.name, buf, p.extracted);
+  }).then(function() {
+    p.status = 'confirmed';
+    p.confirmedRowIdx = rowIdx;
+    window.invAttachedRows.add(rowIdx);
+    showToast('Invoice attached');
+    invRenderQueue();
+    filterPurchases();
+  }).catch(function(err) {
+    showToast('Save failed: ' + err.message);
+  });
+}
+
+function invSkip(i) {
+  invPending[i].status = 'pending';
+  invPending[i].candidates = null;
+  invPending[i].extracted = null;
+  invRenderQueue();
+}
+
+function invClearDone() {
+  invPending = invPending.filter(function(p) { return p.status !== 'confirmed'; });
+  invRenderQueue();
+}
+
+// ── View / Detach ─────────────────────────
+function invViewInvoice(rowIdx) {
+  invGetRecord(rowIdx).then(function(inv) {
+    if (!inv) { showToast('No invoice attached'); return; }
+    var blob = new Blob([inv.pdfData], { type: 'application/pdf' });
+    var url = URL.createObjectURL(blob);
+    var modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:flex;flex-direction:column;padding:20px;gap:12px;';
+    modal.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">' +
+      '<span style="font-family:var(--mono);font-size:12px;color:var(--text-2);">' + esc(inv.fileName) + '</span>' +
+      '<div style="display:flex;gap:8px;">' +
+      '<button class="btn-sm btn-ghost" onclick="invDetachModal(' + rowIdx + ',this)">Detach Invoice</button>' +
+      '<button class="btn-sm btn-ghost" onclick="URL.revokeObjectURL(\'' + url + '\');this.closest(\'[style]\').remove()">✕ Close</button>' +
+      '</div></div>' +
+      '<iframe src="' + url + '" style="flex:1;border:none;border-radius:var(--r);background:#fff;min-height:0;"></iframe>';
+    document.body.appendChild(modal);
+  });
+}
+
+function invDetachModal(rowIdx, btn) {
+  if (!confirm('Remove this invoice attachment?')) return;
+  invDeleteRecord(rowIdx).then(function() {
+    window.invAttachedRows.delete(rowIdx);
+    var modal = btn.closest('[style]');
+    if (modal) modal.remove();
+    filterPurchases();
+    showToast('Invoice detached');
+  });
+}
+
+// ── Init ──────────────────────────────────
+function invInit() {
+  invRenderKeyStatus();
+  invRenderQueue();
+  invLoadAttached();
+}
 </script>
 </body>
 </html>

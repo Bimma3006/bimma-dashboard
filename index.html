@@ -3506,9 +3506,6 @@ input::placeholder { color: var(--text-4); }
      INVOICE CHECKER  ·  CSS + PAGE
 ═══════════════════════════════════════ -->
 <style>
-.inv-api-bar{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:20px;flex-wrap:wrap;}
-.inv-api-bar input{flex:1;min-width:220px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;}
-.inv-api-bar input:focus{outline:none;border-color:var(--green);}
 .inv-drop-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:40px 24px;text-align:center;cursor:pointer;transition:border-color var(--transition),background var(--transition);margin-bottom:20px;}
 .inv-drop-zone:hover,.inv-drop-zone.drag-over{border-color:var(--green);background:rgba(0,217,126,0.04);}
 .inv-drop-icon{font-size:32px;margin-bottom:10px;color:var(--text-3);}
@@ -3548,26 +3545,19 @@ input::placeholder { color: var(--text-4); }
     <div class="page-header">
       <div class="page-header-label">Inventory</div>
       <div class="page-header-title">Invoice Checker</div>
-      <div class="page-header-sub">Upload PDF invoices — Claude AI reads each one and links it to the matching purchase</div>
-    </div>
-
-    <!-- API Key -->
-    <div class="inv-api-bar">
-      <input id="invApiKey" type="password" placeholder="Paste Claude API key (sk-ant-…)" autocomplete="off">
-      <button class="btn-sm btn-green" onclick="invSaveKey()">Save Key</button>
-      <span id="invKeyStatus"></span>
+      <div class="page-header-sub">Drop a folder of PDF invoices — parsed client-side and matched to your purchases</div>
     </div>
 
     <!-- Drop zone -->
     <div class="inv-drop-zone" id="invDropZone"
-         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragover="event.preventDefault();event.stopPropagation();this.classList.add('drag-over')"
          ondragleave="this.classList.remove('drag-over')"
-         ondrop="this.classList.remove('drag-over');invHandleDrop(event)">
-      <div class="inv-drop-icon">⊞</div>
+         ondrop="event.stopPropagation();this.classList.remove('drag-over');invHandleDrop(event)">
+      <div class="inv-drop-icon">📁</div>
       <div class="inv-drop-text">
-        Drop PDF invoices here or <label>browse files<input type="file" accept=".pdf" multiple onchange="invHandleFiles(this.files);this.value=''"></label>
+        Drop a folder or PDFs here · or <label>browse folder<input type="file" webkitdirectory multiple style="display:none" onchange="invHandleFiles(this.files);this.value=''"></label> · or <label>browse files<input type="file" accept=".pdf" multiple style="display:none" onchange="invHandleFiles(this.files);this.value=''"></label>
       </div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:8px;">Multiple files supported · PDFs only</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:8px;">Folders and individual PDFs supported · parsed locally, no API key needed</div>
     </div>
 
     <!-- Queue + results -->
@@ -10450,38 +10440,58 @@ async function hub_onAmazonInvoiceUpload(inputEl) {
 
 async function hub_handleInvDrop(event) {
   event.preventDefault();
-  var items = Array.from(event.dataTransfer.items || []);
-  var files = [];
-  var entries = items.map(function(i) { try { return i.webkitGetAsEntry(); } catch(e) { return null; } }).filter(Boolean);
-  for (var ei = 0; ei < entries.length; ei++) {
-    await hub_collectPdfsFromEntry(entries[ei], files);
+  event.stopPropagation();
+  try {
+    var files = [];
+    var dt = event.dataTransfer;
+    // Collect entries synchronously before any await (DataTransferItem API expires after async gap)
+    var entries = [];
+    if (dt.items && dt.items.length) {
+      for (var ii = 0; ii < dt.items.length; ii++) {
+        try {
+          var ent = (dt.items[ii].webkitGetAsEntry || dt.items[ii].getAsEntry || function(){}).call(dt.items[ii]);
+          if (ent) entries.push(ent);
+        } catch(ex) {}
+      }
+    }
+    if (entries.length) {
+      for (var ei = 0; ei < entries.length; ei++) {
+        await hub_collectPdfsFromEntry(entries[ei], files);
+      }
+    } else {
+      // Fallback: plain files drop (individual PDFs, no folder traversal)
+      files = Array.from(dt.files || []).filter(function(f) { return /\.pdf$/i.test(f.name); });
+    }
+    if (!files.length) return;
+    await hub_processInvoiceFiles(files);
+  } catch(err) {
+    console.error('hub_handleInvDrop error:', err);
   }
-  if (!files.length) return;
-  await hub_processInvoiceFiles(files);
 }
 
 async function hub_collectPdfsFromEntry(entry, files) {
   if (!entry) return;
-  if (entry.isFile) {
-    if (/\.pdf$/i.test(entry.name)) {
-      await new Promise(function(resolve) {
-        entry.file(function(f) { files.push(f); resolve(); }, function() { resolve(); });
-      });
-    }
-  } else if (entry.isDirectory) {
-    var reader = entry.createReader();
-    var readBatch = function() {
-      return new Promise(function(resolve) {
-        reader.readEntries(resolve, function() { resolve([]); });
-      });
-    };
-    var batch;
-    do {
-      batch = await readBatch();
-      for (var bi = 0; bi < batch.length; bi++) {
-        await hub_collectPdfsFromEntry(batch[bi], files);
+  try {
+    if (entry.isFile) {
+      if (/\.pdf$/i.test(entry.name)) {
+        await new Promise(function(resolve) {
+          entry.file(function(f) { files.push(f); resolve(); }, function() { resolve(); });
+        });
       }
-    } while (batch.length > 0);
+    } else if (entry.isDirectory) {
+      var reader = entry.createReader();
+      while (true) {
+        var batch = await new Promise(function(resolve) {
+          reader.readEntries(function(r) { resolve(r); }, function() { resolve([]); });
+        });
+        if (!batch || !batch.length) break;
+        for (var bi = 0; bi < batch.length; bi++) {
+          await hub_collectPdfsFromEntry(batch[bi], files);
+        }
+      }
+    }
+  } catch(err) {
+    console.warn('hub_collectPdfsFromEntry error for', entry && entry.name, err);
   }
 }
 
@@ -10847,35 +10857,57 @@ function invLoadAttached() {
   }).catch(function() {});
 }
 
-// ── API Key ───────────────────────────────
-function invSaveKey() {
-  var key = (document.getElementById('invApiKey').value || '').trim();
-  if (!key.startsWith('sk-ant-')) { showToast('Invalid key — must start with sk-ant-'); return; }
-  localStorage.setItem('bimma_claude_key', key);
-  document.getElementById('invApiKey').value = '';
-  invRenderKeyStatus();
-  showToast('Claude API key saved');
-}
-function invRenderKeyStatus() {
-  var key = localStorage.getItem('bimma_claude_key');
-  var el = document.getElementById('invKeyStatus');
-  var input = document.getElementById('invApiKey');
-  if (!el) return;
-  if (key) {
-    el.innerHTML = '<span style="color:var(--green);font-family:var(--mono);font-size:11px;">✓ ' + key.slice(0,16) + '…</span>';
-    if (input) input.placeholder = 'Key saved — paste new key to replace';
-  } else {
-    el.innerHTML = '<span style="color:var(--text-3);font-family:var(--mono);font-size:11px;">No key saved</span>';
-  }
-}
-
 // ── File handling ─────────────────────────
 var invPending = [];
 
-function invHandleDrop(e) {
+async function invHandleDrop(e) {
   e.preventDefault();
-  var files = Array.from(e.dataTransfer.files).filter(function(f) { return f.type === 'application/pdf'; });
-  invAddFiles(files);
+  try {
+    var files = [];
+    var dt = e.dataTransfer;
+    // Collect entries synchronously before any await
+    var entries = [];
+    if (dt.items && dt.items.length) {
+      for (var ii = 0; ii < dt.items.length; ii++) {
+        try {
+          var ent = (dt.items[ii].webkitGetAsEntry || dt.items[ii].getAsEntry || function(){}).call(dt.items[ii]);
+          if (ent) entries.push(ent);
+        } catch(ex) {}
+      }
+    }
+    if (entries.length) {
+      for (var ei = 0; ei < entries.length; ei++) {
+        await invCollectPdfsFromEntry(entries[ei], files);
+      }
+    } else {
+      files = Array.from(dt.files || []).filter(function(f) { return /\.pdf$/i.test(f.name); });
+    }
+    if (files.length) invAddFiles(files);
+  } catch(err) { console.error('invHandleDrop:', err); }
+}
+
+async function invCollectPdfsFromEntry(entry, files) {
+  if (!entry) return;
+  try {
+    if (entry.isFile) {
+      if (/\.pdf$/i.test(entry.name)) {
+        await new Promise(function(resolve) {
+          entry.file(function(f) { files.push(f); resolve(); }, function() { resolve(); });
+        });
+      }
+    } else if (entry.isDirectory) {
+      var reader = entry.createReader();
+      while (true) {
+        var batch = await new Promise(function(resolve) {
+          reader.readEntries(function(r) { resolve(r); }, function() { resolve([]); });
+        });
+        if (!batch || !batch.length) break;
+        for (var bi = 0; bi < batch.length; bi++) {
+          await invCollectPdfsFromEntry(batch[bi], files);
+        }
+      }
+    }
+  } catch(err) { console.warn('invCollectPdfsFromEntry:', entry && entry.name, err); }
 }
 function invHandleFiles(fileList) {
   invAddFiles(Array.from(fileList).filter(function(f) { return f.type === 'application/pdf'; }));
@@ -10905,7 +10937,7 @@ function invRenderQueue() {
     html += '<span class="inv-status inv-status-' + p.status + '">' + invStatusLabel(p.status) + '</span>';
     html += '</div>';
     if (p.status === 'analysing') {
-      html += '<div style="font-family:var(--mono);font-size:11px;color:var(--amber);">Sending to Claude…</div>';
+      html += '<div style="font-family:var(--mono);font-size:11px;color:var(--amber);">Parsing PDF…</div>';
     }
     if (p.extracted) {
       html += '<div class="inv-extracted">Detected: ' + esc(p.extracted.product || '—') + ' · £' + (p.extracted.unitPrice||0).toFixed(2) + ' · ' + esc(p.extracted.supplier || '—') + ' · ' + esc(p.extracted.date || '—') + (p.extracted.asin ? ' · ' + esc(p.extracted.asin) : '') + '</div>';
@@ -10945,83 +10977,48 @@ function invStatusLabel(s) {
 }
 
 // ── Analysis ──────────────────────────────
-function invAnalyseAll() {
-  var key = localStorage.getItem('bimma_claude_key');
-  if (!key) { showToast('Add your Claude API key first'); return; }
+async function invAnalyseAll() {
   if (!allRows || !allRows.length) { showToast('Load your purchases first (connect Google Sheets)'); return; }
-  var chain = Promise.resolve();
-  invPending.forEach(function(p, i) {
-    if (p.status !== 'pending') return;
-    chain = chain.then(function() { return invAnalyseOne(i, key); });
-  });
+  try { await hub_loadPdfJs(); } catch(e) { showToast('Could not load PDF parser — check connection'); return; }
+  for (var i = 0; i < invPending.length; i++) {
+    if (invPending[i].status === 'pending') await invAnalyseOne(i);
+  }
 }
 
-function invAnalyseOne(i, key) {
+async function invAnalyseOne(i) {
   var p = invPending[i];
   p.status = 'analysing';
   invRenderQueue();
-  return invFileToBase64(p.file).then(function(base64) {
-    return fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 512,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
-            { type: 'text', text: 'Extract from this invoice: supplier/seller name, product description, ASIN (if present, usually starts with B0), quantity purchased, unit price in GBP, total amount in GBP, invoice or order date. Reply ONLY with valid JSON and nothing else: {"supplier":"","product":"","asin":"","qty":1,"unitPrice":0,"total":0,"date":"YYYY-MM-DD"}' }
-          ]
-        }]
-      })
-    });
-  }).then(function(resp) {
-    if (!resp.ok) {
-      return resp.json().catch(function() { return {}; }).then(function(err) {
-        throw new Error((err.error && err.error.message) || ('API error ' + resp.status));
-      });
+  try {
+    var text = await hub_pdfToText(p.file);
+    var inv = hub_parseAmazonInvoice(text || '', p.file.name);
+    // Convert parsed invoice to the shape invMatchPurchase expects
+    var li = (inv.lineItems && inv.lineItems[0]) || {};
+    var dateYMD = '';
+    if (inv.date && inv.date !== '?') {
+      var dp = inv.date.split('/');
+      if (dp.length === 3) dateYMD = dp[2] + '-' + dp[1] + '-' + dp[0];
+      else dateYMD = inv.date;
     }
-    return resp.json();
-  }).then(function(data) {
-    var text = (data.content && data.content[0] && data.content[0].text) || '';
-    var extracted;
-    try {
-      extracted = JSON.parse(text.replace(/```json|```/g, '').trim());
-    } catch(e) {
-      var m = text.match(/\{[\s\S]*\}/);
-      if (m) { try { extracted = JSON.parse(m[0]); } catch(e2) {} }
-    }
-    if (!extracted) throw new Error('Could not parse Claude response');
-    p.extracted = extracted;
-    p.candidates = invMatchPurchase(extracted);
+    var mkt = (inv.marketplace || '').toLowerCase();
+    var supplier = mkt.includes('de') ? 'Amazon.de' : mkt.includes('fr') ? 'Amazon.fr' : mkt.includes('es') ? 'Amazon.es' : mkt.includes('it') ? 'Amazon.it' : 'Amazon';
+    p.extracted = {
+      supplier: supplier,
+      product: li.description || inv.invoiceNo || '',
+      asin: li.asin || '',
+      qty: li.qty || 1,
+      unitPrice: li.unitPrice || inv.total || 0,
+      total: inv.total || 0,
+      date: dateYMD
+    };
+    p.candidates = invMatchPurchase(p.extracted);
     p.chosenCandidate = 0;
     p.status = p.candidates.length ? 'matched' : 'unmatched';
-    invRenderQueue();
-  }).catch(function(err) {
+  } catch(err) {
     p.status = 'error';
     p.error = err.message;
-    invRenderQueue();
-  });
-}
-
-function invFileToBase64(file) {
-  return new Promise(function(resolve, reject) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var bytes = new Uint8Array(e.target.result);
-      var binary = '';
-      for (var j = 0; j < bytes.length; j++) binary += String.fromCharCode(bytes[j]);
-      resolve(btoa(binary));
-    };
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(file);
-  });
+  }
+  invRenderQueue();
 }
 
 // ── Matching ──────────────────────────────
@@ -11136,7 +11133,6 @@ function invDetachModal(rowIdx, btn) {
 
 // ── Init ──────────────────────────────────
 function invInit() {
-  invRenderKeyStatus();
   invRenderQueue();
   invLoadAttached();
 }

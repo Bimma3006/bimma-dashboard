@@ -11057,6 +11057,7 @@ async function invAnalyseAll() {
   var progStatus = document.getElementById('invProgressStatus');
   if (progWrap) progWrap.style.display = 'block';
 
+  window.invMatchedThisRun = new Set(); // tracks rowIdx claimed in this batch
   var total = pending.length, done = 0, confirmed = 0, unmatched = 0, skipped = 0, errors = 0;
 
   for (var i = 0; i < invPending.length; i++) {
@@ -11143,6 +11144,7 @@ async function invAnalyseOne(i) {
       p.extracted = { asin: extracted.asin, date: extracted.date }; // keep only what's needed for display
       window.invAttachedRows.add(rowIdx);
       window.invAttachedCounts[rowIdx] = (window.invAttachedCounts[rowIdx] || 0) + 1;
+      if (window.invMatchedThisRun) window.invMatchedThisRun.add(rowIdx);
       var siblingCount = invPending.filter(function(q) { return q !== p && q.status === 'confirmed' && q.confirmedRowIdx === rowIdx; }).length;
       if (siblingCount > 0) p._multiInv = siblingCount + 1;
       return 'confirmed';
@@ -11163,32 +11165,41 @@ async function invAnalyseOne(i) {
 function invMatchPurchase(extracted) {
   if (!allRows || !allRows.length) return [];
   var asin = (extracted.asin || '').trim().toUpperCase();
+  // invDate from extracted is already YYYY-MM-DD — safe for new Date()
   var invDate = extracted.date ? new Date(extracted.date) : null;
 
-  // Must have ASIN to match
   if (!asin || asin.length < 8) return [];
 
-  // Find all rows with matching ASIN
   var asinMatches = allRows.filter(function(r) {
     return (r.asin || '').trim().toUpperCase() === asin;
   });
   if (!asinMatches.length) return [];
 
-  // Score by date proximity (lower diff = higher score)
   var scored = asinMatches.map(function(r) {
     var dateDiff = Infinity;
     if (invDate && r.date) {
-      try { dateDiff = Math.abs(new Date(r.date) - invDate) / 86400000; } catch(e) {}
+      try {
+        // parseUKDate handles DD/MM/YYYY correctly; new Date() does not
+        var rDate = parseUKDate(r.date);
+        if (rDate && !isNaN(rDate.getTime())) {
+          dateDiff = Math.abs(rDate.getTime() - invDate.getTime()) / 86400000;
+        }
+      } catch(e) {}
     }
-    return { r: r, dateDiff: dateDiff };
+    var claimed = window.invMatchedThisRun && window.invMatchedThisRun.has(r.rowIdx);
+    return { r: r, dateDiff: dateDiff, claimed: claimed };
   });
 
-  // Sort by date proximity
-  scored.sort(function(a, b) { return a.dateDiff - b.dateDiff; });
+  // Sort by date proximity; use "already claimed this run" only as a tiebreaker
+  // when two rows are within 1 day of each other — avoids splitting genuine
+  // multi-invoice orders while still spreading invoices across distinct dates
+  scored.sort(function(a, b) {
+    var delta = a.dateDiff - b.dateDiff;
+    if (Math.abs(delta) < 1 && a.claimed !== b.claimed) return a.claimed ? 1 : -1;
+    return delta;
+  });
 
-  // Return closest match only (top 1), or up to 3 if dates are similarly close
-  var best = scored[0].dateDiff;
-  return scored.filter(function(c) { return c.dateDiff <= Math.max(best + 7, 30); }).slice(0, 3);
+  return scored.slice(0, 1);
 }
 
 function invClearDone() {

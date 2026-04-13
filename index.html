@@ -2979,6 +2979,7 @@ input::placeholder { color: var(--text-4); }
         </select>
         <input type="text" id="searchInput" placeholder="Search SKU, title, ASIN…" oninput="filterPurchases()" style="width:240px;">
         <span style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:auto;" id="purchaseCount"></span>
+        <button class="btn-sm btn-ghost" style="color:var(--red);border-color:var(--red);margin-left:10px;" onclick="invDetachAll()">Detach All Invoices</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -11257,6 +11258,25 @@ function invModalShowFile(btn, fi) {
   if (titleEl) titleEl.textContent = files[fi].fileName;
   btn.parentElement.querySelectorAll('button').forEach(function(b) { b.className = b.className.replace('btn-green','btn-ghost'); });
   btn.className = btn.className.replace('btn-ghost','btn-green');
+}
+
+function invDetachAll() {
+  if (!confirm('Remove ALL attached invoices? This cannot be undone.')) return;
+  invOpenDB().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction('invoices', 'readwrite');
+      tx.objectStore('invoices').clear();
+      tx.oncomplete = resolve;
+      tx.onerror = function(e) { reject(e.target.error); };
+    });
+  }).then(function() {
+    window.invAttachedRows = new Set();
+    window.invAttachedCounts = {};
+    filterPurchases();
+    showToast('All invoices detached');
+  }).catch(function(err) {
+    showToast('Failed: ' + err.message);
+  });
 }
 
 function invDetachModal(rowIdx, btn) {

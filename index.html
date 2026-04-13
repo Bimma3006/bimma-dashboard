@@ -2991,7 +2991,6 @@ input::placeholder { color: var(--text-4); }
             <th style="text-align:center;cursor:pointer;user-select:none;white-space:nowrap;" onclick="purchaseSetSort('qty')">Qty<span id="purchSort_qty" style="color:var(--green);font-size:9px;"></span></th>
             <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="purchaseSetSort('spend')">Spend<span id="purchSort_spend" style="color:var(--green);font-size:9px;"></span></th>
             <th>Supplier</th>
-            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="purchaseSetSort('roi')">ROI<span id="purchSort_roi" style="color:var(--green);font-size:9px;"></span></th>
             <th style="text-align:center;">Uploaded</th>
             <th style="text-align:center;">Invoice</th>
           </tr></thead>
@@ -4407,7 +4406,7 @@ function purchaseSetSort(col) {
     if (purchaseSortDir === 1) purchaseSortDir = -1;
     else purchaseSortCol = null;
   } else { purchaseSortCol = col; purchaseSortDir = 1; }
-  ['date','buy','sell','qty','spend','roi'].forEach(c => {
+  ['date','buy','sell','qty','spend'].forEach(c => {
     const el = document.getElementById('purchSort_'+c);
     if (el) el.textContent = c === purchaseSortCol ? (purchaseSortDir === 1 ? ' ▼' : ' ▲') : '';
   });
@@ -4416,25 +4415,21 @@ function purchaseSetSort(col) {
 function renderPurchases(rows) {
   document.getElementById('purchaseCount').textContent = rows.length+' purchases';
   const tb=document.getElementById('purchasesTbody');
-  if(!rows.length){tb.innerHTML='<tr><td colspan="12"><div class="empty-state">No purchases</div></td></tr>';return;}
-  const calcRoi = r => { const cost=r.buy/(1+BIMMA_CFG.vatRate), netRev=r.sell>0?r.sell-scoutReferral(r.sell)-scoutFbaFee(r.sell):0; return r.sell>0&&r.buy>0?((netRev-cost)/cost*100):null; };
+  if(!rows.length){tb.innerHTML='<tr><td colspan="11"><div class="empty-state">No purchases</div></td></tr>';return;}
   if (purchaseSortCol) {
     rows = [...rows].sort((a,b) => {
       let va, vb;
       if (purchaseSortCol==='date') { va=new Date(a.date||0); vb=new Date(b.date||0); return purchaseSortDir*(vb-va); }
-      if (purchaseSortCol==='roi')  { va=calcRoi(a)??-999; vb=calcRoi(b)??-999; }
       else { va=a[purchaseSortCol]||0; vb=b[purchaseSortCol]||0; }
       return purchaseSortDir*(vb-va);
     });
   }
   tb.innerHTML=rows.map(r=>{
-    const roi=calcRoi(r);
-    const roiHtml=roi!==null?`<span class="roi-pill ${roi>=20?'roi-green':roi>=15?'roi-amber':'roi-red'}">${roi.toFixed(1)}%</span>`:'—';
     const hasInv=window.invAttachedRows&&window.invAttachedRows.has(r.rowIdx);
     const invCount=(window.invAttachedCounts&&window.invAttachedCounts[r.rowIdx])||1;
     const invLabel=hasInv?(invCount>1?`📄 ${invCount}`:'📄'):'—';
     const invStyle=hasInv?'color:var(--blue);cursor:pointer;font-family:var(--mono);font-size:11px;':'color:var(--border2);';
-    return `<tr><td class="td-date">${fmtDate(r.date)}</td><td class="td-sku">${esc(r.sku)}</td><td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td><td class="td-center mono">${esc(r.asin)}</td><td class="td-price">£${r.buy.toFixed(2)}</td><td class="td-price">£${r.sell.toFixed(2)}</td><td class="td-center">${r.qty}</td><td class="td-price">£${r.spend.toFixed(2)}</td><td style="font-size:11px;color:var(--text-3)">${esc(r.supplier)}</td><td style="text-align:right;">${roiHtml}</td><td class="toggle-wrap"><button class="toggle ${r.uploaded?'on':''}" onclick="toggleUpload(${r.rowIdx},this,'purchases')"></button></td><td class="td-center">${hasInv?`<span style="${invStyle}" onclick="invViewInvoice(${r.rowIdx})" title="View ${invCount} attached invoice${invCount>1?'s':''}">${invLabel}</span>`:`<span style="${invStyle}">—</span>`}</td></tr>`;
+    return `<tr><td class="td-date">${fmtDate(r.date)}</td><td class="td-sku">${esc(r.sku)}</td><td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td><td class="td-center mono">${esc(r.asin)}</td><td class="td-price">£${r.buy.toFixed(2)}</td><td class="td-price">£${r.sell.toFixed(2)}</td><td class="td-center">${r.qty}</td><td class="td-price">£${r.spend.toFixed(2)}</td><td style="font-size:11px;color:var(--text-3)">${esc(r.supplier)}</td><td class="toggle-wrap"><button class="toggle ${r.uploaded?'on':''}" onclick="toggleUpload(${r.rowIdx},this,'purchases')"></button></td><td class="td-center">${hasInv?`<span style="${invStyle}" onclick="invViewInvoice(${r.rowIdx})" title="View ${invCount} attached invoice${invCount>1?'s':''}">${invLabel}</span>`:`<span style="${invStyle}">—</span>`}</td></tr>`;
   }).join('');
 }
 function updateSupplierList() {

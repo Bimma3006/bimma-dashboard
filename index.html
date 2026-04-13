@@ -3529,10 +3529,6 @@ input::placeholder { color: var(--text-4); }
 .inv-match-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .inv-match-title{font-size:13px;color:var(--text);flex:1;min-width:0;}
 .inv-match-meta{font-family:var(--mono);font-size:11px;color:var(--text-3);}
-.inv-conf{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:var(--r-xs);text-transform:uppercase;letter-spacing:.06em;}
-.inv-conf-high{color:var(--green);background:var(--green-glow);}
-.inv-conf-med{color:var(--amber);background:var(--amber-glow);}
-.inv-conf-low{color:var(--text-3);background:var(--surface4);}
 .inv-match-sel{background:var(--surface4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:6px 10px;color:var(--text);font-size:12px;width:100%;}
 .inv-match-actions{display:flex;gap:8px;}
 .inv-icon-btn{background:none;border:1px solid var(--border2);border-radius:var(--r-xs);color:var(--blue);cursor:pointer;font-size:13px;padding:2px 8px;transition:border-color var(--transition),color var(--transition);}
@@ -10910,15 +10906,23 @@ async function invCollectPdfsFromEntry(entry, files) {
   } catch(err) { console.warn('invCollectPdfsFromEntry:', entry && entry.name, err); }
 }
 function invHandleFiles(fileList) {
-  invAddFiles(Array.from(fileList).filter(function(f) { return f.type === 'application/pdf'; }));
+  invAddFiles(Array.from(fileList).filter(function(f) { return /\.pdf$/i.test(f.name) || f.type === 'application/pdf'; }));
 }
 function invAddFiles(files) {
   files.forEach(function(f) {
-    if (!invPending.find(function(p) { return p.name === f.name; })) {
-      invPending.push({ file: f, name: f.name, status: 'pending', extracted: null, candidates: null, chosenCandidate: 0, confirmedRowIdx: null, error: null });
+    var key = f.name + '_' + f.size;
+    if (!invPending.find(function(p) { return p._key === key; })) {
+      invPending.push({ file: f, name: f.name, _key: key, status: 'pending', extracted: null, candidates: null, chosenCandidate: 0, confirmedRowIdx: null, error: null });
     }
   });
   invRenderQueue();
+}
+function invOpenPdf(i) {
+  var p = invPending[i];
+  if (!p || !p.file) return;
+  var url = URL.createObjectURL(p.file);
+  window.open(url, '_blank');
+  setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
 }
 
 function invRenderQueue() {
@@ -10928,13 +10932,15 @@ function invRenderQueue() {
   var hasPending = invPending.some(function(p) { return p.status === 'pending'; });
   var html = '<div class="inv-queue-hdr"><span>' + invPending.length + ' file' + (invPending.length !== 1 ? 's' : '') + ' queued</span>';
   if (hasPending) html += '<button class="btn-sm btn-green" onclick="invAnalyseAll()">▶ Analyse All</button>';
-  html += '<button class="btn-sm btn-ghost" onclick="invClearDone()">Clear Done</button></div>';
+  html += '<button class="btn-sm btn-ghost" onclick="invClearDone()">Clear Done</button>';
+  html += '<button class="btn-sm btn-ghost" style="color:var(--red);border-color:var(--red);" onclick="if(confirm(\'Clear all queued files?\'')){invPending=[];invRenderQueue();}">✕ Clear All</button></div>';
   html += '<div class="inv-file-list">';
   invPending.forEach(function(p, i) {
     html += '<div class="inv-file-row">';
     html += '<div class="inv-file-top">';
     html += '<span class="inv-file-name">' + esc(p.name) + '</span>';
     html += '<span class="inv-status inv-status-' + p.status + '">' + invStatusLabel(p.status) + '</span>';
+    html += '<button class="inv-icon-btn" onclick="invOpenPdf(' + i + ')" title="View PDF" style="font-size:11px;padding:2px 8px;">View PDF</button>';
     html += '</div>';
     if (p.status === 'analysing') {
       html += '<div style="font-family:var(--mono);font-size:11px;color:var(--amber);">Parsing PDF…</div>';
@@ -10944,12 +10950,16 @@ function invRenderQueue() {
     }
     if (p.status === 'matched' && p.candidates && p.candidates.length) {
       var top = p.candidates[0];
+      var daysDiff = isFinite(top.dateDiff) ? Math.round(top.dateDiff) : null;
+      var dateNote = daysDiff === null ? '' : daysDiff === 0 ? ' · exact date' : ' · ' + daysDiff + 'd apart';
       html += '<div class="inv-match-box">';
-      html += '<div class="inv-match-row"><span class="inv-match-title">' + esc(top.r.title) + '</span><span class="inv-match-meta">' + esc(top.r.asin) + ' · £' + top.r.buy.toFixed(2) + ' · ' + fmtDate(top.r.date) + '</span><span class="inv-conf inv-conf-' + (top.score>=80?'high':top.score>=40?'med':'low') + '">' + (top.score>=80?'High':top.score>=40?'Medium':'Low') + ' match</span></div>';
+      html += '<div class="inv-match-row"><span class="inv-match-title">' + esc(top.r.title) + '</span><span class="inv-match-meta">' + esc(top.r.asin) + ' · ' + fmtDate(top.r.date) + dateNote + '</span></div>';
       if (p.candidates.length > 1) {
         html += '<select class="inv-match-sel" onchange="invPending[' + i + '].chosenCandidate=parseInt(this.value)">';
         p.candidates.forEach(function(c, ci) {
-          html += '<option value="' + ci + '"' + (ci===0?' selected':'') + '>' + esc(c.r.title) + ' — £' + c.r.buy.toFixed(2) + ' — ' + fmtDate(c.r.date) + '</option>';
+          var dd = isFinite(c.dateDiff) ? Math.round(c.dateDiff) : null;
+          var dn = dd === null ? '' : dd === 0 ? ' · exact date' : ' · ' + dd + 'd apart';
+          html += '<option value="' + ci + '"' + (ci===0?' selected':'') + '>' + esc(c.r.title) + ' — ' + fmtDate(c.r.date) + dn + '</option>';
         });
         html += '</select>';
       }
@@ -11024,48 +11034,33 @@ async function invAnalyseOne(i) {
 // ── Matching ──────────────────────────────
 function invMatchPurchase(extracted) {
   if (!allRows || !allRows.length) return [];
-  var candidates = allRows.map(function(r) { return { r: r, score: 0 }; });
+  var asin = (extracted.asin || '').trim().toUpperCase();
+  var invDate = extracted.date ? new Date(extracted.date) : null;
 
-  if (extracted.asin && extracted.asin.length > 5) {
-    candidates.forEach(function(c) {
-      if (c.r.asin && c.r.asin.toUpperCase() === extracted.asin.toUpperCase()) c.score += 100;
-    });
-  }
-  if (extracted.unitPrice > 0) {
-    candidates.forEach(function(c) {
-      var diff = Math.abs(c.r.buy - extracted.unitPrice) / (extracted.unitPrice || 1);
-      if (diff < 0.03) c.score += 50;
-      else if (diff < 0.1) c.score += 20;
-    });
-  }
-  if (extracted.supplier) {
-    var sup = extracted.supplier.toLowerCase();
-    candidates.forEach(function(c) {
-      var rs = (c.r.supplier || '').toLowerCase();
-      if (rs && sup.includes(rs)) c.score += 30;
-      else if (rs && rs.includes(sup)) c.score += 20;
-    });
-  }
-  if (extracted.date) {
-    var invDate = new Date(extracted.date);
-    candidates.forEach(function(c) {
-      if (c.r.date) {
-        var diff = Math.abs(new Date(c.r.date) - invDate) / 86400000;
-        if (diff < 2) c.score += 25;
-        else if (diff < 7) c.score += 12;
-        else if (diff < 30) c.score += 4;
-      }
-    });
-  }
-  if (extracted.product) {
-    var words = extracted.product.toLowerCase().split(/\s+/).filter(function(w) { return w.length > 3; });
-    candidates.forEach(function(c) {
-      var title = c.r.title.toLowerCase();
-      var hits = words.filter(function(w) { return title.includes(w); }).length;
-      c.score += hits * 8;
-    });
-  }
-  return candidates.filter(function(c) { return c.score > 10; }).sort(function(a, b) { return b.score - a.score; }).slice(0, 3);
+  // Must have ASIN to match
+  if (!asin || asin.length < 8) return [];
+
+  // Find all rows with matching ASIN
+  var asinMatches = allRows.filter(function(r) {
+    return (r.asin || '').trim().toUpperCase() === asin;
+  });
+  if (!asinMatches.length) return [];
+
+  // Score by date proximity (lower diff = higher score)
+  var scored = asinMatches.map(function(r) {
+    var dateDiff = Infinity;
+    if (invDate && r.date) {
+      try { dateDiff = Math.abs(new Date(r.date) - invDate) / 86400000; } catch(e) {}
+    }
+    return { r: r, dateDiff: dateDiff };
+  });
+
+  // Sort by date proximity
+  scored.sort(function(a, b) { return a.dateDiff - b.dateDiff; });
+
+  // Return closest match only (top 1), or up to 3 if dates are similarly close
+  var best = scored[0].dateDiff;
+  return scored.filter(function(c) { return c.dateDiff <= Math.max(best + 7, 30); }).slice(0, 3);
 }
 
 // ── Confirm / Skip ────────────────────────

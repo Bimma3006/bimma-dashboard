@@ -4421,7 +4421,10 @@ function renderPurchases(rows) {
     const roi=calcRoi(r);
     const roiHtml=roi!==null?`<span class="roi-pill ${roi>=20?'roi-green':roi>=15?'roi-amber':'roi-red'}">${roi.toFixed(1)}%</span>`:'—';
     const hasInv=window.invAttachedRows&&window.invAttachedRows.has(r.rowIdx);
-    return `<tr><td class="td-date">${fmtDate(r.date)}</td><td class="td-sku">${esc(r.sku)}</td><td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td><td class="td-center mono">${esc(r.asin)}</td><td class="td-price">£${r.buy.toFixed(2)}</td><td class="td-price">£${r.sell.toFixed(2)}</td><td class="td-center">${r.qty}</td><td class="td-price">£${r.spend.toFixed(2)}</td><td style="font-size:11px;color:var(--text-3)">${esc(r.supplier)}</td><td style="text-align:right;">${roiHtml}</td><td class="toggle-wrap"><button class="toggle ${r.uploaded?'on':''}" onclick="toggleUpload(${r.rowIdx},this,'purchases')"></button></td><td class="td-center">${hasInv?`<button class="inv-icon-btn" onclick="invViewInvoice(${r.rowIdx})" title="View attached invoice">⊞</button>`:'<span style="color:var(--border2);">—</span>'}</td></tr>`;
+    const invCount=(window.invAttachedCounts&&window.invAttachedCounts[r.rowIdx])||1;
+    const invLabel=hasInv?(invCount>1?`📄 ${invCount}`:'📄'):'—';
+    const invStyle=hasInv?'color:var(--blue);cursor:pointer;font-family:var(--mono);font-size:11px;':'color:var(--border2);';
+    return `<tr><td class="td-date">${fmtDate(r.date)}</td><td class="td-sku">${esc(r.sku)}</td><td class="td-title" title="${esc(r.title)}">${esc(r.title)}</td><td class="td-center mono">${esc(r.asin)}</td><td class="td-price">£${r.buy.toFixed(2)}</td><td class="td-price">£${r.sell.toFixed(2)}</td><td class="td-center">${r.qty}</td><td class="td-price">£${r.spend.toFixed(2)}</td><td style="font-size:11px;color:var(--text-3)">${esc(r.supplier)}</td><td style="text-align:right;">${roiHtml}</td><td class="toggle-wrap"><button class="toggle ${r.uploaded?'on':''}" onclick="toggleUpload(${r.rowIdx},this,'purchases')"></button></td><td class="td-center">${hasInv?`<span style="${invStyle}" onclick="invViewInvoice(${r.rowIdx})" title="View ${invCount} attached invoice${invCount>1?'s':''}">${invLabel}</span>`:`<span style="${invStyle}">—</span>`}</td></tr>`;
   }).join('');
 }
 function updateSupplierList() {
@@ -10869,9 +10872,22 @@ function invDeleteRecord(rowIdx) {
 }
 
 window.invAttachedRows = new Set();
+window.invAttachedCounts = {};   // rowIdx → number of invoices
 function invLoadAttached() {
-  invGetAllKeys().then(function(keys) {
-    window.invAttachedRows = new Set(keys);
+  invOpenDB().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction('invoices', 'readonly');
+      var req = tx.objectStore('invoices').getAll();
+      req.onsuccess = function(e) { resolve(e.target.result); };
+      req.onerror = function(e) { reject(e.target.error); };
+    });
+  }).then(function(records) {
+    window.invAttachedRows = new Set();
+    window.invAttachedCounts = {};
+    (records || []).forEach(function(rec) {
+      window.invAttachedRows.add(rec.rowIdx);
+      window.invAttachedCounts[rec.rowIdx] = rec.files ? rec.files.length : (rec.pdfData ? 1 : 0);
+    });
   }).catch(function() {});
 }
 
@@ -11030,6 +11046,7 @@ async function invAnalyseOne(i) {
       p.status = 'confirmed';
       p.confirmedRowIdx = rowIdx;
       window.invAttachedRows.add(rowIdx);
+      window.invAttachedCounts[rowIdx] = (window.invAttachedCounts[rowIdx] || 0) + 1;
       // Track if multiple invoices hit the same purchase row
       var siblingCount = invPending.filter(function(q) { return q.status === 'confirmed' && q.confirmedRowIdx === rowIdx; }).length;
       if (siblingCount > 0) p._multiInv = siblingCount + 1;
@@ -11135,6 +11152,7 @@ function invDetachModal(rowIdx, btn) {
   if (!confirm('Remove this invoice attachment?')) return;
   invDeleteRecord(rowIdx).then(function() {
     window.invAttachedRows.delete(rowIdx);
+    delete window.invAttachedCounts[rowIdx];
     var modal = btn.closest('[style]');
     if (modal) modal.remove();
     filterPurchases();

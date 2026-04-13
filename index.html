@@ -3524,6 +3524,7 @@ input::placeholder { color: var(--text-4); }
 .inv-status-matched{color:var(--blue);background:var(--accent-glow);}
 .inv-status-confirmed{color:var(--green);background:var(--green-glow);}
 .inv-status-unmatched{color:var(--amber);background:var(--amber-glow);}
+.inv-status-skipped{color:var(--text-3);background:var(--surface3);}
 .inv-status-error{color:var(--red);background:var(--red-glow);}
 .inv-match-box{background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
 .inv-match-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -10985,6 +10986,7 @@ function invRenderQueue() {
   var nPending   = invPending.filter(function(p) { return p.status === 'pending'; }).length;
   var nConfirmed = invPending.filter(function(p) { return p.status === 'confirmed'; }).length;
   var nUnmatched = invPending.filter(function(p) { return p.status === 'unmatched'; }).length;
+  var nSkipped   = invPending.filter(function(p) { return p.status === 'skipped'; }).length;
   var nError     = invPending.filter(function(p) { return p.status === 'error'; }).length;
   var hasPending = nPending > 0;
   var isLarge    = invPending.length > 50;
@@ -10999,6 +11001,7 @@ function invRenderQueue() {
     html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 18px;display:flex;gap:24px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;">';
     html += '<span style="color:var(--green);">✓ ' + nConfirmed + ' attached</span>';
     html += '<span style="color:var(--text-3);">' + nUnmatched + ' no match</span>';
+    if (nSkipped) html += '<span style="color:var(--amber);">' + nSkipped + ' credit notes skipped</span>';
     if (nError) html += '<span style="color:var(--red);">' + nError + ' errors</span>';
     html += '</div>';
     // Still show individual error rows so the user can see what failed
@@ -11038,7 +11041,7 @@ function invRenderQueue() {
 }
 
 function invStatusLabel(s) {
-  return { pending:'Pending', analysing:'Analysing…', matched:'Matched', confirmed:'Confirmed', unmatched:'No match', error:'Error' }[s] || s;
+  return { pending:'Pending', analysing:'Analysing…', matched:'Matched', confirmed:'Confirmed', unmatched:'No match', skipped:'Credit note', error:'Error' }[s] || s;
 }
 
 // ── Analysis ──────────────────────────────
@@ -11054,7 +11057,7 @@ async function invAnalyseAll() {
   var progStatus = document.getElementById('invProgressStatus');
   if (progWrap) progWrap.style.display = 'block';
 
-  var total = pending.length, done = 0, confirmed = 0, unmatched = 0, errors = 0;
+  var total = pending.length, done = 0, confirmed = 0, unmatched = 0, skipped = 0, errors = 0;
 
   for (var i = 0; i < invPending.length; i++) {
     if (invPending[i].status !== 'pending') continue;
@@ -11063,33 +11066,55 @@ async function invAnalyseAll() {
     done++;
     if (result === 'confirmed') confirmed++;
     else if (result === 'unmatched') unmatched++;
+    else if (result === 'skipped') skipped++;
     else errors++;
 
     // Update progress bar (lightweight — no DOM list rebuild)
     if (progBar) progBar.style.width = Math.round((done / total) * 100) + '%';
-    if (progStatus) progStatus.textContent = done + ' / ' + total + '  ·  ✓ ' + confirmed + ' attached  ·  ' + unmatched + ' no match' + (errors ? '  ·  ' + errors + ' errors' : '');
+    if (progStatus) progStatus.textContent = done + ' / ' + total + '  ·  ✓ ' + confirmed + ' attached' + (skipped ? '  ·  ' + skipped + ' credit notes skipped' : '') + '  ·  ' + unmatched + ' no match' + (errors ? '  ·  ' + errors + ' errors' : '');
 
     // Yield to the event loop + GC every 20 files
     if (done % 20 === 0) await new Promise(function(r) { setTimeout(r, 30); });
   }
 
   if (progBar) progBar.style.width = '100%';
-  if (progStatus) progStatus.textContent = 'Done — ' + confirmed + ' attached · ' + unmatched + ' no match' + (errors ? ' · ' + errors + ' errors' : '');
+  if (progStatus) progStatus.textContent = 'Done — ' + confirmed + ' attached' + (skipped ? ' · ' + skipped + ' credit notes skipped' : '') + ' · ' + unmatched + ' no match' + (errors ? ' · ' + errors + ' errors' : '');
   setTimeout(function() { if (progWrap) progWrap.style.display = 'none'; }, 4000);
 
   invRenderQueue();  // single render at the end
   filterPurchases();
 }
 
+function invIsCreditNote(filename, text) {
+  // Check filename first (cheap)
+  if (/credit.?note|gutschrift|note.?de.?cr[eé]dit|nota.?de.?cr[eé]dito|nota.?credito|refund/i.test(filename)) return true;
+  // Check first ~2000 chars of text (document header area)
+  var head = (text || '').slice(0, 2000);
+  return /\bcredit\s*note\b|\bgutschrift\b|\bnote\s+de\s+cr[eé]dit\b|\bnota\s+de\s+cr[eé]dito\b|\bnota\s+credito\b|\bavere\b/i.test(head);
+}
+
 async function invAnalyseOne(i) {
-  // Returns 'confirmed' | 'unmatched' | 'error' — does NOT touch the DOM
+  // Returns 'confirmed' | 'unmatched' | 'skipped' | 'error' — does NOT touch the DOM
   var p = invPending[i];
   try {
+    // Quick filename check — skip credit notes before even reading the PDF
+    if (invIsCreditNote(p.name, '')) {
+      p.status = 'skipped';
+      return 'skipped';
+    }
+
     // Read file buffer ONCE — reused for both PDF parsing and IndexedDB save
     var buf = await p.file.arrayBuffer();
     p.file = null; // release File reference immediately to free memory
 
     var text = await hub_pdfToText(buf);
+
+    // Full text check for credit notes
+    if (invIsCreditNote(p.name, text)) {
+      p.status = 'skipped';
+      return 'skipped';
+    }
+
     var inv = hub_parseAmazonInvoice(text || '', p.name);
     var li = (inv.lineItems && inv.lineItems[0]) || {};
     var dateYMD = '';

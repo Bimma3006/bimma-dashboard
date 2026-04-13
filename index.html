@@ -3885,10 +3885,14 @@ input::placeholder { color: var(--text-4); }
       <div id="hubInvPanel1">
         <div class="hub-info-box" style="margin-bottom:16px;"><strong>How to get your Amazon invoices:</strong> Amazon account → Manage Your Data → Request Your Data → Select 'Orders' → Submit → Download emailed ZIP → Open folder: <code>Retail.TransactionalInvoicing</code> → Upload all PDFs here.</div>
         <div class="hub-upload-zone" onclick="document.getElementById('hubAmazonInvFile').click()">
-          <div style="font-size:28px;margin-bottom:8px;">📄</div>
-          <div style="font-weight:600;margin-bottom:4px;">Upload Amazon Invoice PDFs</div>
-          <div style="color:var(--text-3);font-size:13px;">Select multiple PDF files from your Retail.TransactionalInvoicing folder</div>
-          <input type="file" id="hubAmazonInvFile" accept=".pdf" multiple style="display:none" onchange="hub_onAmazonInvoiceUpload(this)">
+          <div style="font-size:28px;margin-bottom:8px;">📁</div>
+          <div style="font-weight:600;margin-bottom:4px;">Upload Invoice Folder</div>
+          <div style="color:var(--text-3);font-size:13px;">Select your <code>Retail.TransactionalInvoicing</code> folder — PDFs parsed automatically, client-side</div>
+          <input type="file" id="hubAmazonInvFile" webkitdirectory multiple style="display:none" onchange="hub_onAmazonInvoiceUpload(this)">
+        </div>
+        <div id="hubAmzInvProgress" style="display:none;margin-top:14px;">
+          <div style="background:var(--surface3);border-radius:99px;height:6px;overflow:hidden;"><div id="hubAmzInvProgressBar" style="background:var(--green);height:100%;width:0%;transition:width .25s;"></div></div>
+          <div id="hubAmzInvProgressStatus" style="font-family:var(--mono);font-size:12px;color:var(--text-3);margin-top:5px;"></div>
         </div>
         <div id="hubAmazonInvStats" style="margin-top:12px;font-size:13px;color:var(--text-3);">No invoices loaded.</div>
         <div id="hubAmazonInvTable" style="margin-top:16px;"></div>
@@ -7701,6 +7705,24 @@ function stalkerSetFeedFilter(id) {
   stalkerRenderFeed();
 }
 
+function stalkerPurchLabel(asin) {
+  if (typeof allRows === 'undefined' || !allRows || !allRows.length) return '';
+  const asinUp = (asin || '').trim().toUpperCase();
+  const nowMs = Date.now();
+  let latestDate = null;
+  allRows.forEach(r => {
+    try {
+      const d = parseUKDate(r.date);
+      if (!d) return;
+      if ((r.asin || '').trim().toUpperCase() !== asinUp) return;
+      if (!latestDate || d > latestDate) latestDate = d;
+    } catch {}
+  });
+  if (!latestDate) return '';
+  const daysAgo = Math.floor((nowMs - latestDate.getTime()) / 86400000);
+  return `<span class="inv-badge">📦 bought ${daysAgo}d ago</span>`;
+}
+
 function stalkerRenderFeed() {
   const feedEl  = document.getElementById('stalkerFeed');
   const emptyEl = document.getElementById('stalkerFeedEmpty');
@@ -7749,6 +7771,7 @@ function stalkerRenderFeed() {
       const detectedStr = stalkerFmtTime(item.detectedAt);
 
       // Rich card if we have title/image data, basic row otherwise
+      const _purchLabel = stalkerPurchLabel(item.asin);
       if (item.title || item.imgKey || item.price) {
         const imgUrl      = item.imgKey ? `https://m.media-amazon.com/images/I/${item.imgKey}` : null;
         const feeEstimate = item.price ? (parseFloat(item.price) * 0.15).toFixed(2) : null;
@@ -7763,6 +7786,7 @@ function stalkerRenderFeed() {
             </div>
             <div class="stalker-product-title" title="${item.title||item.asin}">${item.title||item.asin}</div>
             <div style="font-family:var(--mono);font-size:11px;color:var(--blue);margin-top:2px;">${item.asin}</div>
+            ${_purchLabel ? `<div style="margin-top:4px;">${_purchLabel}</div>` : ''}
           </div>
           <div>
             <div style="font-size:13px;font-weight:600;color:var(--text);">${item.sellerName}</div>
@@ -7786,6 +7810,7 @@ function stalkerRenderFeed() {
         <div class="stalker-item-dot"></div>
         <div class="stalker-item-info">
           <div class="stalker-item-asin">${item.asin}</div>
+          ${_purchLabel ? `<div style="margin-top:3px;">${_purchLabel}</div>` : ''}
           <div class="stalker-item-seller">${flag} ${item.sellerName} · amazon.${tld} · detected ${detectedStr}</div>
         </div>
         <div>
@@ -10060,6 +10085,306 @@ function hub_renderM10() {
   hub_initSortableTable('hubTableM10');
 }
 
+// ── PDF.js loader ──────────────────────────────────────────────────────────
+var _hub_pdfjs_ready = false, _hub_pdfjs_promise = null;
+function hub_loadPdfJs() {
+  if (_hub_pdfjs_ready) return Promise.resolve();
+  if (_hub_pdfjs_promise) return _hub_pdfjs_promise;
+  _hub_pdfjs_promise = new Promise(function(resolve, reject) {
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.crossOrigin = 'anonymous';
+    s.onload = function() {
+      try {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        _hub_pdfjs_ready = true;
+        resolve();
+      } catch(e) { reject(e); }
+    };
+    s.onerror = function() { reject(new Error('Failed to load PDF.js from CDN')); };
+    document.head.appendChild(s);
+  });
+  return _hub_pdfjs_promise;
+}
+
+async function hub_pdfToText(file) {
+  var buf = await file.arrayBuffer();
+  var pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  var pageTexts = [];
+  for (var p = 1; p <= pdf.numPages; p++) {
+    var page    = await pdf.getPage(p);
+    var content = await page.getTextContent();
+    // Sort items by y-descending then x-ascending to get visual reading order
+    var items = content.items.slice().sort(function(a, b) {
+      var dy = b.transform[5] - a.transform[5];
+      if (Math.abs(dy) > 3) return dy;
+      return a.transform[4] - b.transform[4];
+    });
+    // Group into lines by y proximity
+    var lines = [], cur = [], lastY = null;
+    items.forEach(function(item) {
+      if (!item.str || !item.str.trim()) return;
+      var y = Math.round(item.transform[5]);
+      if (lastY !== null && Math.abs(y - lastY) > 4) {
+        if (cur.length) lines.push(cur.join(' '));
+        cur = [];
+      }
+      cur.push(item.str.trim());
+      lastY = y;
+    });
+    if (cur.length) lines.push(cur.join(' '));
+    pageTexts.push(lines.join('\n'));
+  }
+  return pageTexts.join('\n');
+}
+
+// ── Smart decimal parser (handles both UK 1,234.56 and EU 1.234,56) ────────
+function hub_parseDecimal(s) {
+  if (s == null) return null;
+  s = String(s).replace(/[£€$\s\u00a0]/g, '').trim();
+  if (!s || s === '-') return null;
+  var neg = s.charAt(0) === '-'; s = s.replace(/^-/, '');
+  var n;
+  // European: comma is decimal separator (ends in ,DD)
+  if (/,\d{1,2}$/.test(s)) n = parseFloat(s.replace(/\./g, '').replace(',', '.'));
+  else n = parseFloat(s.replace(/,/g, ''));
+  return isNaN(n) ? null : (neg ? -n : n);
+}
+
+// ── Date normaliser ─────────────────────────────────────────────────────────
+function hub_normDate(raw) {
+  if (!raw) return '?';
+  raw = raw.trim().replace(/\s+/g, ' ');
+  // ISO YYYY-MM-DD
+  var iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return iso[3] + '/' + iso[2] + '/' + iso[1];
+  // DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY
+  var dmy = raw.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})$/);
+  if (dmy) return dmy[1].padStart(2,'0') + '/' + dmy[2].padStart(2,'0') + '/' + dmy[3];
+  // DD Month YYYY (multilingual)
+  var MONTHS = {
+    jan:1, january:1, janvier:1, januar:1, enero:1, gennaio:1,
+    feb:2, february:2, fevrier:2, februar:2, febrero:2, febbraio:2,
+    mar:3, march:3, mars:3, marz:3, marzo:3,
+    apr:4, april:4, avril:4, abril:4, aprile:4,
+    may:5, mai:5, mayo:5, maggio:5,
+    jun:6, june:6, juin:6, juni:6, junio:6, giugno:6,
+    jul:7, july:7, juillet:7, juli:7, julio:7, luglio:7,
+    aug:8, august:8, aout:8, agosto:8, 'août':8,
+    sep:9, september:9, septembre:9, septiembre:9, settembre:9,
+    oct:10, october:10, octobre:10, oktober:10, octubre:10, ottobre:10,
+    nov:11, november:11, novembre:11, noviembre:11,
+    dec:12, december:12, decembre:12, dezember:12, diciembre:12, dicembre:12
+  };
+  var textDate = raw.match(/^(\d{1,2})\s+([A-Za-z\u00e0-\u00ff]+)\.?\s+(\d{4})$/);
+  if (textDate) {
+    var key = textDate[2].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    var mon = MONTHS[key] || MONTHS[key.slice(0, 4)] || MONTHS[key.slice(0, 3)];
+    if (mon) return textDate[1].padStart(2,'0') + '/' + String(mon).padStart(2,'0') + '/' + textDate[3];
+  }
+  return raw.slice(0, 12);
+}
+
+// ── Amazon invoice parser ───────────────────────────────────────────────────
+function hub_parseAmazonInvoice(text, filename) {
+  var inv = {
+    filename: filename,
+    invoiceNo: '?', orderNo: '?', date: '?',
+    marketplace: '?', currency: '?',
+    lineItems: [], shipping: null, discounts: null, total: null,
+    parseError: null
+  };
+  try {
+    var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+    var blob  = lines.join(' ');
+
+    // ── Marketplace ───────────────────────────────────────────
+    var domM = blob.match(/amazon\.(fr|de|es|co\.uk|it|nl|pl|se)/i);
+    if (domM) {
+      var d = domM[1].toLowerCase();
+      inv.marketplace = d === 'co.uk' ? 'uk' : d;
+    }
+    if (inv.marketplace === '?') {
+      // Fallback: infer from currency symbols present
+      if (blob.indexOf('\u00a3') !== -1)      { inv.marketplace = 'uk'; }
+      else if (blob.indexOf('\u20ac') !== -1) { inv.marketplace = inv.marketplace; } // still unknown market but EUR
+    }
+    inv.currency = inv.marketplace === 'uk' ? 'GBP'
+                 : inv.marketplace !== '?'  ? 'EUR'
+                 : blob.indexOf('\u00a3') !== -1 ? 'GBP'
+                 : blob.indexOf('\u20ac') !== -1 ? 'EUR'
+                 : '?';
+
+    // ── Order number ──────────────────────────────────────────
+    var ordM = blob.match(/\b(\d{3}-\d{7}-\d{7})\b/);
+    if (ordM) { inv.orderNo = ordM[1]; }
+    else { var fnO = filename.match(/(\d{3}-\d{7}-\d{7})/); if (fnO) inv.orderNo = fnO[1]; }
+
+    // ── Invoice number ────────────────────────────────────────
+    var invNoM = blob.match(/(?:Invoice\s*(?:Number|No\.?|#|:)|Facture\s*(?:n[°o°]|num[eé]ro)\s*[:\s]|Rechnungsnummer\s*[:\s]|N[uú]mero\s*de\s*(?:la\s*)?factura\s*[:\s]|Numero\s*fattura\s*[:\s])\s*([A-Z0-9][A-Z0-9\-]{3,50})/i);
+    if (invNoM) {
+      inv.invoiceNo = invNoM[1].trim();
+    } else {
+      // Fallback pattern e.g. INV-UK-1234, FAC-FR-1234, RE-DE-1234
+      var invFb = blob.match(/\b((?:INV|FAC|RE|FAT|FAK|REC)-[A-Z]{2}-[0-9]+)\b/i);
+      if (invFb) inv.invoiceNo = invFb[1];
+    }
+
+    // ── Date ──────────────────────────────────────────────────
+    var dateLabelM = blob.match(/(?:Invoice\s*Date|Rechnungsdatum|Date\s*de\s*(?:la\s*)?facture|Fecha\s*de\s*(?:la\s*)?factura|Data\s*(?:fattura|emissione))\s*[:\s]+([0-9]{1,2}[\s\/\.\-][A-Za-z0-9\u00e0-\u00ff]+[\s\/\.\-][0-9]{4}|[0-9]{4}-[0-9]{2}-[0-9]{2})/i);
+    if (dateLabelM) {
+      inv.date = hub_normDate(dateLabelM[1]);
+    } else {
+      var dateG = blob.match(/\b(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{4})\b/);
+      if (dateG) inv.date = dateG[1].padStart(2,'0') + '/' + dateG[2].padStart(2,'0') + '/' + dateG[3];
+    }
+
+    // ── Line items via ASIN anchors ───────────────────────────
+    var asinRe  = /ASIN\s*:?\s*([A-Z0-9]{10})/i;
+    var priceRe = /(?:Unit\s*[Pp]rice|Prix\s*unitaire|St[uü]ckpreis|Precio\s*unitario|Prezzo\s*unitario)\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i;
+    var subtotRe = /(?:Item\s*[Ss]ubtotal|Sous-?total|Artikel-?Zwischensumme|Subtotal\s*(?:\(IVA|TTC|incl)?|Totale\s*articolo)\s*(?:incl\.?\s*(?:VAT|TVA|USt\.?|IVA))?\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i;
+    var qtyRe   = /(?:Quantity|Qty|Menge|Qt[eé]|Cantidad|Quantit[àa]|Anzahl)\s*[:\s]?\s*(\d+)/i;
+    var skipped = new Set();
+
+    for (var li = 0; li < lines.length; li++) {
+      var asinM = lines[li].match(asinRe);
+      if (!asinM) continue;
+      var asin = asinM[1].toUpperCase();
+      if (skipped.has(asin)) continue; // dedupe (same ASIN listed twice for multi-qty)
+
+      // Product name: walk back from ASIN line
+      var name = '?';
+      for (var nb = li - 1; nb >= Math.max(0, li - 6); nb--) {
+        var ln = lines[nb];
+        if (!ln || ln.length < 8) continue;
+        if (/^[£€0-9,\.\s\-]+$/.test(ln)) continue; // pure numbers/prices
+        if (/^(?:ASIN|Qty|Quantity|Menge|Qt[eé]|Cantidad|Prix|Price|Preis|Precio|Total|Item|Article|Artikel|Artículo|Produit|Produkt|Producto|Prodotto|Invoice|Facture|Rechnung|Factura)/i.test(ln)) continue;
+        name = ln.slice(0, 60); break;
+      }
+
+      // Context: ASIN line + next 8 lines
+      var ctx = lines.slice(li, Math.min(lines.length, li + 9)).join(' ');
+
+      var qty = 1;
+      var qM = ctx.match(qtyRe) || lines.slice(Math.max(0, li - 3), li).join(' ').match(qtyRe);
+      if (qM) qty = parseInt(qM[1]) || 1;
+
+      var unitP = null, lineT = null;
+      var unitM = ctx.match(priceRe);
+      if (unitM) unitP = hub_parseDecimal(unitM[1]);
+      var lineM = ctx.match(subtotRe);
+      if (lineM) lineT = hub_parseDecimal(lineM[1]);
+
+      // Fallback: grab the first price-looking number near the ASIN
+      if (!lineT && !unitP) {
+        var anyP = ctx.match(/[£€]\s*([0-9]+[,\.][0-9]{2})/) || ctx.match(/([0-9]+[,\.][0-9]{2})\s*[£€]/);
+        if (anyP) { unitP = hub_parseDecimal(anyP[1]); }
+      }
+      if (!lineT && unitP != null) lineT = +(unitP * qty).toFixed(2);
+      if (!unitP && lineT != null) unitP = +(lineT / qty).toFixed(2);
+
+      inv.lineItems.push({ asin: asin, name: name, qty: qty, unitPrice: unitP, lineTotal: lineT });
+      skipped.add(asin);
+    }
+
+    // ── Shipping ──────────────────────────────────────────────
+    var shipM = blob.match(/(?:Shipping\s*[Cc]harges?|Livraison|Versandkosten|Env[ií]o|Spedizione|Verzendkosten)\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i);
+    if (shipM) inv.shipping = hub_parseDecimal(shipM[1]);
+
+    // ── Discounts / promotions ────────────────────────────────
+    var discM = blob.match(/(?:Promotions?\s*(?:Applied)?|Remise|Rabatt|Descuento|Sconto|Promozione)\s*[:\s]?\s*-?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i);
+    if (discM) inv.discounts = -Math.abs(hub_parseDecimal(discM[1]));
+
+    // ── Total ─────────────────────────────────────────────────
+    var TOT_RE = [
+      /(?:Order\s*Total|Grand\s*Total)\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      /Total\s*TTC\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      /Gesamtbetrag\s*(?:inkl\.?\s*USt\.?)?\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      /Zwischensumme\s*inkl\.?\s*USt\.?\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      /Precio\s*total\s*(?:IVA\s*incluido|con\s*IVA)\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      /Totale\s*(?:IVA\s*inclusa|ordine)?\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      /Total\s*(?:incl\.?\s*(?:VAT|TVA|USt\.?|IVA))\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+    ];
+    for (var t = 0; t < TOT_RE.length; t++) {
+      var tm = blob.match(TOT_RE[t]);
+      if (tm && tm[1]) { inv.total = hub_parseDecimal(tm[1]); break; }
+    }
+  } catch(err) {
+    inv.parseError = err.message;
+  }
+  return inv;
+}
+
+// ── Detail modal for parsed invoices ───────────────────────────────────────
+function hub_viewAmzInvDetail(key) {
+  try {
+    var inv   = JSON.parse(localStorage.getItem(key));
+    var modal = document.getElementById('hubInvPreviewModal');
+    var cont  = document.getElementById('hubInvPreviewContent');
+    var title = document.getElementById('hubInvPreviewTitle');
+    if (!modal || !inv) return;
+    if (title) title.textContent = inv.filename || 'Invoice Detail';
+
+    var MF  = { uk:'\ud83c\uddec\ud83c\udde7', de:'\ud83c\udde9\ud83c\uddea', fr:'\ud83c\uddeb\ud83c\uddf7', es:'\ud83c\uddea\ud83c\uddf8', it:'\ud83c\uddee\ud83c\uddf9', nl:'\ud83c\uddf3\ud83c\uddf1' };
+    var sym = inv.currency === 'EUR' ? '\u20ac' : '\u00a3';
+    var fmtN = function(n) { return n != null ? sym + n.toFixed(2) : '<span style="color:var(--text-3);">?</span>'; };
+
+    // Meta grid
+    var meta = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">' +
+      hub_amzInvCell('Invoice #', inv.invoiceNo) +
+      hub_amzInvCell('Order #', inv.orderNo) +
+      hub_amzInvCell('Date', inv.date) +
+      hub_amzInvCell('Marketplace', (MF[inv.marketplace] || '\ud83c\udf10') + '\u2009' + (inv.marketplace && inv.marketplace !== '?' ? inv.marketplace.toUpperCase() : '?')) +
+      hub_amzInvCell('Currency', inv.currency) +
+      hub_amzInvCell('Total', inv.total != null ? sym + inv.total.toFixed(2) : '?') +
+    '</div>';
+
+    if (inv.parseError) {
+      meta += '<div style="background:rgba(240,59,80,0.1);border:1px solid rgba(240,59,80,0.25);border-radius:var(--r-sm);padding:9px 12px;margin-bottom:14px;font-family:var(--mono);font-size:12px;color:var(--red);">\u26a0 ' + inv.parseError + '</div>';
+    }
+
+    // Line items table
+    var body = '';
+    if (inv.lineItems && inv.lineItems.length) {
+      body += '<div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-3);margin-bottom:6px;">Line Items</div>';
+      body += '<div class="hub-table-wrap" style="margin-bottom:12px;"><table class="hub-table"><thead><tr>' +
+        '<th>ASIN</th><th>Product</th><th style="text-align:center;">Qty</th>' +
+        '<th style="text-align:right;">Unit Price</th><th style="text-align:right;">Line Total</th>' +
+        '</tr></thead><tbody>';
+      inv.lineItems.forEach(function(li) {
+        body += '<tr>' +
+          '<td><a href="https://www.amazon.co.uk/dp/' + li.asin + '" target="_blank" style="font-family:var(--mono);font-size:11px;color:var(--green);text-decoration:none;">' + li.asin + '</a></td>' +
+          '<td style="font-size:12px;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (li.name || '').replace(/"/g, "'") + '">' + (li.name || '?') + '</td>' +
+          '<td style="font-family:var(--mono);font-size:12px;text-align:center;">' + (li.qty || 1) + '</td>' +
+          '<td style="font-family:var(--mono);font-size:12px;text-align:right;">' + (li.unitPrice != null ? sym + li.unitPrice.toFixed(2) : '<span style="color:var(--text-3);">?</span>') + '</td>' +
+          '<td style="font-family:var(--mono);font-size:12px;font-weight:600;text-align:right;">' + (li.lineTotal != null ? sym + li.lineTotal.toFixed(2) : '<span style="color:var(--text-3);">?</span>') + '</td>' +
+        '</tr>';
+      });
+      body += '</tbody></table></div>';
+    } else if (!inv.parseError) {
+      body += '<div style="color:var(--text-3);font-family:var(--mono);font-size:12px;padding:8px 0;">No line items extracted.</div>';
+    }
+
+    // Summary totals
+    var summaryRows = '';
+    if (inv.shipping  != null) summaryRows += '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:3px 0;"><span style="color:var(--text-3);">Shipping</span><span>' + sym + inv.shipping.toFixed(2) + '</span></div>';
+    if (inv.discounts != null) summaryRows += '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:3px 0;"><span style="color:var(--text-3);">Discount</span><span style="color:var(--green);">' + sym + inv.discounts.toFixed(2) + '</span></div>';
+    if (inv.total     != null) summaryRows += '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px;font-weight:700;padding:6px 0;border-top:1px solid var(--border);margin-top:4px;"><span>Total</span><span>' + sym + inv.total.toFixed(2) + '</span></div>';
+    if (summaryRows) body += '<div style="background:var(--surface3);border-radius:var(--r-sm);padding:10px 14px;">' + summaryRows + '</div>';
+
+    if (cont) cont.innerHTML = meta + body;
+    modal.style.display = 'flex';
+  } catch(e) { console.error('hub_viewAmzInvDetail:', e); }
+}
+
+function hub_amzInvCell(label, value) {
+  var missing = !value || value === '?';
+  return '<div style="background:var(--surface3);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;">' +
+    '<div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);margin-bottom:3px;">' + label + '</div>' +
+    '<div style="font-family:var(--mono);font-size:12px;color:' + (missing ? 'var(--text-3)' : 'var(--text)') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + (value || '') + '">' + (value || '?') + '</div>' +
+  '</div>';
+}
+
 // ── Module 11: Invoice Library ────────────
 
 var _hub_inv_tab=1;
@@ -10072,42 +10397,109 @@ function hub_setInvTab(n) {
   });
 }
 
-function hub_onAmazonInvoiceUpload(inputEl) {
-  var files=Array.from(inputEl.files);
-  if(!files.length)return;
-  var re=/([0-9]{3}-[0-9]{7}-[0-9]{7}|[A-Z]{2}[0-9]{2,3}-[0-9A-Z]{6,})/i;
-  var done=0;
-  files.forEach(function(file){
-    var reader=new FileReader();
-    reader.onload=function(e){
-      var m=re.exec(file.name);
-      var oid=m?m[1]:file.name.replace(/\.pdf$/i,'');
-      try{localStorage.setItem('hub_invoice_amazon_'+oid,JSON.stringify({filename:file.name,orderID:oid,uploadedAt:new Date().toISOString(),fileBase64:e.target.result}));}catch(ex){alert('Storage error: '+ex.message);}
-      done++;
-      if(done===files.length){hub_renderAmazonInvLibrary();inputEl.value='';}
-    };
-    reader.readAsDataURL(file);
-  });
+async function hub_onAmazonInvoiceUpload(inputEl) {
+  var pdfs = Array.from(inputEl.files).filter(function(f) { return /\.pdf$/i.test(f.name); });
+  if (!pdfs.length) { inputEl.value = ''; return; }
+
+  var progDiv = document.getElementById('hubAmzInvProgress');
+  var bar     = document.getElementById('hubAmzInvProgressBar');
+  var status  = document.getElementById('hubAmzInvProgressStatus');
+  if (progDiv) progDiv.style.display = '';
+  if (bar) bar.style.width = '0%';
+  if (status) status.textContent = 'Loading PDF parser\u2026';
+
+  try { await hub_loadPdfJs(); }
+  catch(e) {
+    if (status) status.textContent = 'Failed to load PDF.js: ' + e.message;
+    inputEl.value = ''; return;
+  }
+
+  var failed = 0;
+  for (var i = 0; i < pdfs.length; i++) {
+    var file = pdfs[i];
+    if (bar) bar.style.width = Math.round((i / pdfs.length) * 100) + '%';
+    if (status) status.textContent = 'Parsing ' + (i + 1) + ' of ' + pdfs.length + ': ' + file.name;
+    try {
+      var text = await hub_pdfToText(file);
+      var parsed = hub_parseAmazonInvoice(text || '', file.name);
+      parsed.parsedAt = new Date().toISOString();
+      if (!text || !text.trim()) parsed.parseError = parsed.parseError || 'PDF text extraction returned empty';
+      // Key: prefer order number so duplicates overwrite; fall back to filename hash
+      var baseKey = parsed.orderNo !== '?' ? parsed.orderNo : file.name.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 50);
+      try { localStorage.setItem('hub_amzinv_' + baseKey, JSON.stringify(parsed)); } catch(se) { /* storage full */ }
+    } catch(err) {
+      failed++;
+      var errObj = { filename: file.name, invoiceNo: '?', orderNo: '?', date: '?', marketplace: '?', currency: '?', lineItems: [], total: null, parseError: err.message, parsedAt: new Date().toISOString() };
+      try { localStorage.setItem('hub_amzinv_err_' + Date.now() + '_' + i, JSON.stringify(errObj)); } catch(se2) {}
+    }
+  }
+
+  if (bar) bar.style.width = '100%';
+  if (status) status.textContent = pdfs.length + ' PDF' + (pdfs.length !== 1 ? 's' : '') + ' processed' + (failed ? ' \u00b7 ' + failed + ' failed' : '');
+  setTimeout(function() { if (progDiv) progDiv.style.display = 'none'; }, 3000);
+  hub_renderAmazonInvLibrary();
+  inputEl.value = '';
 }
 
 function hub_renderAmazonInvLibrary() {
-  var stats=document.getElementById('hubAmazonInvStats');
-  var table=document.getElementById('hubAmazonInvTable');
-  if(!stats||!table)return;
-  var oppOrders=new Set((window._hubOpportunities||[]).filter(function(o){return o.orderId;}).map(function(o){return o.orderId;}));
-  var invoices=[];
-  for(var i=0;i<localStorage.length;i++){
-    var k=localStorage.key(i);
-    if(!k||k.indexOf('hub_invoice_amazon_')!==0)continue;
-    try{var inv=JSON.parse(localStorage.getItem(k));invoices.push(Object.assign({key:k,matched:oppOrders.has(inv.orderID)},inv));}catch(e){}
+  var statsEl = document.getElementById('hubAmazonInvStats');
+  var tableEl = document.getElementById('hubAmazonInvTable');
+  if (!statsEl || !tableEl) return;
+
+  var invoices = [];
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (!k || k.indexOf('hub_amzinv_') !== 0) continue;
+    try { var inv = JSON.parse(localStorage.getItem(k)); if (inv) invoices.push(Object.assign({ key: k }, inv)); } catch(e) {}
   }
-  invoices.sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
-  var matched=invoices.filter(function(i){return i.matched;}).length;
-  stats.textContent=invoices.length+' invoice'+(invoices.length!==1?'s':'')+' loaded · '+matched+' matched to open cases · '+(invoices.length-matched)+' unmatched';
-  if(!invoices.length){table.innerHTML='';return;}
-  table.innerHTML='<div class="hub-table-wrap"><table class="hub-table"><thead><tr><th>Order ID</th><th>Filename</th><th>Upload Date</th><th>Matched</th><th>Preview</th></tr></thead><tbody>'+
-    invoices.map(function(inv){return '<tr><td><code style="font-size:11px;">'+inv.orderID+'</code></td><td style="font-size:12px;">'+inv.filename+'</td><td style="font-size:12px;">'+new Date(inv.uploadedAt).toLocaleDateString('en-GB')+'</td><td>'+(inv.matched?'<span style="color:var(--green);">✓ Yes</span>':'<span style="color:var(--text-3);">—</span>')+'</td><td><button class="hub-btn-xs" onclick="hub_previewInvoice(\''+inv.key+'\',\'Amazon\')">View</button></td></tr>';}).join('')+
-  '</tbody></table></div>';
+  invoices.sort(function(a, b) { return new Date(b.parsedAt || 0) - new Date(a.parsedAt || 0); });
+
+  if (!invoices.length) {
+    statsEl.innerHTML = '<span style="color:var(--text-3);">No invoices loaded.</span>';
+    tableEl.innerHTML = '';
+    return;
+  }
+
+  var totEUR = 0, totGBP = 0, errCount = 0;
+  invoices.forEach(function(inv) {
+    if (inv.parseError) { errCount++; return; }
+    if (inv.total) {
+      if (inv.currency === 'EUR') totEUR += inv.total;
+      else if (inv.currency === 'GBP') totGBP += inv.total;
+    }
+  });
+
+  var parts = ['<span style="color:var(--text-2);">' + invoices.length + ' invoice' + (invoices.length !== 1 ? 's' : '') + '</span>'];
+  if (totEUR > 0) parts.push('<span style="color:var(--blue);">\u20ac' + totEUR.toFixed(2) + ' EUR</span>');
+  if (totGBP > 0) parts.push('<span style="color:var(--green);">\u00a3' + totGBP.toFixed(2) + ' GBP</span>');
+  if (errCount > 0) parts.push('<span style="color:var(--red);">' + errCount + ' failed</span>');
+  statsEl.innerHTML = parts.join(' \u00b7 ');
+
+  var MF = { uk: '\ud83c\uddec\ud83c\udde7', de: '\ud83c\udde9\ud83c\uddea', fr: '\ud83c\uddeb\ud83c\uddf7', es: '\ud83c\uddea\ud83c\uddf8', it: '\ud83c\uddee\ud83c\uddf9', nl: '\ud83c\uddf3\ud83c\uddf1' };
+  var ML = { uk: 'UK', de: 'DE', fr: 'FR', es: 'ES', it: 'IT', nl: 'NL' };
+
+  var rows = invoices.map(function(inv) {
+    var isErr = !!inv.parseError;
+    var flag  = MF[inv.marketplace] || '\ud83c\udf10';
+    var mkt   = ML[inv.marketplace] || (inv.marketplace && inv.marketplace !== '?' ? inv.marketplace.toUpperCase() : '?');
+    var sym   = inv.currency === 'EUR' ? '\u20ac' : '\u00a3';
+    var miss  = 'color:var(--text-3);';
+    return '<tr style="' + (isErr ? 'background:rgba(240,59,80,0.06);' : '') + '">' +
+      '<td><code style="font-size:11px;' + (inv.invoiceNo === '?' ? miss : '') + '">' + (inv.invoiceNo || '?') + '</code></td>' +
+      '<td><code style="font-size:11px;' + (inv.orderNo === '?' ? miss : '') + '">' + (inv.orderNo || '?') + '</code></td>' +
+      '<td style="font-family:var(--mono);font-size:12px;' + (inv.date === '?' ? miss : '') + '">' + (inv.date || '?') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px;">' + flag + ' ' + mkt + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px;color:' + (inv.currency === 'EUR' ? 'var(--blue)' : inv.currency === 'GBP' ? 'var(--green)' : 'var(--text-3)') + ';">' + (inv.currency || '?') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:13px;font-weight:600;text-align:right;">' + (isErr ? '<span style="color:var(--red);" title="' + (inv.parseError || '').replace(/"/g, "'") + '">\u26a0 error</span>' : inv.total != null ? sym + inv.total.toFixed(2) : '<span style="' + miss + '">?</span>') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:12px;text-align:center;">' + (isErr ? '<span style="color:var(--red);" title="' + (inv.parseError || '').replace(/"/g, "'") + '">!</span>' : (inv.lineItems || []).length) + '</td>' +
+      '<td><button class="hub-btn-xs" onclick="hub_viewAmzInvDetail(\'' + inv.key + '\')">View</button></td>' +
+    '</tr>';
+  }).join('');
+
+  tableEl.innerHTML = '<div class="hub-table-wrap"><table class="hub-table"><thead><tr>' +
+    '<th>Invoice #</th><th>Order #</th><th>Date</th><th>Marketplace</th><th>Currency</th>' +
+    '<th style="text-align:right;">Total</th><th style="text-align:center;">ASINs</th><th></th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
 var _hub_manual_queue=[];
@@ -10262,7 +10654,7 @@ function hub_saveAnthropicKey() {
 function hub_renderM11() {
   var summary=document.getElementById('hubSummaryM11');
   var amz=0,man=0;
-  for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('hub_invoice_amazon_')===0)amz++;if(k&&k.indexOf('hub_invoice_manual_')===0)man++;}
+  for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&(k.indexOf('hub_amzinv_')===0||k.indexOf('hub_invoice_amazon_')===0))amz++;if(k&&k.indexOf('hub_invoice_manual_')===0)man++;}
   if(summary)summary.textContent=amz+' Amazon · '+man+' manual invoices';
   hub_renderAmazonInvLibrary();
   hub_renderManualInvLibrary();

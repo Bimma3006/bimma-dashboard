@@ -3884,10 +3884,10 @@ input::placeholder { color: var(--text-4); }
       <!-- Amazon tab -->
       <div id="hubInvPanel1">
         <div class="hub-info-box" style="margin-bottom:16px;"><strong>How to get your Amazon invoices:</strong> Amazon account → Manage Your Data → Request Your Data → Select 'Orders' → Submit → Download emailed ZIP → Open folder: <code>Retail.TransactionalInvoicing</code> → Upload all PDFs here.</div>
-        <div class="hub-upload-zone" onclick="document.getElementById('hubAmazonInvFile').click()">
+        <div class="hub-upload-zone" onclick="document.getElementById('hubAmazonInvFile').click()" ondragover="event.preventDefault();event.dataTransfer.dropEffect='copy';this.style.borderColor='var(--green)'" ondragleave="this.style.borderColor=''" ondrop="this.style.borderColor='';hub_handleInvDrop(event)">
           <div style="font-size:28px;margin-bottom:8px;">📁</div>
           <div style="font-weight:600;margin-bottom:4px;">Upload Invoice Folder</div>
-          <div style="color:var(--text-3);font-size:13px;">Select your <code>Retail.TransactionalInvoicing</code> folder — PDFs parsed automatically, client-side</div>
+          <div style="color:var(--text-3);font-size:13px;">Drop folder here or click to browse — PDFs parsed automatically, client-side</div>
           <input type="file" id="hubAmazonInvFile" webkitdirectory multiple style="display:none" onchange="hub_onAmazonInvoiceUpload(this)">
         </div>
         <div id="hubAmzInvProgress" style="display:none;margin-top:14px;">
@@ -3899,11 +3899,6 @@ input::placeholder { color: var(--text-4); }
       </div>
       <!-- Manual tab -->
       <div id="hubInvPanel2" style="display:none;">
-        <div style="background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r);padding:14px;margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <span style="font-size:13px;color:var(--text-2);">Anthropic API Key (for AI Parse):</span>
-          <input type="password" id="hubAnthropicKey" placeholder="sk-ant-..." onchange="hub_saveAnthropicKey()" style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-sm);padding:5px 10px;font-family:var(--mono);font-size:13px;">
-          <span id="hubAiKeyStatus" style="font-size:12px;color:var(--text-3);">Not set</span>
-        </div>
         <div class="hub-upload-zone" onclick="document.getElementById('hubManualInvFile').click()">
           <div style="font-size:28px;margin-bottom:8px;">📎</div>
           <div style="font-weight:600;margin-bottom:4px;">Upload Invoice Files</div>
@@ -3914,7 +3909,7 @@ input::placeholder { color: var(--text-4); }
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <strong>Invoice Queue</strong>
             <div style="display:flex;gap:8px;">
-              <button onclick="hub_parseAllInvoices()" class="hub-btn-xs" style="background:var(--accent);color:#fff;border-color:var(--accent);">⚡ Parse All (AI)</button>
+              <button onclick="hub_parsePdfAllManual()" class="hub-btn-xs" style="background:var(--blue);color:#fff;border-color:var(--blue);">↓ Parse All PDFs</button>
               <button onclick="hub_saveAllManualInvoices()" class="hub-btn-xs" style="background:var(--green);color:#000;border-color:var(--green);font-weight:600;">Save All</button>
             </div>
           </div>
@@ -8982,9 +8977,7 @@ function hub_getCogsMap() {
   } catch(e) { return {}; }
 }
 
-function hub_getAnthropicKey() {
-  return (localStorage.getItem('hub_anthropic_key') || '').trim();
-}
+
 
 // ── CSV / TSV Parser ─────────────────────
 
@@ -10297,11 +10290,23 @@ function hub_parseAmazonInvoice(text, filename) {
 
     // ── Total ─────────────────────────────────────────────────
     var TOT_RE = [
+      // EN
+      /Total\s*payable\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      /Invoice\s*[Tt]otal\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
       /(?:Order\s*Total|Grand\s*Total)\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      // FR
+      /Total\s*[àa]\s*payer\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      /Facture\s*[Tt]otal\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
       /Total\s*TTC\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      // DE
+      /Zahlbetrag\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      /Gesamtpreis\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
       /Gesamtbetrag\s*(?:inkl\.?\s*USt\.?)?\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
       /Zwischensumme\s*inkl\.?\s*USt\.?\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
-      /Precio\s*total\s*(?:IVA\s*incluido|con\s*IVA)\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      // ES
+      /Total\s*pendiente\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      /Precio\s*total\s*(?:IVA\s*incluido|con\s*IVA)?\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
+      // Fallbacks
       /Totale\s*(?:IVA\s*inclusa|ordine)?\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
       /Total\s*(?:incl\.?\s*(?:VAT|TVA|USt\.?|IVA))\s*[:\s]?\s*[£€]?\s*([0-9]+[,\.][0-9]{1,2})\s*[£€]?/i,
     ];
@@ -10397,10 +10402,7 @@ function hub_setInvTab(n) {
   });
 }
 
-async function hub_onAmazonInvoiceUpload(inputEl) {
-  var pdfs = Array.from(inputEl.files).filter(function(f) { return /\.pdf$/i.test(f.name); });
-  if (!pdfs.length) { inputEl.value = ''; return; }
-
+async function hub_processInvoiceFiles(files) {
   var progDiv = document.getElementById('hubAmzInvProgress');
   var bar     = document.getElementById('hubAmzInvProgressBar');
   var status  = document.getElementById('hubAmzInvProgressStatus');
@@ -10411,20 +10413,19 @@ async function hub_onAmazonInvoiceUpload(inputEl) {
   try { await hub_loadPdfJs(); }
   catch(e) {
     if (status) status.textContent = 'Failed to load PDF.js: ' + e.message;
-    inputEl.value = ''; return;
+    return;
   }
 
   var failed = 0;
-  for (var i = 0; i < pdfs.length; i++) {
-    var file = pdfs[i];
-    if (bar) bar.style.width = Math.round((i / pdfs.length) * 100) + '%';
-    if (status) status.textContent = 'Parsing ' + (i + 1) + ' of ' + pdfs.length + ': ' + file.name;
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    if (bar) bar.style.width = Math.round((i / files.length) * 100) + '%';
+    if (status) status.textContent = 'Parsing ' + (i + 1) + ' of ' + files.length + ': ' + file.name;
     try {
       var text = await hub_pdfToText(file);
       var parsed = hub_parseAmazonInvoice(text || '', file.name);
       parsed.parsedAt = new Date().toISOString();
       if (!text || !text.trim()) parsed.parseError = parsed.parseError || 'PDF text extraction returned empty';
-      // Key: prefer order number so duplicates overwrite; fall back to filename hash
       var baseKey = parsed.orderNo !== '?' ? parsed.orderNo : file.name.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 50);
       try { localStorage.setItem('hub_amzinv_' + baseKey, JSON.stringify(parsed)); } catch(se) { /* storage full */ }
     } catch(err) {
@@ -10435,10 +10436,53 @@ async function hub_onAmazonInvoiceUpload(inputEl) {
   }
 
   if (bar) bar.style.width = '100%';
-  if (status) status.textContent = pdfs.length + ' PDF' + (pdfs.length !== 1 ? 's' : '') + ' processed' + (failed ? ' \u00b7 ' + failed + ' failed' : '');
+  if (status) status.textContent = files.length + ' PDF' + (files.length !== 1 ? 's' : '') + ' processed' + (failed ? ' \u00b7 ' + failed + ' failed' : '');
   setTimeout(function() { if (progDiv) progDiv.style.display = 'none'; }, 3000);
   hub_renderAmazonInvLibrary();
+}
+
+async function hub_onAmazonInvoiceUpload(inputEl) {
+  var pdfs = Array.from(inputEl.files).filter(function(f) { return /\.pdf$/i.test(f.name); });
   inputEl.value = '';
+  if (!pdfs.length) return;
+  await hub_processInvoiceFiles(pdfs);
+}
+
+async function hub_handleInvDrop(event) {
+  event.preventDefault();
+  var items = Array.from(event.dataTransfer.items || []);
+  var files = [];
+  var entries = items.map(function(i) { try { return i.webkitGetAsEntry(); } catch(e) { return null; } }).filter(Boolean);
+  for (var ei = 0; ei < entries.length; ei++) {
+    await hub_collectPdfsFromEntry(entries[ei], files);
+  }
+  if (!files.length) return;
+  await hub_processInvoiceFiles(files);
+}
+
+async function hub_collectPdfsFromEntry(entry, files) {
+  if (!entry) return;
+  if (entry.isFile) {
+    if (/\.pdf$/i.test(entry.name)) {
+      await new Promise(function(resolve) {
+        entry.file(function(f) { files.push(f); resolve(); }, function() { resolve(); });
+      });
+    }
+  } else if (entry.isDirectory) {
+    var reader = entry.createReader();
+    var readBatch = function() {
+      return new Promise(function(resolve) {
+        reader.readEntries(resolve, function() { resolve([]); });
+      });
+    };
+    var batch;
+    do {
+      batch = await readBatch();
+      for (var bi = 0; bi < batch.length; bi++) {
+        await hub_collectPdfsFromEntry(batch[bi], files);
+      }
+    } while (batch.length > 0);
+  }
 }
 
 function hub_renderAmazonInvLibrary() {
@@ -10525,7 +10569,7 @@ function hub_renderManualQueue() {
     var trueCog=q.form.giftCard?(parseFloat(q.form.amount||0)+parseFloat(q.form.giftCard||0)*0.90):0;
     return '<div style="background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r);padding:14px;margin-bottom:10px;">' +
       '<div style="display:flex;justify-content:space-between;margin-bottom:10px;"><strong style="font-size:13px;">'+q.file.name+'</strong>' +
-      '<div style="display:flex;gap:6px;"><button class="hub-btn-xs" onclick="hub_aiParseOne('+idx+')">⚡ AI Parse</button><button class="hub-btn-xs" onclick="_hub_manual_queue.splice('+idx+',1);hub_renderManualQueue()">✕ Remove</button></div></div>' +
+      '<div style="display:flex;gap:6px;"><button class="hub-btn-xs" onclick="hub_pdfParseManual('+idx+')" style="color:var(--blue);border-color:var(--blue);">↓ Parse PDF</button><button class="hub-btn-xs" onclick="_hub_manual_queue.splice('+idx+',1);hub_renderManualQueue()">✕ Remove</button></div></div>' +
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">' +
         '<div><label style="font-size:11px;color:var(--text-3);">Supplier</label><select onchange="_hub_manual_queue['+idx+'].form.supplier=this.value" style="width:100%;margin-top:2px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 6px;font-size:13px;"><option value="">Select...</option>'+supOpts+'</select></div>' +
         '<div><label style="font-size:11px;color:var(--text-3);">Order / Receipt No.</label><input type="text" value="'+q.form.orderNo+'" onchange="_hub_manual_queue['+idx+'].form.orderNo=this.value" style="width:100%;margin-top:2px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:4px;padding:4px 6px;font-size:13px;"></div>' +
@@ -10540,39 +10584,30 @@ function hub_renderManualQueue() {
   }).join('');
 }
 
-async function hub_aiParseOne(idx) {
-  var q=_hub_manual_queue[idx];
-  if(!q)return;
-  var apiKey=hub_getAnthropicKey();
-  if(!apiKey){alert('Please enter your Anthropic API key in the field above.');return;}
-  var file=q.file;
-  var reader=new FileReader();
-  reader.onload=async function(e){
-    var b64=e.target.result.split(',')[1];
-    var mt=file.type||'image/jpeg';
-    var sysprompt='You are an invoice parser. Extract fields and return ONLY valid JSON:\n{"supplier":"string","order_number":"string or null","purchase_date":"YYYY-MM-DD or null","line_items":[{"description":"string","qty":1,"unit_price":0,"total_price":0}],"total":0,"payment_methods":[{"type":"gift_card|cash|card|other","amount":0}],"currency":"GBP|EUR|USD|other"}';
-    try{
-      var resp=await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{'x-api-key':apiKey,'anthropic-version':'2023-06-01','content-type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1024,system:sysprompt,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:'Parse this invoice and return JSON only.'}]}]})
-      });
-      var data=await resp.json();
-      if(!resp.ok)throw new Error((data.error&&data.error.message)||resp.statusText);
-      var raw=data.content&&data.content[0]&&data.content[0].text||'{}';
-      var parsed=JSON.parse(raw.replace(/```json\n?|\n?```/g,'').trim());
-      _hub_manual_queue[idx].form.supplier=parsed.supplier||'';
-      _hub_manual_queue[idx].form.orderNo=parsed.order_number||'';
-      _hub_manual_queue[idx].form.purchaseDate=parsed.purchase_date||'';
-      _hub_manual_queue[idx].form.amount=String(parsed.total||'');
-      var gc=(parsed.payment_methods||[]).find(function(p){return p.type==='gift_card';});
-      if(gc)_hub_manual_queue[idx].form.giftCard=String(gc.amount||'');
-      // Fuzzy ASIN match
-      if(parsed.line_items&&parsed.line_items[0]){hub_fuzzyMatchAsin(parsed.line_items[0].description||'',idx);}
-      hub_renderManualQueue();
-    }catch(err){alert('AI Parse error: '+err.message);}
-  };
-  reader.readAsDataURL(file);
+async function hub_pdfParseManual(idx) {
+  var q = _hub_manual_queue[idx];
+  if (!q) return;
+  try {
+    await hub_loadPdfJs();
+    var text = await hub_pdfToText(q.file);
+    var inv = hub_parseAmazonInvoice(text || '', q.file.name);
+    // Map marketplace to supplier name
+    var MKT_SUPPLIER = { uk: 'Amazon.co.uk', de: 'Amazon.de', fr: 'Amazon.fr', es: 'Amazon.es', it: 'Amazon.it', nl: 'Amazon.nl' };
+    if (inv.marketplace && inv.marketplace !== '?') {
+      _hub_manual_queue[idx].form.supplier = MKT_SUPPLIER[inv.marketplace] || 'Amazon';
+    }
+    if (inv.orderNo && inv.orderNo !== '?') _hub_manual_queue[idx].form.orderNo = inv.orderNo;
+    if (inv.total != null) _hub_manual_queue[idx].form.amount = String(inv.total);
+    if (inv.date && inv.date !== '?') {
+      // Convert DD/MM/YYYY → YYYY-MM-DD for date input
+      var dp = inv.date.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (dp) _hub_manual_queue[idx].form.purchaseDate = dp[3] + '-' + dp[2] + '-' + dp[1];
+    }
+    if (inv.lineItems && inv.lineItems.length && inv.lineItems[0].asin) {
+      _hub_manual_queue[idx].form.asin = inv.lineItems[0].asin;
+    }
+    hub_renderManualQueue();
+  } catch(err) { alert('Parse error: ' + err.message); }
 }
 
 function hub_fuzzyMatchAsin(description, idx) {
@@ -10589,7 +10624,7 @@ function hub_fuzzyMatchAsin(description, idx) {
   if(best&&bestScore>0.3)_hub_manual_queue[idx].form.asin=best;
 }
 
-async function hub_parseAllInvoices() {
+async function hub_parsePdfAllManual() {
   var progressDiv=document.getElementById('hubManualQueueProgress');
   var bar=document.getElementById('hubManualQueueBar');
   var status=document.getElementById('hubManualQueueStatus');
@@ -10597,13 +10632,13 @@ async function hub_parseAllInvoices() {
   var done=0,matched=0;
   for(var i=0;i<_hub_manual_queue.length;i++){
     if(bar)bar.style.width=Math.round(i/_hub_manual_queue.length*100)+'%';
-    if(status)status.textContent='Parsing '+(i+1)+' of '+_hub_manual_queue.length+'…';
-    await hub_aiParseOne(i);
+    if(status)status.textContent='Parsing '+(i+1)+' of '+_hub_manual_queue.length+'\u2026';
+    await hub_pdfParseManual(i);
     done++;
     if(_hub_manual_queue[i]&&_hub_manual_queue[i].form.asin)matched++;
   }
   if(bar)bar.style.width='100%';
-  if(status)status.textContent=done+' parsed · '+matched+' auto-matched · '+(done-matched)+' need review';
+  if(status)status.textContent=done+' parsed \u00b7 '+matched+' auto-matched \u00b7 '+(done-matched)+' need review';
 }
 
 function hub_saveAllManualInvoices() {
@@ -10642,14 +10677,6 @@ function hub_renderManualInvLibrary() {
   '</tbody></table></div>';
 }
 
-function hub_saveAnthropicKey() {
-  var inp=document.getElementById('hubAnthropicKey');
-  if(!inp)return;
-  var key=inp.value.trim();
-  localStorage.setItem('hub_anthropic_key',key);
-  var status=document.getElementById('hubAiKeyStatus');
-  if(status)status.textContent=key?'✓ Saved':'Not set';
-}
 
 function hub_renderM11() {
   var summary=document.getElementById('hubSummaryM11');
@@ -10658,8 +10685,6 @@ function hub_renderM11() {
   if(summary)summary.textContent=amz+' Amazon · '+man+' manual invoices';
   hub_renderAmazonInvLibrary();
   hub_renderManualInvLibrary();
-  var ki=document.getElementById('hubAnthropicKey');
-  if(ki){var key=hub_getAnthropicKey();ki.value=key;var ks=document.getElementById('hubAiKeyStatus');if(ks)ks.textContent=key?'✓ Saved':'Not set';}
 }
 
 // ── Sortable Tables ───────────────────────

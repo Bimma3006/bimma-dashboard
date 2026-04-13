@@ -10178,7 +10178,7 @@ function hub_normDate(raw) {
     nov:11, november:11, novembre:11, noviembre:11,
     dec:12, december:12, decembre:12, dezember:12, diciembre:12, dicembre:12
   };
-  var textDate = raw.match(/^(\d{1,2})\s+([A-Za-z\u00e0-\u00ff]+)\.?\s+(\d{4})$/);
+  var textDate = raw.match(/^(\d{1,2})\.?\s+([A-Za-z\u00e0-\u00ff]+)\.?\s+(\d{4})$/);
   if (textDate) {
     var key = textDate[2].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     var mon = MONTHS[key] || MONTHS[key.slice(0, 4)] || MONTHS[key.slice(0, 3)];
@@ -10233,8 +10233,8 @@ function hub_parseAmazonInvoice(text, filename) {
     }
 
     // ── Date ──────────────────────────────────────────────────
-    // Date pattern: "DD Month YYYY", "DD/MM/YYYY", "DD.MM.YYYY", "YYYY-MM-DD"
-    var _DP = '(?:[0-9]{1,2}\\s+[A-Za-z\\u00e0-\\u00ff]+\\.?\\s+[0-9]{4}|[0-9]{1,2}[\\/\\.][0-9]{1,2}[\\/\\.][0-9]{4}|[0-9]{4}-[0-9]{2}-[0-9]{2})';
+    // Date pattern: "DD Month YYYY", "DD. Month YYYY" (German), "DD/MM/YYYY", "DD.MM.YYYY", "YYYY-MM-DD"
+    var _DP = '(?:[0-9]{1,2}\\.?\\s+[A-Za-z\\u00e0-\\u00ff]+\\.?\\s+[0-9]{4}|[0-9]{1,2}[\\/\\.][0-9]{1,2}[\\/\\.][0-9]{4}|[0-9]{4}-[0-9]{2}-[0-9]{2})';
     // 1. Prefer Order date — this matches the purchase date in the sheets
     var orderDateM = blob.match(new RegExp('Order\\s*[Dd]ate\\s*[:\\s]+(' + _DP + ')', 'i'));
     if (orderDateM) {
@@ -11215,20 +11215,21 @@ function invMatchPurchase(extracted) {
     return { r: r, dateDiff: dateDiff, claimed: claimed };
   });
 
-  // Sort by date proximity; use "already claimed this run" only as a tiebreaker
-  // when two rows are within 1 day of each other — avoids splitting genuine
-  // multi-invoice orders while still spreading invoices across distinct dates
+  // Sort by date proximity; use "already claimed this run" as a tiebreaker
+  // when two rows are within 3 days of each other — spreads invoices across
+  // distinct purchases while still allowing multiple invoices on the same order
   scored.sort(function(a, b) {
     var delta = a.dateDiff - b.dateDiff;
-    if (Math.abs(delta) < 1 && a.claimed !== b.claimed) return a.claimed ? 1 : -1;
+    if (Math.abs(delta) < 3 && a.claimed !== b.claimed) return a.claimed ? 1 : -1;
     return delta;
   });
 
   var best = scored[0];
-  // If we have a reliable invoice date, enforce a 45-day maximum gap.
-  // This prevents a January invoice matching a July purchase just because the ASIN is the same.
-  // If no date was parsed, skip the threshold and match on ASIN alone.
-  if (invDate && isFinite(best.dateDiff) && best.dateDiff > 45) return [];
+  // Enforce a 14-day maximum gap. With Order date now correctly parsed from the
+  // invoice, a legitimate match should be 0–3 days. Anything over 14 days is a
+  // different purchase of the same ASIN in a different month/period.
+  // If no date was parsed at all, fall back to ASIN-only matching.
+  if (invDate && isFinite(best.dateDiff) && best.dateDiff > 14) return [];
 
   return scored.slice(0, 1);
 }

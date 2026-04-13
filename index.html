@@ -3556,6 +3556,14 @@ input::placeholder { color: var(--text-4); }
       <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:8px;">Folders and individual PDFs supported · parsed locally, no API key needed</div>
     </div>
 
+    <!-- Progress (shown during batch processing) -->
+    <div id="invProgressWrap" style="display:none;margin-bottom:20px;">
+      <div style="background:var(--surface3);border-radius:99px;height:6px;overflow:hidden;">
+        <div id="invProgressBar" style="background:var(--green);height:100%;width:0%;transition:width .2s;"></div>
+      </div>
+      <div id="invProgressStatus" style="font-family:var(--mono);font-size:12px;color:var(--text-3);margin-top:6px;"></div>
+    </div>
+
     <!-- Queue + results -->
     <div id="invQueue"></div>
   </div>
@@ -10089,33 +10097,39 @@ function hub_loadPdfJs() {
   return _hub_pdfjs_promise;
 }
 
-async function hub_pdfToText(file) {
-  var buf = await file.arrayBuffer();
+async function hub_pdfToText(fileOrBuf) {
+  // Accept either a File/Blob or a pre-read ArrayBuffer to avoid double-reads
+  var buf = (fileOrBuf instanceof ArrayBuffer) ? fileOrBuf : await fileOrBuf.arrayBuffer();
   var pdf = await pdfjsLib.getDocument({ data: buf }).promise;
   var pageTexts = [];
-  for (var p = 1; p <= pdf.numPages; p++) {
-    var page    = await pdf.getPage(p);
-    var content = await page.getTextContent();
-    // Sort items by y-descending then x-ascending to get visual reading order
-    var items = content.items.slice().sort(function(a, b) {
-      var dy = b.transform[5] - a.transform[5];
-      if (Math.abs(dy) > 3) return dy;
-      return a.transform[4] - b.transform[4];
-    });
-    // Group into lines by y proximity
-    var lines = [], cur = [], lastY = null;
-    items.forEach(function(item) {
-      if (!item.str || !item.str.trim()) return;
-      var y = Math.round(item.transform[5]);
-      if (lastY !== null && Math.abs(y - lastY) > 4) {
-        if (cur.length) lines.push(cur.join(' '));
-        cur = [];
-      }
-      cur.push(item.str.trim());
-      lastY = y;
-    });
-    if (cur.length) lines.push(cur.join(' '));
-    pageTexts.push(lines.join('\n'));
+  try {
+    for (var p = 1; p <= pdf.numPages; p++) {
+      var page    = await pdf.getPage(p);
+      var content = await page.getTextContent();
+      page.cleanup();
+      // Sort items by y-descending then x-ascending to get visual reading order
+      var items = content.items.slice().sort(function(a, b) {
+        var dy = b.transform[5] - a.transform[5];
+        if (Math.abs(dy) > 3) return dy;
+        return a.transform[4] - b.transform[4];
+      });
+      // Group into lines by y proximity
+      var lines = [], cur = [], lastY = null;
+      items.forEach(function(item) {
+        if (!item.str || !item.str.trim()) return;
+        var y = Math.round(item.transform[5]);
+        if (lastY !== null && Math.abs(y - lastY) > 4) {
+          if (cur.length) lines.push(cur.join(' '));
+          cur = [];
+        }
+        cur.push(item.str.trim());
+        lastY = y;
+      });
+      if (cur.length) lines.push(cur.join(' '));
+      pageTexts.push(lines.join('\n'));
+    }
+  } finally {
+    pdf.destroy(); // critical: release PDF.js memory after each document
   }
   return pageTexts.join('\n');
 }
@@ -10967,35 +10981,59 @@ function invRenderQueue() {
   var el = document.getElementById('invQueue');
   if (!el) return;
   if (!invPending.length) { el.innerHTML = ''; return; }
-  var hasPending = invPending.some(function(p) { return p.status === 'pending'; });
+
+  var nPending   = invPending.filter(function(p) { return p.status === 'pending'; }).length;
+  var nConfirmed = invPending.filter(function(p) { return p.status === 'confirmed'; }).length;
+  var nUnmatched = invPending.filter(function(p) { return p.status === 'unmatched'; }).length;
+  var nError     = invPending.filter(function(p) { return p.status === 'error'; }).length;
+  var hasPending = nPending > 0;
+  var isLarge    = invPending.length > 50;
+
   var html = '<div class="inv-queue-hdr"><span>' + invPending.length + ' file' + (invPending.length !== 1 ? 's' : '') + ' queued</span>';
   if (hasPending) html += '<button class="btn-sm btn-green" onclick="invAnalyseAll()">▶ Analyse All</button>';
   html += '<button class="btn-sm btn-ghost" onclick="invClearDone()">Clear Done</button>';
   html += '<button class="btn-sm btn-ghost" style="color:var(--red);border-color:var(--red);" onclick="if(confirm(\'Clear all queued files?\')){invPending=[];invRenderQueue();}">✕ Clear All</button></div>';
-  html += '<div class="inv-file-list">';
-  invPending.forEach(function(p, i) {
-    html += '<div class="inv-file-row">';
-    html += '<div class="inv-file-top">';
-    html += '<span class="inv-file-name">' + esc(p.name) + '</span>';
-    html += '<span class="inv-status inv-status-' + p.status + '">' + invStatusLabel(p.status) + '</span>';
-    html += '<button class="inv-icon-btn" onclick="invOpenPdf(' + i + ')" title="View PDF" style="font-size:11px;padding:2px 8px;">View PDF</button>';
+
+  // For large batches show a summary card instead of rendering hundreds of rows
+  if (isLarge && !hasPending) {
+    html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 18px;display:flex;gap:24px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;">';
+    html += '<span style="color:var(--green);">✓ ' + nConfirmed + ' attached</span>';
+    html += '<span style="color:var(--text-3);">' + nUnmatched + ' no match</span>';
+    if (nError) html += '<span style="color:var(--red);">' + nError + ' errors</span>';
     html += '</div>';
-    if (p.status === 'analysing') {
-      html += '<div style="font-family:var(--mono);font-size:11px;color:var(--amber);">Parsing PDF…</div>';
+    // Still show individual error rows so the user can see what failed
+    var errItems = invPending.filter(function(p) { return p.status === 'error'; });
+    if (errItems.length) {
+      html += '<div class="inv-file-list" style="margin-top:10px;">';
+      errItems.forEach(function(p) {
+        html += '<div class="inv-file-row"><div class="inv-file-top"><span class="inv-file-name">' + esc(p.name) + '</span><span class="inv-status inv-status-error">Error</span></div>';
+        html += '<div style="color:var(--red);font-size:12px;">' + esc(p.error || 'Unknown error') + '</div></div>';
+      });
+      html += '</div>';
     }
-    if (p.status === 'confirmed') {
-      var matched = allRows.find(function(r) { return r.rowIdx === p.confirmedRowIdx; });
-      html += '<div style="color:var(--green);font-family:var(--mono);font-size:11px;">✓ Attached to: ' + esc(matched ? (matched.title || matched.asin) : 'Purchase #' + p.confirmedRowIdx) + (p.extracted && p.extracted.asin ? ' · ' + esc(p.extracted.asin) : '') + (p._multiInv ? ' · invoice ' + p._multiInv : '') + '</div>';
-    }
-    if (p.status === 'unmatched') {
-      html += '<div style="font-size:12px;color:var(--text-3);">No matching purchase — ASIN not found in your purchases sheet.</div>';
-    }
-    if (p.status === 'error') {
-      html += '<div style="color:var(--red);font-size:12px;">' + esc(p.error || 'Unknown error') + '</div>';
-    }
+  } else {
+    html += '<div class="inv-file-list">';
+    invPending.forEach(function(p, i) {
+      html += '<div class="inv-file-row"><div class="inv-file-top">';
+      html += '<span class="inv-file-name">' + esc(p.name) + '</span>';
+      html += '<span class="inv-status inv-status-' + p.status + '">' + invStatusLabel(p.status) + '</span>';
+      if (p.file) html += '<button class="inv-icon-btn" onclick="invOpenPdf(' + i + ')" style="font-size:11px;padding:2px 8px;">View PDF</button>';
+      html += '</div>';
+      if (p.status === 'confirmed') {
+        var matched = allRows.find(function(r) { return r.rowIdx === p.confirmedRowIdx; });
+        html += '<div style="color:var(--green);font-family:var(--mono);font-size:11px;">✓ Attached to: ' + esc(matched ? (matched.title || matched.asin) : 'Purchase #' + p.confirmedRowIdx) + (p.extracted && p.extracted.asin ? ' · ' + esc(p.extracted.asin) : '') + (p._multiInv ? ' · invoice ' + p._multiInv : '') + '</div>';
+      }
+      if (p.status === 'unmatched') {
+        html += '<div style="font-size:12px;color:var(--text-3);">No matching purchase — ASIN not found in your purchases sheet.</div>';
+      }
+      if (p.status === 'error') {
+        html += '<div style="color:var(--red);font-size:12px;">' + esc(p.error || 'Unknown error') + '</div>';
+      }
+      html += '</div>';
+    });
     html += '</div>';
-  });
-  html += '</div>';
+  }
+
   el.innerHTML = html;
 }
 
@@ -11007,19 +11045,52 @@ function invStatusLabel(s) {
 async function invAnalyseAll() {
   if (!allRows || !allRows.length) { showToast('Load your purchases first (connect Google Sheets)'); return; }
   try { await hub_loadPdfJs(); } catch(e) { showToast('Could not load PDF parser — check connection'); return; }
+
+  var pending = invPending.filter(function(p) { return p.status === 'pending'; });
+  if (!pending.length) return;
+
+  var progWrap = document.getElementById('invProgressWrap');
+  var progBar  = document.getElementById('invProgressBar');
+  var progStatus = document.getElementById('invProgressStatus');
+  if (progWrap) progWrap.style.display = 'block';
+
+  var total = pending.length, done = 0, confirmed = 0, unmatched = 0, errors = 0;
+
   for (var i = 0; i < invPending.length; i++) {
-    if (invPending[i].status === 'pending') await invAnalyseOne(i);
+    if (invPending[i].status !== 'pending') continue;
+
+    var result = await invAnalyseOne(i);
+    done++;
+    if (result === 'confirmed') confirmed++;
+    else if (result === 'unmatched') unmatched++;
+    else errors++;
+
+    // Update progress bar (lightweight — no DOM list rebuild)
+    if (progBar) progBar.style.width = Math.round((done / total) * 100) + '%';
+    if (progStatus) progStatus.textContent = done + ' / ' + total + '  ·  ✓ ' + confirmed + ' attached  ·  ' + unmatched + ' no match' + (errors ? '  ·  ' + errors + ' errors' : '');
+
+    // Yield to the event loop + GC every 20 files
+    if (done % 20 === 0) await new Promise(function(r) { setTimeout(r, 30); });
   }
+
+  if (progBar) progBar.style.width = '100%';
+  if (progStatus) progStatus.textContent = 'Done — ' + confirmed + ' attached · ' + unmatched + ' no match' + (errors ? ' · ' + errors + ' errors' : '');
+  setTimeout(function() { if (progWrap) progWrap.style.display = 'none'; }, 4000);
+
+  invRenderQueue();  // single render at the end
   filterPurchases();
 }
 
 async function invAnalyseOne(i) {
+  // Returns 'confirmed' | 'unmatched' | 'error' — does NOT touch the DOM
   var p = invPending[i];
-  p.status = 'analysing';
-  invRenderQueue();
   try {
-    var text = await hub_pdfToText(p.file);
-    var inv = hub_parseAmazonInvoice(text || '', p.file.name);
+    // Read file buffer ONCE — reused for both PDF parsing and IndexedDB save
+    var buf = await p.file.arrayBuffer();
+    p.file = null; // release File reference immediately to free memory
+
+    var text = await hub_pdfToText(buf);
+    var inv = hub_parseAmazonInvoice(text || '', p.name);
     var li = (inv.lineItems && inv.lineItems[0]) || {};
     var dateYMD = '';
     if (inv.date && inv.date !== '?') {
@@ -11029,7 +11100,7 @@ async function invAnalyseOne(i) {
     }
     var mkt = (inv.marketplace || '').toLowerCase();
     var supplier = mkt.includes('de') ? 'Amazon.de' : mkt.includes('fr') ? 'Amazon.fr' : mkt.includes('es') ? 'Amazon.es' : mkt.includes('it') ? 'Amazon.it' : 'Amazon';
-    p.extracted = {
+    var extracted = {
       supplier: supplier,
       product: li.description || inv.invoiceNo || '',
       asin: li.asin || '',
@@ -11038,26 +11109,29 @@ async function invAnalyseOne(i) {
       total: inv.total || 0,
       date: dateYMD
     };
-    var candidates = invMatchPurchase(p.extracted);
+    var candidates = invMatchPurchase(extracted);
     if (candidates.length) {
       var rowIdx = candidates[0].r.rowIdx;
-      var buf = await p.file.arrayBuffer();
-      await invSaveRecord(rowIdx, p.name, buf, p.extracted);
+      await invSaveRecord(rowIdx, p.name, buf, extracted);
       p.status = 'confirmed';
       p.confirmedRowIdx = rowIdx;
+      p.extracted = { asin: extracted.asin, date: extracted.date }; // keep only what's needed for display
       window.invAttachedRows.add(rowIdx);
       window.invAttachedCounts[rowIdx] = (window.invAttachedCounts[rowIdx] || 0) + 1;
-      // Track if multiple invoices hit the same purchase row
-      var siblingCount = invPending.filter(function(q) { return q.status === 'confirmed' && q.confirmedRowIdx === rowIdx; }).length;
+      var siblingCount = invPending.filter(function(q) { return q !== p && q.status === 'confirmed' && q.confirmedRowIdx === rowIdx; }).length;
       if (siblingCount > 0) p._multiInv = siblingCount + 1;
+      return 'confirmed';
     } else {
       p.status = 'unmatched';
+      p.extracted = { asin: extracted.asin }; // keep ASIN for display
+      return 'unmatched';
     }
   } catch(err) {
     p.status = 'error';
     p.error = err.message;
+    p.file = null;
+    return 'error';
   }
-  invRenderQueue();
 }
 
 // ── Matching ──────────────────────────────

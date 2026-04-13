@@ -10807,11 +10807,33 @@ function invOpenDB() {
 }
 function invSaveRecord(rowIdx, fileName, pdfData, extractedData) {
   return invOpenDB().then(function(db) {
+    // Read existing record first so we can append rather than overwrite
     return new Promise(function(resolve, reject) {
-      var tx = db.transaction('invoices', 'readwrite');
-      tx.objectStore('invoices').put({ rowIdx: rowIdx, fileName: fileName, pdfData: pdfData, extractedData: extractedData, attachedAt: new Date().toISOString() });
-      tx.oncomplete = resolve;
-      tx.onerror = function(e) { reject(e.target.error); };
+      var getTx = db.transaction('invoices', 'readonly');
+      var getReq = getTx.objectStore('invoices').get(rowIdx);
+      getReq.onsuccess = function(e) {
+        var existing = e.target.result;
+        var files;
+        if (existing) {
+          // Migrate old single-file format { pdfData, fileName } → files array
+          if (existing.files) {
+            files = existing.files;
+          } else {
+            files = [{ fileName: existing.fileName, pdfData: existing.pdfData, extractedData: existing.extractedData, attachedAt: existing.attachedAt }];
+          }
+          // Avoid duplicate filenames
+          if (!files.find(function(f) { return f.fileName === fileName; })) {
+            files.push({ fileName: fileName, pdfData: pdfData, extractedData: extractedData, attachedAt: new Date().toISOString() });
+          }
+        } else {
+          files = [{ fileName: fileName, pdfData: pdfData, extractedData: extractedData, attachedAt: new Date().toISOString() }];
+        }
+        var putTx = db.transaction('invoices', 'readwrite');
+        putTx.objectStore('invoices').put({ rowIdx: rowIdx, files: files });
+        putTx.oncomplete = resolve;
+        putTx.onerror = function(ev) { reject(ev.target.error); };
+      };
+      getReq.onerror = function(e) { reject(e.target.error); };
     });
   });
 }
@@ -10947,7 +10969,7 @@ function invRenderQueue() {
     }
     if (p.status === 'confirmed') {
       var matched = allRows.find(function(r) { return r.rowIdx === p.confirmedRowIdx; });
-      html += '<div style="color:var(--green);font-family:var(--mono);font-size:11px;">✓ Attached to: ' + esc(matched ? (matched.title || matched.asin) : 'Purchase #' + p.confirmedRowIdx) + (p.extracted && p.extracted.asin ? ' · ' + esc(p.extracted.asin) : '') + '</div>';
+      html += '<div style="color:var(--green);font-family:var(--mono);font-size:11px;">✓ Attached to: ' + esc(matched ? (matched.title || matched.asin) : 'Purchase #' + p.confirmedRowIdx) + (p.extracted && p.extracted.asin ? ' · ' + esc(p.extracted.asin) : '') + (p._multiInv ? ' · invoice ' + p._multiInv : '') + '</div>';
     }
     if (p.status === 'unmatched') {
       html += '<div style="font-size:12px;color:var(--text-3);">No matching purchase — ASIN not found in your purchases sheet.</div>';
@@ -11008,6 +11030,9 @@ async function invAnalyseOne(i) {
       p.status = 'confirmed';
       p.confirmedRowIdx = rowIdx;
       window.invAttachedRows.add(rowIdx);
+      // Track if multiple invoices hit the same purchase row
+      var siblingCount = invPending.filter(function(q) { return q.status === 'confirmed' && q.confirmedRowIdx === rowIdx; }).length;
+      if (siblingCount > 0) p._multiInv = siblingCount + 1;
     } else {
       p.status = 'unmatched';
     }
@@ -11059,19 +11084,51 @@ function invClearDone() {
 function invViewInvoice(rowIdx) {
   invGetRecord(rowIdx).then(function(inv) {
     if (!inv) { showToast('No invoice attached'); return; }
-    var blob = new Blob([inv.pdfData], { type: 'application/pdf' });
-    var url = URL.createObjectURL(blob);
+    // Normalise old single-file format
+    var files = inv.files || [{ fileName: inv.fileName, pdfData: inv.pdfData }];
     var modal = document.createElement('div');
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:flex;flex-direction:column;padding:20px;gap:12px;';
-    modal.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">' +
-      '<span style="font-family:var(--mono);font-size:12px;color:var(--text-2);">' + esc(inv.fileName) + '</span>' +
-      '<div style="display:flex;gap:8px;">' +
-      '<button class="btn-sm btn-ghost" onclick="invDetachModal(' + rowIdx + ',this)">Detach Invoice</button>' +
-      '<button class="btn-sm btn-ghost" onclick="URL.revokeObjectURL(\'' + url + '\');this.closest(\'[style]\').remove()">✕ Close</button>' +
-      '</div></div>' +
-      '<iframe src="' + url + '" style="flex:1;border:none;border-radius:var(--r);background:#fff;min-height:0;"></iframe>';
+    var urls = [];
+    // Build tab buttons if multiple files
+    var tabsHtml = '';
+    if (files.length > 1) {
+      tabsHtml = '<div style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;">' +
+        files.map(function(f, fi) {
+          return '<button class="btn-sm ' + (fi===0?'btn-green':'btn-ghost') + '" style="font-size:11px;" onclick="invModalShowFile(this,' + fi + ')">' + esc(f.fileName) + '</button>';
+        }).join('') + '</div>';
+    }
+    var firstUrl = URL.createObjectURL(new Blob([files[0].pdfData], { type: 'application/pdf' }));
+    urls.push(firstUrl);
+    modal.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">' +
+        '<span style="font-family:var(--mono);font-size:12px;color:var(--text-2);" id="invModalTitle">' + esc(files[0].fileName) + (files.length > 1 ? ' <span style="color:var(--text-3);">+' + (files.length-1) + ' more</span>' : '') + '</span>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="btn-sm btn-ghost" onclick="invDetachModal(' + rowIdx + ',this)">Detach All</button>' +
+          '<button class="btn-sm btn-ghost" onclick="this.closest(\'div[style]\').remove()">✕ Close</button>' +
+        '</div>' +
+      '</div>' +
+      tabsHtml +
+      '<iframe id="invModalFrame" src="' + firstUrl + '" style="flex:1;border:none;border-radius:var(--r);background:#fff;min-height:0;"></iframe>';
+    // Store file data on modal element for tab switching
+    modal._invFiles = files;
+    modal._invUrls = urls;
     document.body.appendChild(modal);
   });
+}
+function invModalShowFile(btn, fi) {
+  var modal = btn.closest('div[style]');
+  if (!modal || !modal._invFiles) return;
+  var files = modal._invFiles;
+  var urls = modal._invUrls;
+  if (!urls[fi]) {
+    urls[fi] = URL.createObjectURL(new Blob([files[fi].pdfData], { type: 'application/pdf' }));
+  }
+  var frame = modal.querySelector('#invModalFrame');
+  if (frame) frame.src = urls[fi];
+  var titleEl = modal.querySelector('#invModalTitle');
+  if (titleEl) titleEl.textContent = files[fi].fileName;
+  btn.parentElement.querySelectorAll('button').forEach(function(b) { b.className = b.className.replace('btn-green','btn-ghost'); });
+  btn.className = btn.className.replace('btn-ghost','btn-green');
 }
 
 function invDetachModal(rowIdx, btn) {

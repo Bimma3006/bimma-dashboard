@@ -10233,12 +10233,22 @@ function hub_parseAmazonInvoice(text, filename) {
     }
 
     // ── Date ──────────────────────────────────────────────────
-    var dateLabelM = blob.match(/(?:Invoice\s*Date|Rechnungsdatum|Date\s*de\s*(?:la\s*)?facture|Fecha\s*de\s*(?:la\s*)?factura|Data\s*(?:fattura|emissione))\s*[:\s]+([0-9]{1,2}[\s\/\.\-][A-Za-z0-9\u00e0-\u00ff]+[\s\/\.\-][0-9]{4}|[0-9]{4}-[0-9]{2}-[0-9]{2})/i);
-    if (dateLabelM) {
-      inv.date = hub_normDate(dateLabelM[1]);
+    // Date pattern: "DD Month YYYY", "DD/MM/YYYY", "DD.MM.YYYY", "YYYY-MM-DD"
+    var _DP = '(?:[0-9]{1,2}\\s+[A-Za-z\\u00e0-\\u00ff]+\\.?\\s+[0-9]{4}|[0-9]{1,2}[\\/\\.][0-9]{1,2}[\\/\\.][0-9]{4}|[0-9]{4}-[0-9]{2}-[0-9]{2})';
+    // 1. Prefer Order date — this matches the purchase date in the sheets
+    var orderDateM = blob.match(new RegExp('Order\\s*[Dd]ate\\s*[:\\s]+(' + _DP + ')', 'i'));
+    if (orderDateM) {
+      inv.date = hub_normDate(orderDateM[1].trim());
     } else {
-      var dateG = blob.match(/\b(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{4})\b/);
-      if (dateG) inv.date = dateG[1].padStart(2,'0') + '/' + dateG[2].padStart(2,'0') + '/' + dateG[3];
+      // 2. Fall back to Invoice date (handles "Invoice date / Delivery date" variant)
+      var dateLabelM = blob.match(new RegExp('(?:Invoice\\s*[Dd]ate(?:\\s*/[^0-9]{0,30})?|Rechnungsdatum|Bestelldatum|Date\\s*de\\s*(?:la\\s*)?(?:facture|commande)|Fecha\\s*de\\s*(?:la\\s*)?(?:factura|pedido)|Data\\s*(?:fattura|emissione|ordine))\\s*[:\\s]+(' + _DP + ')', 'i'));
+      if (dateLabelM) {
+        inv.date = hub_normDate(dateLabelM[1].trim());
+      } else {
+        // 3. Generic DD/MM/YYYY or DD.MM.YYYY in blob
+        var dateG = blob.match(/\b(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{4})\b/);
+        if (dateG) inv.date = dateG[1].padStart(2,'0') + '/' + dateG[2].padStart(2,'0') + '/' + dateG[3];
+      }
     }
 
     // ── Line items via ASIN anchors ───────────────────────────

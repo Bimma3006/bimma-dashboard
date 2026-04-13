@@ -11134,6 +11134,11 @@ async function invAnalyseOne(i) {
       if (dp.length === 3) dateYMD = dp[2] + '-' + dp[1] + '-' + dp[0];
       else dateYMD = inv.date;
     }
+    // Fallback: try to extract date from filename (Amazon filenames often contain YYYY-MM-DD)
+    if (!dateYMD) {
+      var fnDate = p.name.match(/(\d{4})[.\-_](\d{2})[.\-_](\d{2})/);
+      if (fnDate) dateYMD = fnDate[1] + '-' + fnDate[2] + '-' + fnDate[3];
+    }
     var mkt = (inv.marketplace || '').toLowerCase();
     var supplier = mkt.includes('de') ? 'Amazon.de' : mkt.includes('fr') ? 'Amazon.fr' : mkt.includes('es') ? 'Amazon.es' : mkt.includes('it') ? 'Amazon.it' : 'Amazon';
     var extracted = {
@@ -11208,6 +11213,12 @@ function invMatchPurchase(extracted) {
     if (Math.abs(delta) < 1 && a.claimed !== b.claimed) return a.claimed ? 1 : -1;
     return delta;
   });
+
+  var best = scored[0];
+  // If we have a reliable invoice date, enforce a 45-day maximum gap.
+  // This prevents a January invoice matching a July purchase just because the ASIN is the same.
+  // If no date was parsed, skip the threshold and match on ASIN alone.
+  if (invDate && isFinite(best.dateDiff) && best.dateDiff > 45) return [];
 
   return scored.slice(0, 1);
 }

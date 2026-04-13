@@ -11178,7 +11178,7 @@ function invViewInvoice(rowIdx) {
     // Normalise old single-file format
     var files = inv.files || [{ fileName: inv.fileName, pdfData: inv.pdfData }];
     var modal = document.createElement('div');
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:flex;flex-direction:column;padding:20px;gap:12px;';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:10000;display:flex;flex-direction:column;padding:20px;gap:12px;';
     modal.setAttribute('data-inv-modal', '1');
     var urls = [];
     // Build tab buttons if multiple files

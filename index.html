@@ -10933,7 +10933,7 @@ function invRenderQueue() {
   var html = '<div class="inv-queue-hdr"><span>' + invPending.length + ' file' + (invPending.length !== 1 ? 's' : '') + ' queued</span>';
   if (hasPending) html += '<button class="btn-sm btn-green" onclick="invAnalyseAll()">▶ Analyse All</button>';
   html += '<button class="btn-sm btn-ghost" onclick="invClearDone()">Clear Done</button>';
-  html += '<button class="btn-sm btn-ghost" style="color:var(--red);border-color:var(--red);" onclick="if(confirm(\'Clear all queued files?\'')){invPending=[];invRenderQueue();}">✕ Clear All</button></div>';
+  html += '<button class="btn-sm btn-ghost" style="color:var(--red);border-color:var(--red);" onclick="if(confirm(\'Clear all queued files?\')){invPending=[];invRenderQueue();}">✕ Clear All</button></div>';
   html += '<div class="inv-file-list">';
   invPending.forEach(function(p, i) {
     html += '<div class="inv-file-row">';

@@ -10102,7 +10102,11 @@ function hub_loadPdfJs() {
 async function hub_pdfToText(fileOrBuf) {
   // Accept either a File/Blob or a pre-read ArrayBuffer to avoid double-reads
   var buf = (fileOrBuf instanceof ArrayBuffer) ? fileOrBuf : await fileOrBuf.arrayBuffer();
-  var pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  // Race against a 20s timeout — prevents hangs on encrypted/corrupt PDFs or worker crashes
+  var pdf = await Promise.race([
+    pdfjsLib.getDocument({ data: buf }).promise,
+    new Promise(function(_, reject) { setTimeout(function() { reject(new Error('PDF parse timeout')); }, 20000); })
+  ]);
   var pageTexts = [];
   try {
     for (var p = 1; p <= pdf.numPages; p++) {
@@ -11105,11 +11109,16 @@ async function invAnalyseOne(i) {
       return 'skipped';
     }
 
-    // Read file buffer ONCE — reused for both PDF parsing and IndexedDB save
-    var buf = await p.file.arrayBuffer();
+    // Guard: file may have been nulled by a previous partial run
+    if (!p.file) { p.status = 'error'; p.error = 'File reference lost — re-add the folder and try again'; return 'error'; }
+
+    var rawBuf = await p.file.arrayBuffer();
     p.file = null; // release File reference immediately to free memory
 
-    var text = await hub_pdfToText(buf);
+    // PDF.js worker transfers (neuters) the ArrayBuffer it receives.
+    // Slice a copy for storage BEFORE passing to hub_pdfToText.
+    var saveBuf = rawBuf.slice(0);
+    var text = await hub_pdfToText(rawBuf); // rawBuf may be detached after this
 
     // Full text check for credit notes
     if (invIsCreditNote(p.name, text)) {
@@ -11139,7 +11148,7 @@ async function invAnalyseOne(i) {
     var candidates = invMatchPurchase(extracted);
     if (candidates.length) {
       var rowIdx = candidates[0].r.rowIdx;
-      await invSaveRecord(rowIdx, p.name, buf, extracted);
+      await invSaveRecord(rowIdx, p.name, saveBuf, extracted);
       p.status = 'confirmed';
       p.confirmedRowIdx = rowIdx;
       p.extracted = { asin: extracted.asin, date: extracted.date }; // keep only what's needed for display

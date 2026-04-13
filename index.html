@@ -11179,6 +11179,7 @@ function invViewInvoice(rowIdx) {
     var files = inv.files || [{ fileName: inv.fileName, pdfData: inv.pdfData }];
     var modal = document.createElement('div');
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:flex;flex-direction:column;padding:20px;gap:12px;';
+    modal.setAttribute('data-inv-modal', '1');
     var urls = [];
     // Build tab buttons if multiple files
     var tabsHtml = '';
@@ -11195,7 +11196,7 @@ function invViewInvoice(rowIdx) {
         '<span style="font-family:var(--mono);font-size:12px;color:var(--text-2);" id="invModalTitle">' + esc(files[0].fileName) + (files.length > 1 ? ' <span style="color:var(--text-3);">+' + (files.length-1) + ' more</span>' : '') + '</span>' +
         '<div style="display:flex;gap:8px;">' +
           '<button class="btn-sm btn-ghost" onclick="invDetachModal(' + rowIdx + ',this)">Detach All</button>' +
-          '<button class="btn-sm btn-ghost" onclick="this.closest(\'div[style]\').remove()">✕ Close</button>' +
+          '<button class="btn-sm btn-ghost" onclick="this.closest(\'[data-inv-modal]\').remove()">✕ Close</button>' +
         '</div>' +
       '</div>' +
       tabsHtml +
@@ -11207,7 +11208,7 @@ function invViewInvoice(rowIdx) {
   });
 }
 function invModalShowFile(btn, fi) {
-  var modal = btn.closest('div[style]');
+  var modal = btn.closest('[data-inv-modal]');
   if (!modal || !modal._invFiles) return;
   var files = modal._invFiles;
   var urls = modal._invUrls;
@@ -11227,7 +11228,7 @@ function invDetachModal(rowIdx, btn) {
   invDeleteRecord(rowIdx).then(function() {
     window.invAttachedRows.delete(rowIdx);
     delete window.invAttachedCounts[rowIdx];
-    var modal = btn.closest('[style]');
+    var modal = btn.closest('[data-inv-modal]');
     if (modal) modal.remove();
     filterPurchases();
     showToast('Invoice detached');

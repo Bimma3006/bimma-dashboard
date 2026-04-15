@@ -2786,6 +2786,10 @@ input::placeholder { color: var(--text-4); }
             <span><span class="a2a-calc-price" id="daPcGc10"></span><span class="a2a-calc-save" id="daPcGc10Save"></span></span>
           </div>
           <div class="a2a-calc-row">
+            <span class="a2a-calc-lbl">🎁 20% Gift Card</span>
+            <span><span class="a2a-calc-price" id="daPcGc20"></span><span class="a2a-calc-save" id="daPcGc20Save"></span></span>
+          </div>
+          <div class="a2a-calc-row">
             <span class="a2a-calc-lbl">🏪 Currys/Argos 15% GC</span>
             <span><span class="a2a-calc-price" id="daPcGc15"></span><span class="a2a-calc-save" id="daPcGc15Save"></span></span>
           </div>
@@ -6108,11 +6112,14 @@ function daPriceCalc() {
   const fmt  = v => '£' + v.toFixed(2);
   const save = v => ' −£' + (raw - v).toFixed(2);
   const gc10  = raw * 0.90;
+  const gc20  = raw * 0.80;
   const gc15  = raw * 0.85;
   const ss    = raw * 0.85;
   const gcss  = raw * 0.85 * 0.90;
   document.getElementById('daPcGc10').textContent    = fmt(gc10);
   document.getElementById('daPcGc10Save').textContent = save(gc10);
+  document.getElementById('daPcGc20').textContent    = fmt(gc20);
+  document.getElementById('daPcGc20Save').textContent = save(gc20);
   document.getElementById('daPcGc15').textContent    = fmt(gc15);
   document.getElementById('daPcGc15Save').textContent = save(gc15);
   document.getElementById('daPcSS').textContent      = fmt(ss);

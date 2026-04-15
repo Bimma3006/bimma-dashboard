@@ -5574,6 +5574,16 @@ function daAnalyseRow(row) {
     gcRoi = gcProfit / gcBuyExVat;
   }
 
+  // Gift card: 20% off buy price
+  const gc20BuyExVat = buyExVat ? buyExVat * 0.80 : null;
+  const gc20BuyIncVat = buyIncVat ? buyIncVat * 0.80 : null;
+  let gc20Profit = null, gc20Roi = null;
+  if (sp && gc20BuyExVat && refFee !== null && fbaExVat !== null) {
+    const gc20VatDue = (spIncVat * vat / (1 + vat)) - (gc20BuyIncVat ? gc20BuyIncVat * vat / (1 + vat) : 0);
+    gc20Profit = sp - gc20BuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - gc20VatDue;
+    gc20Roi = gc20Profit / gc20BuyExVat;
+  }
+
   // Subscribe & Save: 15% off buy price
   let ssProfit = null, ssRoi = null;
   if (ss && sp && buyExVat && buyIncVat && refFee !== null && fbaExVat !== null) {
@@ -5639,7 +5649,7 @@ function daAnalyseRow(row) {
   if (fbaFeeEst && reason && colour !== 'grey') reason += ' · FBA est.';
   const sortOrder = colour === 'green' ? 0 : colour === 'amber' ? 1 : spikeFlag ? 4 : colour === 'red' ? 2 : 3;
 
-  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, gcssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, decision: null };
+  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, gc20Profit, gc20Roi, ssProfit, ssRoi, gcssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, decision: null };
 }
 
 // ════════════════════════════════════════
@@ -5902,7 +5912,8 @@ function daRenderHeaders() {
     <th data-col="spIncVat" data-type="num">${spLabel}</th>
     <th data-col="profit" data-type="num">Profit</th>
     <th data-col="roi" data-type="num">ROI</th>
-    <th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI with 10% gift card">🎁 GC</th>
+    <th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI with 10% gift card">🎁 GC 10%</th>
+    <th data-col="gc20Roi" data-type="num" style="color:var(--amber);" title="ROI with 20% gift card">🎁 GC 20%</th>
     <th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys/Argos with 15% gift card">🏪 15%</th>
     ${ssCols}
     <th data-col="boughtPerMonth" data-type="num">Sold/mo</th>
@@ -5968,6 +5979,7 @@ function daRenderTable() {
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
       <td class="td-num" style="color:${gcColour(deal.gcRoi)}">${fmtP(deal.gcRoi)}</td>
+      <td class="td-num" style="color:${gcColour(deal.gc20Roi)}">${fmtP(deal.gc20Roi)}</td>
       <td class="td-num" style="color:${r15Colour(deal.r15Roi)}">${fmtP(deal.r15Roi)}</td>
       ${ssCells}
       <td class="td-num td-center">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>

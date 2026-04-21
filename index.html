@@ -4505,11 +4505,13 @@ async function purchasesPushToPrep() {
       return;
     }
     // Step 3: append new rows after existing data
-    await gFetch(
+    const appendRes = await gFetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${PREP_TAB}!A:H:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
       { method: 'POST', body: JSON.stringify({ values: newRows }) }
     );
-    toast(`✓ Pushed ${newRows.length} row${newRows.length>1?'s':''} to prep sheet!`, 'success');
+    const updatedRange = appendRes.updates?.updatedRange || 'unknown range';
+    const updatedCells = appendRes.updates?.updatedCells || 0;
+    toast(`✓ Pushed ${newRows.length} row${newRows.length>1?'s':''} — written to ${updatedRange} (${updatedCells} cells updated)`, 'success');
     if (btn) { btn.textContent = '✓ Done!'; setTimeout(() => { btn.textContent = '↑ Push to Prep Sheet'; btn.disabled = false; }, 2500); }
   } catch(e) {
     toast('Push failed: ' + e.message, 'error');

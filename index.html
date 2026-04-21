@@ -4509,8 +4509,8 @@ async function purchasesPushToPrep() {
     // Step 2: filter out already-pushed SKUs
     const newRows = rows
       .filter(r => !existingSkus.has((r.sku||'').trim().toUpperCase()))
-      .map(r => ['', r.title||'', r.date||'', '', '', r.asin||'', r.sku||'', '', '', '', r.qty]);
-    // A=empty, B=Title, C=Date, D=empty, E=empty, F=ASIN, G=SKU, H=empty, I=empty, J=empty, K=Qty
+      .map(r => ['', r.title||'', r.date||'', '', '', r.asin||'', r.sku||'', r.qty, '', '', r.qty]);
+    // A=empty, B=Title, C=Date, D=empty, E=empty, F=ASIN, G=SKU, H=Qty, I=empty, J=empty, K=Qty
     if (!newRows.length) {
       toast('All SKUs already in prep sheet — nothing new to push', 'success');
       if (btn) { btn.textContent = '↑ Push to Prep Sheet'; btn.disabled = false; }

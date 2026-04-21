@@ -4490,13 +4490,18 @@ async function purchasesPushToPrep() {
   const btn = document.getElementById('purchPushBtn');
   if (btn) { btn.textContent = 'Pushing…'; btn.disabled = true; }
   try {
-    // Step 1: read existing SKUs from column G (rows 3-1000) to deduplicate
-    const existing = await gFetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${PREP_TAB}!G3:G1000`
+    // Step 1: read entire column G to find last real data row + collect existing SKUs
+    const colG = await gFetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${PREP_TAB}!G:G`
     );
-    const existingSkus = new Set((existing.values || []).flat().map(v => (v||'').trim().toUpperCase()));
-    toast(`Debug: found ${existingSkus.size} existing SKUs in prep sheet`, 'success');
-    await new Promise(r => setTimeout(r, 2000));
+    const gValues = (colG.values || []);
+    // Find the last row that actually has a SKU value (ignore stray formatting below)
+    let lastDataRow = 2; // minimum: row 2 (1-indexed), so new data starts at row 3
+    for (let i = gValues.length - 1; i >= 2; i--) {
+      if (gValues[i] && gValues[i][0] && gValues[i][0].trim()) { lastDataRow = i + 1; break; }
+    }
+    const startRow = lastDataRow + 1;
+    const existingSkus = new Set(gValues.slice(2).map(r => (r[0]||'').trim().toUpperCase()).filter(Boolean));
     // Step 2: filter out already-pushed SKUs
     const newRows = rows
       .filter(r => !existingSkus.has((r.sku||'').trim().toUpperCase()))
@@ -4506,16 +4511,13 @@ async function purchasesPushToPrep() {
       if (btn) { btn.textContent = '↑ Push to Prep Sheet'; btn.disabled = false; }
       return;
     }
-    toast(`Debug: ${newRows.length} new rows to write`, 'success');
-    await new Promise(r => setTimeout(r, 2000));
-    // Step 3: append new rows after existing data
-    const appendRes = await gFetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${PREP_TAB}!A:H:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-      { method: 'POST', body: JSON.stringify({ values: newRows }) }
+    // Step 3: write to the exact row after the last real data row
+    const writeRange = `${PREP_TAB}!A${startRow}:H${startRow + newRows.length - 1}`;
+    await gFetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`,
+      { method: 'PUT', body: JSON.stringify({ values: newRows }) }
     );
-    const updatedRange = appendRes.updates?.updatedRange || 'NO RANGE RETURNED';
-    const updatedCells = appendRes.updates?.updatedCells ?? 'NONE';
-    toast(`Written to: ${updatedRange} — cells updated: ${updatedCells}`, updatedCells > 0 ? 'success' : 'error');
+    toast(`✓ Pushed ${newRows.length} row${newRows.length>1?'s':''} to prep sheet from row ${startRow}!`, 'success');
     if (btn) { btn.textContent = '✓ Done!'; setTimeout(() => { btn.textContent = '↑ Push to Prep Sheet'; btn.disabled = false; }, 2500); }
   } catch(e) {
     toast('Push failed: ' + e.message, 'error');

@@ -4464,7 +4464,7 @@ function purchasesCopyAll() {
   // Columns: B=Title, C=Date, D=(empty), E=(empty), F=ASIN, G=SKU, H=Qty
   // Paste starting at column B and each field lands in the right column
   const lines = rows.map(r => [
-    r.title||'', r.date||'', '', '', r.asin||'', r.sku||'', r.qty
+    r.title||'', r.date||'', '', '', r.asin||'', r.sku||'', '', '', '', r.qty
   ].join('\t'));
   const tsv = lines.join('\n');
   const btn = document.getElementById('purchCopyBtn');
@@ -4505,14 +4505,15 @@ async function purchasesPushToPrep() {
     // Step 2: filter out already-pushed SKUs
     const newRows = rows
       .filter(r => !existingSkus.has((r.sku||'').trim().toUpperCase()))
-      .map(r => ['', r.title||'', r.date||'', '', '', r.asin||'', r.sku||'', r.qty]);
+      .map(r => ['', r.title||'', r.date||'', '', '', r.asin||'', r.sku||'', '', '', '', r.qty]);
+    // A=empty, B=Title, C=Date, D=empty, E=empty, F=ASIN, G=SKU, H=empty, I=empty, J=empty, K=Qty
     if (!newRows.length) {
       toast('All SKUs already in prep sheet — nothing new to push', 'success');
       if (btn) { btn.textContent = '↑ Push to Prep Sheet'; btn.disabled = false; }
       return;
     }
     // Step 3: write to the exact row after the last real data row
-    const writeRange = `${PREP_TAB}!A${startRow}:H${startRow + newRows.length - 1}`;
+    const writeRange = `${PREP_TAB}!A${startRow}:K${startRow + newRows.length - 1}`;
     await gFetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`,
       { method: 'PUT', body: JSON.stringify({ values: newRows }) }

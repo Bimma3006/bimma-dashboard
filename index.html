@@ -4489,9 +4489,9 @@ async function purchasesPushToPrep() {
   const btn = document.getElementById('purchPushBtn');
   if (btn) { btn.textContent = 'Pushing…'; btn.disabled = true; }
   try {
-    // Read existing ASIN column (F) to avoid duplicates
+    // Read existing ASINs from row 3 down (rows 1-2 are headers) to avoid duplicates
     const existing = await gFetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${encodeURIComponent(PREP_TAB)}!F:F`
+      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${encodeURIComponent(PREP_TAB)}!F3:F`
     );
     const existingAsins = new Set((existing.values || []).flat().map(v => (v||'').trim().toUpperCase()));
     // Build rows: A=empty, B=Title, C=Date, D=empty, E=empty, F=ASIN, G=SKU, H=Qty

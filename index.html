@@ -4495,6 +4495,8 @@ async function purchasesPushToPrep() {
       `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${PREP_TAB}!G3:G1000`
     );
     const existingSkus = new Set((existing.values || []).flat().map(v => (v||'').trim().toUpperCase()));
+    toast(`Debug: found ${existingSkus.size} existing SKUs in prep sheet`, 'success');
+    await new Promise(r => setTimeout(r, 2000));
     // Step 2: filter out already-pushed SKUs
     const newRows = rows
       .filter(r => !existingSkus.has((r.sku||'').trim().toUpperCase()))
@@ -4504,14 +4506,16 @@ async function purchasesPushToPrep() {
       if (btn) { btn.textContent = '↑ Push to Prep Sheet'; btn.disabled = false; }
       return;
     }
+    toast(`Debug: ${newRows.length} new rows to write`, 'success');
+    await new Promise(r => setTimeout(r, 2000));
     // Step 3: append new rows after existing data
     const appendRes = await gFetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${PREP_TAB}!A:H:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
       { method: 'POST', body: JSON.stringify({ values: newRows }) }
     );
-    const updatedRange = appendRes.updates?.updatedRange || 'unknown range';
-    const updatedCells = appendRes.updates?.updatedCells || 0;
-    toast(`✓ Pushed ${newRows.length} row${newRows.length>1?'s':''} — written to ${updatedRange} (${updatedCells} cells updated)`, 'success');
+    const updatedRange = appendRes.updates?.updatedRange || 'NO RANGE RETURNED';
+    const updatedCells = appendRes.updates?.updatedCells ?? 'NONE';
+    toast(`Written to: ${updatedRange} — cells updated: ${updatedCells}`, updatedCells > 0 ? 'success' : 'error');
     if (btn) { btn.textContent = '✓ Done!'; setTimeout(() => { btn.textContent = '↑ Push to Prep Sheet'; btn.disabled = false; }, 2500); }
   } catch(e) {
     toast('Push failed: ' + e.message, 'error');

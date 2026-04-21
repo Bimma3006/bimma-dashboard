@@ -4490,41 +4490,24 @@ async function purchasesPushToPrep() {
   const btn = document.getElementById('purchPushBtn');
   if (btn) { btn.textContent = 'Pushing…'; btn.disabled = true; }
   try {
-    // Step 1: get the numeric sheetId for the tab (avoids range-parse issues with special chars in name)
-    const meta = await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}?fields=sheets.properties`);
-    const sheet = (meta.sheets || []).find(s => s.properties.title === PREP_TAB);
-    if (!sheet) {
-      const names = (meta.sheets||[]).map(s=>s.properties.title).join(' | ');
-      throw new Error(`Tab not found. Available tabs: ${names}`);
-    }
-    const sheetId = sheet.properties.sheetId;
-    // Step 2: read existing SKUs via batchGet (range as query param — no path encoding issues)
-    const batchRes = await gFetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values:batchGet?ranges=${encodeURIComponent("'" + PREP_TAB + "'!G3:G555")}`
+    // Step 1: read existing SKUs from column G (rows 3-1000) to deduplicate
+    const existing = await gFetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${PREP_TAB}!G3:G1000`
     );
-    const existingSkus = new Set(((batchRes.valueRanges||[])[0]?.values||[]).flat().map(v=>(v||'').trim().toUpperCase()));
-    // Step 3: filter out duplicates — build rows: A=empty, B=Title, C=Date, D=empty, E=empty, F=ASIN, G=SKU, H=Qty
+    const existingSkus = new Set((existing.values || []).flat().map(v => (v||'').trim().toUpperCase()));
+    // Step 2: filter out already-pushed SKUs
     const newRows = rows
       .filter(r => !existingSkus.has((r.sku||'').trim().toUpperCase()))
       .map(r => ['', r.title||'', r.date||'', '', '', r.asin||'', r.sku||'', r.qty]);
     if (!newRows.length) {
-      toast('All SKUs already exist in the prep sheet — nothing new to push', 'success');
+      toast('All SKUs already in prep sheet — nothing new to push', 'success');
       if (btn) { btn.textContent = '↑ Push to Prep Sheet'; btn.disabled = false; }
       return;
     }
-    // Step 4: appendCells via batchUpdate — uses numeric sheetId, no range string needed
-    const requests = [{
-      appendCells: {
-        sheetId,
-        fields: 'userEnteredValue',
-        rows: newRows.map(row => ({
-          values: row.map(cell => ({ userEnteredValue: { stringValue: String(cell) } }))
-        }))
-      }
-    }];
+    // Step 3: append new rows after existing data
     await gFetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}:batchUpdate`,
-      { method: 'POST', body: JSON.stringify({ requests }) }
+      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${PREP_TAB}!A:H:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      { method: 'POST', body: JSON.stringify({ values: newRows }) }
     );
     toast(`✓ Pushed ${newRows.length} row${newRows.length>1?'s':''} to prep sheet!`, 'success');
     if (btn) { btn.textContent = '✓ Done!'; setTimeout(() => { btn.textContent = '↑ Push to Prep Sheet'; btn.disabled = false; }, 2500); }

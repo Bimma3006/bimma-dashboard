@@ -7860,7 +7860,7 @@ function stalkerRenderFeed() {
       // Rich card if we have title/image data, basic row otherwise
       const _purchLabel = stalkerPurchLabel(item.asin);
       if (item.title || item.imgKey || item.price) {
-        const imgUrl      = item.imgKey ? `https://m.media-amazon.com/images/I/${item.imgKey.includes('.') ? item.imgKey : item.imgKey + '._SL96_.jpg'}` : null;
+        const imgUrl      = item.imgKey ? `https://m.media-amazon.com/images/I/${item.imgKey.includes('.') ? item.imgKey : item.imgKey + '._SL96_.jpg'}` : item.asin ? `https://images-na.ssl-images-amazon.com/images/P/${item.asin}.01._SL75_.jpg` : null;
         const feeEstimate = item.price ? (parseFloat(item.price) * 0.15).toFixed(2) : null;
         return `<div class="stalker-product-row" style="border-left:3px solid var(--green);background:rgba(0,232,138,0.04);">
           ${imgUrl
@@ -8082,7 +8082,7 @@ function stalkerRenderProductFeed(products, seller) {
     const asin   = p.asin || '';
     const title  = p.title || asin;
     const imgKey = p.imagesCSV ? p.imagesCSV.split(',')[0] : null;
-    const imgUrl = imgKey ? `https://m.media-amazon.com/images/I/${imgKey.includes('.') ? imgKey : imgKey + '._SL96_.jpg'}` : null;
+    const imgUrl = imgKey ? `https://m.media-amazon.com/images/I/${imgKey.includes('.') ? imgKey : imgKey + '._SL96_.jpg'}` : `https://images-na.ssl-images-amazon.com/images/P/${p.asin || asin}.01._SL75_.jpg`;
     // Price extraction from Keepa csv arrays
     // Each csv field = [keepaTime, price, keepaTime, price, ...]
     // Values are in pence/cents × 100, -1 = out of stock

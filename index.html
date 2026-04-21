@@ -4493,7 +4493,10 @@ async function purchasesPushToPrep() {
     // Step 1: get the numeric sheetId for the tab (avoids range-parse issues with special chars in name)
     const meta = await gFetch(`https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}?fields=sheets.properties`);
     const sheet = (meta.sheets || []).find(s => s.properties.title === PREP_TAB);
-    if (!sheet) { throw new Error(`Tab "${PREP_TAB}" not found — check the name matches exactly`); }
+    if (!sheet) {
+      const names = (meta.sheets||[]).map(s=>s.properties.title).join(' | ');
+      throw new Error(`Tab not found. Available tabs: ${names}`);
+    }
     const sheetId = sheet.properties.sheetId;
     // Step 2: read existing SKUs via batchGet (range as query param — no path encoding issues)
     const batchRes = await gFetch(

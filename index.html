@@ -4490,17 +4490,21 @@ async function purchasesPushToPrep() {
   const btn = document.getElementById('purchPushBtn');
   if (btn) { btn.textContent = 'Pushing…'; btn.disabled = true; }
   try {
-    // Step 1: read entire column G to find last real data row + collect existing SKUs
+    // Step 1a: read column B to find the true last used row (title always filled)
+    const colB = await gFetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${PREP_TAB}!B:B`
+    );
+    const bValues = (colB.values || []);
+    let lastDataRow = 2;
+    for (let i = bValues.length - 1; i >= 2; i--) {
+      if (bValues[i] && bValues[i][0] && bValues[i][0].trim()) { lastDataRow = i + 1; break; }
+    }
+    const startRow = lastDataRow + 1;
+    // Step 1b: read column G for SKU dedup check
     const colG = await gFetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${PREP_TAB}!G:G`
     );
     const gValues = (colG.values || []);
-    // Find the last row that actually has a SKU value (ignore stray formatting below)
-    let lastDataRow = 2; // minimum: row 2 (1-indexed), so new data starts at row 3
-    for (let i = gValues.length - 1; i >= 2; i--) {
-      if (gValues[i] && gValues[i][0] && gValues[i][0].trim()) { lastDataRow = i + 1; break; }
-    }
-    const startRow = lastDataRow + 1;
     const existingSkus = new Set(gValues.slice(2).map(r => (r[0]||'').trim().toUpperCase()).filter(Boolean));
     // Step 2: filter out already-pushed SKUs
     const newRows = rows

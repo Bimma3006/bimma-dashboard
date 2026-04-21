@@ -4506,6 +4506,11 @@ async function purchasesPushToPrep() {
     );
     const gValues = (colG.values || []);
     const existingSkus = new Set(gValues.slice(2).map(r => (r[0]||'').trim().toUpperCase()).filter(Boolean));
+    // Debug: show sample SKUs from both sides to check format match
+    const samplePrep = [...existingSkus].slice(0,2).join(' | ') || 'NONE';
+    const samplePurch = rows.slice(0,2).map(r=>(r.sku||'').trim()).join(' | ') || 'NONE';
+    toast(`Prep SKUs: "${samplePrep}" — Purchase SKUs: "${samplePurch}"`, 'success');
+    await new Promise(r => setTimeout(r, 5000));
     // Step 2: filter out already-pushed SKUs
     const newRows = rows
       .filter(r => !existingSkus.has((r.sku||'').trim().toUpperCase()))

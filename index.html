@@ -2983,6 +2983,8 @@ input::placeholder { color: var(--text-4); }
         </select>
         <input type="text" id="searchInput" placeholder="Search SKU, title, ASIN…" oninput="filterPurchases()" style="width:240px;">
         <span style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:auto;" id="purchaseCount"></span>
+        <button class="btn-sm btn-ghost" id="purchCopyBtn" onclick="purchasesCopyAll()" style="margin-left:10px;">📋 Copy for Prep Sheet</button>
+        <button class="btn-sm btn-green" id="purchPushBtn" onclick="purchasesPushToPrep()" style="margin-left:6px;">↑ Push to Prep Sheet</button>
         <button class="btn-sm btn-ghost" style="color:var(--red);border-color:var(--red);margin-left:10px;" onclick="invDetachAll()">Detach All Invoices</button>
       </div>
       <div class="table-wrap">
@@ -4157,6 +4159,8 @@ function showPage(name, el) {
 const SHEET_ID = '17woLJlpqKBV6TEDROTVuNSTxvvCASlja_cCNmBSXtV0';
 const PURCH_TAB = 'Purchasing sheet';
 const LISTING_TAB = 'Listing loader';
+const PREP_SHEET_ID = '1QYlHtTTBJVyasUrV59FqoQ1GUIK1c2XZ_KliInkMZFA';
+const PREP_TAB = 'BX0107 BImma Retail Ltd - Prep Management Form';
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.appdata';
 let tokenClient = null, accessToken = null, allRows = [];
 
@@ -4417,6 +4421,7 @@ function purchaseSetSort(col) {
   filterPurchases();
 }
 function renderPurchases(rows) {
+  purchasesFiltered = rows;
   document.getElementById('purchaseCount').textContent = rows.length+' purchases';
   const tb=document.getElementById('purchasesTbody');
   if(!rows.length){tb.innerHTML='<tr><td colspan="11"><div class="empty-state">No purchases</div></td></tr>';return;}
@@ -4442,13 +4447,72 @@ function updateSupplierList() {
   const suppliers = [...new Set(allRows.map(r => r.supplier).filter(Boolean))].sort();
   dl.innerHTML = suppliers.map(s => `<option value="${s}">`).join('');
 }
+let purchasesFiltered = [];
 function filterPurchases() {
   updateSupplierList();
   const m=document.getElementById('monthFilter').value, s=document.getElementById('searchInput').value.toLowerCase();
   let f=allRows;
   if(m!=='all')f=f.filter(r=>monthKey(r.date)===m);
   if(s)f=f.filter(r=>r.title.toLowerCase().includes(s)||r.sku.toLowerCase().includes(s)||r.asin.toLowerCase().includes(s));
+  purchasesFiltered=f;
   renderPurchases(f);
+}
+function purchasesCopyAll() {
+  const rows = purchasesFiltered.length ? purchasesFiltered : allRows;
+  if (!rows.length) { toast('No rows to copy', 'error'); return; }
+  // Columns: B=Title, C=Date, D=(empty), E=(empty), F=ASIN, G=SKU, H=Qty
+  // Paste starting at column B and each field lands in the right column
+  const lines = rows.map(r => [
+    r.title||'', r.date||'', '', '', r.asin||'', r.sku||'', r.qty
+  ].join('\t'));
+  const tsv = lines.join('\n');
+  const btn = document.getElementById('purchCopyBtn');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(tsv).then(() => {
+      toast('✓ Copied ' + rows.length + ' rows — paste into your prep sheet!', 'success');
+      if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => { btn.textContent = '📋 Copy for Prep Sheet'; }, 2000); }
+    }).catch(() => fallbackCopy(tsv, rows.length, btn));
+  } else { fallbackCopy(tsv, rows.length, btn); }
+}
+function fallbackCopy(text, count, btn) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+  document.body.removeChild(ta);
+  toast('✓ Copied ' + count + ' rows — paste into your prep sheet!', 'success');
+  if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => { btn.textContent = '📋 Copy for Prep Sheet'; }, 2000); }
+}
+async function purchasesPushToPrep() {
+  if (!accessToken) { toast('Connect to Google Sheets first', 'error'); return; }
+  const rows = purchasesFiltered.length ? purchasesFiltered : allRows;
+  if (!rows.length) { toast('No rows to push', 'error'); return; }
+  const btn = document.getElementById('purchPushBtn');
+  if (btn) { btn.textContent = 'Pushing…'; btn.disabled = true; }
+  try {
+    // Read existing ASIN column (F) to avoid duplicates
+    const existing = await gFetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${encodeURIComponent(PREP_TAB)}!F:F`
+    );
+    const existingAsins = new Set((existing.values || []).flat().map(v => (v||'').trim().toUpperCase()));
+    // Build rows: A=empty, B=Title, C=Date, D=empty, E=empty, F=ASIN, G=SKU, H=Qty
+    const newRows = rows
+      .filter(r => !existingAsins.has((r.asin||'').trim().toUpperCase()))
+      .map(r => ['', r.title||'', r.date||'', '', '', r.asin||'', r.sku||'', r.qty]);
+    if (!newRows.length) {
+      toast('All ASINs already exist in the prep sheet — nothing new to push', 'success');
+      if (btn) { btn.textContent = '↑ Push to Prep Sheet'; btn.disabled = false; }
+      return;
+    }
+    await gFetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${encodeURIComponent(PREP_TAB)}!A:H:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      { method: 'POST', body: JSON.stringify({ values: newRows }) }
+    );
+    toast(`✓ Pushed ${newRows.length} row${newRows.length>1?'s':''} to prep sheet!`, 'success');
+    if (btn) { btn.textContent = '✓ Done!'; setTimeout(() => { btn.textContent = '↑ Push to Prep Sheet'; btn.disabled = false; }, 2500); }
+  } catch(e) {
+    toast('Push failed: ' + e.message, 'error');
+    if (btn) { btn.textContent = '↑ Push to Prep Sheet'; btn.disabled = false; }
+  }
 }
 function renderListing(rows) {
   document.getElementById('ls-pending').textContent=rows.filter(r=>!r.uploaded).length;

@@ -4489,14 +4489,14 @@ async function purchasesPushToPrep() {
   const btn = document.getElementById('purchPushBtn');
   if (btn) { btn.textContent = 'Pushing…'; btn.disabled = true; }
   try {
-    // Read existing ASINs from row 3 down (rows 1-2 are headers) to avoid duplicates
+    // Read existing SKUs from G3:G555 to avoid duplicates (SKU is always unique)
     const existing = await gFetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${encodeURIComponent(PREP_TAB)}!F3:F`
+      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${encodeURIComponent(PREP_TAB)}!G3:G555`
     );
-    const existingAsins = new Set((existing.values || []).flat().map(v => (v||'').trim().toUpperCase()));
+    const existingSkus = new Set((existing.values || []).flat().map(v => (v||'').trim().toUpperCase()));
     // Build rows: A=empty, B=Title, C=Date, D=empty, E=empty, F=ASIN, G=SKU, H=Qty
     const newRows = rows
-      .filter(r => !existingAsins.has((r.asin||'').trim().toUpperCase()))
+      .filter(r => !existingSkus.has((r.sku||'').trim().toUpperCase()))
       .map(r => ['', r.title||'', r.date||'', '', '', r.asin||'', r.sku||'', r.qty]);
     if (!newRows.length) {
       toast('All ASINs already exist in the prep sheet — nothing new to push', 'success');

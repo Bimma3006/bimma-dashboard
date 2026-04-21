@@ -4160,7 +4160,8 @@ const SHEET_ID = '17woLJlpqKBV6TEDROTVuNSTxvvCASlja_cCNmBSXtV0';
 const PURCH_TAB = 'Purchasing sheet';
 const LISTING_TAB = 'Listing loader';
 const PREP_SHEET_ID = '1QYlHtTTBJVyasUrV59FqoQ1GUIK1c2XZ_KliInkMZFA';
-const PREP_TAB = "'BX0107 BImma Retail Ltd - Prep Management Form'";
+const PREP_TAB = 'BX0107 BImma Retail Ltd - Prep Management Form';
+function prepRange(r) { return encodeURIComponent("'" + PREP_TAB + "'!" + r); }
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.appdata';
 let tokenClient = null, accessToken = null, allRows = [];
 
@@ -4491,7 +4492,7 @@ async function purchasesPushToPrep() {
   try {
     // Read existing SKUs from G3:G555 to avoid duplicates (SKU is always unique)
     const existing = await gFetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${encodeURIComponent(PREP_TAB)}!G3:G555`
+      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${prepRange('G3:G555')}`
     );
     const existingSkus = new Set((existing.values || []).flat().map(v => (v||'').trim().toUpperCase()));
     // Build rows: A=empty, B=Title, C=Date, D=empty, E=empty, F=ASIN, G=SKU, H=Qty
@@ -4504,7 +4505,7 @@ async function purchasesPushToPrep() {
       return;
     }
     await gFetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${encodeURIComponent(PREP_TAB)}!A:H:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${PREP_SHEET_ID}/values/${prepRange('A:H')}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
       { method: 'POST', body: JSON.stringify({ values: newRows }) }
     );
     toast(`✓ Pushed ${newRows.length} row${newRows.length>1?'s':''} to prep sheet!`, 'success');

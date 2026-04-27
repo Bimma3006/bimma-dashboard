@@ -824,6 +824,25 @@ input::placeholder { color: var(--text-4); }
 .exp-amount-input::placeholder { color: var(--text-4); font-weight: 400; font-size: 16px; }
 .exp-currency { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 6px; letter-spacing: 0.04em; }
 .exp-saved { font-family: var(--mono); font-size: 10px; color: var(--green); opacity: 0; transition: opacity 0.2s; margin-top: 5px; height: 14px; }
+
+/* ── Gift Cards ── */
+.gc-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-top: 16px; }
+.gc-table { width: 100%; border-collapse: collapse; }
+.gc-table th { font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-3); padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border); background: var(--surface2); }
+.gc-table td { padding: 13px 16px; border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 13px; color: var(--text); vertical-align: middle; }
+.gc-table tr:last-child td { border-bottom: none; }
+.gc-table tr:hover td { background: rgba(255,255,255,0.015); }
+.gc-code { font-family: var(--mono); font-size: 13px; color: var(--text); letter-spacing: 0.04em; }
+.gc-bar-wrap { width: 120px; height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; }
+.gc-bar { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.3s; }
+.gc-bar.low { background: var(--amber); }
+.gc-bar.empty { background: var(--red); }
+.gc-empty { padding: 40px 16px; text-align: center; font-family: var(--mono); font-size: 12px; color: var(--text-3); letter-spacing: 0.06em; }
+.gc-actions { display: flex; gap: 8px; align-items: center; }
+.gc-btn-del { background: transparent; border: none; color: var(--text-3); cursor: pointer; font-size: 15px; line-height: 1; transition: color 0.15s; padding: 2px 4px; }
+.gc-btn-del:hover { color: var(--red); }
+.gc-btn-edit { background: transparent; border: 1px solid var(--border2); color: var(--text-2); cursor: pointer; font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; padding: 4px 9px; border-radius: var(--r-xs); transition: border-color 0.15s, color 0.15s; }
+.gc-btn-edit:hover { border-color: var(--green); color: var(--green); }
 .exp-saved.show { opacity: 1; }
 .exp-add-btn {
   border: 1.5px dashed var(--border);
@@ -2365,6 +2384,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-divider"></div>
     <div class="sidebar-section-label">Finance</div>
     <div class="nav-item" data-page="expenses" onclick="showPage('expenses',this)"><span class="nav-icon">£</span>Expenses</div>
+    <div class="nav-item" data-page="giftcards" onclick="showPage('giftcards',this)"><span class="nav-icon">🎁</span>Gift Cards</div>
     <div class="nav-divider"></div>
     <div class="sidebar-section-label">Intelligence</div>
     <div class="nav-item" data-page="hub" onclick="showPage('hub',this)"><span class="nav-icon">🏠</span>Business Hub</div>
@@ -3148,6 +3168,87 @@ input::placeholder { color: var(--text-4); }
     </div>
   </div>
 
+
+  <!-- ══ PAGE: GIFT CARDS ══ -->
+  <div class="page" id="page-giftcards">
+    <div class="page-inner">
+      <div class="page-header">
+        <div class="page-header-label">Finance</div>
+        <div class="page-header-title">Argos Gift Cards</div>
+        <div class="page-header-sub">Store your Argos gift card details and track remaining balances</div>
+      </div>
+
+      <div class="exp-stat-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="exp-stat">
+          <div class="exp-stat-label">Total Remaining</div>
+          <div class="exp-stat-value" id="gcStatTotal" style="color:var(--green);">£0.00</div>
+          <div class="exp-stat-sub" id="gcStatCards">0 cards</div>
+        </div>
+        <div class="exp-stat">
+          <div class="exp-stat-label">Total Loaded</div>
+          <div class="exp-stat-value" id="gcStatLoaded" style="color:var(--text);">£0.00</div>
+          <div class="exp-stat-sub">original value</div>
+        </div>
+        <div class="exp-stat">
+          <div class="exp-stat-label">Total Spent</div>
+          <div class="exp-stat-value" id="gcStatSpent" style="color:var(--red);">£0.00</div>
+          <div class="exp-stat-sub">across all cards</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="exp-section-label" style="margin:0;border:none;padding:0;">Argos Gift Cards</div>
+        <button class="btn-sm btn-green" onclick="gcOpenAddModal()">+ Add Card</button>
+      </div>
+
+      <div class="gc-table-wrap">
+        <table class="gc-table">
+          <thead>
+            <tr>
+              <th>Card Number</th>
+              <th>PIN</th>
+              <th>Original (£)</th>
+              <th>Remaining (£)</th>
+              <th>Balance</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="gcTableBody">
+            <tr><td colspan="6"><div class="gc-empty">No gift cards saved yet — click + Add Card to get started</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- GIFT CARD ADD / EDIT MODAL -->
+  <div class="exp-add-modal" id="gcModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-title" id="gcModalTitle">Add Gift Card</div>
+      <div class="modal-sub">Enter the Argos gift card details below.</div>
+      <input type="hidden" id="gcEditIdx" value="">
+      <div style="margin-bottom:12px;">
+        <div class="field-label">Card Number</div>
+        <input class="modal-input" type="text" id="gcCardNumber" placeholder="e.g. 1234 5678 9012 3456" autocomplete="off">
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="field-label">PIN</div>
+        <input class="modal-input" type="text" id="gcPin" placeholder="e.g. 1234" autocomplete="off">
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="field-label">Original Value (£)</div>
+        <input class="modal-input" type="number" id="gcOriginal" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div style="margin-bottom:20px;">
+        <div class="field-label">Remaining Balance (£)</div>
+        <input class="modal-input" type="number" id="gcRemaining" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-sm btn-ghost" onclick="gcCloseModal()">Cancel</button>
+        <button class="btn-sm btn-green" onclick="gcConfirmSave()">Save</button>
+      </div>
+    </div>
+  </div>
 
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- DEAL SCOUT PAGE                                          -->
@@ -4148,7 +4249,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', stalker:'Storefront Stalker', leakage:'Leakage Tracker', hub:'Business Health Hub', invoices:'Invoice Checker' };
+  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', giftcards:'Argos Gift Cards', stalker:'Storefront Stalker', leakage:'Leakage Tracker', hub:'Business Health Hub', invoices:'Invoice Checker' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   document.dispatchEvent(new CustomEvent('bimma:pagechange', { detail: name }));
 }
@@ -11420,6 +11521,107 @@ function invInit() {
   invRenderQueue();
   invLoadAttached();
 }
+
+// ══════════════════════════════════════════
+// GIFT CARDS
+// ══════════════════════════════════════════
+function gcGetCards() { try { return JSON.parse(localStorage.getItem('bimma_giftcards') || '[]'); } catch { return []; } }
+function gcSaveCards(c) { localStorage.setItem('bimma_giftcards', JSON.stringify(c)); }
+
+function gcRender() {
+  const cards = gcGetCards();
+  const tbody = document.getElementById('gcTableBody');
+  if (!tbody) return;
+
+  let totalLoaded = 0, totalRemaining = 0;
+  cards.forEach(c => { totalLoaded += c.original || 0; totalRemaining += c.remaining || 0; });
+  const totalSpent = totalLoaded - totalRemaining;
+
+  document.getElementById('gcStatTotal').textContent = '£' + totalRemaining.toFixed(2);
+  document.getElementById('gcStatLoaded').textContent = '£' + totalLoaded.toFixed(2);
+  document.getElementById('gcStatSpent').textContent = '£' + totalSpent.toFixed(2);
+  document.getElementById('gcStatCards').textContent = cards.length + ' card' + (cards.length !== 1 ? 's' : '');
+
+  if (!cards.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="gc-empty">No gift cards saved yet — click + Add Card to get started</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = cards.map((c, i) => {
+    const pct = c.original > 0 ? Math.max(0, Math.min(100, (c.remaining / c.original) * 100)) : 0;
+    const barClass = pct <= 10 ? 'empty' : pct <= 30 ? 'low' : '';
+    const remColor = pct <= 10 ? 'var(--red)' : pct <= 30 ? 'var(--amber)' : 'var(--green)';
+    return `<tr>
+      <td><span class="gc-code">${gcEsc(c.cardNumber) || '—'}</span></td>
+      <td><span class="gc-code" style="color:var(--text-2);">${gcEsc(c.pin) || '—'}</span></td>
+      <td>£${(c.original || 0).toFixed(2)}</td>
+      <td style="color:${remColor};font-weight:700;">£${(c.remaining || 0).toFixed(2)}</td>
+      <td><div class="gc-bar-wrap"><div class="gc-bar ${barClass}" style="width:${pct}%"></div></div></td>
+      <td><div class="gc-actions">
+        <button class="gc-btn-edit" onclick="gcOpenAddModal(${i})">Edit</button>
+        <button class="gc-btn-del" onclick="gcDelete(${i})" title="Delete">✕</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function gcEsc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function gcOpenAddModal(idx) {
+  const modal = document.getElementById('gcModal');
+  document.getElementById('gcCardNumber').value = '';
+  document.getElementById('gcPin').value = '';
+  document.getElementById('gcOriginal').value = '';
+  document.getElementById('gcRemaining').value = '';
+  document.getElementById('gcEditIdx').value = '';
+  document.getElementById('gcModalTitle').textContent = 'Add Gift Card';
+
+  if (idx !== undefined) {
+    const c = gcGetCards()[idx];
+    if (c) {
+      document.getElementById('gcCardNumber').value = c.cardNumber || '';
+      document.getElementById('gcPin').value = c.pin || '';
+      document.getElementById('gcOriginal').value = c.original || '';
+      document.getElementById('gcRemaining').value = c.remaining || '';
+      document.getElementById('gcEditIdx').value = idx;
+      document.getElementById('gcModalTitle').textContent = 'Edit Gift Card';
+    }
+  }
+  modal.style.display = 'flex';
+  document.getElementById('gcCardNumber').focus();
+}
+
+function gcCloseModal() { document.getElementById('gcModal').style.display = 'none'; }
+
+function gcConfirmSave() {
+  const cardNumber = document.getElementById('gcCardNumber').value.trim();
+  const pin = document.getElementById('gcPin').value.trim();
+  const original = parseFloat(document.getElementById('gcOriginal').value) || 0;
+  const remaining = parseFloat(document.getElementById('gcRemaining').value) || 0;
+  if (!cardNumber) { showToast('Please enter a card number'); return; }
+  const cards = gcGetCards();
+  const editIdx = document.getElementById('gcEditIdx').value;
+  if (editIdx !== '') {
+    cards[parseInt(editIdx)] = { cardNumber, pin, original, remaining };
+  } else {
+    cards.push({ cardNumber, pin, original, remaining });
+  }
+  gcSaveCards(cards);
+  gcCloseModal();
+  gcRender();
+  showToast('Gift card saved');
+}
+
+function gcDelete(idx) {
+  if (!confirm('Delete this gift card?')) return;
+  const cards = gcGetCards();
+  cards.splice(idx, 1);
+  gcSaveCards(cards);
+  gcRender();
+  showToast('Gift card deleted');
+}
+
+document.addEventListener('bimma:pagechange', e => { if (e.detail === 'giftcards') gcRender(); });
 </script>
 </body>
 </html>

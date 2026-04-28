@@ -4352,8 +4352,22 @@ const DRIVE_SYNC_KEYS = [
   'bimma_customWindows','bimma-a2a-veto','bimma-a2a-viewed','bimma-a2a-rejected',
   'bimma_keepa_key','bimma_stalker_key','bimma_scout_viewed',
   'bimma_stalker_sellers','bimma_stalker_snaps','bimma_stalker_feed','bimma_cfg',
-  'bimma_giftcards'
+  'bimma_giftcards','bimma_goog_cid','bimma_r15_brands','bimma_stalker_refresh',
+  'bimma_eur_gbp_rate','bimma_ll_template','hub_settings'
 ];
+function driveDynamicKeys() {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k) continue;
+    if (k.startsWith('hub_report_') || k.startsWith('hub_case_') ||
+        k.startsWith('hub_invoice_manual_') ||
+        (k.startsWith('hub_amzinv_') && !k.startsWith('hub_amzinv_err_'))) {
+      keys.push(k);
+    }
+  }
+  return keys;
+}
 const DRIVE_FILE_NAME = 'bimma-sync.json';
 
 async function driveFindFile() {
@@ -4364,7 +4378,7 @@ async function driveFindFile() {
 async function driveSave() {
   if (!accessToken) { toast('Connect Google first', 'error'); return; }
   const payload = {};
-  DRIVE_SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) payload[k] = v; });
+  [...DRIVE_SYNC_KEYS, ...driveDynamicKeys()].forEach(k => { const v = localStorage.getItem(k); if (v !== null) payload[k] = v; });
   const body = JSON.stringify(payload);
   const boundary = 'bimma_boundary';
   const meta = JSON.stringify({ name: DRIVE_FILE_NAME, parents: ['appDataFolder'] });
@@ -4398,7 +4412,7 @@ async function driveLoad() {
     });
     const payload = await r.json();
     let count = 0;
-    DRIVE_SYNC_KEYS.forEach(k => { if (payload[k] !== undefined) { localStorage.setItem(k, payload[k]); count++; } });
+    Object.keys(payload).forEach(k => { localStorage.setItem(k, payload[k]); count++; });
     // apply Keepa key immediately
     if (payload['bimma_keepa_key']) document.querySelectorAll('.keepa-key-input').forEach(el => el.value = payload['bimma_keepa_key']);
     toast(`Loaded from cloud (${count} keys) — reload to apply all settings`);

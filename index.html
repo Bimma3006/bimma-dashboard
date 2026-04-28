@@ -7964,7 +7964,7 @@ function stalkerRenderFeed() {
         const imgUrl      = item.imgKey ? `https://m.media-amazon.com/images/I/${item.imgKey.includes('.') ? item.imgKey : item.imgKey + '._SL96_.jpg'}` : `https://images-na.ssl-images-amazon.com/images/P/${item.asin}.01._SL75_.jpg`;
         const feeEstimate = item.price ? (parseFloat(item.price) * 0.15).toFixed(2) : null;
         return `<div class="stalker-product-row" style="border-left:3px solid var(--green);background:rgba(0,232,138,0.04);">
-          <img src="${imgUrl}" class="stalker-product-img" onerror="stalkerImgFallback(this,'${item.asin}')">`
+          <img src="${imgUrl}" class="stalker-product-img" onerror="stalkerImgFallback(this,'${item.asin}')">
           <div style="min-width:0;">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
               <span style="background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;">NEW</span>

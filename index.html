@@ -3198,7 +3198,12 @@ input::placeholder { color: var(--text-4); }
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div class="exp-section-label" style="margin:0;border:none;padding:0;">Argos Gift Cards</div>
-        <button class="btn-sm btn-green" onclick="gcOpenAddModal()">+ Add Card</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn-sm btn-ghost" onclick="gcExport()">Export</button>
+          <button class="btn-sm btn-ghost" onclick="document.getElementById('gcImportInput').click()">Import</button>
+          <input type="file" id="gcImportInput" accept=".json" style="display:none" onchange="gcImport(this)">
+          <button class="btn-sm btn-green" onclick="gcOpenAddModal()">+ Add Card</button>
+        </div>
       </div>
 
       <div class="gc-table-wrap">
@@ -11628,6 +11633,32 @@ function gcDelete(idx) {
   gcSaveCards(cards);
   gcRender();
   showToast('Gift card deleted');
+}
+
+function gcExport() {
+  const cards = gcGetCards();
+  const blob = new Blob([JSON.stringify(cards, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'bimma-giftcards-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function gcImport(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error('Invalid format');
+      gcSaveCards(data);
+      gcRender();
+      showToast(data.length + ' gift card' + (data.length !== 1 ? 's' : '') + ' imported');
+    } catch { showToast('Import failed — invalid file'); }
+    input.value = '';
+  };
+  reader.readAsText(file);
 }
 
 document.addEventListener('bimma:pagechange', e => { if (e.detail === 'giftcards') gcRender(); });

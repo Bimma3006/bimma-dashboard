@@ -7961,12 +7961,10 @@ function stalkerRenderFeed() {
       // Rich card if we have title/image data, basic row otherwise
       const _purchLabel = stalkerPurchLabel(item.asin);
       if (item.title || item.imgKey || item.price) {
-        const imgUrl      = item.imgKey ? `https://m.media-amazon.com/images/I/${item.imgKey.includes('.') ? item.imgKey : item.imgKey + '._SL96_.jpg'}` : item.asin ? `https://images-na.ssl-images-amazon.com/images/P/${item.asin}.01._SL75_.jpg` : null;
+        const imgUrl      = item.imgKey ? `https://m.media-amazon.com/images/I/${item.imgKey.includes('.') ? item.imgKey : item.imgKey + '._SL96_.jpg'}` : `https://images-na.ssl-images-amazon.com/images/P/${item.asin}.01._SL75_.jpg`;
         const feeEstimate = item.price ? (parseFloat(item.price) * 0.15).toFixed(2) : null;
         return `<div class="stalker-product-row" style="border-left:3px solid var(--green);background:rgba(0,232,138,0.04);">
-          ${imgUrl
-            ? `<img src="${imgUrl}" class="stalker-product-img" onerror="this.style.display='none'">`
-            : `<div class="stalker-product-img-placeholder">📦</div>`}
+          <img src="${imgUrl}" class="stalker-product-img" onerror="stalkerImgFallback(this,'${item.asin}')">`
           <div style="min-width:0;">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
               <span style="background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;">NEW</span>
@@ -8026,6 +8024,19 @@ function stalkerClearFeed() {
   const emptyEl = document.getElementById('stalkerFeedEmpty');
   if (feedEl)  feedEl.innerHTML = '';
   if (emptyEl) { feedEl.appendChild(emptyEl); emptyEl.style.display = 'flex'; }
+}
+
+function stalkerImgFallback(el, asin) {
+  const tried = parseInt(el.dataset.tried || '0');
+  if (tried === 0) {
+    el.dataset.tried = 1;
+    el.src = `https://images-na.ssl-images-amazon.com/images/P/${asin}.01._SL75_.jpg`;
+  } else if (tried === 1) {
+    el.dataset.tried = 2;
+    el.src = `https://m.media-amazon.com/images/P/${asin}.01._SL75_.jpg`;
+  } else {
+    el.outerHTML = '<div class="stalker-product-img-placeholder">📦</div>';
+  }
 }
 
 function stalkerFmtTime(ts) {
@@ -8220,9 +8231,7 @@ function stalkerRenderProductFeed(products, seller) {
     const feeEstimate = price ? (parseFloat(price) * 0.15).toFixed(2) : null;
 
     return `<div class="stalker-product-row">
-      ${imgUrl
-        ? `<img src="${imgUrl}" class="stalker-product-img" onerror="this.style.display='none'">`
-        : `<div class="stalker-product-img-placeholder">📦</div>`}
+      <img src="${imgUrl}" class="stalker-product-img" onerror="stalkerImgFallback(this,'${asin}')">
       <div style="min-width:0;">
         <div class="stalker-product-title" title="${title}">${title}</div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">

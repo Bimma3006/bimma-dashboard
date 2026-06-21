@@ -5427,7 +5427,7 @@ const MODES = {
   pex: {
     label: 'New, Prime Exclusive',
     pillClass: 'pex',
-    desc: 'Buy price: <strong>New, Prime Exclusive: Current</strong> &nbsp;·&nbsp; Sell price: <strong>Buy Box: 180d avg</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong> &nbsp;·&nbsp; Prime Day lead comparison',
+    desc: 'Buy price: <strong>New, Prime Exclusive: Current</strong> &nbsp;·&nbsp; Sell price: <strong>Buy Box: 180d avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong> &nbsp;·&nbsp; Prime Day lead comparison',
     buyCol: 'New, Prime Exclusive: Current',
     sellCol: 'Buy Box: 180 days avg.',
     extraCost: 0,
@@ -7119,27 +7119,29 @@ function scoutGetCurrentBB(product) {
 }
 
 function scoutGetPrimeExclusivePrice(product) {
-  // Returns current New, Prime Exclusive price from Keepa csv[10]
-  // csv[10] = New, Prime Exclusive price history (Keepa field index 10)
+  // Returns { price, source } for New, Prime Exclusive price from Keepa csv[16]
+  // Keepa field index 16 = New, Prime Exclusive price history
   const stats = product.stats;
   const csv = product.csv;
   const cutoff = Date.now() - 30 * 86400000;
 
+  // Try csv[16] (Prime Exclusive price history) — most recent within 30 days
   try {
-    if (csv && csv[10] && csv[10].length >= 2) {
-      for (let i = csv[10].length - 1; i >= 1; i -= 2) {
-        const raw = csv[10][i];
-        const t = (csv[10][i-1] + 21564000) * 60000;
+    if (csv && csv[16] && csv[16].length >= 2) {
+      for (let i = csv[16].length - 1; i >= 1; i -= 2) {
+        const raw = csv[16][i];
+        const t = (csv[16][i-1] + 21564000) * 60000;
         if (t < cutoff) break;
-        if (raw > 0) return raw / 100;
+        if (raw > 0) return { price: raw / 100, source: 'PEX' };
         if (raw === -1) break;
       }
     }
   } catch(_) {}
 
-  // Fallback: stats.current[10]
-  const cur = stats?.current?.[10];
-  return (cur && cur > 0) ? cur / 100 : null;
+  // Fallback: stats.current[16]
+  const cur = stats?.current?.[16];
+  if (cur && cur > 0) return { price: cur / 100, source: 'PEX' };
+  return null;
 }
 
 // ── Progress ──
@@ -7228,6 +7230,7 @@ async function scoutRun() {
     if (skipped > 0) scoutSetStatus(`${qualifiedAsins.length} ASINs have UK BB — skipping ${skipped} with no data…`, 18);
 
     const euData = {};
+    const euSourceData = {};
     let totalScraped = 0;
     if (qualifiedAsins.length > 0) {
       let step = 0;
@@ -7252,7 +7255,7 @@ async function scoutRun() {
           }
           try {
             const primeExclusive = document.getElementById('scoutPrimeExclusive')?.checked;
-            const euCsvFields = primeExclusive ? '&csv=10' : '';
+            const euCsvFields = primeExclusive ? '&csv=16' : '';
             const url = `https://api.keepa.com/product?key=${apiKey}&domain=${SCOUT_DOMAINS[market].id}&asin=${batch.join(',')}&stats=180&buybox=1${euCsvFields}`;
             const r = await fetch(url);
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -7266,17 +7269,25 @@ async function scoutRun() {
             (data.products || []).forEach(p => {
               if (!p.asin) return;
               if (!euData[p.asin]) euData[p.asin] = {};
-              const bb = primeExclusive ? scoutGetPrimeExclusivePrice(p) : scoutGetCurrentBB(p);
+              const result = primeExclusive ? scoutGetPrimeExclusivePrice(p) : { price: scoutGetCurrentBB(p), source: 'BB' };
+              const bb = result?.price ?? null;
               // Sanity checks:
               // 1. EU price must be between £0.50 and £3,000
               // 2. EU price must be LESS than UK BB (buying EU cheaper to sell UK)
               const ukBBForCheck = scoutCsvBBMap[p.asin] || null;
               const euBelowUkBB = !ukBBForCheck || (bb < ukBBForCheck);
-              if (bb && bb > 0.5 && bb < 3000 && euBelowUkBB) { euData[p.asin][market] = bb; marketScraped++; }
+              if (bb && bb > 0.5 && bb < 3000 && euBelowUkBB) {
+                euData[p.asin][market] = bb;
+                if (result?.source) {
+                  if (!euSourceData[p.asin]) euSourceData[p.asin] = {};
+                  euSourceData[p.asin][market] = result.source;
+                }
+                marketScraped++;
+              }
             });
           } catch(e) { console.warn(`${market} batch ${i}:`, e.message); }
           // Render partial results after each batch
-          scoutRenderPartial(asins, ukMap, euData, markets, marketFx, shipping, prep, minRoi, csvHasBB);
+          scoutRenderPartial(asins, ukMap, euData, euSourceData, markets, marketFx, shipping, prep, minRoi, csvHasBB);
         }
         totalScraped += marketScraped;
         await new Promise(r => setTimeout(r, 200));
@@ -7290,7 +7301,7 @@ async function scoutRun() {
       const ukBB       = csvHasBB ? (scoutCsvBBMap[asin] || null) : (ukResult?.price || null);
       const ukBBSource = csvHasBB ? (scoutCsvBBSourceMap[asin] || '180d') : (ukResult?.source || '180d');
       const title      = (csvHasBB ? scoutCsvTitleMap[asin] : null) || ukProd?.title || '—';
-      let bestMarket = null, bestEuPrice = null, bestCalc = null;
+      let bestMarket = null, bestEuPrice = null, bestCalc = null, bestEuSource = null;
       const euForAsin = euData[asin] || {};
       for (const market of markets) {
         const euPrice = euForAsin[market];
@@ -7298,9 +7309,10 @@ async function scoutRun() {
         const calc = ukBB ? scoutCalcProfit(euPrice, ukBB, marketFx[market], shipping, prep) : null;
         if (!bestCalc || (calc && calc.profit > bestCalc.profit)) {
           bestMarket = market; bestEuPrice = euPrice; bestCalc = calc;
+          bestEuSource = euSourceData[asin]?.[market] || null;
         }
       }
-      return { asin, title, bestMarket, bestEuPrice, ukBB, ukBBSource, calc: bestCalc, minRoi };
+      return { asin, title, bestMarket, bestEuPrice, bestEuSource, ukBB, ukBBSource, calc: bestCalc, minRoi };
     });
 
     scoutSetStatus('Complete', 100);
@@ -7496,7 +7508,7 @@ function scoutRenderTable() {
       <td style="text-align:center;">
         ${r.bestMarket ? `<span class="rp-tag">${srcFlag[r.bestMarket]||''} ${r.bestMarket}</span>` : '<span style="color:var(--text-3)">—</span>'}
       </td>
-      <td style="text-align:right;font-family:var(--mono);">${fEu(r.bestEuPrice, r.bestMarket)}</td>
+      <td style="text-align:right;font-family:var(--mono);">${fEu(r.bestEuPrice, r.bestMarket)}${r.bestEuSource === 'PEX' ? '<div style="font-family:var(--mono);font-size:9px;color:var(--purple);">⭐ PEX</div>' : ''}</td>
       <td style="text-align:right;font-family:var(--mono);">${f2(r.calc?.landed)}</td>
       <td style="text-align:right;font-family:var(--mono);font-weight:600;">${f2(r.ukBB)}<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);">${r.ukBBSource||''}</div></td>
       <td style="text-align:right;font-family:var(--mono);color:var(--text-3);">${f2(r.calc?.fba)}</td>
@@ -8475,7 +8487,7 @@ document.addEventListener('bimma:pagechange', e => {
 
 
 
-function scoutRenderPartial(asins, ukMap, euData, markets, marketFx, shipping, prep, minRoi, csvHasBB) {
+function scoutRenderPartial(asins, ukMap, euData, euSourceData, markets, marketFx, shipping, prep, minRoi, csvHasBB) {
   // Build results from whatever EU data we have so far
   const partial = asins.map(asin => {
     const ukProd     = ukMap[asin];
@@ -8483,16 +8495,17 @@ function scoutRenderPartial(asins, ukMap, euData, markets, marketFx, shipping, p
     const ukBB       = csvHasBB ? (scoutCsvBBMap[asin] || null) : (ukResult?.price || null);
     const ukBBSource = csvHasBB ? (scoutCsvBBSourceMap[asin] || '180d') : (ukResult?.source || '180d');
     const title      = (csvHasBB ? scoutCsvTitleMap[asin] : null) || ukProd?.title || '—';
-    let bestMarket = null, bestEuPrice = null, bestCalc = null;
+    let bestMarket = null, bestEuPrice = null, bestCalc = null, bestEuSource = null;
     for (const market of markets) {
       const euPrice = euData[asin]?.[market];
       if (!euPrice) continue;
       const calc = ukBB ? scoutCalcProfit(euPrice, ukBB, marketFx[market] ?? 0.86, shipping, prep) : null;
       if (!bestCalc || (calc && calc.profit > bestCalc.profit)) {
         bestMarket = market; bestEuPrice = euPrice; bestCalc = calc;
+        bestEuSource = euSourceData?.[asin]?.[market] || null;
       }
     }
-    const result = { asin, title, bestMarket, bestEuPrice, ukBB, ukBBSource, calc: bestCalc, minRoi };
+    const result = { asin, title, bestMarket, bestEuPrice, bestEuSource, ukBB, ukBBSource, calc: bestCalc, minRoi };
     // Record discovery order when first found as strong/moderate
     const cls = scoutClassify(result);
     if ((cls === 'strong' || cls === 'moderate') && scoutDiscoveryOrder[asin] === undefined) {

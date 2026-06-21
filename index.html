@@ -2389,7 +2389,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v5.1 · 21 Mar 26</div>
+    <div class="sidebar-version">v5.2 · 21 Jun 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -2458,7 +2458,7 @@ input::placeholder { color: var(--text-4); }
         <button class="btn-sm btn-ghost" id="bulkMarkBtn" onclick="bulkMarkUploaded()">MARK ALL AS UPLOADED</button>
       </div>
       <!-- Quick Actions -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:32px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;">
         <div class="quick-action-card" onclick="showPage('a2a', document.querySelector('[data-page=a2a]'))">
           <div class="qa-icon" style="font-size:18px;">⚡</div>
           <div class="qa-body">
@@ -4240,7 +4240,7 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', repricer:'Min Price Tool', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', giftcards:'Argos Gift Cards', stalker:'Storefront Stalker', leakage:'Leakage Tracker', hub:'Business Health Hub', invoices:'Invoice Checker' };
+  const titles = { dashboard:'Dashboard', refund:'Refund Monitor', cogs:'COGS Calculator', a2a:'A2A Analyser', scout:'Deal Scout', purchases:'Purchases', listing:'Listing Uploader', add:'Add Purchase', expenses:'Expenses', giftcards:'Argos Gift Cards', stalker:'Storefront Stalker', invoices:'Invoice Checker' };
   document.getElementById('topbarTitle').textContent = titles[name] || name;
   document.dispatchEvent(new CustomEvent('bimma:pagechange', { detail: name }));
 }
@@ -4339,20 +4339,10 @@ const DRIVE_SYNC_KEYS = [
   'bimma_keepa_key','bimma_stalker_key','bimma_scout_viewed',
   'bimma_stalker_sellers','bimma_stalker_snaps','bimma_stalker_feed','bimma_cfg',
   'bimma_giftcards','bimma_goog_cid','bimma_r15_brands','bimma_stalker_refresh',
-  'bimma_eur_gbp_rate','bimma_ll_template','hub_settings'
+  'bimma_eur_gbp_rate','bimma_ll_template'
 ];
 function driveDynamicKeys() {
-  const keys = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (!k) continue;
-    if (k.startsWith('hub_report_') || k.startsWith('hub_case_') ||
-        k.startsWith('hub_invoice_manual_') ||
-        (k.startsWith('hub_amzinv_') && !k.startsWith('hub_amzinv_err_'))) {
-      keys.push(k);
-    }
-  }
-  return keys;
+  return [];
 }
 const DRIVE_FILE_NAME = 'bimma-sync.json';
 
@@ -4470,20 +4460,6 @@ function renderDashboard() {
   const weekEl = document.getElementById('s-week');
   if (weekEl) weekEl.textContent = weekDeals;
 
-  let leakTotal = 0, leakHasData = false;
-  if (window._leakPrepReconciled?.length) {
-    leakTotal += window._leakPrepReconciled.reduce((s,r) => s + (r.cogsVal||0), 0);
-    leakHasData = true;
-  }
-  if (window._leakReturnsProcessed?.length) {
-    leakTotal += window._leakReturnsProcessed.filter(r => !r.isReimbursed).reduce((s,r) => s + (r.exposure||0), 0);
-    leakHasData = true;
-  }
-  const leakEl = document.getElementById('s-leakage');
-  if (leakEl) leakEl.textContent = leakHasData ? '£'+fmt(leakTotal) : '—';
-  const leakSubEl = document.getElementById('s-leakage-sub');
-  if (leakSubEl && !leakHasData) leakSubEl.textContent = 'upload leakage CSVs to track';
-
   const stalkerFeedData = JSON.parse(localStorage.getItem('bimma_stalker_feed') || '[]');
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
   const newToday = stalkerFeedData.filter(f => f.detectedAt >= todayStart.getTime() && f.type === 'new').length;
@@ -4513,7 +4489,6 @@ function renderDashboard() {
     const bc=up===rows.length?'ub-all':up>0?'ub-some':'ub-none';
     return `<div class="month-card" onclick="goToMonth('${m}')"><div class="mc-header"><div><div class="mc-name">${m}</div><div class="mc-deals">${rows.length} deals</div></div><span class="upload-badge ${bc}">${up}/${rows.length} uploaded</span></div><div class="mc-stats"><div><div class="mcs-label">SPEND</div><div class="mcs-value">£${fmt(sp)}</div></div><div><div class="mcs-label">UNITS</div><div class="mcs-value">${qty}</div></div></div></div>`;
   }).join('');
-  if (typeof rpUpdateStatus === 'function') rpUpdateStatus();
 }
 // chart removed
 let purchaseSortCol = null, purchaseSortDir = 1;
@@ -11066,7 +11041,6 @@ function hubInit() {
 }
 
 document.addEventListener('bimma:pagechange', function(e) {
-  if(e.detail==='hub') hubInit();
   if(e.detail==='invoices') invInit();
 });
 

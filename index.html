@@ -9035,6 +9035,25 @@ async function pexRun() {
           const data = await res.json();
           if (data.tokensLeft != null) { pexLastTokens = data.tokensLeft; pexUpdateTokenBar(pexLastTokens); }
           if (data.error) throw new Error(data.error.message || 'Keepa error');
+          if (data.products?.length > 0) {
+            const p0 = data.products[0];
+            console.log('[PEX RAW] asin:', p0.asin, 'domain:', PEX_DOMAINS[market].id);
+            console.log('[PEX RAW] stats.current:', JSON.stringify(p0.stats?.current));
+            console.log('[PEX RAW] csv type:', typeof p0.csv, Array.isArray(p0.csv));
+            console.log('[PEX RAW] csv length:', p0.csv?.length);
+            // Log ALL non-null csv entries
+            if (p0.csv) {
+              for (let k = 0; k < 36; k++) {
+                if (p0.csv[k] !== undefined && p0.csv[k] !== null) {
+                  console.log(`[PEX RAW] csv[${k}] last 6:`, JSON.stringify(p0.csv[k]?.slice(-6)));
+                }
+              }
+              // Also try string keys
+              Object.entries(p0.csv).forEach(([k,v]) => {
+                console.log(`[PEX RAW] csv entry key="${k}":`, JSON.stringify(Array.isArray(v) ? v.slice(-4) : v));
+              });
+            }
+          }
 
           (data.products || []).forEach(p => {
             if (!p.asin) return;

@@ -8885,7 +8885,11 @@ function pexFileChosen(file) {
     const bbStIdx  = headers.findIndex(h => h === 'Buy Box: Strikethrough Price');
     const bbCurIdx = headers.findIndex(h => h === 'Buy Box: Current');
     const titleIdx = headers.findIndex(h => h === 'Title');
-    if (asinIdx < 0) { toast('No ASIN column found in CSV','error'); return; }
+    console.log('[PEX CSV] headers:', headers.slice(0,12));
+    console.log('[PEX CSV] asinIdx:', asinIdx, 'bb180Idx:', bb180Idx);
+    console.log('[PEX CSV] line[1] raw:', lines[1]?.slice(0,100));
+    if (asinIdx < 0) { toast('No ASIN column found in CSV — headers: ' + headers.slice(0,5).join('|'),'error'); return; }
+    console.log('[PEX CSV] first ASIN raw:', (parseCSVLineGlobal(lines[1])[asinIdx]||'').replace(/"/g,'').trim());
     const maxAsins = parseInt(document.getElementById('pexMaxAsins')?.value) || 10000;
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCSVLineGlobal(lines[i]);

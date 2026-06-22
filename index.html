@@ -6238,11 +6238,10 @@ async function scoutRun() {
                 console.log(`[PEX] ${p.asin} cur[16]=${p.stats?.current?.[16]} csv16keys=${p.csv ? Object.keys(p.csv).includes('16') : false} result=`, result);
               }
               const bb = result?.price ?? null;
-              // Sanity checks:
-              // 1. EU price must be between £0.50 and £3,000
-              // 2. EU price must be LESS than UK BB (buying EU cheaper to sell UK)
               const ukBBForCheck = scoutCsvBBMap[p.asin] || null;
-              const euBelowUkBB = !ukBBForCheck || (bb < ukBBForCheck);
+              // In PEX mode the price is in local EU currency — don't compare raw to GBP BB,
+              // the FX conversion happens in scoutCalcProfit. Just sanity check range.
+              const euBelowUkBB = primeExclusive ? true : (!ukBBForCheck || (bb < ukBBForCheck));
               if (bb && bb > 0.5 && bb < 3000 && euBelowUkBB) {
                 euData[p.asin][market] = bb;
                 if (result?.source) {

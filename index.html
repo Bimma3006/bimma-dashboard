@@ -5568,6 +5568,7 @@ let scoutCurrentTab = 'csv';
 let scoutLoadedAsins = []; // ASINs loaded from file
 let scoutCsvBBMap      = {}; // ASIN → best UK sell price from CSV
 let scoutCsvBBSourceMap = {}; // ASIN → source label (180d/ST/365d etc)
+let scoutCsvPexMap     = {}; // ASIN → Prime Exclusive price from CSV (EU)
 let scoutCsvTitleMap   = {}; // ASIN → title from CSV
 
 // Sync API key from localStorage on load
@@ -5642,6 +5643,7 @@ function scoutToggleMarket(market, el) {
 // ── CSV / File handling ──
 let scoutLoadedAsins1 = [], scoutLoadedAsins2 = [];
 let scoutCsvBBMap1 = {}, scoutCsvBBMap2 = {};
+let scoutCsvPexMap1 = {}, scoutCsvPexMap2 = {};
 let scoutCsvBBSourceMap1 = {}, scoutCsvBBSourceMap2 = {};
 let scoutCsvTitleMap1 = {}, scoutCsvTitleMap2 = {};
 
@@ -5703,6 +5705,7 @@ function scoutFileChosen(file, slot=1) {
         const bbCurIdx = headers.findIndex(h => h === 'Buy Box: Current');
         const bbStIdx  = headers.findIndex(h => h === 'Buy Box: Strikethrough Price');
         const titleIdx = headers.findIndex(h => h === 'Title');
+        const pexIdx   = headers.findIndex(h => h === 'New, Prime exclusive: Current');
         if (asinIdx >= 0) {
           for (let i = 1; i < lines.length; i++) {
             const cols  = parseCSVLine(lines[i]);
@@ -5714,6 +5717,7 @@ function scoutFileChosen(file, slot=1) {
             const bb365  = getNum(bb365Idx);
             const bbCur  = getNum(bbCurIdx);
             const bbSt   = getNum(bbStIdx);
+            const pexVal = getNum(pexIdx);
             const title  = (cols[titleIdx]||'').replace(/"/g,'').trim();
             // Best sell price — same logic as A2A analyser
             // ST_CAP: strikethrough only used if > base but <= 130% of base (filters stale RRPs)
@@ -5740,6 +5744,11 @@ function scoutFileChosen(file, slot=1) {
               bbMapSlot[asin]      = bestSell;
               bbSrcMapSlot[asin]   = sellSource;
               titleMapSlot[asin]   = title;
+              if (!isNaN(pexVal) && pexVal > 0) {
+                const pexMapSlot = slot === 1 ? scoutCsvPexMap1 : scoutCsvPexMap2;
+                pexMapSlot[asin] = pexVal;
+                scoutCsvPexMap[asin] = pexVal;
+              }
               // Also update merged maps
               scoutCsvBBMap[asin]       = bestSell;
               scoutCsvBBSourceMap[asin] = sellSource;
@@ -5752,6 +5761,7 @@ function scoutFileChosen(file, slot=1) {
       scoutCsvBBMap       = Object.assign({}, scoutCsvBBMap1, scoutCsvBBMap2);
       scoutCsvBBSourceMap = Object.assign({}, scoutCsvBBSourceMap1, scoutCsvBBSourceMap2);
       scoutCsvTitleMap    = Object.assign({}, scoutCsvTitleMap1, scoutCsvTitleMap2);
+      scoutCsvPexMap      = Object.assign({}, scoutCsvPexMap1, scoutCsvPexMap2);
     } catch(e) { console.error('CSV parse error:', e); }
     const s = slot;
     document.getElementById('scoutDropzone'+s)?.classList.add('loaded');
@@ -5772,8 +5782,8 @@ function scoutFileChosen(file, slot=1) {
 }
 function scoutClearSlot(e, slot) {
   e?.stopPropagation();
-  if (slot === 1) { scoutLoadedAsins1 = []; scoutCsvBBMap1 = {}; scoutCsvBBSourceMap1 = {}; scoutCsvTitleMap1 = {}; }
-  else            { scoutLoadedAsins2 = []; scoutCsvBBMap2 = {}; scoutCsvBBSourceMap2 = {}; scoutCsvTitleMap2 = {}; }
+  if (slot === 1) { scoutLoadedAsins1 = []; scoutCsvBBMap1 = {}; scoutCsvBBSourceMap1 = {}; scoutCsvTitleMap1 = {}; scoutCsvPexMap1 = {}; }
+  else            { scoutLoadedAsins2 = []; scoutCsvBBMap2 = {}; scoutCsvBBSourceMap2 = {}; scoutCsvTitleMap2 = {}; scoutCsvPexMap2 = {}; }
   scoutLoadedAsins = [...new Set([...scoutLoadedAsins1, ...scoutLoadedAsins2])];
   // Merge BB maps
   scoutCsvBBMap = Object.assign({}, scoutCsvBBMap1, scoutCsvBBMap2);
@@ -6181,6 +6191,24 @@ async function scoutRun() {
     const euData = {};
     const euSourceData = {};
     let totalScraped = 0;
+
+    // If PEX mode + CSV has PEX prices, pre-populate euData directly — no Keepa fetch needed
+    const primeExclusiveMode = document.getElementById('scoutPrimeExclusive')?.checked;
+    if (primeExclusiveMode && Object.keys(scoutCsvPexMap).length > 0) {
+      for (const asin of qualifiedAsins) {
+        const pexPrice = scoutCsvPexMap[asin];
+        if (pexPrice && pexPrice > 0) {
+          // Store under a virtual 'CSV' market so render logic finds it
+          euData[asin] = { CSV: pexPrice };
+          euSourceData[asin] = { CSV: 'PEX' };
+          totalScraped++;
+        }
+      }
+      const csvPexCount = Object.keys(euData).length;
+      const stillNeed = qualifiedAsins.filter(a => !euData[a]);
+      scoutSetStatus(`${csvPexCount} PEX prices from CSV — fetching ${stillNeed.length} from Keepa…`, 18);
+    }
+
     if (qualifiedAsins.length > 0) {
       let step = 0;
       for (const market of markets) {
@@ -6218,7 +6246,16 @@ async function scoutRun() {
             (data.products || []).forEach(p => {
               if (!p.asin) return;
               if (!euData[p.asin]) euData[p.asin] = {};
-              const result = primeExclusive ? scoutGetPrimeExclusivePrice(p) : { price: scoutGetCurrentBB(p), source: 'BB' };
+              // PEX mode: use CSV PEX price if available, else use Keepa stats.current[16]
+              let result;
+              if (primeExclusive) {
+                const csvPex = scoutCsvPexMap[p.asin];
+                result = (csvPex && csvPex > 0)
+                  ? { price: csvPex, source: 'PEX' }
+                  : scoutGetPrimeExclusivePrice(p);
+              } else {
+                result = { price: scoutGetCurrentBB(p), source: 'BB' };
+              }
               const bb = result?.price ?? null;
               // Sanity checks:
               // 1. EU price must be between £0.50 and £3,000
@@ -6252,6 +6289,13 @@ async function scoutRun() {
       const title      = (csvHasBB ? scoutCsvTitleMap[asin] : null) || ukProd?.title || '—';
       let bestMarket = null, bestEuPrice = null, bestCalc = null, bestEuSource = null;
       const euForAsin = euData[asin] || {};
+      // Check CSV PEX pre-populated prices first
+      const csvEuPrice = euForAsin['CSV'];
+      if (csvEuPrice) {
+        const calc = ukBB ? scoutCalcProfit(csvEuPrice, ukBB, 1.0, shipping, prep) : null;
+        bestMarket = 'CSV'; bestEuPrice = csvEuPrice; bestCalc = calc;
+        bestEuSource = euSourceData[asin]?.['CSV'] || 'PEX';
+      }
       for (const market of markets) {
         const euPrice = euForAsin[market];
         if (!euPrice) continue;
@@ -6420,6 +6464,7 @@ function scoutRenderTable() {
   const srcCurrencySymbol = { DE:'€', FR:'€', IT:'€', ES:'€', US:'$', JP:'¥' };
   const fEu = (v, mkt) => {
     if (v == null) return '—';
+    if (mkt === 'CSV') return '£' + v.toFixed(2); // CSV PEX price already in GBP
     const sym = srcCurrencySymbol[mkt] || '€';
     return sym + (sym === '¥' ? Math.round(v).toLocaleString() : v.toFixed(2));
   };
@@ -6455,7 +6500,7 @@ function scoutRenderTable() {
       </td>
       <td class="sc-title-cell" title="${(r.title||'').replace(/"/g,'&quot;')}"><span class="sc-title-text">${r.title}</span></td>
       <td style="text-align:center;">
-        ${r.bestMarket ? `<span class="sc-src-badge">${srcFlag[r.bestMarket]||''} ${r.bestMarket}</span>` : '<span style="color:var(--text-3)">—</span>'}
+        ${r.bestMarket ? `<span class="sc-src-badge">${r.bestMarket === 'CSV' ? '📄' : (srcFlag[r.bestMarket]||'')} ${r.bestMarket}</span>` : '<span style="color:var(--text-3)">—</span>'}
       </td>
       <td>${fEu(r.bestEuPrice, r.bestMarket)}${r.bestEuSource === 'PEX' ? '<div class="sc-pex-badge">⭐ Prime Excl.</div>' : ''}</td>
       <td>${f2(r.calc?.landed)}</td>
@@ -7445,6 +7490,12 @@ function scoutRenderPartial(asins, ukMap, euData, euSourceData, markets, marketF
     const ukBBSource = csvHasBB ? (scoutCsvBBSourceMap[asin] || '180d') : (ukResult?.source || '180d');
     const title      = (csvHasBB ? scoutCsvTitleMap[asin] : null) || ukProd?.title || '—';
     let bestMarket = null, bestEuPrice = null, bestCalc = null, bestEuSource = null;
+    const _csvEu = euData[asin]?.['CSV'];
+    if (_csvEu) {
+      const calc = ukBB ? scoutCalcProfit(_csvEu, ukBB, 1.0, shipping, prep) : null;
+      bestMarket = 'CSV'; bestEuPrice = _csvEu; bestCalc = calc;
+      bestEuSource = euSourceData?.[asin]?.['CSV'] || 'PEX';
+    }
     for (const market of markets) {
       const euPrice = euData[asin]?.[market];
       if (!euPrice) continue;

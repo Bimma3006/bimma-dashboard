@@ -6235,10 +6235,16 @@ async function scoutRun() {
             if (primeExclusive && data.products?.length > 0) {
               const p0 = data.products[0];
               console.log('[PEX FULL DUMP] ASIN:', p0.asin);
-              console.log('[PEX FULL DUMP] stats.current:', JSON.stringify(p0.stats?.current));
-              console.log('[PEX FULL DUMP] csv keys:', p0.csv ? Object.keys(p0.csv) : 'NO CSV');
-              console.log('[PEX FULL DUMP] csv[16]:', p0.csv?.[16]);
-              console.log('[PEX FULL DUMP] csv["16"]:', p0.csv?.['16']);
+              console.log('[PEX FULL DUMP] stats.current[16]:', p0.stats?.current?.[16]);
+              // csv is sparse — get csv[16] via Array.from or direct property
+              const rawCsv16 = p0.csv ? Array.from(p0.csv)[16] : undefined;
+              const propCsv16 = p0.csv ? p0.csv[16] : undefined;
+              const strCsv16 = p0.csv ? p0.csv['16'] : undefined;
+              console.log('[PEX FULL DUMP] Array.from(csv)[16]:', rawCsv16);
+              console.log('[PEX FULL DUMP] csv[16] direct:', propCsv16);
+              console.log('[PEX FULL DUMP] csv["16"]:', strCsv16);
+              console.log('[PEX FULL DUMP] csv length:', p0.csv?.length);
+              console.log('[PEX FULL DUMP] full csv[16] last 20:', JSON.stringify(p0.csv?.[16]?.slice(-20)));
             }
             (data.products || []).forEach(p => {
               if (!p.asin) return;

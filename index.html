@@ -5966,36 +5966,36 @@ function scoutGetBB180(product) {
   return null;
 }
 function scoutGetCurrentBB(product) {
-  // Returns current Buy Box price (any seller) from EU marketplace
-  // csv[18] = New Buy Box price history; fallback to csv[1] (new 3P), csv[2] (new), stats.current
+  // Returns EU price — tries csv[0] (Amazon), then stats.current[0],
+  // then stats.current[18] (Buy Box), then stats.current[1] (lowest new 3P)
   const stats = product.stats;
   const csv = product.csv;
-  const cutoff90 = Date.now() - 90 * 86400000;  // widen to 90 days
+  const cutoff = Date.now() - 30 * 86400000;
 
-  // Walk csv[18] (Buy Box) — most recent positive price within 90 days
+  // csv[0] = Amazon price history (most reliably populated with buybox=1)
   try {
-    if (csv && csv[18] && csv[18].length >= 2) {
-      for (let i = csv[18].length - 1; i >= 1; i -= 2) {
-        const raw = csv[18][i];
-        const t = (csv[18][i-1] + 21564000) * 60000;
-        if (t < cutoff90) break;
+    if (csv && csv[0] && csv[0].length >= 2) {
+      for (let i = csv[0].length - 1; i >= 1; i -= 2) {
+        const raw = csv[0][i];
+        const t = (csv[0][i-1] + 21564000) * 60000;
+        if (t < cutoff) break;
         if (raw > 0) return raw / 100;
-        // -1 means OOS at that point — keep scanning backwards for a live price
+        if (raw === -1) break;
       }
     }
   } catch(_) {}
 
-  // Fallback 1: stats.current[18] (Buy Box right now, from stats call)
+  // Fallback: stats.current[0] (Amazon current)
+  const curAmz = stats?.current?.[0];
+  if (curAmz && curAmz > 0) return curAmz / 100;
+
+  // Fallback: stats.current[18] (Buy Box current)
   const curBB = stats?.current?.[18];
   if (curBB && curBB > 0) return curBB / 100;
 
-  // Fallback 2: stats.current[1] (lowest new 3P price)
+  // Fallback: stats.current[1] (lowest new 3P)
   const cur3P = stats?.current?.[1];
   if (cur3P && cur3P > 0) return cur3P / 100;
-
-  // Fallback 3: stats.current[2] (lowest new price overall)
-  const curNew = stats?.current?.[2];
-  if (curNew && curNew > 0) return curNew / 100;
 
   return null;
 }
@@ -6141,7 +6141,7 @@ async function scoutRun() {
           }
           try {
             const primeExclusive = document.getElementById('scoutPrimeExclusive')?.checked;
-            const euCsvFields = primeExclusive ? '&csv=16' : '&csv=18';
+            const euCsvFields = primeExclusive ? '&csv=16' : '';
             const url = `https://api.keepa.com/product?key=${apiKey}&domain=${SCOUT_DOMAINS[market].id}&asin=${batch.join(',')}&stats=180&buybox=1${euCsvFields}`;
             const r = await fetch(url);
             if (!r.ok) throw new Error(`HTTP ${r.status}`);

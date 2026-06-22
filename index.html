@@ -6192,23 +6192,6 @@ async function scoutRun() {
     const euSourceData = {};
     let totalScraped = 0;
 
-    // If PEX mode + CSV has PEX prices, pre-populate euData directly — no Keepa fetch needed
-    const primeExclusiveMode = document.getElementById('scoutPrimeExclusive')?.checked;
-    if (primeExclusiveMode && Object.keys(scoutCsvPexMap).length > 0) {
-      for (const asin of qualifiedAsins) {
-        const pexPrice = scoutCsvPexMap[asin];
-        if (pexPrice && pexPrice > 0) {
-          // Store under a virtual 'CSV' market so render logic finds it
-          euData[asin] = { CSV: pexPrice };
-          euSourceData[asin] = { CSV: 'PEX' };
-          totalScraped++;
-        }
-      }
-      const csvPexCount = Object.keys(euData).length;
-      const stillNeed = qualifiedAsins.filter(a => !euData[a]);
-      scoutSetStatus(`${csvPexCount} PEX prices from CSV — fetching ${stillNeed.length} from Keepa…`, 18);
-    }
-
     if (qualifiedAsins.length > 0) {
       let step = 0;
       for (const market of markets) {
@@ -6246,16 +6229,7 @@ async function scoutRun() {
             (data.products || []).forEach(p => {
               if (!p.asin) return;
               if (!euData[p.asin]) euData[p.asin] = {};
-              // PEX mode: use CSV PEX price if available, else use Keepa stats.current[16]
-              let result;
-              if (primeExclusive) {
-                const csvPex = scoutCsvPexMap[p.asin];
-                result = (csvPex && csvPex > 0)
-                  ? { price: csvPex, source: 'PEX' }
-                  : scoutGetPrimeExclusivePrice(p);
-              } else {
-                result = { price: scoutGetCurrentBB(p), source: 'BB' };
-              }
+              const result = primeExclusive ? scoutGetPrimeExclusivePrice(p) : { price: scoutGetCurrentBB(p), source: 'BB' };
               const bb = result?.price ?? null;
               // Sanity checks:
               // 1. EU price must be between £0.50 and £3,000
@@ -6289,13 +6263,6 @@ async function scoutRun() {
       const title      = (csvHasBB ? scoutCsvTitleMap[asin] : null) || ukProd?.title || '—';
       let bestMarket = null, bestEuPrice = null, bestCalc = null, bestEuSource = null;
       const euForAsin = euData[asin] || {};
-      // Check CSV PEX pre-populated prices first
-      const csvEuPrice = euForAsin['CSV'];
-      if (csvEuPrice) {
-        const calc = ukBB ? scoutCalcProfit(csvEuPrice, ukBB, 1.0, shipping, prep) : null;
-        bestMarket = 'CSV'; bestEuPrice = csvEuPrice; bestCalc = calc;
-        bestEuSource = euSourceData[asin]?.['CSV'] || 'PEX';
-      }
       for (const market of markets) {
         const euPrice = euForAsin[market];
         if (!euPrice) continue;
@@ -7490,12 +7457,6 @@ function scoutRenderPartial(asins, ukMap, euData, euSourceData, markets, marketF
     const ukBBSource = csvHasBB ? (scoutCsvBBSourceMap[asin] || '180d') : (ukResult?.source || '180d');
     const title      = (csvHasBB ? scoutCsvTitleMap[asin] : null) || ukProd?.title || '—';
     let bestMarket = null, bestEuPrice = null, bestCalc = null, bestEuSource = null;
-    const _csvEu = euData[asin]?.['CSV'];
-    if (_csvEu) {
-      const calc = ukBB ? scoutCalcProfit(_csvEu, ukBB, 1.0, shipping, prep) : null;
-      bestMarket = 'CSV'; bestEuPrice = _csvEu; bestCalc = calc;
-      bestEuSource = euSourceData?.[asin]?.['CSV'] || 'PEX';
-    }
     for (const market of markets) {
       const euPrice = euData[asin]?.[market];
       if (!euPrice) continue;

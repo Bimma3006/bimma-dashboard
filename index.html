@@ -2840,7 +2840,7 @@ input::placeholder { color: var(--text-4); }
     .sc-title-text    { color:var(--text); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:340px; display:block; }
     .sc-asin-row      { display:flex; align-items:center; gap:8px; margin-top:3px; }
     .sc-src-badge     { font-family:var(--mono); font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; background:var(--surface4); color:var(--text-3); }
-    .sc-pex-badge     { font-family:var(--mono); font-size:9px; color:var(--purple); margin-top:2px; }
+    .sc-pex-badge     { font-family:var(--mono); font-size:9px; font-weight:700; color:#c084fc; background:rgba(192,132,252,.12); border:1px solid rgba(192,132,252,.25); border-radius:3px; padding:1px 5px; margin-top:3px; display:inline-block; }
     .sc-row-green td  { background:rgba(0,217,126,.04); }
     .sc-row-amber td  { background:rgba(240,165,0,.035); }
     .sc-row-red td    { background:rgba(240,59,80,.035); }
@@ -3065,7 +3065,7 @@ input::placeholder { color: var(--text-4); }
               <th style="text-align:left;">ASIN</th>
               <th style="text-align:left;">Title</th>
               <th style="text-align:center;">Src</th>
-              <th class="sortable" onclick="scoutSetSort('euPrice')">EU Price <span id="scoutSortEuPrice" style="color:var(--green);font-size:9px;"></span></th>
+              <th class="sortable" onclick="scoutSetSort('euPrice')" id="scoutEuPriceHeader">EU Price <span id="scoutSortEuPrice" style="color:var(--green);font-size:9px;"></span></th>
               <th class="sortable" onclick="scoutSetSort('landed')">Landed £ <span id="scoutSortLanded" style="color:var(--green);font-size:9px;"></span></th>
               <th class="sortable" onclick="scoutSetSort('ukBB')">UK BB 180d <span id="scoutSortUkBB" style="color:var(--green);font-size:9px;"></span></th>
               <th class="sortable" onclick="scoutSetSort('fees')">Fees <span id="scoutSortFees" style="color:var(--green);font-size:9px;"></span></th>
@@ -5581,9 +5581,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const pexEl = document.getElementById('scoutPrimeExclusive');
   if (pexEl) {
     pexEl.checked = localStorage.getItem('bimma_scout_pex') === '1';
+    const updatePexHeader = () => {
+      const h = document.getElementById('scoutEuPriceHeader');
+      const sort = document.getElementById('scoutSortEuPrice');
+      if (h) h.innerHTML = (pexEl.checked ? '⭐ PEX Price' : 'EU Price') + ' <span id="scoutSortEuPrice" style="color:var(--green);font-size:9px;">' + (sort?.textContent || '') + '</span>';
+    };
     pexEl.addEventListener('change', () => {
       localStorage.setItem('bimma_scout_pex', pexEl.checked ? '1' : '0');
+      updatePexHeader();
     });
+    updatePexHeader();
   }
   // Init market button states
   ['DE','FR','IT','ES','US','JP'].forEach(m => scoutToggleMarket(m, document.getElementById('scout'+m)));
@@ -6449,7 +6456,7 @@ function scoutRenderTable() {
       <td style="text-align:center;">
         ${r.bestMarket ? `<span class="sc-src-badge">${srcFlag[r.bestMarket]||''} ${r.bestMarket}</span>` : '<span style="color:var(--text-3)">—</span>'}
       </td>
-      <td>${fEu(r.bestEuPrice, r.bestMarket)}${r.bestEuSource === 'PEX' ? '<div class="sc-pex-badge">⭐ PEX</div>' : ''}</td>
+      <td>${fEu(r.bestEuPrice, r.bestMarket)}${r.bestEuSource === 'PEX' ? '<div class="sc-pex-badge">⭐ Prime Excl.</div>' : ''}</td>
       <td>${f2(r.calc?.landed)}</td>
       <td style="font-weight:600;">${f2(r.ukBB)}<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);">${r.ukBBSource||''}</div></td>
       <td style="color:var(--text-3);">${f2(r.calc?.fba)}</td>

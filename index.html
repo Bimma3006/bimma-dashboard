@@ -9031,8 +9031,10 @@ async function pexRun() {
           // stats=180 — gives stats.current[16] as well
           const url = `https://api.keepa.com/product?key=${apiKey}&domain=${PEX_DOMAINS[market].id}&asin=${batch.join(',')}&stats=180&csv=16`;
           const res = await fetch(url);
+          console.log('[PEX FETCH] status:', res.status, 'ok:', res.ok);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
+          console.log('[PEX FETCH] tokensLeft:', data.tokensLeft, 'products:', data.products?.length, 'error:', data.error);
           if (data.tokensLeft != null) { pexLastTokens = data.tokensLeft; pexUpdateTokenBar(pexLastTokens); }
           if (data.error) throw new Error(data.error.message || 'Keepa error');
           if (data.products?.length > 0) {
@@ -9094,7 +9096,7 @@ async function pexRun() {
               srcData[p.asin][market] = cur16 && cur16 > 0 ? 'live' : 'hist';
             }
           });
-        } catch(e) { console.warn(`PEX ${market} batch ${i}:`, e); }
+        } catch(e) { console.error(`[PEX ERROR] ${market} batch ${i}:`, e.message, e); }
 
         // Render after each batch
         pexRenderResults(pexAsins, euData, srcData, markets, eurGbp, shipping, prep, minRoi);

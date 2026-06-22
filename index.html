@@ -6218,6 +6218,12 @@ async function scoutRun() {
             (data.products || []).forEach(p => {
               if (!p.asin) return;
               if (!euData[p.asin]) euData[p.asin] = {};
+              // DEBUG: log first product's stats.current and csv[16] for PEX diagnosis
+              if (primeExclusive && Object.keys(euData).length < 3) {
+                console.log(`[PEX DEBUG] ${p.asin} stats.current:`, p.stats?.current);
+                console.log(`[PEX DEBUG] ${p.asin} csv[16]:`, p.csv?.[16]?.slice(-10));
+                console.log(`[PEX DEBUG] ${p.asin} csv keys:`, p.csv ? Object.keys(p.csv) : 'no csv');
+              }
               const result = primeExclusive ? scoutGetPrimeExclusivePrice(p) : { price: scoutGetCurrentBB(p), source: 'BB' };
               const bb = result?.price ?? null;
               // Sanity checks:

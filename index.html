@@ -2998,7 +2998,7 @@ input::placeholder { color: var(--text-4); }
           <input type="checkbox" id="scoutPrimeExclusive" class="sc-pex-check">
           <div>
             <div class="sc-pex-label">⭐ Prime Exclusive Price</div>
-            <div class="sc-pex-sub">Fetches Prime Exclusive EU price instead of current Buy Box — Prime Day leads</div>
+            <div class="sc-pex-sub">Uses stats.current[16] Prime Exclusive price where available — ASINs without a PEX price set will show no EU price. Use for Prime Day lead lists.</div>
           </div>
         </label>
 
@@ -6218,12 +6218,6 @@ async function scoutRun() {
             (data.products || []).forEach(p => {
               if (!p.asin) return;
               if (!euData[p.asin]) euData[p.asin] = {};
-              // DEBUG: log first product's stats.current and csv[16] for PEX diagnosis
-              if (primeExclusive && Object.keys(euData).length < 3) {
-                console.log(`[PEX DEBUG] ${p.asin} stats.current:`, p.stats?.current);
-                console.log(`[PEX DEBUG] ${p.asin} csv[16]:`, p.csv?.[16]?.slice(-10));
-                console.log(`[PEX DEBUG] ${p.asin} csv keys:`, p.csv ? Object.keys(p.csv) : 'no csv');
-              }
               const result = primeExclusive ? scoutGetPrimeExclusivePrice(p) : { price: scoutGetCurrentBB(p), source: 'BB' };
               const bb = result?.price ?? null;
               // Sanity checks:

@@ -5924,21 +5924,45 @@ async function scoutWaitForTokens(apiKey, needed) {
   }
 }
 function scoutGetBB180(product) {
-  // Returns { price, source } matching UK→UK A2A/CSV logic, or null if no data
+  // Returns { price, source } using identical sell-price logic to the Deal Analyser:
+  // recovery scoring → 365d-vs-180d pick → 10% uplift → strikethrough 130% cap
   const stats = product.stats;
   const csv   = product.csv;
   if (!stats) return null;
 
   const avg180 = stats.avg180?.[18];
   const avg365 = stats.avg365?.[18];
+  const avg90  = stats.avg90?.[18];
+  const sd365  = stats.avg180?.[19]; // Keepa index 19 = std dev (not exposed in stats directly — use what's available)
+  const rankDrops = stats.current?.[3]; // sales rank drops approx
 
-  // Base: prefer 365d if higher than 180d (same as CSV/A2A path)
-  const valid180 = avg180 && avg180 > 0;
-  const valid365 = avg365 && avg365 > 0;
-  const base = (valid365 && valid180 && avg365 > avg180)
-    ? avg365 / 100
-    : (valid180 ? avg180 / 100 : null);
-  const baseSource = (valid365 && valid180 && avg365 > avg180) ? '365d' : '180d';
+  const v180 = avg180 && avg180 > 0;
+  const v365 = avg365 && avg365 > 0;
+
+  // Recovery scoring (mirrors daAnalyseRow)
+  let recoveries = null;
+  if (v180 && sd365) {
+    const cv = (sd365 / 100) / (avg180 / 100);
+    recoveries = cv >= 0.25 ? 10 : cv >= 0.20 ? 8 : cv >= 0.15 ? 6 : cv >= 0.10 ? 4 : cv >= 0.06 ? 2 : 1;
+    if (rankDrops && rankDrops >= 20) recoveries = Math.min(12, recoveries + 2);
+  }
+
+  // Base sell price — same logic as analyser spBase
+  let spBase = null;
+  let spSource = '180d';
+  if (recoveries && recoveries >= 4 && v365) {
+    spBase = (v180 && avg180 > avg365) ? avg180 / 100 : avg365 / 100;
+    spSource = (v180 && avg180 > avg365) ? '180d' : '365d';
+  } else if (recoveries && recoveries >= 3 && v180) {
+    spBase = (avg180 / 100) * 1.10;
+    spSource = '180d+10%';
+  } else if (v180) {
+    spBase = avg180 / 100;
+    spSource = '180d';
+  } else if (v365) {
+    spBase = avg365 / 100;
+    spSource = '365d';
+  }
 
   // Strikethrough from csv[10] (Was Price) — most recent positive value
   let stPrice = null;
@@ -5952,13 +5976,13 @@ function scoutGetBB180(product) {
     }
   } catch(_) {}
 
-  // Strikethrough override: use if > base but within 130% (filters stale RRPs)
+  // Strikethrough override: use if > spBase but within 130%
   const ST_CAP = 1.30;
-  if (stPrice && base && stPrice > base && stPrice <= base * ST_CAP) {
+  if (stPrice && spBase && stPrice > spBase && stPrice <= spBase * ST_CAP) {
     return { price: stPrice, source: 'ST' };
   }
 
-  if (base) return { price: base, source: baseSource };
+  if (spBase) return { price: spBase, source: spSource };
 
   // Fallback to current buy box
   const cur = stats.current?.[18];

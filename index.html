@@ -4581,7 +4581,29 @@ function daAnalyseRow(row) {
   const fbaFeeEst = fbaFeeRaw === null; // flag that we estimated
   // fbaFee assigned below after spIncVat is calculated
   const rankDrops = daParseNum(row['Sales Rank: Drops last 30 days']);
-  const boughtPerMonth = daParseNum(row['Bought in past month']) ?? daParseNum(row['Bought in past 30 days']) ?? daParseNum(row['Bought in past 60 days']) ?? daParseNum(row['Bought in past 90 days']);
+  const boughtPerMonth = daParseNum(row['Bought in past month'])
+    ?? daParseNum(row['Bought in past 30 days'])
+    ?? daParseNum(row['Bought in past 60 days'])
+    ?? daParseNum(row['Bought in past 90 days'])
+    ?? daParseNum(row['Montly sold'])
+    ?? daParseNum(row['Monthly sold'])
+    ?? daParseNum(row['Est. monthly sold'])
+    ?? daParseNum(row['Estimated monthly sold'])
+    ?? daParseNum(row['Sold per month'])
+    ?? daParseNum(row['Sells per month'])
+    ?? daParseNum(row['Sales per month'])
+    ?? daParseNum(row['Units sold per month'])
+    ?? (() => {
+        // Last resort: scan all keys for anything that looks like a "bought/sold/month" column
+        for (const k of Object.keys(row)) {
+          const kl = k.toLowerCase();
+          if ((kl.includes('bought') || kl.includes('sold') || kl.includes('sales')) && (kl.includes('month') || kl.includes('30'))) {
+            const v = daParseNum(row[k]);
+            if (v !== null) return v;
+          }
+        }
+        return null;
+      })();
   const ss = (row['Buy Box: Subscribe & Save'] || '').toLowerCase() === 'yes';
   // Dimensions — check package dims first, fall back to item dims
   const _dims = [
@@ -4930,6 +4952,13 @@ function daRunAnalysis() {
 
       // Load price snapshot from previous run
       const prevPriceSnap = (() => { try { return JSON.parse(localStorage.getItem('bimma_da_price_snap') || '{}'); } catch { return {}; } })();
+
+      // Debug: log column headers once so exact Keepa field names are visible in console
+      if (priceable.length > 0) {
+        const soldKeys = Object.keys(priceable[0]).filter(k => { const kl = k.toLowerCase(); return kl.includes('bought') || kl.includes('sold') || kl.includes('month'); });
+        console.log('[Bimma DA] Sold/bought columns found:', soldKeys.length ? soldKeys : '⚠ NONE — check Keepa export settings');
+        console.log('[Bimma DA] All columns:', Object.keys(priceable[0]));
+      }
 
       daDeals = priceable.map(row => {
         const asin = (row['ASIN'] || '').trim();

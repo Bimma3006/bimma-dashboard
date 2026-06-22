@@ -8980,12 +8980,14 @@ function pexClear() {
 
 // ── Main run ──
 async function pexRun() {
+  console.log('[PEX RUN] pexAsins.length:', pexAsins.length, 'isRunning:', pexIsRunning);
   if (pexIsRunning) return;
   const apiKey = (document.getElementById('pexApiKey')?.value||'').trim();
   if (!apiKey) { toast('Enter your Keepa API key','error'); return; }
   // Update from paste textarea if in paste mode
   const pexPastePane = document.getElementById('pexPastePane');
   if (pexPastePane && pexPastePane.style.display !== 'none') pexCountASINs();
+  console.log('[PEX RUN] after count check, pexAsins.length:', pexAsins.length);
   if (!pexAsins.length) { toast('No ASINs loaded — upload a CSV or paste ASINs','error'); return; }
   const markets = ['DE','FR','IT','ES'].filter(m => document.getElementById('pex'+m)?.checked);
   if (!markets.length) { toast('Select at least one market','error'); return; }

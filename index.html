@@ -6074,24 +6074,28 @@ function scoutGetCurrentBB(product) {
 }
 
 function scoutGetPrimeExclusivePrice(product) {
-  // Keepa field 16 = New, Prime Exclusive price (current only — not historical csv)
-  // stats.current[16] is the live PEX price; csv[16] history rarely populated
   const stats = product.stats;
   const csv   = product.csv;
 
-  // stats.current[16] = "New, Prime Exclusive: Current" — primary source
+  // stats.current[16] = Prime Exclusive: Current
   const cur16 = stats?.current?.[16];
   if (cur16 && cur16 > 0) return { price: cur16 / 100, source: 'PEX' };
 
-  // csv[16] history as fallback — widen to 90 days, skip -1 (OOS) entries
+  // csv is a sparse array — use Object.keys to check if index 16 actually has data
+  // then access via the keyed lookup, not direct index
   try {
-    if (csv && csv[16] && csv[16].length >= 2) {
-      const cutoff = Date.now() - 90 * 86400000;
-      for (let i = csv[16].length - 1; i >= 1; i -= 2) {
-        const raw = csv[16][i];
-        const t = (csv[16][i-1] + 21564000) * 60000;
-        if (t < cutoff) break;
-        if (raw > 0) return { price: raw / 100, source: 'PEX' };
+    if (csv != null) {
+      const csv16 = Object.prototype.hasOwnProperty.call(csv, 16)
+        ? csv[16]
+        : (Object.prototype.hasOwnProperty.call(csv, '16') ? csv['16'] : undefined);
+      if (csv16 && csv16.length >= 2) {
+        const cutoff = Date.now() - 90 * 86400000;
+        for (let i = csv16.length - 1; i >= 1; i -= 2) {
+          const raw = csv16[i];
+          const t = (csv16[i-1] + 21564000) * 60000;
+          if (t < cutoff) break;
+          if (raw > 0) return { price: raw / 100, source: 'PEX' };
+        }
       }
     }
   } catch(_) {}
@@ -6230,6 +6234,9 @@ async function scoutRun() {
               if (!p.asin) return;
               if (!euData[p.asin]) euData[p.asin] = {};
               const result = primeExclusive ? scoutGetPrimeExclusivePrice(p) : { price: scoutGetCurrentBB(p), source: 'BB' };
+              if (primeExclusive && Object.keys(euData).length < 3) {
+                console.log(`[PEX] ${p.asin} cur[16]=${p.stats?.current?.[16]} csv16keys=${p.csv ? Object.keys(p.csv).includes('16') : false} result=`, result);
+              }
               const bb = result?.price ?? null;
               // Sanity checks:
               // 1. EU price must be between £0.50 and £3,000

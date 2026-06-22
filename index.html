@@ -4684,14 +4684,6 @@ function daAnalyseRow(row) {
   }
 
   // Gift card: 20% off buy price
-  const gc20BuyExVat = buyExVat ? buyExVat * 0.80 : null;
-  const gc20BuyIncVat = buyIncVat ? buyIncVat * 0.80 : null;
-  let gc20Profit = null, gc20Roi = null;
-  if (sp && gc20BuyExVat && refFee !== null && fbaExVat !== null) {
-    const gc20VatDue = (spIncVat * vat / (1 + vat)) - (gc20BuyIncVat ? gc20BuyIncVat * vat / (1 + vat) : 0);
-    gc20Profit = sp - gc20BuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - gc20VatDue;
-    gc20Roi = gc20Profit / gc20BuyExVat;
-  }
 
   // Subscribe & Save: 15% off buy price
   let ssProfit = null, ssRoi = null;
@@ -4703,15 +4695,6 @@ function daAnalyseRow(row) {
     ssRoi    = ssProfit / ssBuyExVat;
   }
 
-  // S&S + Gift Card combined: S&S 15% off, then 10% GC on top (~23.5% off total: 0.85 * 0.90 = 0.765)
-  let gcssRoi = null;
-  if (ss && sp && buyExVat && buyIncVat && refFee !== null && fbaExVat !== null) {
-    const gcssBuyIncVat = buyIncVat * 0.85 * 0.90;
-    const gcssBuyExVat  = gcssBuyIncVat / (1 + vat);
-    const gcssVatDue    = (spIncVat * vat / (1 + vat)) - (gcssBuyIncVat * vat / (1 + vat));
-    const gcssProfit    = sp - gcssBuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - gcssVatDue;
-    gcssRoi = gcssProfit / gcssBuyExVat;
-  }
 
   // Retailer 15% gift card (Currys / Argos / Shark / Vax): 15% off buy price, price-matched to Amazon
   // Only applies if product title matches the user-configured brand list
@@ -4758,7 +4741,7 @@ function daAnalyseRow(row) {
   if (fbaFeeEst && reason && colour !== 'grey') reason += ' · FBA est.';
   const sortOrder = colour === 'green' ? 0 : colour === 'amber' ? 1 : spikeFlag ? 4 : colour === 'red' ? 2 : 3;
 
-  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, gc20Profit, gc20Roi, ssProfit, ssRoi, gcssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, decision: null };
+  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, decision: null };
 }
 
 // ════════════════════════════════════════
@@ -4792,7 +4775,7 @@ setTimeout(() => {
           } catch {}
         });
         daDeals = parsed
-          .filter(d => !(d.ss && (d.ssRoi == null || d.ssRoi < 0.15) && (d.gcssRoi == null || d.gcssRoi < 0.15)))
+          .filter(d => !(d.ss && (d.ssRoi == null || d.ssRoi < 0.15)))
           .map(d => {
             const asinUp = (d.asin || '').toUpperCase();
             const pd = _purchMap.get(asinUp);
@@ -4812,7 +4795,7 @@ setTimeout(() => {
         const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
         document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
         const gcEl = document.getElementById('daCountGC'); if(gcEl) gcEl.textContent = daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
-        const ssEl2 = document.getElementById('daCountSS'); if(ssEl2) ssEl2.textContent = daDeals.filter(d => d.ss && ((d.ssRoi != null && d.ssRoi >= 0.15) || (d.gcssRoi != null && d.gcssRoi >= 0.15))).length;
+        const ssEl2 = document.getElementById('daCountSS'); if(ssEl2) ssEl2.textContent = daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15).length;
         const r15El2 = document.getElementById('daCountR15'); if(r15El2) r15El2.textContent = daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
         daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
       }
@@ -4938,7 +4921,7 @@ function daRunAnalysis() {
       // Filter out rows missing essential price data — no FBA fee = can't calculate P&L
       // These would all come back as NO DATA grey rows and are useless noise
       const priceable = preFiltered.filter(row => {
-        const buyRaw = daParseNum(row[cfg.buyCol]);
+        const buyRaw = daParseNum(row[cfg.buyCol]) ?? (cfg.buyCol === 'New, Prime Exclusive: Current' ? daParseNum(row['New, Prime exclusive: Current']) : null);
         const sellPrice = daParseNum(row['Buy Box: 180 days avg.']) || daParseNum(row[cfg.sellCol]);
         return buyRaw !== null && sellPrice !== null;
       });
@@ -4964,13 +4947,13 @@ function daRunAnalysis() {
           }
         }
         return deal;
-      }).filter(d => !(d.ss && (d.ssRoi == null || d.ssRoi < 0.15) && (d.gcssRoi == null || d.gcssRoi < 0.15)))
+      }).filter(d => !(d.ss && (d.ssRoi == null || d.ssRoi < 0.15)))
         .sort((a, b) => a.sortOrder - b.sortOrder);
       document.getElementById('daCountGreen').textContent = daDeals.filter(d => d.colour === 'green').length;
       const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
       document.getElementById('daCountRed').textContent = daDeals.filter(d => d.colour === 'red').length;
       const gcEl = document.getElementById('daCountGC'); if(gcEl) gcEl.textContent = daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
-      const ssElRun = document.getElementById('daCountSS'); if(ssElRun) ssElRun.textContent = daDeals.filter(d => d.ss && ((d.ssRoi != null && d.ssRoi >= 0.15) || (d.gcssRoi != null && d.gcssRoi >= 0.15))).length;
+      const ssElRun = document.getElementById('daCountSS'); if(ssElRun) ssElRun.textContent = daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15).length;
       const r15ElRun = document.getElementById('daCountR15'); if(r15ElRun) r15ElRun.textContent = daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15)).length;
 
       const softSpiked = daDeals.filter(d => d.spikeFlag).length;
@@ -5015,8 +4998,7 @@ function daRenderHeaders() {
   const buyLabel = cfg.condition === 'used' ? 'Buy LN' : 'Buy';
   const spLabel  = cfg.condition === 'used' ? 'SP Used' : 'SP 180d';
   const ssCols = daFilter === 'subsave'
-    ? `<th data-col="ssRoi" data-type="num" style="color:var(--purple);" title="ROI at Subscribe & Save price">♻ S&S</th>
-       <th data-col="gcssRoi" data-type="num" style="color:var(--amber);" title="ROI at S&S + 10% gift card">♻🎁 S&S+GC</th>` : '';
+    ? `<th data-col="ssRoi" data-type="num" style="color:var(--purple);" title="ROI on Subscribe & Save">♻ S&S</th>` : '';
   document.getElementById('daTableHead').innerHTML = `<tr>
     <th class="no-sort th-left" style="min-width:220px;max-width:300px;">Product</th>
     <th data-col="buyIncVat" data-type="num">${buyLabel}</th>
@@ -5024,7 +5006,6 @@ function daRenderHeaders() {
     <th data-col="profit" data-type="num">Profit</th>
     <th data-col="roi" data-type="num">ROI</th>
     <th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI with 10% gift card">🎁 GC 10%</th>
-    <th data-col="gc20Roi" data-type="num" style="color:var(--amber);" title="ROI with 20% gift card">🎁 GC 20%</th>
     <th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys/Argos with 15% gift card">🏪 15%</th>
     ${ssCols}
     <th data-col="boughtPerMonth" data-type="num">Sold/mo</th>
@@ -5041,7 +5022,7 @@ function daRenderTable() {
   let filtered = daFilter === 'giftcard'
     ? daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15))
     : daFilter === 'subsave'
-    ? daDeals.filter(d => d.ss && ((d.ssRoi != null && d.ssRoi >= 0.15) || (d.gcssRoi != null && d.gcssRoi >= 0.15)))
+    ? daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15)
     : daFilter === 'retailer'
     ? daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15))
     : daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter && !d.ss);
@@ -5073,7 +5054,7 @@ function daRenderTable() {
     const r15Colour = r => r == null ? 'var(--text-4)' : r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--blue)' : r > 0 ? 'var(--text-3)' : 'var(--red)';
     const ssColour  = r => r == null ? 'var(--text-4)' : r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--purple)' : 'var(--red)';
     const ssCells = daFilter === 'subsave'
-      ? `<td class="td-num" style="color:${ssColour(deal.ssRoi)}">${fmtP(deal.ssRoi)}</td><td class="td-num" style="color:${gcColour(deal.gcssRoi)}">${fmtP(deal.gcssRoi)}</td>` : '';
+      ? `<td class="td-num" style="color:${ssColour(deal.ssRoi)}">${fmtP(deal.ssRoi)}</td>` : '';
     const idx = daDeals.indexOf(deal);
     tr.dataset.asin = deal.asin;
     tr.innerHTML = `
@@ -5090,7 +5071,6 @@ function daRenderTable() {
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
       <td class="td-num" style="color:${gcColour(deal.gcRoi)}">${fmtP(deal.gcRoi)}</td>
-      <td class="td-num" style="color:${gcColour(deal.gc20Roi)}">${fmtP(deal.gc20Roi)}</td>
       <td class="td-num" style="color:${r15Colour(deal.r15Roi)}">${fmtP(deal.r15Roi)}</td>
       ${ssCells}
       <td class="td-num td-center">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
@@ -5118,7 +5098,7 @@ function daUpdatePillCounts() {
     amber:    daDeals.filter(d => d.colour === 'amber').length,
     red:      daDeals.filter(d => d.colour === 'red').length,
     giftcard: daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length,
-    subsave:  daDeals.filter(d => d.ss && ((d.ssRoi != null && d.ssRoi >= 0.15) || (d.gcssRoi != null && d.gcssRoi >= 0.15))).length,
+    subsave:  daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15).length,
     retailer: daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15)).length,
   };
   const ssEl = document.getElementById('daCountSS'); if (ssEl) ssEl.textContent = counts.subsave;

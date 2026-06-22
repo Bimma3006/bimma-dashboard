@@ -3065,7 +3065,7 @@ input::placeholder { color: var(--text-4); }
               <th style="text-align:left;">ASIN</th>
               <th style="text-align:left;">Title</th>
               <th style="text-align:center;">Src</th>
-              <th class="sortable" onclick="scoutSetSort('euPrice')" id="scoutEuPriceHeader">EU Price <span id="scoutSortEuPrice" style="color:var(--green);font-size:9px;"></span></th>
+              <th class="sortable" onclick="scoutSetSort('euPrice')" id="scoutEuPriceHeader"><span class="sc-eu-col-label">EU Price</span> <span id="scoutSortEuPrice" style="color:var(--green);font-size:9px;"></span></th>
               <th class="sortable" onclick="scoutSetSort('landed')">Landed £ <span id="scoutSortLanded" style="color:var(--green);font-size:9px;"></span></th>
               <th class="sortable" onclick="scoutSetSort('ukBB')">UK BB 180d <span id="scoutSortUkBB" style="color:var(--green);font-size:9px;"></span></th>
               <th class="sortable" onclick="scoutSetSort('fees')">Fees <span id="scoutSortFees" style="color:var(--green);font-size:9px;"></span></th>
@@ -5583,8 +5583,9 @@ document.addEventListener('DOMContentLoaded', () => {
     pexEl.checked = localStorage.getItem('bimma_scout_pex') === '1';
     const updatePexHeader = () => {
       const h = document.getElementById('scoutEuPriceHeader');
-      const sort = document.getElementById('scoutSortEuPrice');
-      if (h) h.innerHTML = (pexEl.checked ? '⭐ PEX Price' : 'EU Price') + ' <span id="scoutSortEuPrice" style="color:var(--green);font-size:9px;">' + (sort?.textContent || '') + '</span>';
+      if (!h) return;
+      const lbl = h.querySelector('.sc-eu-col-label');
+      if (lbl) lbl.textContent = pexEl.checked ? '⭐ PEX Price' : 'EU Price';
     };
     pexEl.addEventListener('change', () => {
       localStorage.setItem('bimma_scout_pex', pexEl.checked ? '1' : '0');

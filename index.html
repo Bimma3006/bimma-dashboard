@@ -6105,14 +6105,15 @@ async function scoutRun() {
       ukProducts.forEach(p => { if (p.asin) ukMap[p.asin] = p; });
     }
 
-    // Qualify ASINs — must have a UK 180d BB
+    // Qualify ASINs — when using CSV BB, only keep ASINs that have a value.
+    // When fetching UK from Keepa (or paste-only), keep ALL ASINs — EU price
+    // will still be shown even if UK BB is missing (profit/ROI will be blank).
     const qualifiedAsins = asins.filter(asin => {
       if (csvHasBB) return scoutCsvBBMap[asin] > 0;
-      const p = ukMap[asin];
-      return p && scoutGetBB180(p) != null;
+      return true; // always proceed when no CSV BB — Keepa may or may not have UK data
     });
     const skipped = asins.length - qualifiedAsins.length;
-    if (skipped > 0) scoutSetStatus(`${qualifiedAsins.length} ASINs have UK BB — skipping ${skipped} with no data…`, 18);
+    if (skipped > 0) scoutSetStatus(`${qualifiedAsins.length} ASINs ready — skipping ${skipped} with no CSV BB…`, 18);
 
     const euData = {};
     const euSourceData = {};

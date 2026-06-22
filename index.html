@@ -4582,6 +4582,7 @@ function daAnalyseRow(row) {
   // fbaFee assigned below after spIncVat is calculated
   const rankDrops = daParseNum(row['Sales Rank: Drops last 30 days']);
   const boughtPerMonth = daParseNum(row['Bought in past month'])
+    ?? daParseNum(row['Monthly Sales Trends: Bought in past month'])
     ?? daParseNum(row['Bought in past 30 days'])
     ?? daParseNum(row['Bought in past 60 days'])
     ?? daParseNum(row['Bought in past 90 days'])
@@ -4594,7 +4595,6 @@ function daAnalyseRow(row) {
     ?? daParseNum(row['Sales per month'])
     ?? daParseNum(row['Units sold per month'])
     ?? (() => {
-        // Last resort: scan all keys for anything that looks like a "bought/sold/month" column
         for (const k of Object.keys(row)) {
           const kl = k.toLowerCase();
           if ((kl.includes('bought') || kl.includes('sold') || kl.includes('sales')) && (kl.includes('month') || kl.includes('30'))) {

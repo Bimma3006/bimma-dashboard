@@ -6396,7 +6396,7 @@ async function scoutRun() {
           }
           try {
             const primeExclusive = document.getElementById('scoutPrimeExclusive')?.checked;
-            const euCsvFields = primeExclusive ? '&csv=16' : '';
+            const euCsvFields = primeExclusive ? '&csv=65536' : '';
             const url = `https://api.keepa.com/product?key=${apiKey}&domain=${SCOUT_DOMAINS[market].id}&asin=${batch.join(',')}&stats=180&buybox=1${euCsvFields}`;
             console.log('[SCOUT] Fetching URL:', url);
             const r = await fetch(url);
@@ -9042,7 +9042,8 @@ async function pexRun() {
         try {
           // Request csv=16 explicitly — Prime Exclusive price history
           // stats=180 — gives stats.current[16] as well
-          const url = `https://api.keepa.com/product?key=${apiKey}&domain=${PEX_DOMAINS[market].id}&asin=${batch.join(',')}&stats=180&csv=16`;
+          // csv bitmask: 2^16=65536 (Prime Exclusive) + 2^0=1 (Amazon) + 2^18=262144 (Buy Box)
+          const url = `https://api.keepa.com/product?key=${apiKey}&domain=${PEX_DOMAINS[market].id}&asin=${batch.join(',')}&stats=180&csv=327681`;
           const res = await fetch(url);
           console.log('[PEX FETCH] status:', res.status, 'ok:', res.ok);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);

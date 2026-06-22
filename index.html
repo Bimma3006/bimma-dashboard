@@ -3130,6 +3130,7 @@ input::placeholder { color: var(--text-4); }
             <div class="sc-drop-label" id="pexDropLabel">Upload Keepa CSV</div>
             <div class="sc-drop-sub" id="pexDropSub">Must include ASIN + "Buy Box: 180 days avg."</div>
             <div class="sc-drop-file" id="pexDropFilename"></div>
+            <button class="sc-drop-clear" id="pexClearFileBtn" onclick="event.stopPropagation();pexClearFile()" style="display:none;">✕</button>
           </div>
         </div>
         <div id="pexPastePane" style="display:none;">
@@ -8757,6 +8758,19 @@ function gcImport(input) {
 
 document.addEventListener('bimma:pagechange', e => { if (e.detail === 'giftcards') gcRender(); });
 
+// ── Global CSV line parser (shared by Scout + PEX Scout) ──
+function parseCSVLineGlobal(line) {
+  const result = []; let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur.trim());
+  return result;
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // PEX SCOUT
 // ═══════════════════════════════════════════════════════════════════
@@ -8860,9 +8874,10 @@ function pexFileChosen(file) {
   const reader = new FileReader();
   reader.onload = e => {
     pexBBMap = {}; pexBBSrcMap = {}; pexTitleMap = {}; pexAsins = [];
-    const lines = e.target.result.split(/\r?\n/).filter(l => l.trim());
-    if (lines.length < 2) return;
-    const headers = parseCSVLine(lines[0]);
+    const raw = e.target.result.replace(/^\uFEFF/, ''); // strip BOM
+    const lines = raw.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) { toast('CSV appears empty','error'); return; }
+    const headers = parseCSVLineGlobal(lines[0]);
     const asinIdx  = headers.findIndex(h => h === 'ASIN');
     const bb180Idx = headers.findIndex(h => h === 'Buy Box: 180 days avg.');
     const bb365Idx = headers.findIndex(h => h === 'Buy Box: 365 days avg.');
@@ -8873,7 +8888,7 @@ function pexFileChosen(file) {
     if (asinIdx < 0) { toast('No ASIN column found in CSV','error'); return; }
     const maxAsins = parseInt(document.getElementById('pexMaxAsins')?.value) || 10000;
     for (let i = 1; i < lines.length; i++) {
-      const cols = parseCSVLine(lines[i]);
+      const cols = parseCSVLineGlobal(lines[i]);
       const asin = (cols[asinIdx]||'').replace(/"/g,'').trim();
       if (!asin || !asin.match(/^B[A-Z0-9]{9}$/i)) continue;
       const getNum = idx => idx >= 0 ? parseFloat((cols[idx]||'').replace(/"/g,'').replace(/,/g,'').trim()) : NaN;
@@ -8895,9 +8910,21 @@ function pexFileChosen(file) {
       if (pexAsins.length >= maxAsins) break;
     }
     pexCountASINs();
+    document.getElementById('pexClearFileBtn').style.display = '';
     toast(`Loaded ${pexAsins.length} ASINs from ${file.name}`, 'success');
   };
   reader.readAsText(file);
+}
+
+function pexClearFile() {
+  pexAsins = []; pexBBMap = {}; pexBBSrcMap = {}; pexTitleMap = {};
+  document.getElementById('pexDropIcon').textContent = '↑';
+  document.getElementById('pexDropLabel').textContent = 'Upload Keepa CSV';
+  document.getElementById('pexDropFilename').textContent = '';
+  document.getElementById('pexDropzone').classList.remove('loaded');
+  document.getElementById('pexClearFileBtn').style.display = 'none';
+  document.getElementById('pexCsvInput').value = '';
+  pexCountASINs();
 }
 
 function pexCountASINs() {

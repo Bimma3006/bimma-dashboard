@@ -8915,6 +8915,11 @@ function pexFileChosen(file) {
     }
     pexCountASINs();
     document.getElementById('pexClearFileBtn').style.display = '';
+    // Persist to localStorage so pexRun can always access even after navigation
+    try { localStorage.setItem('bimma_pex_asins', JSON.stringify(pexAsins));
+          localStorage.setItem('bimma_pex_bbmap', JSON.stringify(pexBBMap));
+          localStorage.setItem('bimma_pex_bbsrc', JSON.stringify(pexBBSrcMap));
+          localStorage.setItem('bimma_pex_titles', JSON.stringify(pexTitleMap)); } catch(_) {}
     toast(`Loaded ${pexAsins.length} ASINs from ${file.name}`, 'success');
   };
   reader.readAsText(file);
@@ -8972,6 +8977,7 @@ function pexStop() {
 }
 function pexClear() {
   pexResults = []; pexAsins = []; pexBBMap = {}; pexBBSrcMap = {}; pexTitleMap = {};
+  try { ['bimma_pex_asins','bimma_pex_bbmap','bimma_pex_bbsrc','bimma_pex_titles'].forEach(k => localStorage.removeItem(k)); } catch(_) {}
   document.getElementById('pexTableBody').innerHTML = '<tr><td colspan="9" class="empty">Upload an ASIN list and click Run PEX Scout to begin</td></tr>';
   document.getElementById('pexResultCount').textContent = '';
   document.getElementById('pexExportBtn').disabled = true;
@@ -8980,14 +8986,19 @@ function pexClear() {
 
 // ── Main run ──
 async function pexRun() {
-  console.log('[PEX RUN] pexAsins.length:', pexAsins.length, 'isRunning:', pexIsRunning);
   if (pexIsRunning) return;
   const apiKey = (document.getElementById('pexApiKey')?.value||'').trim();
   if (!apiKey) { toast('Enter your Keepa API key','error'); return; }
+  // Restore from localStorage if in-memory state was lost
+  if (!pexAsins.length) {
+    try {
+      const saved = localStorage.getItem('bimma_pex_asins');
+      if (saved) { pexAsins = JSON.parse(saved); pexBBMap = JSON.parse(localStorage.getItem('bimma_pex_bbmap')||'{}'); pexBBSrcMap = JSON.parse(localStorage.getItem('bimma_pex_bbsrc')||'{}'); pexTitleMap = JSON.parse(localStorage.getItem('bimma_pex_titles')||'{}'); }
+    } catch(_) {}
+  }
   // Update from paste textarea if in paste mode
   const pexPastePane = document.getElementById('pexPastePane');
   if (pexPastePane && pexPastePane.style.display !== 'none') pexCountASINs();
-  console.log('[PEX RUN] after count check, pexAsins.length:', pexAsins.length);
   if (!pexAsins.length) { toast('No ASINs loaded — upload a CSV or paste ASINs','error'); return; }
   const markets = ['DE','FR','IT','ES'].filter(m => document.getElementById('pex'+m)?.checked);
   if (!markets.length) { toast('Select at least one market','error'); return; }
@@ -9245,10 +9256,20 @@ function pexExport() {
 
 // ── Init PEX Scout on page load ──
 document.addEventListener('DOMContentLoaded', () => {
-  // Sync API key from scout
   const stored = localStorage.getItem('bimma_keepa_key') || '';
   const pexKeyEl = document.getElementById('pexApiKey');
   if (pexKeyEl && stored) pexKeyEl.value = stored;
+  // Restore previously loaded ASINs
+  try {
+    const saved = localStorage.getItem('bimma_pex_asins');
+    if (saved) {
+      pexAsins    = JSON.parse(saved);
+      pexBBMap    = JSON.parse(localStorage.getItem('bimma_pex_bbmap')||'{}');
+      pexBBSrcMap = JSON.parse(localStorage.getItem('bimma_pex_bbsrc')||'{}');
+      pexTitleMap = JSON.parse(localStorage.getItem('bimma_pex_titles')||'{}');
+      pexCountASINs();
+    }
+  } catch(_) {}
 });
 </script>
 </body>

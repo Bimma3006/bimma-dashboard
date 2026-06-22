@@ -8875,7 +8875,7 @@ function pexFileChosen(file) {
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCSVLine(lines[i]);
       const asin = (cols[asinIdx]||'').replace(/"/g,'').trim();
-      if (!asin || !asin.match(/^B0[A-Z0-9]{8}$/)) continue;
+      if (!asin || !asin.match(/^B[A-Z0-9]{9}$/i)) continue;
       const getNum = idx => idx >= 0 ? parseFloat((cols[idx]||'').replace(/"/g,'').replace(/,/g,'').trim()) : NaN;
       const bb180 = getNum(bb180Idx), bb365 = getNum(bb365Idx), bb90 = getNum(bb90Idx);
       const bbSt  = getNum(bbStIdx),  bbCur = getNum(bbCurIdx);
@@ -8901,16 +8901,17 @@ function pexFileChosen(file) {
 }
 
 function pexCountASINs() {
-  // If paste mode, parse from textarea
-  const pasteEl = document.getElementById('pexAsinInput');
-  if (pasteEl && pasteEl.style.display !== 'none') {
+  // Paste mode — parse from textarea and update pexAsins
+  const pastePane = document.getElementById('pexPastePane');
+  const pasteEl   = document.getElementById('pexAsinInput');
+  if (pastePane && pastePane.style.display !== 'none' && pasteEl) {
     const raw = pasteEl.value;
-    const found = [...new Set((raw.match(/B0[A-Z0-9]{8}/gi)||[]).map(a=>a.toUpperCase()))];
+    const found = [...new Set((raw.match(/B[A-Z0-9]{9}/gi)||[]).map(a=>a.toUpperCase()))];
     const max = parseInt(document.getElementById('pexMaxAsins')?.value)||10000;
     pexAsins = found.slice(0, max);
   }
   const el = document.getElementById('pexAsinCount');
-  if (el) el.textContent = pexAsins.length + ' ASINs';
+  if (el) el.textContent = pexAsins.length + ' ASINs' + (Object.keys(pexBBMap).length > 0 ? ` · ${Object.keys(pexBBMap).length} with UK BB` : '');
 }
 
 // ── Token wait ──
@@ -8951,8 +8952,10 @@ async function pexRun() {
   if (pexIsRunning) return;
   const apiKey = (document.getElementById('pexApiKey')?.value||'').trim();
   if (!apiKey) { toast('Enter your Keepa API key','error'); return; }
-  pexCountASINs();
-  if (!pexAsins.length) { toast('No ASINs loaded','error'); return; }
+  // Update from paste textarea if in paste mode
+  const pexPastePane = document.getElementById('pexPastePane');
+  if (pexPastePane && pexPastePane.style.display !== 'none') pexCountASINs();
+  if (!pexAsins.length) { toast('No ASINs loaded — upload a CSV or paste ASINs','error'); return; }
   const markets = ['DE','FR','IT','ES'].filter(m => document.getElementById('pex'+m)?.checked);
   if (!markets.length) { toast('Select at least one market','error'); return; }
 

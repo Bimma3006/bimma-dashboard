@@ -2719,232 +2719,355 @@ input::placeholder { color: var(--text-4); }
 <!-- ══════════════════════════════════════════════════════════ -->
 <div class="page" id="page-scout">
 
-  <!-- HEADER BAR -->
-  <div class="rp-header-bar">
-    <div>
-      <div class="page-header-label">Sourcing</div>
-      <div class="page-header-title">Deal Scout</div>
-      <div class="page-header-sub">Live Keepa fetch — drop an ASIN list to score EU buy box vs UK 180-day average · <span id="scoutTokenDisplay" style="font-family:var(--mono);color:var(--green);font-size:13px;"></span></div>
+  <style>
+    /* ── Scout page ─────────────────────────── */
+    .sc-wrap          { max-width:1200px; padding:28px 32px 48px; }
+    .sc-header        { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:28px; gap:16px; flex-wrap:wrap; }
+    .sc-header-left   { flex:1; }
+    .sc-label         { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--green); margin-bottom:6px; }
+    .sc-title         { font-size:26px; font-weight:700; color:var(--text); line-height:1.1; margin-bottom:6px; }
+    .sc-sub           { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+    .sc-actions       { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .sc-btn           { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.05em; padding:8px 16px; border-radius:var(--r-sm); border:1px solid var(--border2); background:var(--surface2); color:var(--text-2); cursor:pointer; transition:all .15s; white-space:nowrap; }
+    .sc-btn:hover     { border-color:var(--border3); color:var(--text); }
+    .sc-btn:disabled  { opacity:.35; cursor:not-allowed; }
+    .sc-btn-primary   { background:var(--green); border-color:var(--green); color:#000; }
+    .sc-btn-primary:hover { background:#00ff98; border-color:#00ff98; }
+    .sc-btn-danger    { background:rgba(240,59,80,.1); border-color:var(--red); color:var(--red); }
+    .sc-btn-danger:hover { background:rgba(240,59,80,.18); }
+    .sc-token         { font-family:var(--mono); font-size:11px; color:var(--green); }
+
+    /* Config grid */
+    .sc-config        { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px; }
+    .sc-config-wide   { grid-column:span 2; }
+    .sc-panel         { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); padding:18px 20px; }
+    .sc-panel-title   { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); margin-bottom:14px; display:flex; align-items:center; gap:6px; }
+    .sc-panel-title span { font-size:13px; }
+
+    /* Tabs */
+    .sc-tabs          { display:flex; gap:6px; margin-bottom:12px; }
+    .sc-tab           { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:6px 14px; border-radius:var(--r-xs); border:1px solid var(--border2); background:transparent; color:var(--text-3); cursor:pointer; transition:all .15s; }
+    .sc-tab.active    { background:rgba(0,229,132,.1); border-color:var(--green); color:var(--green); }
+    .sc-tab:hover:not(.active) { border-color:var(--border3); color:var(--text-2); }
+
+    /* Drop zones */
+    .sc-dropgrid      { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .sc-drop          { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:24px 16px; background:var(--surface3); border:1.5px dashed var(--border2); border-radius:var(--r-sm); cursor:pointer; transition:all .15s; min-height:90px; }
+    .sc-drop:hover    { border-color:var(--green); background:rgba(0,229,132,.04); }
+    .sc-drop.drag-over{ border-color:var(--green); background:rgba(0,229,132,.08); }
+    .sc-drop.loaded   { border-style:solid; border-color:var(--green); background:rgba(0,229,132,.06); }
+    .sc-drop-icon     { font-size:18px; color:var(--text-3); line-height:1; }
+    .sc-drop-label    { font-family:var(--mono); font-size:11px; font-weight:600; color:var(--text-2); }
+    .sc-drop-sub      { font-family:var(--mono); font-size:10px; color:var(--text-3); }
+    .sc-drop-file     { font-family:var(--mono); font-size:10px; color:var(--green); font-weight:600; text-align:center; word-break:break-all; }
+    .sc-drop-clear    { position:absolute; top:6px; right:8px; background:none; border:none; color:var(--text-3); cursor:pointer; font-size:13px; padding:2px 4px; line-height:1; }
+    .sc-drop-clear:hover { color:var(--red); }
+    .sc-asin-meta     { margin-top:10px; display:flex; align-items:center; gap:12px; }
+    .sc-paste         { width:100%; height:100px; resize:vertical; background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm); color:var(--text); font-family:var(--mono); font-size:11px; padding:10px 12px; outline:none; transition:border-color .15s; }
+    .sc-paste:focus   { border-color:var(--green); }
+
+    /* Market buttons */
+    .sc-markets       { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .sc-market        { display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--surface3); border:1.5px solid var(--border2); border-radius:var(--r-sm); cursor:pointer; transition:all .15s; user-select:none; }
+    .sc-market input  { display:none; }
+    .sc-market:hover  { border-color:var(--border3); }
+    .sc-market.on     { border-color:var(--green); background:rgba(0,229,132,.07); }
+    .sc-market-flag   { font-size:18px; line-height:1; }
+    .sc-market-name   { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--text-2); letter-spacing:.04em; }
+    .sc-market.on .sc-market-name { color:var(--green); }
+
+    /* Settings */
+    .sc-fields        { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; }
+    .sc-field         { display:flex; flex-direction:column; gap:5px; }
+    .sc-field-label   { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); }
+    .sc-input         { background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm); color:var(--text); font-family:var(--mono); font-size:12px; padding:7px 10px; outline:none; width:100%; transition:border-color .15s; -moz-appearance:textfield; }
+    .sc-input:focus   { border-color:var(--green); }
+    .sc-input::-webkit-outer-spin-button,.sc-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+    .sc-input-pw      { -webkit-text-security:disc; }
+    .sc-divider       { border:none; border-top:1px solid var(--border); margin:14px 0; }
+    .sc-fx-btn        { font-family:var(--mono); font-size:10px; font-weight:700; padding:7px 12px; background:rgba(77,142,245,.1); border:1px solid var(--blue); color:var(--blue); border-radius:var(--r-sm); cursor:pointer; white-space:nowrap; transition:all .15s; }
+    .sc-fx-btn:hover  { background:rgba(77,142,245,.2); }
+    .sc-fx-row        { display:flex; align-items:center; gap:8px; }
+    .sc-fx-out        { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--green); min-width:70px; }
+    .sc-pex-row       { display:flex; align-items:flex-start; gap:10px; padding:12px 0 0; }
+    .sc-pex-check     { accent-color:var(--green); width:14px; height:14px; margin-top:1px; flex-shrink:0; cursor:pointer; }
+    .sc-pex-label     { font-family:var(--mono); font-size:10px; font-weight:700; color:var(--text-2); letter-spacing:.05em; cursor:pointer; }
+    .sc-pex-sub       { font-family:var(--mono); font-size:9px; color:var(--text-3); margin-top:3px; line-height:1.5; }
+    .sc-note          { font-family:var(--mono); font-size:9px; color:var(--text-3); margin-top:8px; line-height:1.5; }
+
+    /* Progress */
+    .sc-progress-wrap { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-sm); padding:14px 16px; margin-bottom:16px; }
+    .sc-progress-top  { display:flex; justify-content:space-between; margin-bottom:8px; }
+    .sc-progress-text { font-family:var(--mono); font-size:11px; color:var(--text-2); }
+    .sc-progress-pct  { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+    .sc-progress-bar  { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; }
+    .sc-progress-fill { height:100%; width:0%; background:var(--green); transition:width .3s; border-radius:2px; }
+
+    /* Cache banner */
+    .sc-cache-banner  { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-sm); padding:10px 16px; margin-bottom:16px; font-family:var(--mono); font-size:11px; color:var(--text-3); }
+
+    /* Results */
+    .sc-results-wrap  { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); overflow:hidden; }
+    .sc-results-header{ display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border2); flex-wrap:wrap; gap:10px; }
+    .sc-results-title { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-2); }
+    .sc-results-badge { font-family:var(--mono); font-size:10px; background:var(--surface3); border:1px solid var(--border2); border-radius:10px; padding:2px 10px; color:var(--text-3); }
+    .sc-legend        { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:10px; color:var(--text-3); }
+    .sc-filter-row    { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .sc-filter-btn    { font-family:var(--mono); font-size:10px; font-weight:600; padding:4px 10px; border-radius:10px; border:1px solid var(--border2); background:transparent; color:var(--text-3); cursor:pointer; transition:all .15s; white-space:nowrap; }
+    .sc-filter-btn.active,.sc-filter-btn:hover { border-color:var(--green); color:var(--green); background:rgba(0,229,132,.08); }
+    .sc-filter-btn.danger { border-color:rgba(240,59,80,.35); color:var(--red); }
+    .sc-filter-btn.danger:hover { background:rgba(240,59,80,.08); }
+    .sc-table-scroll  { overflow-x:auto; }
+    .sc-table         { width:100%; border-collapse:collapse; font-size:12px; }
+    .sc-table th      { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-3); padding:10px 14px; text-align:right; border-bottom:1px solid var(--border2); white-space:nowrap; background:var(--surface3); }
+    .sc-table th:first-child,.sc-table th:nth-child(2) { text-align:left; }
+    .sc-table th.sortable { cursor:pointer; user-select:none; }
+    .sc-table th.sortable:hover { color:var(--text-2); }
+    .sc-table td      { padding:10px 14px; text-align:right; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:11px; color:var(--text-2); vertical-align:middle; }
+    .sc-table td:first-child,.sc-table td:nth-child(2) { text-align:left; }
+    .sc-table tr:last-child td { border-bottom:none; }
+    .sc-table tr:hover td { background:var(--surface3); }
+    .sc-table .empty  { text-align:center; padding:40px; color:var(--text-3); font-family:var(--mono); font-size:11px; }
+    .sc-asin-link     { color:var(--blue); text-decoration:none; font-family:var(--mono); font-size:10px; }
+    .sc-asin-link:hover { text-decoration:underline; }
+    .sc-title-cell    { max-width:280px; }
+    .sc-title-text    { color:var(--text); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px; display:block; }
+    .sc-asin-row      { display:flex; align-items:center; gap:8px; margin-top:3px; }
+    .sc-src-badge     { font-family:var(--mono); font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; background:var(--surface4); color:var(--text-3); }
+    .sc-pex-badge     { font-family:var(--mono); font-size:9px; color:var(--purple); margin-top:2px; }
+    .sc-row-green td  { background:rgba(0,217,126,.04); }
+    .sc-row-amber td  { background:rgba(240,165,0,.035); }
+    .sc-row-red td    { background:rgba(240,59,80,.035); }
+  </style>
+
+  <div class="sc-wrap">
+
+    <!-- HEADER -->
+    <div class="sc-header">
+      <div class="sc-header-left">
+        <div class="sc-label">Sourcing</div>
+        <div class="sc-title">Deal Scout</div>
+        <div class="sc-sub">Live Keepa fetch — EU buy box vs UK 180-day average &nbsp;·&nbsp; <span class="sc-token" id="scoutTokenDisplay"></span></div>
+      </div>
+      <div class="sc-actions">
+        <button class="sc-btn" id="scoutExportBtn" onclick="scoutExport()" disabled>↓ Export TSV</button>
+        <button class="sc-btn" onclick="scoutClear()">✕ Clear</button>
+        <button class="sc-btn sc-btn-danger" onclick="scoutStop()" id="scoutStopBtn" style="display:none;">⏹ Stop</button>
+        <button class="sc-btn sc-btn-primary" onclick="scoutRun()" id="scoutRunBtn">🔍 Run Scout</button>
+      </div>
     </div>
-    <div class="rp-header-actions">
-      <button class="rp-dl-btn" id="scoutExportBtn" onclick="scoutExport()" disabled>↓ Export TSV</button>
-      <button class="scout-clear-btn" onclick="scoutClear()">✕ Clear</button>
-      <button class="rp-run-btn" onclick="scoutRun()" id="scoutRunBtn"><span class="rp-run-icon">🔍</span> Run Scout</button>
-      <button class="scout-clear-btn" onclick="scoutStop()" id="scoutStopBtn" style="display:none;background:rgba(240,59,80,0.15);border-color:var(--red);color:var(--red);">⏹ Stop</button>
-    </div>
-  </div>
 
-  <!-- CONFIG PANELS -->
-  <div class="scout-config-grid">
+    <!-- CONFIG -->
+    <div class="sc-config">
 
-    <!-- CSV UPLOAD -->
-    <div class="rp-panel" style="grid-column:span 2;">
-      <div class="rp-panel-label"><span class="rp-panel-icon">📁</span> ASIN Source</div>
-      <div class="scout-source-tabs">
-        <button class="scout-tab active" id="scoutTabCsv" onclick="scoutSetTab('csv')">Upload CSV</button>
-        <button class="scout-tab" id="scoutTabPaste" onclick="scoutSetTab('paste')">Paste ASINs</button>
-      </div>
-
-      <!-- CSV slots -->
-      <div id="scoutCsvPane" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <!-- Slot 1 -->
-        <div class="scout-dropzone" id="scoutDropzone1"
-          ondragover="scoutDragOver(event,1)" ondragleave="scoutDragLeave(event,1)" ondrop="scoutDrop(event,1)"
-          onclick="document.getElementById('scoutCsvInput1').click()">
-          <input type="file" id="scoutCsvInput1" accept=".csv,.txt" style="display:none;" onchange="scoutFileChosen(this.files[0],1)">
-          <div class="scout-drop-icon" id="scoutDropIcon1">↑</div>
-          <div class="scout-drop-label" id="scoutDropLabel1">CSV 1 — up to 5,000 ASINs</div>
-          <div class="scout-drop-sub" id="scoutDropSub1">Drop Keepa export here</div>
-          <div class="scout-drop-filename" id="scoutDropFilename1"></div>
-          <button class="a2a-slot-clear" id="scoutClearFile1" onclick="scoutClearFile1(event)" style="display:none;">✕</button>
+      <!-- ASIN SOURCE -->
+      <div class="sc-panel sc-config-wide">
+        <div class="sc-panel-title"><span>📁</span> ASIN Source</div>
+        <div class="sc-tabs">
+          <button class="sc-tab active" id="scoutTabCsv" onclick="scoutSetTab('csv')">Upload CSV</button>
+          <button class="sc-tab" id="scoutTabPaste" onclick="scoutSetTab('paste')">Paste ASINs</button>
         </div>
-        <!-- Slot 2 -->
-        <div class="scout-dropzone" id="scoutDropzone2"
-          ondragover="scoutDragOver(event,2)" ondragleave="scoutDragLeave(event,2)" ondrop="scoutDrop(event,2)"
-          onclick="document.getElementById('scoutCsvInput2').click()">
-          <input type="file" id="scoutCsvInput2" accept=".csv,.txt" style="display:none;" onchange="scoutFileChosen(this.files[0],2)">
-          <div class="scout-drop-icon" id="scoutDropIcon2">↑</div>
-          <div class="scout-drop-label" id="scoutDropLabel2">CSV 2 — up to 5,000 ASINs</div>
-          <div class="scout-drop-sub" id="scoutDropSub2">Drop Keepa export here</div>
-          <div class="scout-drop-filename" id="scoutDropFilename2"></div>
-          <button class="a2a-slot-clear" id="scoutClearFile2" onclick="scoutClearFile2(event)" style="display:none;">✕</button>
+        <div id="scoutCsvPane">
+          <div class="sc-dropgrid">
+            <div class="sc-drop" id="scoutDropzone1"
+              ondragover="scoutDragOver(event,1)" ondragleave="scoutDragLeave(event,1)" ondrop="scoutDrop(event,1)"
+              onclick="document.getElementById('scoutCsvInput1').click()">
+              <input type="file" id="scoutCsvInput1" accept=".csv,.txt" style="display:none;" onchange="scoutFileChosen(this.files[0],1)">
+              <div class="sc-drop-icon" id="scoutDropIcon1">↑</div>
+              <div class="sc-drop-label" id="scoutDropLabel1">CSV 1 — up to 5,000 ASINs</div>
+              <div class="sc-drop-sub" id="scoutDropSub1">Drop Keepa export here</div>
+              <div class="sc-drop-file" id="scoutDropFilename1"></div>
+              <button class="sc-drop-clear" id="scoutClearFile1" onclick="scoutClearFile1(event)" style="display:none;">✕</button>
+            </div>
+            <div class="sc-drop" id="scoutDropzone2"
+              ondragover="scoutDragOver(event,2)" ondragleave="scoutDragLeave(event,2)" ondrop="scoutDrop(event,2)"
+              onclick="document.getElementById('scoutCsvInput2').click()">
+              <input type="file" id="scoutCsvInput2" accept=".csv,.txt" style="display:none;" onchange="scoutFileChosen(this.files[0],2)">
+              <div class="sc-drop-icon" id="scoutDropIcon2">↑</div>
+              <div class="sc-drop-label" id="scoutDropLabel2">CSV 2 — up to 5,000 ASINs</div>
+              <div class="sc-drop-sub" id="scoutDropSub2">Drop Keepa export here</div>
+              <div class="sc-drop-file" id="scoutDropFilename2"></div>
+              <button class="sc-drop-clear" id="scoutClearFile2" onclick="scoutClearFile2(event)" style="display:none;">✕</button>
+            </div>
+          </div>
+        </div>
+        <div id="scoutPastePane" style="display:none;">
+          <textarea id="scoutAsinInput" class="sc-paste"
+            placeholder="Paste ASINs in any format — newline, comma, space or mixed&#10;B01N5IB20Q, B07ZPKBL9V&#10;B08KTZ8249"
+            oninput="scoutCountASINs()"></textarea>
+        </div>
+        <div class="sc-asin-meta">
+          <span id="scoutAsinCount" style="color:var(--text-3);font-family:var(--mono);font-size:11px;">0 ASINs detected</span>
+          <span id="scoutAsinWarning" style="color:var(--amber);font-family:var(--mono);font-size:11px;display:none;">⚠ Max <span id="scoutMaxDisplay">20</span> — extras ignored</span>
         </div>
       </div>
 
-      <!-- Paste pane -->
-      <div id="scoutPastePane" style="display:none;">
-        <textarea id="scoutAsinInput"
-          placeholder="Paste ASINs in any format — newline, comma, space or mixed&#10;B01N5IB20Q, B07ZPKBL9V&#10;B08KTZ8249"
-          class="scout-paste-area"
-          oninput="scoutCountASINs()"></textarea>
+      <!-- MARKETS -->
+      <div class="sc-panel">
+        <div class="sc-panel-title"><span>🌍</span> Source Markets</div>
+        <div class="sc-markets">
+          <label class="sc-market on" id="scoutLabelDE" onclick="scoutToggleMarket('DE',this)">
+            <input type="checkbox" id="scoutDE" checked>
+            <span class="sc-market-flag">🇩🇪</span><span class="sc-market-name">DE</span>
+          </label>
+          <label class="sc-market on" id="scoutLabelFR" onclick="scoutToggleMarket('FR',this)">
+            <input type="checkbox" id="scoutFR" checked>
+            <span class="sc-market-flag">🇫🇷</span><span class="sc-market-name">FR</span>
+          </label>
+          <label class="sc-market on" id="scoutLabelIT" onclick="scoutToggleMarket('IT',this)">
+            <input type="checkbox" id="scoutIT" checked>
+            <span class="sc-market-flag">🇮🇹</span><span class="sc-market-name">IT</span>
+          </label>
+          <label class="sc-market on" id="scoutLabelES" onclick="scoutToggleMarket('ES',this)">
+            <input type="checkbox" id="scoutES" checked>
+            <span class="sc-market-flag">🇪🇸</span><span class="sc-market-name">ES</span>
+          </label>
+          <label class="sc-market" id="scoutLabelUS" onclick="scoutToggleMarket('US',this)">
+            <input type="checkbox" id="scoutUS">
+            <span class="sc-market-flag">🇺🇸</span><span class="sc-market-name">US</span>
+          </label>
+          <label class="sc-market" id="scoutLabelJP" onclick="scoutToggleMarket('JP',this)">
+            <input type="checkbox" id="scoutJP">
+            <span class="sc-market-flag">🇯🇵</span><span class="sc-market-name">JP</span>
+          </label>
+        </div>
+        <hr class="sc-divider">
+        <div class="sc-panel-title" style="margin-bottom:10px;"><span>🔑</span> Keepa API Key</div>
+        <input type="password" id="scoutApiKey" class="sc-input sc-input-pw" placeholder="Paste your Keepa API key…" oninput="scoutSyncApiKey()">
+        <div class="sc-note">Stored in browser only.</div>
       </div>
 
-      <div class="scout-asin-meta">
-        <span id="scoutAsinCount" style="color:var(--text-3);font-family:var(--mono);font-size:11px;">0 ASINs detected</span>
-        <span id="scoutAsinWarning" style="color:var(--amber);font-family:var(--mono);font-size:11px;display:none;">⚠ Max <span id="scoutMaxDisplay">20</span> — extras ignored</span>
-      </div>
-    </div>
+      <!-- COSTS -->
+      <div class="sc-panel">
+        <div class="sc-panel-title"><span>⚙</span> Cost Settings</div>
+        <div class="sc-fields">
+          <div class="sc-field">
+            <div class="sc-field-label">EUR / GBP</div>
+            <input id="scoutEurGbp" type="number" value="0.86" step="0.001" min="0.1" max="2" class="sc-input" oninput="fxConvertUpdate()">
+          </div>
+          <div class="sc-field">
+            <div class="sc-field-label">USD / GBP</div>
+            <input id="scoutUsdGbp" type="number" value="0.79" step="0.001" min="0.1" max="2" class="sc-input">
+          </div>
+          <div class="sc-field">
+            <div class="sc-field-label">JPY / GBP</div>
+            <input id="scoutJpyGbp" type="number" value="0.0051" step="0.0001" min="0.001" max="0.1" class="sc-input">
+          </div>
+          <div class="sc-field" style="justify-content:flex-end;">
+            <div class="sc-field-label">&nbsp;</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button onclick="scoutRefreshFx()" id="scoutFxRefreshBtn" class="sc-fx-btn">↻ Live rates</button>
+              <span id="scoutFxTs" style="font-family:var(--mono);font-size:9px;color:var(--text-3);line-height:1.3;"></span>
+            </div>
+          </div>
+          <div class="sc-field">
+            <div class="sc-field-label">Min ROI %</div>
+            <input id="scoutMinRoi" type="number" value="15" step="1" min="0" class="sc-input">
+          </div>
+          <div class="sc-field">
+            <div class="sc-field-label">Shipping £</div>
+            <input id="scoutShipping" type="number" value="2.00" step="0.01" min="0" class="sc-input">
+          </div>
+          <div class="sc-field">
+            <div class="sc-field-label">Prep £</div>
+            <input id="scoutPrep" type="number" value="0.45" step="0.01" min="0" class="sc-input">
+          </div>
+          <div class="sc-field">
+            <div class="sc-field-label">Max ASINs</div>
+            <input id="scoutMaxAsins" type="number" value="10000" step="100" min="1" max="10000" class="sc-input" oninput="scoutCountASINs()">
+          </div>
+        </div>
 
-    <!-- API KEY -->
-    <div class="rp-panel">
-      <div class="rp-panel-label"><span class="rp-panel-icon">🔑</span> Keepa API Key</div>
-      <input type="password" id="scoutApiKey" class="rp-input" placeholder="Paste your Keepa API key…" oninput="scoutSyncApiKey()">
-      <div class="rp-panel-note">Synced with Min Price Tool. Stored in browser only.</div>
-    </div>
+        <hr class="sc-divider">
 
-    <!-- MARKETS -->
-    <div class="rp-panel">
-      <div class="rp-panel-label"><span class="rp-panel-icon">🌍</span> Source Markets</div>
-      <div class="scout-market-grid">
-        <label class="scout-market-btn" id="scoutLabelDE">
-          <input type="checkbox" id="scoutDE" checked onchange="scoutToggleMarket('DE',this)">
-          <span class="scout-market-flag">🇩🇪</span><span class="scout-market-code">DE</span>
+        <!-- PEX toggle -->
+        <label class="sc-pex-row" style="cursor:pointer;">
+          <input type="checkbox" id="scoutPrimeExclusive" class="sc-pex-check">
+          <div>
+            <div class="sc-pex-label">⭐ Prime Exclusive Price</div>
+            <div class="sc-pex-sub">Fetches Prime Exclusive EU price instead of current Buy Box — Prime Day leads</div>
+          </div>
         </label>
-        <label class="scout-market-btn" id="scoutLabelFR">
-          <input type="checkbox" id="scoutFR" checked onchange="scoutToggleMarket('FR',this)">
-          <span class="scout-market-flag">🇫🇷</span><span class="scout-market-code">FR</span>
-        </label>
-        <label class="scout-market-btn" id="scoutLabelIT">
-          <input type="checkbox" id="scoutIT" checked onchange="scoutToggleMarket('IT',this)">
-          <span class="scout-market-flag">🇮🇹</span><span class="scout-market-code">IT</span>
-        </label>
-        <label class="scout-market-btn" id="scoutLabelES">
-          <input type="checkbox" id="scoutES" checked onchange="scoutToggleMarket('ES',this)">
-          <span class="scout-market-flag">🇪🇸</span><span class="scout-market-code">ES</span>
-        </label>
-        <label class="scout-market-btn" id="scoutLabelUS">
-          <input type="checkbox" id="scoutUS" onchange="scoutToggleMarket('US',this)">
-          <span class="scout-market-flag">🇺🇸</span><span class="scout-market-code">US</span>
-        </label>
-        <label class="scout-market-btn" id="scoutLabelJP">
-          <input type="checkbox" id="scoutJP" onchange="scoutToggleMarket('JP',this)">
-          <span class="scout-market-flag">🇯🇵</span><span class="scout-market-code">JP</span>
-        </label>
-      </div>
-    </div>
 
-    <!-- FX + COSTS -->
-    <div class="rp-panel">
-      <div class="rp-panel-label"><span class="rp-panel-icon">⚙</span> Cost Settings</div>
-      <div class="rp-settings-grid">
-        <div>
-          <div class="rp-setting-label">EUR / GBP</div>
-          <input id="scoutEurGbp" type="number" value="0.86" step="0.001" min="0.1" max="2" class="rp-input" oninput="fxConvertUpdate()">
-        </div>
-        <div>
-          <div class="rp-setting-label">USD / GBP</div>
-          <input id="scoutUsdGbp" type="number" value="0.79" step="0.001" min="0.1" max="2" class="rp-input">
-        </div>
-        <div>
-          <div class="rp-setting-label">JPY / GBP</div>
-          <input id="scoutJpyGbp" type="number" value="0.0051" step="0.0001" min="0.001" max="0.1" class="rp-input">
-        </div>
-        <div style="display:flex;align-items:flex-end;gap:6px;">
-          <button onclick="scoutRefreshFx()" id="scoutFxRefreshBtn" style="font-family:var(--mono);font-size:10px;padding:5px 10px;background:rgba(77,142,245,0.12);border:1px solid var(--blue);color:var(--blue);border-radius:var(--r-sm);cursor:pointer;white-space:nowrap;">↻ Live rates</button>
-          <span id="scoutFxTs" style="font-family:var(--mono);font-size:9px;color:var(--text-3);line-height:1.2;"></span>
-        </div>
-        <div>
-          <div class="rp-setting-label">Min ROI %</div>
-          <input id="scoutMinRoi" type="number" value="15" step="1" min="0" class="rp-input">
-        </div>
-        <div>
-          <div class="rp-setting-label">Shipping £</div>
-          <input id="scoutShipping" type="number" value="2.00" step="0.01" min="0" class="rp-input">
-        </div>
-        <div>
-          <div class="rp-setting-label">Prep £</div>
-          <input id="scoutPrep" type="number" value="0.45" step="0.01" min="0" class="rp-input">
-        </div>
-      </div>
-      <div style="margin-top:10px;">
-        <div class="rp-setting-label">Max ASINs</div>
-        <input id="scoutMaxAsins" type="number" value="10000" step="100" min="1" max="10000" class="rp-input rp-input-sm" oninput="scoutCountASINs()">
-      </div>
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-          <input type="checkbox" id="scoutPrimeExclusive" style="accent-color:var(--green);width:14px;height:14px;">
-          <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-2);letter-spacing:0.05em;">⭐ PRIME EXCLUSIVE PRICE</span>
-        </label>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:4px;line-height:1.5;">Fetches New, Prime Exclusive price instead of current Buy Box from EU — use for Prime Day lead comparison</div>
-      </div>
-      <!-- EUR → GBP quick converter -->
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-        <div class="rp-setting-label" style="margin-bottom:7px;">€ → £ Quick Converter</div>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <hr class="sc-divider">
+
+        <!-- FX converter -->
+        <div class="sc-field-label" style="margin-bottom:8px;">€ → £ Converter</div>
+        <div class="sc-fx-row">
           <span style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text-3);">€</span>
-          <input type="number" id="scoutFxEurInput" placeholder="0.00" step="0.01" min="0"
-            class="rp-input" style="width:100px;" oninput="fxConvertUpdate()">
+          <input type="number" id="scoutFxEurInput" placeholder="0.00" step="0.01" min="0" class="sc-input" style="width:90px;" oninput="fxConvertUpdate()">
           <span style="font-family:var(--mono);font-size:13px;color:var(--text-3);">→</span>
-          <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green);min-width:80px;" id="scoutFxGbpOut">—</span>
+          <span class="sc-fx-out" id="scoutFxGbpOut">—</span>
         </div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:5px;">Uses EUR/GBP rate above · live as you type</div>
+        <div class="sc-note">Uses EUR/GBP rate above · live as you type</div>
+      </div>
+
+    </div><!-- /sc-config -->
+
+    <!-- PROGRESS -->
+    <div id="scoutStatus" style="display:none;" class="sc-progress-wrap">
+      <div class="sc-progress-top">
+        <span id="scoutStatusText" class="sc-progress-text">Starting…</span>
+        <span id="scoutStatusPct" class="sc-progress-pct">0%</span>
+      </div>
+      <div class="sc-progress-bar">
+        <div id="scoutProgressFill" class="sc-progress-fill"></div>
       </div>
     </div>
 
-  </div><!-- /scout-config-grid -->
-
-  <!-- PROGRESS -->
-  <div id="scoutStatus" style="display:none;" class="scout-progress-bar-wrap">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <span id="scoutStatusText" style="font-family:var(--mono);font-size:11px;color:var(--text-2);">Starting…</span>
-      <span id="scoutStatusPct" style="font-family:var(--mono);font-size:11px;color:var(--text-3);">0%</span>
+    <!-- CACHE BANNER -->
+    <div id="scoutCacheBanner" style="display:none;" class="sc-cache-banner">
+      <span>📋 Showing saved scan from <strong id="scoutCacheDate" style="color:var(--text-2);"></strong> — <strong id="scoutCacheCount" style="color:var(--text-2);"></strong> ASINs</span>
+      <button onclick="scoutClearCache()" class="sc-btn" style="font-size:10px;padding:5px 10px;">✕ Clear &amp; start fresh</button>
     </div>
-    <div style="height:3px;background:var(--border2);border-radius:2px;overflow:hidden;">
-      <div id="scoutProgressFill" style="height:100%;width:0%;background:var(--green);transition:width 0.3s;border-radius:2px;"></div>
-    </div>
-  </div>
 
-  <!-- Scout cache restore banner -->
-  <div id="scoutCacheBanner" style="display:none;margin-bottom:12px;padding:10px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);align-items:center;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:11px;color:var(--text-3);">
-    <span>📋 Showing saved scan from <strong id="scoutCacheDate" style="color:var(--text-2);"></strong> — <strong id="scoutCacheCount" style="color:var(--text-2);"></strong> ASINs</span>
-    <button onclick="scoutClearCache()" class="stalker-btn" style="font-size:11px;">✕ Clear &amp; start fresh</button>
-  </div>
-
-  <!-- RESULTS TABLE -->
-  <div class="rp-table-wrap" id="scoutTableWrap">
-    <div class="rp-table-header">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span class="rp-table-title">Results</span>
-        <span id="scoutResultCount" class="rp-table-badge"></span>
-      </div>
-      <div style="display:flex;align-items:center;gap:14px;">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:8px;">
-          <span><span style="color:var(--green);">■</span> <span id="scoutLegendStrong">≥20% ROI</span></span>
-          <span><span style="color:var(--amber);">■</span> <span id="scoutLegendMod">≥15% ROI</span></span>
-          <span><span style="color:var(--red);">■</span> below</span>
-          <span style="margin-left:12px;display:flex;gap:6px;">
-            <button onclick="scoutSetFilter('all')"     id="scoutFilterAll"      class="scout-filter-btn active">All</button>
-            <button onclick="scoutSetFilter('strong')"  id="scoutFilterStrong"   class="scout-filter-btn">💚 Strong</button>
-            <button onclick="scoutSetFilter('moderate')" id="scoutFilterModerate" class="scout-filter-btn">🟡 Moderate</button>
-            <button onclick="scoutSetFilter('reject')"  id="scoutFilterReject"   class="scout-filter-btn">🔴 Reject</button>
-            <button onclick="scoutSetFilter('noprice')" id="scoutFilterNoprice"  class="scout-filter-btn">— No EU Price</button>
-            <button onclick="scoutSetFilter('giftcard')" id="scoutFilterGiftcard" class="scout-filter-btn">🎁 GC Only</button>
-          </span>
-          <button onclick="scoutClearAllViewed()" id="scoutClearViewedBtn" class="scout-filter-btn" style="display:none;border-color:rgba(240,59,80,0.35);color:var(--red);" title="Remove the 👁 viewed badge from all deals">👁 Clear all viewed</button>
+    <!-- RESULTS -->
+    <div class="sc-results-wrap" id="scoutTableWrap">
+      <div class="sc-results-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="sc-results-title">Results</span>
+          <span id="scoutResultCount" class="sc-results-badge"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <div class="sc-legend">
+            <span><span style="color:var(--green);">■</span> <span id="scoutLegendStrong">≥20% ROI</span></span>
+            <span><span style="color:var(--amber);">■</span> <span id="scoutLegendMod">≥15% ROI</span></span>
+            <span><span style="color:var(--red);">■</span> below</span>
+          </div>
+          <div class="sc-filter-row">
+            <button onclick="scoutSetFilter('all')"      id="scoutFilterAll"      class="sc-filter-btn active">All</button>
+            <button onclick="scoutSetFilter('strong')"   id="scoutFilterStrong"   class="sc-filter-btn">💚 Strong</button>
+            <button onclick="scoutSetFilter('moderate')" id="scoutFilterModerate" class="sc-filter-btn">🟡 Moderate</button>
+            <button onclick="scoutSetFilter('reject')"   id="scoutFilterReject"   class="sc-filter-btn">🔴 Reject</button>
+            <button onclick="scoutSetFilter('noprice')"  id="scoutFilterNoprice"  class="sc-filter-btn">— No EU Price</button>
+            <button onclick="scoutSetFilter('giftcard')" id="scoutFilterGiftcard" class="sc-filter-btn">🎁 GC Only</button>
+            <button onclick="scoutClearAllViewed()" id="scoutClearViewedBtn" class="sc-filter-btn danger" style="display:none;" title="Remove viewed badges">👁 Clear viewed</button>
+          </div>
         </div>
       </div>
+      <div class="sc-table-scroll">
+        <table class="sc-table" id="scoutTable">
+          <thead>
+            <tr>
+              <th style="text-align:left;">ASIN</th>
+              <th style="text-align:left;">Title</th>
+              <th style="text-align:center;">Src</th>
+              <th class="sortable" onclick="scoutSetSort('euPrice')">EU Price <span id="scoutSortEuPrice" style="color:var(--green);font-size:9px;"></span></th>
+              <th class="sortable" onclick="scoutSetSort('landed')">Landed £ <span id="scoutSortLanded" style="color:var(--green);font-size:9px;"></span></th>
+              <th class="sortable" onclick="scoutSetSort('ukBB')">UK BB 180d <span id="scoutSortUkBB" style="color:var(--green);font-size:9px;"></span></th>
+              <th class="sortable" onclick="scoutSetSort('fees')">Fees <span id="scoutSortFees" style="color:var(--green);font-size:9px;"></span></th>
+              <th class="sortable" onclick="scoutSetSort('profit')">Profit <span id="scoutSortProfit" style="color:var(--green);font-size:9px;"></span></th>
+              <th class="sortable" onclick="scoutSetSort('roi')">ROI % <span id="scoutSortRoi" style="color:var(--green);font-size:9px;"></span></th>
+            </tr>
+          </thead>
+          <tbody id="scoutTableBody">
+            <tr><td colspan="9" class="empty">Upload an ASIN list and click Run Scout to begin</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div style="overflow-x:auto;">
-      <table class="rp-table" id="scoutTable">
-        <thead>
-          <tr>
-            <th>ASIN</th>
-            <th>Title</th>
-            <th style="text-align:center;">Src</th>
-            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="scoutSetSort('euPrice')" title="Sort by EU Price">EU Price<span id="scoutSortEuPrice" style="color:var(--green);font-size:9px;"></span></th>
-            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="scoutSetSort('landed')" title="Sort by Landed cost">Landed £<span id="scoutSortLanded" style="color:var(--green);font-size:9px;"></span></th>
-            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="scoutSetSort('ukBB')" title="Sort by UK BB 180d">UK BB 180d<span id="scoutSortUkBB" style="color:var(--green);font-size:9px;"></span></th>
-            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="scoutSetSort('fees')" title="Sort by Fees">Fees<span id="scoutSortFees" style="color:var(--green);font-size:9px;"></span></th>
-            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="scoutSetSort('profit')" title="Sort by Profit">Profit<span id="scoutSortProfit" style="color:var(--green);font-size:9px;"></span></th>
-            <th style="text-align:right;cursor:pointer;user-select:none;white-space:nowrap;" onclick="scoutSetSort('roi')" title="Sort by ROI %">ROI %<span id="scoutSortRoi" style="color:var(--green);font-size:9px;"></span></th>
-          </tr>
-        </thead>
-        <tbody id="scoutTableBody">
-          <tr><td colspan="9" class="rp-table-empty">Upload an ASIN list and click Run Scout to begin</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+
+  </div><!-- /sc-wrap -->
 
 </div><!-- /page-scout -->
 
@@ -5489,7 +5612,10 @@ function scoutSetTab(tab) {
 function scoutToggleMarket(market, el) {
   const label = document.getElementById('scoutLabel'+market);
   if (!label) return;
-  label.classList.toggle('checked', el.checked);
+  // el may be the checkbox or the label itself depending on caller
+  const checkbox = document.getElementById('scout'+market);
+  if (!checkbox) return;
+  label.classList.toggle('on', checkbox.checked);
 }
 
 // ── CSV / File handling ──
@@ -6171,7 +6297,7 @@ function scoutRenderTable() {
   const badge = scoutIsRunning
     ? `${filtered.length} confirmed · 💚 ${strong} strong · 🟡 ${moderate} moderate · ⏳ ${reject + noprice} still scanning…`
     : `${filtered.length} shown · 💚 ${strong} strong · 🟡 ${moderate} moderate · 🔴 ${reject} reject · — ${noprice} no EU price · 🎁 ${gcOnly} GC`;
-  if (countEl) { countEl.textContent = badge; countEl.className = 'rp-table-badge'; }
+  if (countEl) { countEl.textContent = badge; countEl.className = 'sc-results-badge'; }
 
   const f2  = v => v != null ? '£' + v.toFixed(2) : '—';
   const srcCurrencySymbol = { DE:'€', FR:'€', IT:'€', ES:'€', US:'$', JP:'¥' };
@@ -6204,22 +6330,22 @@ function scoutRenderTable() {
       lastGroup = cls;
       groupRow = `<tr><td colspan="9" style="padding:10px 12px 6px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);background:var(--surface2);border-bottom:1px solid var(--border);">${groupLabel[cls]}</td></tr>`;
     }
-    return groupRow + `<tr style="border-left:3px solid ${cls==='strong'?'var(--green)':cls==='moderate'?'var(--amber)':'transparent'};">
-      <td style="font-family:var(--mono);font-size:11px;color:var(--text-2);">
-        <a href="https://keepa.com/#!product/2-${r.asin}" target="_blank" onclick="setTimeout(()=>scoutMarkViewed('${r.asin}'),0)" style="color:var(--text-2);text-decoration:none;border-bottom:1px dashed var(--border2);">${r.asin}</a>
+    return groupRow + `<tr class="sc-row-${cls==='strong'?'green':cls==='moderate'?'amber':cls==='reject'?'red':''}" style="border-left:3px solid ${cls==='strong'?'var(--green)':cls==='moderate'?'var(--amber)':'transparent'};">
+      <td>
+        <a href="https://keepa.com/#!product/2-${r.asin}" target="_blank" onclick="setTimeout(()=>scoutMarkViewed('${r.asin}'),0)" class="sc-asin-link">${r.asin}</a>
         <span id="sv_${r.asin}">${scoutViewedAsins.has(r.asin) ? `<span style="font-family:var(--mono);font-size:9px;color:var(--text-3);background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:4px;display:inline-flex;align-items:center;gap:3px;">👁 viewed<span onclick="event.stopPropagation();scoutUnmarkViewed('${r.asin}')" style="cursor:pointer;color:var(--red);font-size:11px;line-height:1;" title="Unmark as viewed">×</span></span>` : ''}</span>
         ${(typeof allRows !== 'undefined' && allRows.some(p => p.asin === r.asin)) ? `<div style="font-family:var(--mono);font-size:9px;background:rgba(240,165,0,0.15);color:var(--amber);border:1px solid rgba(240,165,0,0.3);border-radius:3px;padding:1px 5px;margin-top:2px;display:inline-block;">🛒 Bought</div>` : ''}
       </td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(r.title||'').replace(/"/g,'&quot;')}">${r.title}</td>
+      <td class="sc-title-cell" title="${(r.title||'').replace(/"/g,'&quot;')}"><span class="sc-title-text">${r.title}</span></td>
       <td style="text-align:center;">
-        ${r.bestMarket ? `<span class="rp-tag">${srcFlag[r.bestMarket]||''} ${r.bestMarket}</span>` : '<span style="color:var(--text-3)">—</span>'}
+        ${r.bestMarket ? `<span class="sc-src-badge">${srcFlag[r.bestMarket]||''} ${r.bestMarket}</span>` : '<span style="color:var(--text-3)">—</span>'}
       </td>
-      <td style="text-align:right;font-family:var(--mono);">${fEu(r.bestEuPrice, r.bestMarket)}${r.bestEuSource === 'PEX' ? '<div style="font-family:var(--mono);font-size:9px;color:var(--purple);">⭐ PEX</div>' : ''}</td>
-      <td style="text-align:right;font-family:var(--mono);">${f2(r.calc?.landed)}</td>
-      <td style="text-align:right;font-family:var(--mono);font-weight:600;">${f2(r.ukBB)}<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);">${r.ukBBSource||''}</div></td>
-      <td style="text-align:right;font-family:var(--mono);color:var(--text-3);">${f2(r.calc?.fba)}</td>
-      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${profitCol};">${f2(r.calc?.profit)}</td>
-      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:${roiCol};">${fPct(roi)}${gcBadge}</td>
+      <td>${fEu(r.bestEuPrice, r.bestMarket)}${r.bestEuSource === 'PEX' ? '<div class="sc-pex-badge">⭐ PEX</div>' : ''}</td>
+      <td>${f2(r.calc?.landed)}</td>
+      <td style="font-weight:600;">${f2(r.ukBB)}<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);">${r.ukBBSource||''}</div></td>
+      <td style="color:var(--text-3);">${f2(r.calc?.fba)}</td>
+      <td style="font-weight:700;color:${profitCol};">${f2(r.calc?.profit)}</td>
+      <td style="font-weight:700;color:${roiCol};">${fPct(roi)}${gcBadge}</td>
     </tr>`;
   }).join('');
 }

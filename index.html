@@ -5062,9 +5062,6 @@ function daAnalyseRow(row) {
   } else if (roi >= cfg.minROI) {
     strength = 'MARGINAL'; colour = 'amber';
     reason = `ROI ${(roi*100).toFixed(1)}% — verify on Keepa`;
-  } else if (gcRoi != null && gcRoi >= 0.15) {
-    strength = 'STRONG'; colour = 'green';
-    reason = `GC ROI ${(gcRoi*100).toFixed(1)}% — needs 10% gift card`;
   } else if (r15Roi != null && r15Roi >= 0.15) {
     strength = 'STRONG'; colour = 'green';
     reason = `Retailer ROI ${(r15Roi*100).toFixed(1)}% — needs 15% gift card`;
@@ -5347,7 +5344,6 @@ function daRenderHeaders() {
     <th data-col="spIncVat" data-type="num">${spLabel}</th>
     <th data-col="profit" data-type="num">Profit</th>
     <th data-col="roi" data-type="num">ROI</th>
-    <th data-col="gcRoi" data-type="num" style="color:var(--amber);" title="ROI with 10% gift card">🎁 GC 10%</th>
     <th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys/Argos with 15% gift card">🏪 15%</th>
     ${ssCols}
     <th data-col="boughtPerMonth" data-type="num">Sold/mo</th>
@@ -5412,7 +5408,6 @@ function daRenderTable() {
       <td class="td-num">${fmtN(deal.spIncVat)}${spTag}</td>
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
-      <td class="td-num" style="color:${gcColour(deal.gcRoi)}">${fmtP(deal.gcRoi)}</td>
       <td class="td-num" style="color:${r15Colour(deal.r15Roi)}">${fmtP(deal.r15Roi)}</td>
       ${ssCells}
       <td class="td-num td-center">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>

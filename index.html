@@ -1569,6 +1569,9 @@ input::placeholder { color: var(--text-4); }
 /* Deal Analyser — enhancements */
 .da-table tbody tr.viewed { opacity: 0.42; }
 .da-table tbody tr.viewed .td-product-title { color: var(--text-3); }
+.da-brand-tag { font-family:var(--mono); font-size:10px; color:var(--text-3); cursor:pointer; padding:2px 7px; border-radius:3px; border:1px solid var(--border2); white-space:nowrap; display:inline-block; transition:all .12s; }
+.da-brand-tag:hover { border-color:var(--green); color:var(--green); }
+.da-brand-tag.active { border-color:var(--green); color:var(--green); background:rgba(0,229,132,.08); }
 .viewed-badge {
   font-family: var(--mono); font-size: 8px; font-weight: 700;
   letter-spacing: 0.1em; padding: 1px 6px; border-radius: 3px;
@@ -5235,7 +5238,7 @@ function daRenderTable() {
       <td class="td-num">${fmtN(deal.spIncVat)}${spTag}</td>
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td style="vertical-align:middle;">
-        ${deal.brand ? `<span onclick="daSetBrandFilter('${deal.brand.replace(/'/g,'\\'')}',event)" style="font-family:var(--mono);font-size:10px;color:var(--text-3);cursor:pointer;padding:2px 6px;border-radius:3px;border:1px solid var(--border2);white-space:nowrap;display:inline-block;" title="Click to filter by ${deal.brand.replace(/'/g,'\\'')}">` + deal.brand + '</span>' : '<span style="color:var(--text-4)">—</span>'}
+        ${deal.brand ? `<span class="da-brand-tag" data-brand="${deal.brand.replace(/"/g,'&quot;')}">${deal.brand}</span>` : '<span style="color:var(--text-4)">—</span>'}
       </td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
       <td class="td-num" style="color:${r15Colour(deal.r15Roi)}">${fmtP(deal.r15Roi)}</td>
@@ -5276,6 +5279,12 @@ function daUpdatePillCounts() {
     if (!span) { span = document.createElement('span'); span.className = 'pill-count'; el.appendChild(span); }
     span.textContent = counts[key];
   });
+  // Highlight active brand tag
+  if (daBrandFilter) {
+    document.querySelectorAll('.da-brand-tag').forEach(t => {
+      t.classList.toggle('active', t.dataset.brand === daBrandFilter);
+    });
+  }
 }
 
 
@@ -5309,6 +5318,15 @@ function daClearBrandFilter() {
   daRenderHeaders();
   daRenderTable();
 }
+
+// Delegated click handler for brand tags (avoids inline onclick in template literals)
+document.addEventListener('click', e => {
+  const tag = e.target.closest('.da-brand-tag');
+  if (tag) {
+    e.stopPropagation();
+    daSetBrandFilter(tag.dataset.brand);
+  }
+});
 
 function daSetFilter(f, btn) {
   daFilter = f;

@@ -6310,9 +6310,12 @@ async function scoutRun() {
       for (const market of markets) {
         const euPrice = euForAsin[market];
         if (!euPrice) continue;
-        const calc = ukBB ? scoutCalcProfit(euPrice, ukBB, marketFx[market], shipping, prep) : null;
-        if (!bestCalc || (calc && calc.profit > bestCalc.profit)) {
-          bestMarket = market; bestEuPrice = euPrice; bestCalc = calc;
+        // Pick cheapest landed GBP price across markets
+        const landedGbp = euPrice * (marketFx[market] || 0.86);
+        const bestLanded = bestEuPrice != null ? bestEuPrice * (marketFx[bestMarket] || 0.86) : Infinity;
+        if (landedGbp < bestLanded) {
+          bestMarket = market; bestEuPrice = euPrice;
+          bestCalc = ukBB ? scoutCalcProfit(euPrice, ukBB, marketFx[market], shipping, prep) : null;
           bestEuSource = euSourceData[asin]?.[market] || null;
         }
       }
@@ -7504,9 +7507,12 @@ function scoutRenderPartial(asins, ukMap, euData, euSourceData, markets, marketF
     for (const market of markets) {
       const euPrice = euData[asin]?.[market];
       if (!euPrice) continue;
-      const calc = ukBB ? scoutCalcProfit(euPrice, ukBB, marketFx[market] ?? 0.86, shipping, prep) : null;
-      if (!bestCalc || (calc && calc.profit > bestCalc.profit)) {
-        bestMarket = market; bestEuPrice = euPrice; bestCalc = calc;
+      // Pick cheapest landed GBP price across markets
+      const landedGbp = euPrice * (marketFx[market] ?? 0.86);
+      const bestLanded = bestEuPrice != null ? bestEuPrice * (marketFx[bestMarket] ?? 0.86) : Infinity;
+      if (landedGbp < bestLanded) {
+        bestMarket = market; bestEuPrice = euPrice;
+        bestCalc = ukBB ? scoutCalcProfit(euPrice, ukBB, marketFx[market] ?? 0.86, shipping, prep) : null;
         bestEuSource = euSourceData?.[asin]?.[market] || null;
       }
     }

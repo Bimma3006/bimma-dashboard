@@ -6243,28 +6243,24 @@ function scoutGetCurrentBB(product) {
 }
 
 function scoutGetPrimeExclusivePrice(product) {
+  // csv[33] = New, Prime Exclusive price (NOT csv[16] which is review count)
   const stats = product.stats;
   const csv   = product.csv;
 
-  // stats.current[16] = Prime Exclusive: Current
-  const cur16 = stats?.current?.[16];
-  if (cur16 && cur16 > 0) return { price: cur16 / 100, source: 'PEX' };
+  // stats.current[33] = live PEX price right now
+  const cur33 = stats?.current?.[33];
+  if (cur33 && cur33 > 0) return { price: cur33 / 100, source: 'PEX' };
 
-  // csv is a sparse array — use Object.keys to check if index 16 actually has data
-  // then access via the keyed lookup, not direct index
+  // csv[33] history — walk backwards within 90 days
   try {
-    if (csv != null) {
-      const csv16 = Object.prototype.hasOwnProperty.call(csv, 16)
-        ? csv[16]
-        : (Object.prototype.hasOwnProperty.call(csv, '16') ? csv['16'] : undefined);
-      if (csv16 && csv16.length >= 2) {
-        const cutoff = Date.now() - 90 * 86400000;
-        for (let i = csv16.length - 1; i >= 1; i -= 2) {
-          const raw = csv16[i];
-          const t = (csv16[i-1] + 21564000) * 60000;
-          if (t < cutoff) break;
-          if (raw > 0) return { price: raw / 100, source: 'PEX' };
-        }
+    const csv33 = csv ? (csv[33] || csv['33']) : null;
+    if (Array.isArray(csv33) && csv33.length >= 2) {
+      const cutoff = Date.now() - 90 * 86400000;
+      for (let i = csv33.length - 1; i >= 1; i -= 2) {
+        const raw = csv33[i];
+        const t = (csv33[i-1] + 21564000) * 60000;
+        if (t < cutoff) break;
+        if (raw > 0) return { price: raw / 100, source: 'PEX' };
       }
     }
   } catch(_) {}
@@ -9006,6 +9002,13 @@ async function pexTestSingleAsin() {
         console.log(`[TEST] ${d.name} offer[${i}]: isPEX=${o.isPrimeExclusive} isFBA=${o.isFBA} condition=${o.condition} sellerId=${o.sellerId}`);
         if (o.offerCSV) console.log(`[TEST] ${d.name} offer[${i}] offerCSV last 9:`, JSON.stringify(o.offerCSV.slice(-9)));
       });
+      // Log csv[33] = Prime Exclusive price specifically
+      const csv33 = p.csv ? (p.csv[33] || p.csv['33']) : null;
+      console.log(`[TEST] ${d.name} csv[33] (PEX price):`, csv33 ? JSON.stringify(csv33.slice(-6)) : 'NOT PRESENT');
+      if (csv33 && csv33.length >= 2) {
+        const lastPrice = csv33[csv33.length-1];
+        console.log(`[TEST] ${d.name} PEX price = ${lastPrice > 0 ? (lastPrice/100).toFixed(2) : 'OOS/none'}`);
+      }
       // Also log ALL csv fields that have data
       if (p.csv) {
         Object.entries(p.csv).forEach(([k,v]) => {
@@ -9076,8 +9079,8 @@ async function pexRun() {
         try {
           // Request csv=16 explicitly — Prime Exclusive price history
           // stats=180 — gives stats.current[16] as well
-          // Request offers to get isPrimeExclusive flag + primeExclusiveCSV per offer
-          const url = `https://api.keepa.com/product?key=${apiKey}&domain=${PEX_DOMAINS[market].id}&asin=${batch.join(',')}&stats=180&offers=20&only-live-offers=1`;
+          // csv[33] = Prime Exclusive price. stats=180 returns stats.current[33].
+          const url = `https://api.keepa.com/product?key=${apiKey}&domain=${PEX_DOMAINS[market].id}&asin=${batch.join(',')}&stats=180`;
           const res = await fetch(url);
           console.log('[PEX FETCH] status:', res.status, 'ok:', res.ok);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -9096,37 +9099,27 @@ async function pexRun() {
           (data.products || []).forEach(p => {
             if (!p.asin) return;
 
-            // PEX price lives on individual offers with isPrimeExclusive=true
-            // Walk liveOffersOrder to find active PEX offer with lowest price
+            // csv[33] = New, Prime Exclusive price (confirmed from API response analysis)
+            // csv[16] is review count — NOT the PEX price despite what docs suggest
             let pexPrice = null;
-            const offers = p.offers || [];
-            const liveIdx = p.liveOffersOrder || [];
 
-            // Check live offers first
-            for (const idx of liveIdx) {
-              const offer = offers[idx];
-              if (!offer) continue;
-              if (!offer.isPrimeExclusive) continue;
-              // Current price is in offerCSV — last price entry
-              const csv = offer.offerCSV;
-              if (csv && csv.length >= 2) {
-                const lastPrice = csv[csv.length - 1];
-                if (lastPrice > 0) { pexPrice = lastPrice / 100; break; }
-              }
+            // Primary: stats.current[33] = live PEX price right now
+            const cur33 = p.stats?.current?.[33];
+            if (cur33 && cur33 > 0) {
+              pexPrice = cur33 / 100;
             }
 
-            // Fallback: scan all offers for isPrimeExclusive
-            if (!pexPrice) {
-              for (const offer of offers) {
-                if (!offer?.isPrimeExclusive) continue;
-                const csv = offer.offerCSV;
-                if (csv && csv.length >= 2) {
-                  // Walk backwards for most recent positive price
-                  for (let j = csv.length - 1; j >= 2; j -= 3) {
-                    if (csv[j] > 0) { pexPrice = csv[j] / 100; break; }
-                  }
+            // Fallback: walk csv[33] backwards for most recent positive price
+            if (!pexPrice && p.csv != null) {
+              const csv33 = p.csv[33] || p.csv['33'];
+              if (Array.isArray(csv33) && csv33.length >= 2) {
+                const cutoff = Date.now() - 90 * 86400000;
+                for (let j = csv33.length - 1; j >= 1; j -= 2) {
+                  const raw = csv33[j];
+                  const t = (csv33[j-1] + 21564000) * 60000;
+                  if (t < cutoff) break;
+                  if (raw > 0) { pexPrice = raw / 100; break; }
                 }
-                if (pexPrice) break;
               }
             }
 

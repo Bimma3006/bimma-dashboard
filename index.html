@@ -3832,7 +3832,7 @@ async function exportListingXLSM() {
   const ws = wb.Sheets['Template'];
   if(!ws){toast('Template sheet not found in file','error');return;}
   // Column indices (0-based) from Amazon template row 5
-  const C = { sku:0, asin:3, condition:7, taxCode:9, maxQty:11, fulfillment:31, price:36,
+  const C = { sku:0, asin:3, condition:7, taxCode:9, fulfillment:31, price:36,
                countryOfOrigin:110, batteriesRequired:111, dg1:134, dg2:135, dg3:136, dg4:137, dg5:138 };
   const set = (ws, r, c, v) => {
     const ref = XLSX.utils.encode_cell({r, c});
@@ -3846,7 +3846,6 @@ async function exportListingXLSM() {
     set(ws, r, C.asin,        row.asin);
     set(ws, r, C.condition,   'New');
     set(ws, r, C.taxCode,     'A_GEN_NOTAX');
-    set(ws, r, C.maxQty,      3);
     set(ws, r, C.fulfillment, 'AMAZON_EU');
     set(ws, r, C.price,       price);
     set(ws, r, C.countryOfOrigin,   'United Kingdom');

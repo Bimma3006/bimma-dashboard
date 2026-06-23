@@ -8986,38 +8986,40 @@ async function pexTestSingleAsin() {
   if (!apiKey) { toast('Enter Keepa API key first','error'); return; }
   const asin = 'B09Q5YPDNR';
   const domains = [{name:'UK',id:2},{name:'DE',id:3},{name:'FR',id:4},{name:'IT',id:8},{name:'ES',id:9}];
-  pexSetStatus(`Testing ${asin} across all domains…`, 10);
+  pexSetStatus(`Testing ${asin}…`, 5);
+  const results = [];
   for (const d of domains) {
     try {
-      const url = `https://api.keepa.com/product?key=${apiKey}&domain=${d.id}&asin=${asin}&stats=180&offers=20`;
-      console.log(`[TEST] ${d.name} URL:`, url);
+      const url = `https://api.keepa.com/product?key=${apiKey}&domain=${d.id}&asin=${asin}&stats=180`;
       const res = await fetch(url);
       const data = await res.json();
       const p = data.products?.[0];
-      if (!p) { console.log(`[TEST] ${d.name}: no product returned`); continue; }
-      console.log(`[TEST] ${d.name} tokensLeft:`, data.tokensLeft);
-      console.log(`[TEST] ${d.name} stats.current:`, JSON.stringify(p.stats?.current));
-      console.log(`[TEST] ${d.name} offers count:`, p.offers?.length, 'liveOffersOrder:', p.liveOffersOrder);
-      (p.offers||[]).forEach((o,i) => {
-        console.log(`[TEST] ${d.name} offer[${i}]: isPEX=${o.isPrimeExclusive} isFBA=${o.isFBA} condition=${o.condition} sellerId=${o.sellerId}`);
-        if (o.offerCSV) console.log(`[TEST] ${d.name} offer[${i}] offerCSV last 9:`, JSON.stringify(o.offerCSV.slice(-9)));
-      });
-      // Log csv[33] = Prime Exclusive price specifically
+      if (!p) { results.push(`${d.name}: no product`); continue; }
+      const cur33 = p.stats?.current?.[33];
       const csv33 = p.csv ? (p.csv[33] || p.csv['33']) : null;
-      console.log(`[TEST] ${d.name} csv[33] (PEX price):`, csv33 ? JSON.stringify(csv33.slice(-6)) : 'NOT PRESENT');
-      if (csv33 && csv33.length >= 2) {
-        const lastPrice = csv33[csv33.length-1];
-        console.log(`[TEST] ${d.name} PEX price = ${lastPrice > 0 ? (lastPrice/100).toFixed(2) : 'OOS/none'}`);
+      let pexPrice = null;
+      if (cur33 && cur33 > 0) pexPrice = cur33 / 100;
+      if (!pexPrice && csv33?.length >= 2) {
+        for (let j = csv33.length-1; j >= 1; j -= 2) {
+          if (csv33[j] > 0) { pexPrice = csv33[j] / 100; break; }
+        }
       }
-      // Also log ALL csv fields that have data
-      if (p.csv) {
-        Object.entries(p.csv).forEach(([k,v]) => {
-          if (Array.isArray(v) && v.length > 0) console.log(`[TEST] ${d.name} csv[${k}] last 4:`, JSON.stringify(v.slice(-4)));
-        });
-      }
-    } catch(e) { console.error(`[TEST] ${d.name} error:`, e); }
+      // Log everything useful
+      console.log(`[TEST] ${d.name} | cur[33]=${cur33} | csv33=${csv33?JSON.stringify(csv33.slice(-6)):'none'} | PEX=£${pexPrice?.toFixed(2)||'none'}`);
+      console.log(`[TEST] ${d.name} full stats.current:`, JSON.stringify(p.stats?.current));
+      // Log ALL csv keys with data
+      if (p.csv) Object.entries(p.csv).forEach(([k,v]) => {
+        if (Array.isArray(v) && v.length > 0 && v[v.length-1] > 0)
+          console.log(`[TEST] ${d.name} csv[${k}] last val: ${v[v.length-1]} = £${(v[v.length-1]/100).toFixed(2)}`);
+      });
+      results.push(`${d.name}: ${pexPrice ? '✅ £'+pexPrice.toFixed(2) : '❌ no PEX'} | cur[33]=${cur33}`);
+    } catch(e) { results.push(`${d.name}: ERROR ${e.message}`); console.error(`[TEST] ${d.name}:`, e); }
   }
-  pexSetStatus('Test complete — check console', 100);
+  document.getElementById('pexTableBody').innerHTML = `<tr><td colspan="9" style="font-family:var(--mono);font-size:12px;padding:20px;color:var(--text-2);">
+    <b>Test results for ${asin}:</b><br><br>${results.map(r=>`• ${r}`).join('<br>')}
+    <br><br><span style="color:var(--text-3)">Check console for full csv dump</span>
+  </td></tr>`;
+  pexSetStatus('Test complete', 100);
   setTimeout(pexHideStatus, 2000);
 }
 

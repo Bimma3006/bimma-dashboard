@@ -5092,9 +5092,7 @@ function daRunAnalysis() {
       // Debug: log column headers once so exact Keepa field names are visible in console
       if (priceable.length > 0) {
         const soldKeys = Object.keys(priceable[0]).filter(k => { const kl = k.toLowerCase(); return kl.includes('bought') || kl.includes('sold') || kl.includes('month'); });
-        console.log('[Bimma DA] Sold/bought columns found:', soldKeys.length ? soldKeys : '⚠ NONE — check Keepa export settings');
-        console.log('[Bimma DA] All columns:', Object.keys(priceable[0]));
-      }
+                      }
 
       daDeals = priceable.map(row => {
         const asin = (row['ASIN'] || '').trim();
@@ -6269,7 +6267,6 @@ async function scoutRun() {
               const euBelowUkBB = primeExclusive ? true : (!ukBBForCheck || (bb < ukBBForCheck));
               if (bb && bb > 0.5 && bb < 3000 && euBelowUkBB) {
                 euData[p.asin][market] = bb;
-                if (primeExclusive) console.log(`[SCOUT PEX] ${market} ${p.asin} = €${bb?.toFixed(2)}`);
                 if (result?.source) {
                   if (!euSourceData[p.asin]) euSourceData[p.asin] = {};
                   euSourceData[p.asin][market] = result.source;

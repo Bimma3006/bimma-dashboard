@@ -3107,6 +3107,7 @@ input::placeholder { color: var(--text-4); }
         <button class="sc-btn" onclick="pexClear()">✕ Clear</button>
         <button class="sc-btn sc-btn-danger" onclick="pexStop()" id="pexStopBtn" style="display:none;">⏹ Stop</button>
         <button class="sc-btn sc-btn-primary" onclick="pexRun()" id="pexRunBtn">⭐ Run PEX Scout</button>
+        <button class="sc-btn" onclick="pexTestSingleAsin()" id="pexTestBtn" title="Test single ASIN B09Q5YPDNR on DE">🧪 Test</button>
       </div>
     </div>
 
@@ -8984,6 +8985,39 @@ function pexClear() {
 }
 
 // ── Main run ──
+async function pexTestSingleAsin() {
+  const apiKey = (document.getElementById('pexApiKey')?.value||'').trim();
+  if (!apiKey) { toast('Enter Keepa API key first','error'); return; }
+  const asin = 'B09Q5YPDNR';
+  const domains = [{name:'UK',id:2},{name:'DE',id:3},{name:'FR',id:4},{name:'IT',id:8},{name:'ES',id:9}];
+  pexSetStatus(`Testing ${asin} across all domains…`, 10);
+  for (const d of domains) {
+    try {
+      const url = `https://api.keepa.com/product?key=${apiKey}&domain=${d.id}&asin=${asin}&stats=180&offers=20`;
+      console.log(`[TEST] ${d.name} URL:`, url);
+      const res = await fetch(url);
+      const data = await res.json();
+      const p = data.products?.[0];
+      if (!p) { console.log(`[TEST] ${d.name}: no product returned`); continue; }
+      console.log(`[TEST] ${d.name} tokensLeft:`, data.tokensLeft);
+      console.log(`[TEST] ${d.name} stats.current:`, JSON.stringify(p.stats?.current));
+      console.log(`[TEST] ${d.name} offers count:`, p.offers?.length, 'liveOffersOrder:', p.liveOffersOrder);
+      (p.offers||[]).forEach((o,i) => {
+        console.log(`[TEST] ${d.name} offer[${i}]: isPEX=${o.isPrimeExclusive} isFBA=${o.isFBA} condition=${o.condition} sellerId=${o.sellerId}`);
+        if (o.offerCSV) console.log(`[TEST] ${d.name} offer[${i}] offerCSV last 9:`, JSON.stringify(o.offerCSV.slice(-9)));
+      });
+      // Also log ALL csv fields that have data
+      if (p.csv) {
+        Object.entries(p.csv).forEach(([k,v]) => {
+          if (Array.isArray(v) && v.length > 0) console.log(`[TEST] ${d.name} csv[${k}] last 4:`, JSON.stringify(v.slice(-4)));
+        });
+      }
+    } catch(e) { console.error(`[TEST] ${d.name} error:`, e); }
+  }
+  pexSetStatus('Test complete — check console', 100);
+  setTimeout(pexHideStatus, 2000);
+}
+
 async function pexRun() {
   console.log('[PEX] pexRun called, pexIsRunning=', pexIsRunning, 'pexAsins=', pexAsins.length);
   if (pexIsRunning) { console.warn('[PEX] already running, bailing'); return; }

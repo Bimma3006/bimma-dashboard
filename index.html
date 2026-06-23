@@ -3107,7 +3107,6 @@ input::placeholder { color: var(--text-4); }
         <button class="sc-btn" onclick="pexClear()">✕ Clear</button>
         <button class="sc-btn sc-btn-danger" onclick="pexStop()" id="pexStopBtn" style="display:none;">⏹ Stop</button>
         <button class="sc-btn sc-btn-primary" onclick="pexRun()" id="pexRunBtn">⭐ Run PEX Scout</button>
-        <button class="sc-btn" onclick="pexTestSingleAsin()" id="pexTestBtn" title="Test single ASIN B09Q5YPDNR on DE">🧪 Test</button>
       </div>
     </div>
 
@@ -6387,7 +6386,6 @@ async function scoutRun() {
             const primeExclusive = document.getElementById('scoutPrimeExclusive')?.checked;
             const euCsvFields = primeExclusive ? '&csv=65536' : '';
             const url = `https://api.keepa.com/product?key=${apiKey}&domain=${SCOUT_DOMAINS[market].id}&asin=${batch.join(',')}&stats=180&buybox=1${euCsvFields}`;
-            console.log('[SCOUT] Fetching URL:', url);
             const r = await fetch(url);
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
             const data = await r.json();
@@ -6396,7 +6394,6 @@ async function scoutRun() {
               scoutUpdateTokenBar(scoutLastTokenCount);
             }
             if (data.error) throw new Error(data.error.message || 'Keepa error');
-            console.log('[SCOUT] Got', (data.products||[]).length, 'products, primeExclusive=', primeExclusive);
             if (primeExclusive && data.products?.length > 0) {
               const p0 = data.products[0];
               console.log('[PEX FULL DUMP] ASIN:', p0.asin);
@@ -8881,11 +8878,7 @@ function pexFileChosen(file) {
     const bbStIdx  = headers.findIndex(h => h === 'Buy Box: Strikethrough Price');
     const bbCurIdx = headers.findIndex(h => h === 'Buy Box: Current');
     const titleIdx = headers.findIndex(h => h === 'Title');
-    console.log('[PEX CSV] headers:', headers.slice(0,12));
-    console.log('[PEX CSV] asinIdx:', asinIdx, 'bb180Idx:', bb180Idx);
-    console.log('[PEX CSV] line[1] raw:', lines[1]?.slice(0,100));
-    if (asinIdx < 0) { toast('No ASIN column found in CSV — headers: ' + headers.slice(0,5).join('|'),'error'); return; }
-    console.log('[PEX CSV] first ASIN raw:', (parseCSVLineGlobal(lines[1])[asinIdx]||'').replace(/"/g,'').trim());
+    if (asinIdx < 0) { toast('No ASIN column found in CSV','error'); return; }
     const maxAsins = parseInt(document.getElementById('pexMaxAsins')?.value) || 10000;
     for (let i = 1; i < lines.length; i++) {
       const cols = parseCSVLineGlobal(lines[i]);
@@ -8981,51 +8974,8 @@ function pexClear() {
 }
 
 // ── Main run ──
-async function pexTestSingleAsin() {
-  const apiKey = (document.getElementById('pexApiKey')?.value||'').trim();
-  if (!apiKey) { toast('Enter Keepa API key first','error'); return; }
-  const asin = 'B0D7QHKDBG';
-  const domains = [{name:'UK',id:2},{name:'DE',id:3},{name:'FR',id:4},{name:'IT',id:8},{name:'ES',id:9}];
-  pexSetStatus(`Testing ${asin}…`, 5);
-  const results = [];
-  for (const d of domains) {
-    try {
-      const url = `https://api.keepa.com/product?key=${apiKey}&domain=${d.id}&asin=${asin}&stats=180`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const p = data.products?.[0];
-      if (!p) { results.push(`${d.name}: no product`); continue; }
-      const cur33 = p.stats?.current?.[33];
-      const csv33 = p.csv ? (p.csv[33] || p.csv['33']) : null;
-      let pexPrice = null;
-      if (cur33 && cur33 > 0) pexPrice = cur33 / 100;
-      if (!pexPrice && csv33?.length >= 2) {
-        for (let j = csv33.length-1; j >= 1; j -= 2) {
-          if (csv33[j] > 0) { pexPrice = csv33[j] / 100; break; }
-        }
-      }
-      // Log everything useful
-      console.log(`[TEST] ${d.name} | cur[33]=${cur33} | csv33=${csv33?JSON.stringify(csv33.slice(-6)):'none'} | PEX=£${pexPrice?.toFixed(2)||'none'}`);
-      console.log(`[TEST] ${d.name} full stats.current:`, JSON.stringify(p.stats?.current));
-      // Log ALL csv keys with data
-      if (p.csv) Object.entries(p.csv).forEach(([k,v]) => {
-        if (Array.isArray(v) && v.length > 0 && v[v.length-1] > 0)
-          console.log(`[TEST] ${d.name} csv[${k}] last val: ${v[v.length-1]} = £${(v[v.length-1]/100).toFixed(2)}`);
-      });
-      results.push(`${d.name}: ${pexPrice ? '✅ £'+pexPrice.toFixed(2) : '❌ no PEX'} | cur[33]=${cur33}`);
-    } catch(e) { results.push(`${d.name}: ERROR ${e.message}`); console.error(`[TEST] ${d.name}:`, e); }
-  }
-  document.getElementById('pexTableBody').innerHTML = `<tr><td colspan="9" style="font-family:var(--mono);font-size:12px;padding:20px;color:var(--text-2);">
-    <b>Test results for ${asin}:</b><br><br>${results.map(r=>`• ${r}`).join('<br>')}
-    <br><br><span style="color:var(--text-3)">Check console for full csv dump</span>
-  </td></tr>`;
-  pexSetStatus('Test complete', 100);
-  setTimeout(pexHideStatus, 2000);
-}
-
 async function pexRun() {
-  console.log('[PEX] pexRun called, pexIsRunning=', pexIsRunning, 'pexAsins=', pexAsins.length);
-  if (pexIsRunning) { console.warn('[PEX] already running, bailing'); return; }
+  if (pexIsRunning) return;
   const apiKey = (document.getElementById('pexApiKey')?.value||'').trim();
   if (!apiKey) { toast('Enter your Keepa API key','error'); return; }
   // Restore from localStorage if in-memory state was lost
@@ -9084,19 +9034,10 @@ async function pexRun() {
           // csv[33] = Prime Exclusive price. stats=180 returns stats.current[33].
           const url = `https://api.keepa.com/product?key=${apiKey}&domain=${PEX_DOMAINS[market].id}&asin=${batch.join(',')}&stats=180`;
           const res = await fetch(url);
-          console.log('[PEX FETCH] status:', res.status, 'ok:', res.ok);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
-          console.log('[PEX FETCH] tokensLeft:', data.tokensLeft, 'products:', data.products?.length, 'error:', data.error);
           if (data.tokensLeft != null) { pexLastTokens = data.tokensLeft; pexUpdateTokenBar(pexLastTokens); }
           if (data.error) throw new Error(data.error.message || 'Keepa error');
-          if (data.products?.length > 0) {
-            const p0 = data.products[0];
-            console.log('[PEX RAW] asin:', p0.asin, 'offers count:', p0.offers?.length, 'liveOffersOrder:', p0.liveOffersOrder?.length);
-            (p0.offers||[]).forEach((o,i) => {
-              console.log(`[PEX RAW] offer[${i}] isPEX:${o.isPrimeExclusive} isFBA:${o.isFBA} condition:${o.condition} offerCSV last 6:`, JSON.stringify(o.offerCSV?.slice(-6)));
-            });
-          }
 
           (data.products || []).forEach(p => {
             if (!p.asin) return;

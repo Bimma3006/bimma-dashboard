@@ -4495,7 +4495,7 @@ const FEES = {
 // STATE
 // ════════════════════════════════════════
 let currentMode = 'uk';
-let daDeals = [], daFilter = 'all', daSort = { col: null, dir: 1 };
+let daDeals = [], daFilter = 'all', daSort = { col: null, dir: 1 }, daBrandFilter = null;
 
 // ════════════════════════════════════════
 // RETAILER BRAND LIST (Currys / Argos / Shark / Vax)
@@ -4752,6 +4752,7 @@ function daAnalyseRow(row) {
   const toHouse = maxDim !== null && maxDim > 63;
   const title = row['Title'] || '';
   const asin  = row['ASIN'] || '';
+  const brand = (row['Brand'] || row['Manufacturer'] || '').trim();
 
   // Buy price: raw + extra cost (e.g. EU shipping), both inc VAT
   // S&S eligible: apply 15% subscriber discount to buy price
@@ -4896,7 +4897,7 @@ function daAnalyseRow(row) {
   if (fbaFeeEst && reason && colour !== 'grey') reason += ' · FBA est.';
   const sortOrder = colour === 'green' ? 0 : colour === 'amber' ? 1 : spikeFlag ? 4 : colour === 'red' ? 2 : 3;
 
-  return { title, asin, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, decision: null };
+  return { title, asin, brand, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, decision: null };
 }
 
 // ════════════════════════════════════════
@@ -5161,8 +5162,10 @@ function daRenderHeaders() {
   const spLabel  = cfg.condition === 'used' ? 'SP Used' : 'SP 180d';
   const ssCols = daFilter === 'subsave'
     ? `<th data-col="ssRoi" data-type="num" style="color:var(--purple);" title="ROI on Subscribe & Save">♻ S&S</th>` : '';
+  const brandFilterLabel = daBrandFilter ? ` <span style="color:var(--green);font-size:9px;cursor:pointer;" onclick="daClearBrandFilter()" title="Clear brand filter">✕ ${daBrandFilter}</span>` : '';
   document.getElementById('daTableHead').innerHTML = `<tr>
     <th class="no-sort th-left" style="min-width:220px;max-width:300px;">Product</th>
+    <th class="no-sort th-left" style="min-width:90px;">Brand${brandFilterLabel}</th>
     <th data-col="buyIncVat" data-type="num">${buyLabel}</th>
     <th data-col="spIncVat" data-type="num">${spLabel}</th>
     <th data-col="profit" data-type="num">Profit</th>
@@ -5187,6 +5190,7 @@ function daRenderTable() {
     : daFilter === 'retailer'
     ? daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15))
     : daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter && !d.ss);
+  if (daBrandFilter) filtered = filtered.filter(d => (d.brand||'').toLowerCase() === daBrandFilter.toLowerCase());
   if (daSearchQ) filtered = filtered.filter(d => d.asin.toLowerCase().includes(daSearchQ) || d.title.toLowerCase().includes(daSearchQ));
   if (daSort.col) {
     filtered = [...filtered].sort((a, b) => {
@@ -5230,6 +5234,9 @@ function daRenderTable() {
       <td class="td-num">${fmtN(deal.buyIncVat)}</td>
       <td class="td-num">${fmtN(deal.spIncVat)}${spTag}</td>
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
+      <td style="vertical-align:middle;">
+        ${deal.brand ? `<span onclick="daSetBrandFilter('${deal.brand.replace(/'/g,'\\'')}',event)" style="font-family:var(--mono);font-size:10px;color:var(--text-3);cursor:pointer;padding:2px 6px;border-radius:3px;border:1px solid var(--border2);white-space:nowrap;display:inline-block;" title="Click to filter by ${deal.brand.replace(/'/g,'\\'')}">` + deal.brand + '</span>' : '<span style="color:var(--text-4)">—</span>'}
+      </td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
       <td class="td-num" style="color:${r15Colour(deal.r15Roi)}">${fmtP(deal.r15Roi)}</td>
       ${ssCells}
@@ -5291,6 +5298,18 @@ function daInitSort() {
 // ════════════════════════════════════════
 // FILTER / DECISION
 // ════════════════════════════════════════
+function daSetBrandFilter(brand, e) {
+  if (e) e.stopPropagation();
+  daBrandFilter = daBrandFilter === brand ? null : brand;
+  daRenderHeaders();
+  daRenderTable();
+}
+function daClearBrandFilter() {
+  daBrandFilter = null;
+  daRenderHeaders();
+  daRenderTable();
+}
+
 function daSetFilter(f, btn) {
   daFilter = f;
   document.querySelectorAll('#daFilters .a2a-fpill').forEach(b => b.classList.remove('active'));
@@ -5370,7 +5389,7 @@ function daPriceCalc() {
 }
 
 function daReset() {
-  daDeals = []; daFilter = 'all'; daSort = { col: null, dir: 1 };
+  daDeals = []; daFilter = 'all'; daSort = { col: null, dir: 1 }; daBrandFilter = null;
   daSlotFiles = { 1: null, 2: null, 3: null };
   [1, 2, 3].forEach(n => {
     document.getElementById('daSlot' + n).classList.remove('has-file');

@@ -5062,9 +5062,6 @@ function daAnalyseRow(row) {
   } else if (roi >= cfg.minROI) {
     strength = 'MARGINAL'; colour = 'amber';
     reason = `ROI ${(roi*100).toFixed(1)}% — verify on Keepa`;
-  } else if (r15Roi != null && r15Roi >= 0.15) {
-    strength = 'STRONG'; colour = 'green';
-    reason = `Retailer ROI ${(r15Roi*100).toFixed(1)}% — needs 15% gift card`;
   } else {
     strength = 'REJECT'; colour = 'red';
     reason = roi !== null ? `ROI ${(roi*100).toFixed(1)}% — below minimum` : 'Below minimum';

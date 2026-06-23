@@ -8748,7 +8748,14 @@ function gcImport(input) {
   reader.readAsText(file);
 }
 
-document.addEventListener('bimma:pagechange', e => { if (e.detail === 'giftcards') gcRender(); });
+document.addEventListener('bimma:pagechange', e => {
+  if (e.detail === 'giftcards') gcRender();
+  if (e.detail === 'pexscout') {
+    // Reset stuck running state when navigating to page
+    if (pexIsRunning) { pexIsRunning = false; const rb=document.getElementById('pexRunBtn'); if(rb) rb.disabled=false; const sb=document.getElementById('pexStopBtn'); if(sb) sb.style.display='none'; }
+    pexCountASINs();
+  }
+});
 
 // ── Global CSV line parser (shared by Scout + PEX Scout) ──
 function parseCSVLineGlobal(line) {
@@ -8978,7 +8985,8 @@ function pexClear() {
 
 // ── Main run ──
 async function pexRun() {
-  if (pexIsRunning) return;
+  console.log('[PEX] pexRun called, pexIsRunning=', pexIsRunning, 'pexAsins=', pexAsins.length);
+  if (pexIsRunning) { console.warn('[PEX] already running, bailing'); return; }
   const apiKey = (document.getElementById('pexApiKey')?.value||'').trim();
   if (!apiKey) { toast('Enter your Keepa API key','error'); return; }
   // Restore from localStorage if in-memory state was lost

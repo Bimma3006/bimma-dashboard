@@ -6222,48 +6222,43 @@ async function scoutRun() {
     let totalScraped = 0;
 
     if (qualifiedAsins.length > 0) {
-      let step = 0;
-      for (const market of markets) {
+      const batchSize = 100;
+      const totalBatches = Math.ceil(qualifiedAsins.length / batchSize);
+      const primeExclusive = document.getElementById('scoutPrimeExclusive')?.checked;
+
+      for (let i = 0; i < qualifiedAsins.length; i += batchSize) {
         if (scoutShouldStop) break;
-        step++;
-        const batchSize = 100;
-        let marketScraped = 0;
-        for (let i = 0; i < qualifiedAsins.length; i += batchSize) {
-          if (scoutShouldStop) break;
-          const batch = qualifiedAsins.slice(i, i + batchSize);
-          const pct = 20 + ((step - 1) / markets.length + (i / qualifiedAsins.length) / markets.length) * 70;
-          const asinsLeft = qualifiedAsins.length - i;
-          const tokensEst = asinsLeft * markets.length * 3;
-          const minsEst = Math.ceil(tokensEst / scoutRefillRate);
-          scoutSetStatus(
-            `${market}: fetching batch ${Math.floor(i/batchSize)+1}/${Math.ceil(qualifiedAsins.length/batchSize)} · ${i + batch.length}/${qualifiedAsins.length} ASINs · ~${minsEst} min remaining`,
-            pct
-          );
-          const euNeeded = batch.length * 3 + 20;
-          if (scoutLastTokenCount !== null && scoutLastTokenCount < euNeeded) {
-            await scoutWaitForTokens(apiKey, euNeeded);
-          }
+        const batch = qualifiedAsins.slice(i, i + batchSize);
+        const batchNum = Math.floor(i / batchSize) + 1;
+        const pct = 20 + (i / qualifiedAsins.length) * 70;
+
+        // Need tokens for all markets at once
+        const euNeeded = batch.length * markets.length * 3 + 20;
+        if (scoutLastTokenCount !== null && scoutLastTokenCount < euNeeded) {
+          await scoutWaitForTokens(apiKey, euNeeded);
+        }
+        if (scoutShouldStop) break;
+
+        scoutSetStatus(`Batch ${batchNum}/${totalBatches} — ${batch.length} ASINs × ${markets.length} markets`, pct);
+
+        // Fetch all markets in parallel for this batch
+        await Promise.all(markets.map(async market => {
           try {
-            const primeExclusive = document.getElementById('scoutPrimeExclusive')?.checked;
-            // stats=180 returns stats.current[33] (Prime Exclusive) and stats.current[18] (Buy Box)
             const url = `https://api.keepa.com/product?key=${apiKey}&domain=${SCOUT_DOMAINS[market].id}&asin=${batch.join(',')}&stats=180&buybox=1`;
             const r = await fetch(url);
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
             const data = await r.json();
             if (data.tokensLeft !== undefined) {
-              scoutLastTokenCount = data.tokensLeft;
+              scoutLastTokenCount = Math.min(scoutLastTokenCount ?? data.tokensLeft, data.tokensLeft);
               scoutUpdateTokenBar(scoutLastTokenCount);
             }
             if (data.error) throw new Error(data.error.message || 'Keepa error');
-            
             (data.products || []).forEach(p => {
               if (!p.asin) return;
               if (!euData[p.asin]) euData[p.asin] = {};
               const result = primeExclusive ? scoutGetPrimeExclusivePrice(p) : { price: scoutGetCurrentBB(p), source: 'BB' };
               const bb = result?.price ?? null;
               const ukBBForCheck = scoutCsvBBMap[p.asin] || null;
-              // In PEX mode the price is in local EU currency — don't compare raw to GBP BB,
-              // the FX conversion happens in scoutCalcProfit. Just sanity check range.
               const euBelowUkBB = primeExclusive ? true : (!ukBBForCheck || (bb < ukBBForCheck));
               if (bb && bb > 0.5 && bb < 3000 && euBelowUkBB) {
                 euData[p.asin][market] = bb;
@@ -6271,18 +6266,16 @@ async function scoutRun() {
                   if (!euSourceData[p.asin]) euSourceData[p.asin] = {};
                   euSourceData[p.asin][market] = result.source;
                 }
-                marketScraped++;
+                totalScraped++;
               }
             });
           } catch(e) { console.warn(`${market} batch ${i}:`, e.message); }
-          // Render partial results after each batch
-          scoutRenderPartial(asins, ukMap, euData, euSourceData, markets, marketFx, shipping, prep, minRoi, csvHasBB);
-        }
-        totalScraped += marketScraped;
-        await new Promise(r => setTimeout(r, 200));
+        }));
+
+        // Render after each ASIN batch — now has all markets for these ASINs
+        scoutRenderPartial(asins, ukMap, euData, euSourceData, markets, marketFx, shipping, prep, minRoi, csvHasBB);
       }
     }
-
     scoutSetStatus('Computing best deals…', 85);
     scoutResults = asins.map(asin => {
       const ukProd     = ukMap[asin];

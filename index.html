@@ -4777,7 +4777,7 @@ function daAnalyseRow(row) {
   // Falls back to best avg × 1.08 if no current BB
   // Sell price: current BB × 1.2 — simple, realistic target above current market
   // Falls back to best avg × 1.08 if no current BB
-  const UPLIFT = 1.08;
+  const UPLIFT = 1.20;
   const ST_CAP = 1.30;
   const avgCandidates = [avg90, avg180, avg365].filter(v => v != null && v > 0);
   const bestAvg = avgCandidates.length ? Math.max(...avgCandidates) : null;
@@ -4786,7 +4786,7 @@ function daAnalyseRow(row) {
   const useBBCurrent = cfg.condition !== 'used' && bbCurrent && bbCurrent > 0;
   const spIncVat = useBBCurrent ? bbCurrent * 1.2 : avgFallback;
   const whichAvg = bestAvg === avg90 ? '90d' : bestAvg === avg365 ? '365d' : '180d';
-  const spSource = useBBCurrent ? 'BB×1.2' : stCapped && spIncVat === stCapped ? 'ST' : `${whichAvg}+8%`;
+  const spSource = useBBCurrent ? 'BB×1.2' : stCapped && spIncVat === stCapped ? 'ST' : `${whichAvg}×1.2`;
   const sp = spIncVat ? spIncVat / (1 + vat) : null;
 
   // FBA fee: use actual if present, otherwise estimate from sell price

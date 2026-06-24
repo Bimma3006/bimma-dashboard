@@ -4772,22 +4772,21 @@ function daAnalyseRow(row) {
   }
 
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
-  // Sell price logic:
-  // 1. Take the highest of all avg buy box periods (90d, 180d, 365d) — whichever is best
-  // 2. Also consider ST price as a candidate
-  // 3. Pick the highest of all candidates
-  // 4. Apply a small uplift multiplier (8%) to reflect that averages include price dips
-  // 5. Current BB overrides everything if it's higher (price has recently risen)
   const UPLIFT = 1.08;
+  const ST_CAP = 1.30;
   const BB_CURRENT_CAP = 2.0;
-  const candidates = [avg90, avg180, avg365, stPrice].filter(v => v != null && v > 0);
-  const bestAvg = candidates.length ? Math.max(...candidates) : null;
-  const spBase = bestAvg ? bestAvg * UPLIFT : null;
+  const avgCandidates = [avg90, avg180, avg365].filter(v => v != null && v > 0);
+  const bestAvg = avgCandidates.length ? Math.max(...avgCandidates) : null;
+  const spAvgUplifted = bestAvg ? bestAvg * UPLIFT : null;
+  const stCapped = cfg.condition !== 'used' && stPrice && bestAvg && stPrice > bestAvg && stPrice <= bestAvg * ST_CAP ? stPrice : null;
+  const spBase = spAvgUplifted && stCapped ? Math.max(spAvgUplifted, stCapped)
+    : stCapped ?? spAvgUplifted ?? daParseNum(row[cfg.sellCol]);
+  const whichAvg = bestAvg === avg90 ? '90d' : bestAvg === avg365 ? '365d' : '180d';
+  const spBaseSource = stCapped && spBase === stCapped ? 'ST' : `${whichAvg}+8%`;
   const useBBCurrent = cfg.condition !== 'used' && bbCurrent && spBase
     && bbCurrent > spBase && bbCurrent <= spBase * BB_CURRENT_CAP;
   const spIncVat = useBBCurrent ? bbCurrent : spBase;
-  const whichAvg = bestAvg === stPrice ? 'ST' : bestAvg === avg90 ? '90d' : bestAvg === avg365 ? '365d' : '180d';
-  const spSource = useBBCurrent ? 'BB now' : `${whichAvg}+8%`;
+  const spSource = useBBCurrent ? 'BB now' : spBaseSource;
   const sp = spIncVat ? spIncVat / (1 + vat) : null;
 
   // FBA fee: use actual if present, otherwise estimate from sell price
@@ -5739,18 +5738,21 @@ function scoutFileChosen(file, slot=1) {
             const bbSt   = getNum(bbStIdx);
             const pexVal = getNum(pexIdx);
             const title  = (cols[titleIdx]||'').replace(/"/g,'').trim();
-            // Sell price: highest of 90d/180d/365d/ST + 8% uplift; current BB overrides if higher
             const UPLIFT = 1.08;
+            const ST_CAP = 1.30;
             const valid = v => !isNaN(v) && v > 0;
             let bestSell = null, sellSource = '';
-            const avgCandidates = [bb90, bb180, bb365, bbSt].filter(valid);
-            const bestAvg = avgCandidates.length ? Math.max(...avgCandidates) : null;
-            const base = bestAvg ? bestAvg * UPLIFT : null;
-            const whichAvg = bestAvg === bbSt ? 'ST' : bestAvg === bb90 ? '90d' : bestAvg === bb365 ? '365d' : '180d';
+            const avgCands = [bb90, bb180, bb365].filter(valid);
+            const bestAvg = avgCands.length ? Math.max(...avgCands) : null;
+            const avgUplifted = bestAvg ? bestAvg * UPLIFT : null;
+            const stCapped = valid(bbSt) && bestAvg && bbSt > bestAvg && bbSt <= bestAvg * ST_CAP ? bbSt : null;
+            const base = avgUplifted && stCapped ? Math.max(avgUplifted, stCapped) : stCapped ?? avgUplifted ?? null;
+            const whichAvg = bestAvg === bb90 ? '90d' : bestAvg === bb365 ? '365d' : '180d';
+            const baseSource = stCapped && base === stCapped ? 'ST' : whichAvg + '+8%';
             if (valid(bbCur) && base && bbCur > base && bbCur <= base * 2.0) {
               bestSell = bbCur; sellSource = 'BB now';
             } else if (base) {
-              bestSell = base; sellSource = whichAvg + '+8%';
+              bestSell = base; sellSource = baseSource;
             } else if (base) {
               bestSell = base; sellSource = baseSource;
             }
@@ -6000,8 +6002,9 @@ function scoutGetBB180(product) {
   const avg90  = stats.avg90?.[18];
 
   const UPLIFT = 1.08;
+  const ST_CAP = 1.30;
 
-  // Strikethrough from csv[10] (Was Price) — most recent positive value
+  // Strikethrough from csv[10]
   let stPrice = null;
   try {
     if (csv && csv[10] && csv[10].length >= 2) {
@@ -6013,19 +6016,17 @@ function scoutGetBB180(product) {
     }
   } catch(_) {}
 
-  // Pick highest of all candidates, apply uplift
-  const candidates = [avg90, avg180, avg365, stPrice ? stPrice * 100 : null].filter(v => v != null && v > 0);
-  if (!candidates.length) return null;
-  const bestRaw = Math.max(...candidates);
-  const bestPrice = bestRaw / 100;
-  const whichAvg = (stPrice && stPrice * 100 === bestRaw) ? 'ST'
-    : (avg90 && avg90 === bestRaw) ? '90d'
-    : (avg365 && avg365 === bestRaw) ? '365d'
-    : '180d';
-  const spBase = bestPrice * UPLIFT;
-  const spSource = whichAvg + '+8%';
+  const avgCands = [avg90, avg180, avg365].filter(v => v != null && v > 0);
+  if (!avgCands.length) return null;
+  const bestAvgRaw = Math.max(...avgCands);
+  const bestAvg = bestAvgRaw / 100;
+  const avgUplifted = bestAvg * UPLIFT;
+  const whichAvg = (avg90 && avg90 === bestAvgRaw) ? '90d' : (avg365 && avg365 === bestAvgRaw) ? '365d' : '180d';
+  const stCapped = stPrice && stPrice > bestAvg && stPrice <= bestAvg * ST_CAP ? stPrice : null;
+  const spBase = avgUplifted && stCapped ? Math.max(avgUplifted, stCapped) : stCapped ?? avgUplifted;
+  const spSource = stCapped && spBase === stCapped ? 'ST' : whichAvg + '+8%';
 
-  // Current BB overrides if higher than uplift base and within 2×
+  // Current BB overrides if higher than base and within 2×
   const curRaw = stats.current?.[18];
   const bbCurrent = curRaw && curRaw > 0 ? curRaw / 100 : null;
   if (bbCurrent && bbCurrent > spBase && bbCurrent <= spBase * 2.0) {

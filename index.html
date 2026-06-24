@@ -4783,7 +4783,7 @@ function daAnalyseRow(row) {
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
   // Sell price: highest of 90d/180d/365d BB avg × tiered multiplier
   const ST_CAP = 1.30;
-  const avgCandidates = [avg90, avg180, avg365].filter(v => v != null && v > 0);
+  const avgCandidates = [avg90, avg180, (avg365 && avg90 && avg365 > avg90 * 1.15 ? null : avg365)].filter(v => v != null && v > 0);
   const bestAvg = avgCandidates.length ? Math.max(...avgCandidates) : null;
   const UPLIFT = bestAvg == null ? 1.20
     : bestAvg < 100  ? 1.20
@@ -5223,7 +5223,7 @@ function daRenderTable() {
     tr.innerHTML = `
       <td class="td-product">
         <div class="td-product-title">${deal.title}</div>
-        <div class="td-product-badges">${deal.ss ? '<span class="ss-badge">S&S</span> ' : ''}${deal.boughtDaysAgo != null ? `<span class="inv-badge">📦 bought ${deal.boughtDaysAgo}d ago</span> ` : ''}${deal.toHouse ? `<span class="to-house-badge">🏠 To house${deal.maxDim ? ' '+deal.maxDim.toFixed(0)+'cm' : ''}</span> ` : ''}${deal.priceChanged ? '<span class="pc-badge">↓ PRICE DROP</span> ' : ''}${deal.priceMoved === 'down' ? `<span class="pc-badge">↓ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% cheaper</span> ` : deal.priceMoved === 'up' ? `<span class="price-up-badge">↑ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% pricier</span> ` : ''}${trendWarn}${spikeWarn}${daViewedList.has(deal.asin) ? `<span class="viewed-badge">SEEN<span onclick="event.stopPropagation();daUnmarkViewed('${deal.asin}')" style="cursor:pointer;color:var(--red);margin-left:3px;font-size:10px;line-height:1;" title="Unmark as viewed">×</span></span>` : ''}</div>
+        <div class="td-product-badges">${deal.ss ? '<span class="ss-badge">S&S</span> ' : ''}${deal.boughtDaysAgo != null ? `<span class="inv-badge">📦 bought ${deal.boughtDaysAgo}d ago</span> ` : ''}${deal.toHouse ? `<span class="to-house-badge">🏠 To house${deal.maxDim ? ' '+deal.maxDim.toFixed(0)+'cm' : ''}</span> ` : ''}${deal.priceChanged ? '<span class="pc-badge">↓ PRICE DROP</span> ' : ''}${deal.priceMoved === 'down' ? `<span class="pc-badge">↓ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% cheaper</span> ` : ''}${trendWarn}${spikeWarn}${daViewedList.has(deal.asin) ? `<span class="viewed-badge">SEEN<span onclick="event.stopPropagation();daUnmarkViewed('${deal.asin}')" style="cursor:pointer;color:var(--red);margin-left:3px;font-size:10px;line-height:1;" title="Unmark as viewed">×</span></span>` : ''}</div>
         <div class="td-asin-row">
           <a href="https://www.amazon.co.uk/dp/${deal.asin}" target="_blank" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">${deal.asin}</a>
           <a href="https://www.keepa.com/#product/2-${deal.asin}" target="_blank" class="keepa-link" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">Keepa ↗</a>

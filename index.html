@@ -4710,7 +4710,7 @@ function daFbaFee(price) {
 
 function daAnalyseRow(row) {
   const cfg = MODES[currentMode];
-  const { vat, referralPct, prepFee, dsFeeRate } = FEES;
+  const { vat, prepFee, dsFeeRate } = FEES;
 
   const buyRaw   = daParseNum(row[cfg.buyCol]) ?? (cfg.buyCol === 'New, Prime Exclusive: Current' ? daParseNum(row['New, Prime exclusive: Current']) : null);
   const avg90    = daParseNum(row['Buy Box: 90 days avg.']);
@@ -4718,8 +4718,15 @@ function daAnalyseRow(row) {
   const avg365   = daParseNum(row['Buy Box: 365 days avg.']);
   const sd365    = daParseNum(row['Buy Box: Standard Deviation 365 days']);
   const fbaFeeRaw = daParseNum(row['FBA Pick&Pack Fee']);
-  const fbaFeeEst = fbaFeeRaw === null; // flag that we estimated
+  const fbaFeeEst = fbaFeeRaw === null;
+  const referralPctRaw = daParseNum(row['Referral Fee %']);
+  const referralPct = (referralPctRaw !== null && referralPctRaw > 0) ? referralPctRaw / 100 : FEES.referralPct;
+  const weightG = daParseNum(row['Weight (g)']);
+  const inboundShipping = (weightG !== null && weightG > 0) ? (weightG / 1000) * 0.23 : 0;
   // fbaFee assigned below after spIncVat is calculated
+
+
+
   const rankDrops = daParseNum(row['Sales Rank: Drops last 30 days']);
   const boughtPerMonth = daParseNum(row['Bought in past month'])
     ?? daParseNum(row['Monthly Sales Trends: Bought in past month'])
@@ -4809,7 +4816,7 @@ function daAnalyseRow(row) {
   let profit = null, roi = null;
   if (sp && buyExVat && refFee !== null && fbaExVat !== null) {
     const vatDue = (spIncVat * vat / (1 + vat)) - (buyIncVat ? buyIncVat * vat / (1 + vat) : 0);
-    profit = sp - buyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - vatDue;
+    profit = sp - buyExVat - refFee - fbaExVat - prepFee - inboundShipping - (dsFee || 0) - vatDue;
     roi = profit / buyExVat;
   }
 
@@ -4831,7 +4838,7 @@ function daAnalyseRow(row) {
   let gcProfit = null, gcRoi = null;
   if (sp && gcBuyExVat && refFee !== null && fbaExVat !== null) {
     const gcVatDue = (spIncVat * vat / (1 + vat)) - (gcBuyIncVat ? gcBuyIncVat * vat / (1 + vat) : 0);
-    gcProfit = sp - gcBuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - gcVatDue;
+    gcProfit = sp - gcBuyExVat - refFee - fbaExVat - prepFee - inboundShipping - (dsFee || 0) - gcVatDue;
     gcRoi = gcProfit / gcBuyExVat;
   }
 
@@ -4843,7 +4850,7 @@ function daAnalyseRow(row) {
     const ssBuyIncVat = buyIncVat * 0.85;
     const ssBuyExVat  = ssBuyIncVat / (1 + vat);
     const ssVatDue    = (spIncVat * vat / (1 + vat)) - (ssBuyIncVat * vat / (1 + vat));
-    ssProfit = sp - ssBuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - ssVatDue;
+    ssProfit = sp - ssBuyExVat - refFee - fbaExVat - prepFee - inboundShipping - (dsFee || 0) - ssVatDue;
     ssRoi    = ssProfit / ssBuyExVat;
   }
 
@@ -4857,7 +4864,7 @@ function daAnalyseRow(row) {
   let r15Profit = null, r15Roi = null;
   if (r15Match && sp && r15BuyExVat && refFee !== null && fbaExVat !== null) {
     const r15VatDue = (spIncVat * vat / (1 + vat)) - (r15BuyIncVat ? r15BuyIncVat * vat / (1 + vat) : 0);
-    r15Profit = sp - r15BuyExVat - refFee - fbaExVat - prepFee - (dsFee || 0) - r15VatDue;
+    r15Profit = sp - r15BuyExVat - refFee - fbaExVat - prepFee - inboundShipping - (dsFee || 0) - r15VatDue;
     r15Roi    = r15Profit / r15BuyExVat;
   }
 

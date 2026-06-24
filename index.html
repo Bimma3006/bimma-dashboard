@@ -4771,6 +4771,7 @@ function daAnalyseRow(row) {
     if (rankDrops && rankDrops >= 20) recoveries = Math.min(12, recoveries + 2);
   }
 
+  const bbCurrent = daParseNum(row['Buy Box: Current']);
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
   const UPLIFT = 1.08;
   const ST_CAP = 1.30;
@@ -4818,7 +4819,6 @@ function daAnalyseRow(row) {
   // avg_skew: 180d avg is 30%+ above 365d avg AND current price has dropped below 180d avg
   //           — means a past spike inflated the 180d avg, skewing the sell price projection
   let spikeFlag = null;
-  const bbCurrent = daParseNum(row['Buy Box: Current']);
   if (bbCurrent && avg180 && sd365) {
     if (bbCurrent > avg180 + (sd365 * 3)) spikeFlag = 'bb_spike';
   }

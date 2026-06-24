@@ -5130,7 +5130,7 @@ function daRunAnalysis() {
         document.getElementById('daTableWrap').classList.add('visible');
         document.getElementById('daResetBtn').style.display = '';
         daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
-        try { localStorage.setItem('bimma_da_results', JSON.stringify(daDeals)); localStorage.setItem('bimma_da_results_mode', currentMode); } catch(e) {}
+        try { const slim = daDeals.map(d => { const {title,asin,brand,buyExVat,buyIncVat,spIncVat,spSource,sp,dip,recoveries,profit,roi,gcProfit,gcRoi,ssProfit,ssRoi,r15Profit,r15Roi,rankDrops,boughtPerMonth,ss,priceTrendWarning,spikeFlag,strength,colour,reason,sortOrder,fbaFeeEst,toHouse,maxDim,bbCurrent,avg180,decision,priceChanged,priceMoved,priceMovePct,boughtDaysAgo}=d; return {title,asin,brand,buyExVat,buyIncVat,spIncVat,spSource,sp,dip,recoveries,profit,roi,gcProfit,gcRoi,ssProfit,ssRoi,r15Profit,r15Roi,rankDrops,boughtPerMonth,ss,priceTrendWarning,spikeFlag,strength,colour,reason,sortOrder,fbaFeeEst,toHouse,maxDim,bbCurrent,avg180,decision,priceChanged,priceMoved,priceMovePct,boughtDaysAgo}; }); localStorage.setItem('bimma_da_results', JSON.stringify(slim)); localStorage.setItem('bimma_da_results_mode', currentMode); } catch(e) { console.warn('DA persist failed:', e); }
         try { const snap = {}; daDeals.forEach(d => { if (d.asin && d.buyIncVat != null) snap[d.asin.toUpperCase()] = d.buyIncVat; }); localStorage.setItem('bimma_da_price_snap', JSON.stringify(snap)); } catch(e) {}
       } catch(err) {
         document.getElementById('daLoading').classList.remove('visible');

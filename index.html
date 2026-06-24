@@ -4789,7 +4789,11 @@ function daAnalyseRow(row) {
     return daParseNum(row[cfg.sellCol]);
   })();
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
-  const ST_CAP = 1.30;
+  // ST cap: use strikethrough if it's above the base price but within 3× it.
+  // 1.30 was too conservative — real Amazon ST prices are often 150-200% of current BB.
+  // 3× still filters genuinely stale/absurd RRPs (e.g. £250 ST on an £85 product is fine;
+  // a £10,000 ST on a £50 product would be filtered).
+  const ST_CAP = 3.0;
   const BB_CURRENT_CAP = 2.0;
   // Use current BB if it's above 180d base and within 2× it
   const useBBCurrent = cfg.condition !== 'used' && bbCurrent && spBase
@@ -5758,14 +5762,14 @@ function scoutFileChosen(file, slot=1) {
             const pexVal = getNum(pexIdx);
             const title  = (cols[titleIdx]||'').replace(/"/g,'').trim();
             // Best sell price — same logic as A2A analyser
-            // ST_CAP: strikethrough only used if > base but <= 130% of base (filters stale RRPs)
-            const ST_CAP = 1.30;
+            // ST_CAP: strikethrough used if > base but <= 3× base (filters only absurd stale RRPs)
+            const ST_CAP = 3.0;
             const valid = v => !isNaN(v) && v > 0;
             let bestSell = null, sellSource = '';
             // Base: use 365d if higher than 180d, else 180d
             const base = (valid(bb365) && valid(bb180) && bb365 > bb180) ? bb365 : (valid(bb180) ? bb180 : null);
             const baseSource = (valid(bb365) && valid(bb180) && bb365 > bb180) ? '365d' : '180d';
-            // Strikethrough: use if above base AND within 130% cap
+            // Strikethrough: use if above base AND within 3× cap
             if (valid(bbSt) && base && bbSt > base && bbSt <= base * ST_CAP) {
               bestSell = bbSt; sellSource = 'ST';
             } else if (base) {
@@ -6064,7 +6068,7 @@ function scoutGetBB180(product) {
   } catch(_) {}
 
   // Strikethrough override: use if > spBase but within 130%
-  const ST_CAP = 1.30;
+  const ST_CAP = 3.0;
   if (stPrice && spBase && stPrice > spBase && stPrice <= spBase * ST_CAP) {
     return { price: stPrice, source: 'ST' };
   }

@@ -4789,8 +4789,8 @@ function daAnalyseRow(row) {
     : bestAvg < 100  ? 1.20
     : bestAvg < 300  ? 1.17
     : bestAvg < 600  ? 1.13
-    : bestAvg < 1000 ? 1.09
-    : 1.05;
+    : bestAvg < 1000 ? 1.07
+    : 1.03;
   const stCapped = stPrice && bestAvg && stPrice > bestAvg && stPrice <= bestAvg * ST_CAP ? stPrice : null;
   const spIncVat = stCapped && bestAvg ? Math.max(bestAvg * UPLIFT, stCapped) : stCapped ?? (bestAvg ? bestAvg * UPLIFT : null) ?? daParseNum(row[cfg.sellCol]);
   const whichAvg = bestAvg === avg90 ? '90d' : bestAvg === avg365 ? '365d' : '180d';

@@ -4773,21 +4773,18 @@ function daAnalyseRow(row) {
 
   const bbCurrent = daParseNum(row['Buy Box: Current']);
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
+  // Sell price: current BB × 1.2 — simple, realistic target above current market
+  // Falls back to best avg × 1.08 if no current BB
   const UPLIFT = 1.08;
   const ST_CAP = 1.30;
-  const BB_CURRENT_CAP = 2.0;
   const avgCandidates = [avg90, avg180, avg365].filter(v => v != null && v > 0);
   const bestAvg = avgCandidates.length ? Math.max(...avgCandidates) : null;
-  const spAvgUplifted = bestAvg ? bestAvg * UPLIFT : null;
-  const stCapped = cfg.condition !== 'used' && stPrice && bestAvg && stPrice > bestAvg && stPrice <= bestAvg * ST_CAP ? stPrice : null;
-  const spBase = spAvgUplifted && stCapped ? Math.max(spAvgUplifted, stCapped)
-    : stCapped ?? spAvgUplifted ?? daParseNum(row[cfg.sellCol]);
+  const stCapped = stPrice && bestAvg && stPrice > bestAvg && stPrice <= bestAvg * ST_CAP ? stPrice : null;
+  const avgFallback = stCapped && bestAvg ? Math.max(bestAvg * UPLIFT, stCapped) : stCapped ?? (bestAvg ? bestAvg * UPLIFT : null) ?? daParseNum(row[cfg.sellCol]);
+  const useBBCurrent = cfg.condition !== 'used' && bbCurrent && bbCurrent > 0;
+  const spIncVat = useBBCurrent ? bbCurrent * 1.2 : avgFallback;
   const whichAvg = bestAvg === avg90 ? '90d' : bestAvg === avg365 ? '365d' : '180d';
-  const spBaseSource = stCapped && spBase === stCapped ? 'ST' : `${whichAvg}+8%`;
-  const useBBCurrent = cfg.condition !== 'used' && bbCurrent && spBase
-    && bbCurrent > spBase && bbCurrent <= spBase * BB_CURRENT_CAP;
-  const spIncVat = useBBCurrent ? bbCurrent : spBase;
-  const spSource = useBBCurrent ? 'BB now' : spBaseSource;
+  const spSource = useBBCurrent ? 'BB×1.2' : stCapped && spIncVat === stCapped ? 'ST' : `${whichAvg}+8%`;
   const sp = spIncVat ? spIncVat / (1 + vat) : null;
 
   // FBA fee: use actual if present, otherwise estimate from sell price
@@ -5744,15 +5741,13 @@ function scoutFileChosen(file, slot=1) {
             let bestSell = null, sellSource = '';
             const avgCands = [bb90, bb180, bb365].filter(valid);
             const bestAvg = avgCands.length ? Math.max(...avgCands) : null;
-            const avgUplifted = bestAvg ? bestAvg * UPLIFT : null;
             const stCapped = valid(bbSt) && bestAvg && bbSt > bestAvg && bbSt <= bestAvg * ST_CAP ? bbSt : null;
-            const base = avgUplifted && stCapped ? Math.max(avgUplifted, stCapped) : stCapped ?? avgUplifted ?? null;
-            const whichAvg = bestAvg === bb90 ? '90d' : bestAvg === bb365 ? '365d' : '180d';
-            const baseSource = stCapped && base === stCapped ? 'ST' : whichAvg + '+8%';
-            if (valid(bbCur) && base && bbCur > base && bbCur <= base * 2.0) {
-              bestSell = bbCur; sellSource = 'BB now';
-            } else if (base) {
-              bestSell = base; sellSource = baseSource;
+            const avgFallback = stCapped && bestAvg ? Math.max(bestAvg * UPLIFT, stCapped) : stCapped ?? (bestAvg ? bestAvg * UPLIFT : null);
+            if (valid(bbCur)) {
+              bestSell = bbCur * 1.2; sellSource = 'BB×1.2';
+            } else if (avgFallback) {
+              const whichAvg = bestAvg === bb90 ? '90d' : bestAvg === bb365 ? '365d' : '180d';
+              bestSell = avgFallback; sellSource = stCapped && avgFallback === stCapped ? 'ST' : whichAvg + '+8%';
             } else if (base) {
               bestSell = base; sellSource = baseSource;
             }
@@ -6004,7 +5999,6 @@ function scoutGetBB180(product) {
   const UPLIFT = 1.08;
   const ST_CAP = 1.30;
 
-  // Strikethrough from csv[10]
   let stPrice = null;
   try {
     if (csv && csv[10] && csv[10].length >= 2) {
@@ -6016,23 +6010,20 @@ function scoutGetBB180(product) {
     }
   } catch(_) {}
 
+  // Current BB × 1.2 — primary sell price
+  const curRaw = stats.current?.[18];
+  const bbCurrent = curRaw && curRaw > 0 ? curRaw / 100 : null;
+  if (bbCurrent) return { price: bbCurrent * 1.2, source: 'BB×1.2' };
+
+  // Fallback: best avg + 8% (or ST if capped within 1.3×)
   const avgCands = [avg90, avg180, avg365].filter(v => v != null && v > 0);
   if (!avgCands.length) return null;
   const bestAvgRaw = Math.max(...avgCands);
   const bestAvg = bestAvgRaw / 100;
-  const avgUplifted = bestAvg * UPLIFT;
   const whichAvg = (avg90 && avg90 === bestAvgRaw) ? '90d' : (avg365 && avg365 === bestAvgRaw) ? '365d' : '180d';
   const stCapped = stPrice && stPrice > bestAvg && stPrice <= bestAvg * ST_CAP ? stPrice : null;
-  const spBase = avgUplifted && stCapped ? Math.max(avgUplifted, stCapped) : stCapped ?? avgUplifted;
+  const spBase = stCapped ? Math.max(bestAvg * UPLIFT, stCapped) : bestAvg * UPLIFT;
   const spSource = stCapped && spBase === stCapped ? 'ST' : whichAvg + '+8%';
-
-  // Current BB overrides if higher than base and within 2×
-  const curRaw = stats.current?.[18];
-  const bbCurrent = curRaw && curRaw > 0 ? curRaw / 100 : null;
-  if (bbCurrent && bbCurrent > spBase && bbCurrent <= spBase * 2.0) {
-    return { price: bbCurrent, source: 'BB now' };
-  }
-
   return { price: spBase, source: spSource };
 }
 function scoutGetCurrentBB(product) {

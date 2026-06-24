@@ -4772,12 +4772,13 @@ function daAnalyseRow(row) {
   }
 
   // Sell price selection:
-  // 1. Base: when recoveries >= 4, use the HIGHER of 365d and 180d avg (so a recent
-  //    price rise isn't penalised by a lower historical 365d figure).
-  //    When recoveries >= 3, apply a 10% uplift to 180d avg to reflect recovery potential.
-  //    Otherwise use 180d avg.
-  // 2. Strikethrough override: if strikethrough exists and is within 130% of base SP
-  //    (capped to avoid stale/inflated strikethroughs on permanently-dropped products)
+  // 1. Base: when recoveries >= 4, use the HIGHER of 365d and 180d avg.
+  //    When recoveries >= 3, apply a 10% uplift to 180d avg.
+  //    Otherwise use 180d avg (cfg.sellCol).
+  // 2. Current BB override: if current BB is ABOVE the base AND within 2× base,
+  //    use it — this captures products where the price has recently recovered.
+  //    Cap at 2× to avoid stale inflated current prices being misleading.
+  // 3. Strikethrough override: if ST exists and is within 130% of the chosen base.
   const spBase = (() => {
     if (recoveries && recoveries >= 4 && avg365) {
       return (avg180 && avg180 > avg365) ? avg180 : avg365;
@@ -4788,11 +4789,18 @@ function daAnalyseRow(row) {
     return daParseNum(row[cfg.sellCol]);
   })();
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
-  // Strikethrough: use if above avg base but within 130% of it (filters stale RRPs)
   const ST_CAP = 1.30;
-  const useStrikethrough = cfg.condition !== 'used' && stPrice && spBase && stPrice > spBase && stPrice <= spBase * ST_CAP;
-  const spIncVat = useStrikethrough ? stPrice : spBase;
+  const BB_CURRENT_CAP = 2.0;
+  // Use current BB if it's above 180d base and within 2× it
+  const useBBCurrent = cfg.condition !== 'used' && bbCurrent && spBase
+    && bbCurrent > spBase && bbCurrent <= spBase * BB_CURRENT_CAP;
+  const spAfterBBCurrent = useBBCurrent ? bbCurrent : spBase;
+  const spAfterBBCurrentSource = useBBCurrent ? 'BB now' : null;
+  // Strikethrough on top of whichever base we picked
+  const useStrikethrough = cfg.condition !== 'used' && stPrice && spAfterBBCurrent && stPrice > spAfterBBCurrent && stPrice <= spAfterBBCurrent * ST_CAP;
+  const spIncVat = useStrikethrough ? stPrice : spAfterBBCurrent;
   const spSource = useStrikethrough ? 'ST'
+    : spAfterBBCurrentSource ? spAfterBBCurrentSource
     : (recoveries && recoveries >= 4 && avg365)
       ? (avg180 && avg180 > avg365 ? '180d' : '365d')
       : (recoveries && recoveries >= 3 && avg180)
@@ -4899,7 +4907,7 @@ function daAnalyseRow(row) {
   if (fbaFeeEst && reason && colour !== 'grey') reason += ' · FBA est.';
   const sortOrder = colour === 'green' ? 0 : colour === 'amber' ? 1 : spikeFlag ? 4 : colour === 'red' ? 2 : 3;
 
-  return { title, asin, brand, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, decision: null };
+  return { title, asin, brand, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, bbCurrent, avg180, decision: null };
 }
 
 // ════════════════════════════════════════
@@ -5168,6 +5176,7 @@ function daRenderHeaders() {
     <th class="no-sort th-left" style="min-width:90px;">Brand${brandFilterLabel}</th>
     <th data-col="buyIncVat" data-type="num">${buyLabel}</th>
     <th data-col="spIncVat" data-type="num">${spLabel}</th>
+    <th data-col="bbCurrent" data-type="num" title="Current Buy Box — what it's selling for right now" style="color:var(--blue);">BB Now</th>
     <th data-col="profit" data-type="num">Profit</th>
     <th data-col="roi" data-type="num">ROI</th>
     <th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys/Argos with 15% gift card">🏪 15%</th>
@@ -5236,6 +5245,7 @@ function daRenderTable() {
       </td>
       <td class="td-num">${fmtN(deal.buyIncVat)}</td>
       <td class="td-num">${fmtN(deal.spIncVat)}${spTag}</td>
+      <td class="td-num" style="color:${deal.bbCurrent && deal.avg180 && deal.bbCurrent > deal.avg180 * 1.05 ? 'var(--green)' : deal.bbCurrent && deal.avg180 && deal.bbCurrent < deal.avg180 * 0.95 ? 'var(--red)' : 'var(--text-3)'};">${deal.bbCurrent ? '£'+deal.bbCurrent.toFixed(2) : '—'}</td>
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
       <td class="td-num" style="color:${r15Colour(deal.r15Roi)}">${fmtP(deal.r15Roi)}</td>

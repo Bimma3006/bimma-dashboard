@@ -4781,17 +4781,16 @@ function daAnalyseRow(row) {
 
   const bbCurrent = daParseNum(row['Buy Box: Current']);
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
-  // Sell price: highest of 90d/180d/365d BB avg × 1.20
-  // ST used instead if within 1.3× of best avg and higher
+  // Sell price: highest of 90d/180d/365d BB avg × tiered multiplier
+  const ST_CAP = 1.30;
+  const avgCandidates = [avg90, avg180, avg365].filter(v => v != null && v > 0);
+  const bestAvg = avgCandidates.length ? Math.max(...avgCandidates) : null;
   const UPLIFT = bestAvg == null ? 1.20
     : bestAvg < 100  ? 1.20
     : bestAvg < 300  ? 1.17
     : bestAvg < 600  ? 1.13
     : bestAvg < 1000 ? 1.09
     : 1.05;
-  const ST_CAP = 1.30;
-  const avgCandidates = [avg90, avg180, avg365].filter(v => v != null && v > 0);
-  const bestAvg = avgCandidates.length ? Math.max(...avgCandidates) : null;
   const stCapped = stPrice && bestAvg && stPrice > bestAvg && stPrice <= bestAvg * ST_CAP ? stPrice : null;
   const spIncVat = stCapped && bestAvg ? Math.max(bestAvg * UPLIFT, stCapped) : stCapped ?? (bestAvg ? bestAvg * UPLIFT : null) ?? daParseNum(row[cfg.sellCol]);
   const whichAvg = bestAvg === avg90 ? '90d' : bestAvg === avg365 ? '365d' : '180d';

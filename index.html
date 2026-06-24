@@ -4771,43 +4771,23 @@ function daAnalyseRow(row) {
     if (rankDrops && rankDrops >= 20) recoveries = Math.min(12, recoveries + 2);
   }
 
-  // Sell price selection:
-  // 1. Base: when recoveries >= 4, use the HIGHER of 365d and 180d avg.
-  //    When recoveries >= 3, apply a 10% uplift to 180d avg.
-  //    Otherwise use 180d avg (cfg.sellCol).
-  // 2. Current BB override: if current BB is ABOVE the base AND within 2× base,
-  //    use it — this captures products where the price has recently recovered.
-  //    Cap at 2× to avoid stale inflated current prices being misleading.
-  // 3. Strikethrough override: if ST exists and is within 130% of the chosen base.
-  const spBase = (() => {
-    if (recoveries && recoveries >= 4 && avg365) {
-      return (avg180 && avg180 > avg365) ? avg180 : avg365;
-    }
-    if (recoveries && recoveries >= 3 && avg180) {
-      return avg180 * 1.10;
-    }
-    return daParseNum(row[cfg.sellCol]);
-  })();
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
-  // Priority order for sell price:
-  // 1. Current BB — if it's above 180d avg and within 2× it, use it (price has risen)
-  // 2. Strikethrough — ONLY if current BB is absent, and ST is within 1.5× of 180d avg
-  //    (ST when current BB exists is irrelevant — nobody pays the RRP if BB is lower)
-  // 3. Fallback to spBase (180d avg or 365d avg)
+  // Sell price logic:
+  // 1. Take the highest of all avg buy box periods (90d, 180d, 365d) — whichever is best
+  // 2. Also consider ST price as a candidate
+  // 3. Pick the highest of all candidates
+  // 4. Apply a small uplift multiplier (8%) to reflect that averages include price dips
+  // 5. Current BB overrides everything if it's higher (price has recently risen)
+  const UPLIFT = 1.08;
   const BB_CURRENT_CAP = 2.0;
-  const ST_CAP = 1.5;
+  const candidates = [avg90, avg180, avg365, stPrice].filter(v => v != null && v > 0);
+  const bestAvg = candidates.length ? Math.max(...candidates) : null;
+  const spBase = bestAvg ? bestAvg * UPLIFT : null;
   const useBBCurrent = cfg.condition !== 'used' && bbCurrent && spBase
     && bbCurrent > spBase && bbCurrent <= spBase * BB_CURRENT_CAP;
-  const useStrikethrough = !useBBCurrent && cfg.condition !== 'used'
-    && stPrice && spBase && stPrice > spBase && stPrice <= spBase * ST_CAP;
-  const spIncVat = useBBCurrent ? bbCurrent : useStrikethrough ? stPrice : spBase;
-  const spSource = useBBCurrent ? 'BB now'
-    : useStrikethrough ? 'ST'
-    : (recoveries && recoveries >= 4 && avg365)
-      ? (avg180 && avg180 > avg365 ? '180d' : '365d')
-      : (recoveries && recoveries >= 3 && avg180)
-        ? '180d+10%'
-        : '180d';
+  const spIncVat = useBBCurrent ? bbCurrent : spBase;
+  const whichAvg = bestAvg === stPrice ? 'ST' : bestAvg === avg90 ? '90d' : bestAvg === avg365 ? '365d' : '180d';
+  const spSource = useBBCurrent ? 'BB now' : `${whichAvg}+8%`;
   const sp = spIncVat ? spIncVat / (1 + vat) : null;
 
   // FBA fee: use actual if present, otherwise estimate from sell price
@@ -5759,25 +5739,20 @@ function scoutFileChosen(file, slot=1) {
             const bbSt   = getNum(bbStIdx);
             const pexVal = getNum(pexIdx);
             const title  = (cols[titleIdx]||'').replace(/"/g,'').trim();
-            // ST_CAP: only use ST when current BB is absent, capped at 1.5× base
-            const ST_CAP = 1.5;
+            // Sell price: highest of 90d/180d/365d/ST + 8% uplift; current BB overrides if higher
+            const UPLIFT = 1.08;
             const valid = v => !isNaN(v) && v > 0;
             let bestSell = null, sellSource = '';
-            // Base: use 365d if higher than 180d, else 180d
-            const base = (valid(bb365) && valid(bb180) && bb365 > bb180) ? bb365 : (valid(bb180) ? bb180 : null);
-            const baseSource = (valid(bb365) && valid(bb180) && bb365 > bb180) ? '365d' : '180d';
-            // Current BB: use if above base and within 2×
+            const avgCandidates = [bb90, bb180, bb365, bbSt].filter(valid);
+            const bestAvg = avgCandidates.length ? Math.max(...avgCandidates) : null;
+            const base = bestAvg ? bestAvg * UPLIFT : null;
+            const whichAvg = bestAvg === bbSt ? 'ST' : bestAvg === bb90 ? '90d' : bestAvg === bb365 ? '365d' : '180d';
             if (valid(bbCur) && base && bbCur > base && bbCur <= base * 2.0) {
               bestSell = bbCur; sellSource = 'BB now';
-            // Strikethrough: only if no current BB override, within 1.5× base
-            } else if (valid(bbSt) && base && bbSt > base && bbSt <= base * ST_CAP) {
-              bestSell = bbSt; sellSource = 'ST';
+            } else if (base) {
+              bestSell = base; sellSource = whichAvg + '+8%';
             } else if (base) {
               bestSell = base; sellSource = baseSource;
-            } else if (valid(bb90)) {
-              bestSell = bb90; sellSource = '90d';
-            } else if (valid(bbCur)) {
-              bestSell = bbCur; sellSource = 'cur';
             }
             if (asin && bestSell) {
               const bbMapSlot      = slot === 1 ? scoutCsvBBMap1      : scoutCsvBBMap2;
@@ -6015,8 +5990,7 @@ async function scoutWaitForTokens(apiKey, needed) {
   }
 }
 function scoutGetBB180(product) {
-  // Returns { price, source } using identical sell-price logic to the Deal Analyser:
-  // recovery scoring → 365d-vs-180d pick → 10% uplift → strikethrough 130% cap
+  // Returns { price, source } — highest of 90d/180d/365d/ST + 8% uplift; current BB overrides if higher
   const stats = product.stats;
   const csv   = product.csv;
   if (!stats) return null;
@@ -6024,36 +5998,8 @@ function scoutGetBB180(product) {
   const avg180 = stats.avg180?.[18];
   const avg365 = stats.avg365?.[18];
   const avg90  = stats.avg90?.[18];
-  const sd365  = stats.avg180?.[19]; // Keepa index 19 = std dev (not exposed in stats directly — use what's available)
-  const rankDrops = stats.current?.[3]; // sales rank drops approx
 
-  const v180 = avg180 && avg180 > 0;
-  const v365 = avg365 && avg365 > 0;
-
-  // Recovery scoring (mirrors daAnalyseRow)
-  let recoveries = null;
-  if (v180 && sd365) {
-    const cv = (sd365 / 100) / (avg180 / 100);
-    recoveries = cv >= 0.25 ? 10 : cv >= 0.20 ? 8 : cv >= 0.15 ? 6 : cv >= 0.10 ? 4 : cv >= 0.06 ? 2 : 1;
-    if (rankDrops && rankDrops >= 20) recoveries = Math.min(12, recoveries + 2);
-  }
-
-  // Base sell price — same logic as analyser spBase
-  let spBase = null;
-  let spSource = '180d';
-  if (recoveries && recoveries >= 4 && v365) {
-    spBase = (v180 && avg180 > avg365) ? avg180 / 100 : avg365 / 100;
-    spSource = (v180 && avg180 > avg365) ? '180d' : '365d';
-  } else if (recoveries && recoveries >= 3 && v180) {
-    spBase = (avg180 / 100) * 1.10;
-    spSource = '180d+10%';
-  } else if (v180) {
-    spBase = avg180 / 100;
-    spSource = '180d';
-  } else if (v365) {
-    spBase = avg365 / 100;
-    spSource = '365d';
-  }
+  const UPLIFT = 1.08;
 
   // Strikethrough from csv[10] (Was Price) — most recent positive value
   let stPrice = null;
@@ -6067,18 +6013,26 @@ function scoutGetBB180(product) {
     }
   } catch(_) {}
 
-  // Strikethrough override: use if > spBase but within 130%
-  const ST_CAP = 1.5;
-  if (stPrice && spBase && stPrice > spBase && stPrice <= spBase * ST_CAP) {
-    return { price: stPrice, source: 'ST' };
+  // Pick highest of all candidates, apply uplift
+  const candidates = [avg90, avg180, avg365, stPrice ? stPrice * 100 : null].filter(v => v != null && v > 0);
+  if (!candidates.length) return null;
+  const bestRaw = Math.max(...candidates);
+  const bestPrice = bestRaw / 100;
+  const whichAvg = (stPrice && stPrice * 100 === bestRaw) ? 'ST'
+    : (avg90 && avg90 === bestRaw) ? '90d'
+    : (avg365 && avg365 === bestRaw) ? '365d'
+    : '180d';
+  const spBase = bestPrice * UPLIFT;
+  const spSource = whichAvg + '+8%';
+
+  // Current BB overrides if higher than uplift base and within 2×
+  const curRaw = stats.current?.[18];
+  const bbCurrent = curRaw && curRaw > 0 ? curRaw / 100 : null;
+  if (bbCurrent && bbCurrent > spBase && bbCurrent <= spBase * 2.0) {
+    return { price: bbCurrent, source: 'BB now' };
   }
 
-  if (spBase) return { price: spBase, source: spSource };
-
-  // Fallback to current buy box
-  const cur = stats.current?.[18];
-  if (cur && cur > 0) return { price: cur / 100, source: 'cur' };
-  return null;
+  return { price: spBase, source: spSource };
 }
 function scoutGetCurrentBB(product) {
   // Returns EU price — tries csv[0] (Amazon), then stats.current[0],

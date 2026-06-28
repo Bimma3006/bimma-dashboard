@@ -5750,13 +5750,13 @@ function scoutFileChosen(file, slot=1) {
             const bbSt   = getNum(bbStIdx);
             const pexVal = getNum(pexIdx);
             const title  = (cols[titleIdx]||'').replace(/"/g,'').trim();
-            const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
-            const UPLIFT = tieredUplift(bestAvg);
             const ST_CAP = 1.30;
             const valid = v => !isNaN(v) && v > 0;
             let bestSell = null, sellSource = '';
             const avgCands = [bb90, bb180, bb365].filter(valid);
             const bestAvg = avgCands.length ? Math.max(...avgCands) : null;
+            const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
+            const UPLIFT = tieredUplift(bestAvg);
             const stCapped = valid(bbSt) && bestAvg && bbSt > bestAvg && bbSt <= bestAvg * ST_CAP ? bbSt : null;
             const avgFallback = stCapped && bestAvg ? Math.max(bestAvg * UPLIFT, stCapped) : stCapped ?? (bestAvg ? bestAvg * UPLIFT : null);
             if (valid(bbCur)) {
@@ -5765,8 +5765,6 @@ function scoutFileChosen(file, slot=1) {
             } else if (avgFallback) {
               const whichAvg = bestAvg === bb90 ? '90d' : bestAvg === bb365 ? '365d' : '180d';
               bestSell = avgFallback; sellSource = stCapped && avgFallback === stCapped ? 'ST' : whichAvg + '+8%';
-            } else if (base) {
-              bestSell = base; sellSource = baseSource;
             }
             if (asin && bestSell) {
               const bbMapSlot      = slot === 1 ? scoutCsvBBMap1      : scoutCsvBBMap2;

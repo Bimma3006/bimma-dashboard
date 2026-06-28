@@ -6217,7 +6217,7 @@ async function scoutRun() {
           if (!asinList.length) return;
           try {
             const pex = document.getElementById('scoutPrimeExclusive')?.checked;
-            const url = `https://api.keepa.com/product?key=${apiKey}&domain=${SCOUT_DOMAINS[market].id}&asin=${asinList.join(',')}&stats=180&buybox=1&only_live=1${pex ? '&csv=16' : ''}`;
+            const url = `https://api.keepa.com/product?key=${apiKey}&domain=${SCOUT_DOMAINS[market].id}&asin=${asinList.join(',')}&stats=180&buybox=1${pex ? '&csv=16' : ''}`;
             const r = await fetch(url);
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
             const data = await r.json();

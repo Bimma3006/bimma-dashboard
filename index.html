@@ -6222,6 +6222,8 @@ async function scoutRun() {
     // Token cost per ASIN = 3 tokens × markets; batch size = what fits in a full refill
     const tokenCostPerAsin = 3 * markets.length;
     const dynamicBatchSize = Math.max(10, Math.floor((scoutTokenMax * 0.95) / tokenCostPerAsin));
+    // First batch uses current balance (don't wait), subsequent batches wait for full refill
+    const firstBatchSize = Math.max(10, Math.floor(((scoutLastTokenCount ?? scoutTokenMax) * 0.95) / tokenCostPerAsin));
 
     // Show live stats panel
     const liveStats = document.getElementById('scoutLiveStats');
@@ -6232,7 +6234,7 @@ async function scoutRun() {
       if (el('scoutStatTotal'))    el('scoutStatTotal').textContent    = qualifiedAsins.length;
       if (el('scoutStatUsed'))     el('scoutStatUsed').textContent     = tokensSpent;
       if (el('scoutStatCostPer'))  el('scoutStatCostPer').textContent  = tokenCostPerAsin + ' tokens';
-      if (el('scoutStatCapacity')) el('scoutStatCapacity').textContent = dynamicBatchSize + ' ASINs';
+      if (el('scoutStatCapacity')) el('scoutStatCapacity').textContent = (asinsScanned === 0 ? firstBatchSize : dynamicBatchSize) + ' ASINs';
       const refillMins = Math.ceil(scoutTokenMax / scoutRefillRate);
       if (el('scoutStatCycle'))    el('scoutStatCycle').textContent    = `~${refillMins}min refill @ ${scoutRefillRate}/min`;
     };
@@ -6273,9 +6275,10 @@ async function scoutRun() {
         } catch(e) { console.warn(`${market} batch:`, e.message); }
       };
 
-      for (let i = 0; i < qualifiedAsins.length; i += dynamicBatchSize) {
+      for (let i = 0; i < qualifiedAsins.length; ) {
         if (scoutShouldStop) break;
-        const batch = qualifiedAsins.slice(i, i + dynamicBatchSize);
+        const thisBatchSize = i === 0 ? firstBatchSize : dynamicBatchSize;
+        const batch = qualifiedAsins.slice(i, i + thisBatchSize);
         const batchNum = Math.floor(i / dynamicBatchSize) + 1;
         const pct = 20 + (i / qualifiedAsins.length) * 70;
 
@@ -6313,6 +6316,7 @@ async function scoutRun() {
         scoutSetStatus(`Batch ${batchNum}/${totalBatches} · ${batch.length} ASINs × ${markets.length} markets · ${asinsScanned}/${qualifiedAsins.length} done · ${Math.floor(scoutLastTokenCount ?? 0)} tokens left`, pct);
         await Promise.all(markets.map(m => fetchMarket(m, batch)));
         asinsScanned += batch.length;
+        i += batch.length;
         updateLiveStats();
         scoutRenderPartial(qualifiedAsins, ukMap, euData, euSourceData, markets, marketFx, shipping, prep, minRoi, csvHasBB);
       }

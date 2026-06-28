@@ -5963,8 +5963,13 @@ async function scoutRefreshTokens() {
     const data = await res.json();
     if (data.tokensLeft != null) {
       scoutLastTokenCount = data.tokensLeft;
-      if (data.refillRate && data.refillRate > 0) scoutRefillRate = data.refillRate;
-      if (data.tokensLeft > scoutTokenMax) scoutTokenMax = Math.ceil(data.tokensLeft / 100) * 100;
+      if (tkData.refillRate && tkData.refillRate > 0) {
+        scoutRefillRate = tkData.refillRate;
+        // Token capacity = 1 hour of refill (Keepa refills to a 1hr cap)
+        const derivedMax = tkData.refillRate * 60;
+        if (derivedMax > scoutTokenMax) scoutTokenMax = derivedMax;
+      }
+      if (tkData.tokensLeft > scoutTokenMax) scoutTokenMax = Math.ceil(tkData.tokensLeft / 100) * 100;
       scoutUpdateTokenBar(scoutLastTokenCount);
     } else {
       toast('Could not read token count', 'error');
@@ -6157,7 +6162,11 @@ async function scoutRun() {
     try {
       const tkRes = await fetch(`https://api.keepa.com/token?key=${apiKey}`);
       const tkData = await tkRes.json();
-      if (tkData.refillRate && tkData.refillRate > 0) scoutRefillRate = tkData.refillRate;
+      if (tkData.refillRate && tkData.refillRate > 0) {
+        scoutRefillRate = tkData.refillRate;
+        const derivedMax = tkData.refillRate * 60;
+        if (derivedMax > scoutTokenMax) scoutTokenMax = derivedMax;
+      }
       if (tkData.tokensLeft != null) {
         scoutLastTokenCount = tkData.tokensLeft;
         if (tkData.tokensLeft > scoutTokenMax) scoutTokenMax = Math.ceil(tkData.tokensLeft / 100) * 100;
@@ -6278,6 +6287,11 @@ async function scoutRun() {
               const tkData = await tkRes.json();
               if (tkData.tokensLeft != null) {
                 scoutLastTokenCount = tkData.tokensLeft;
+                if (tkData.refillRate && tkData.refillRate > 0) {
+                  scoutRefillRate = tkData.refillRate;
+                  const derivedMax = tkData.refillRate * 60;
+                  if (derivedMax > scoutTokenMax) scoutTokenMax = derivedMax;
+                }
                 if (tkData.tokensLeft > scoutTokenMax) scoutTokenMax = Math.ceil(tkData.tokensLeft / 100) * 100;
                 scoutUpdateTokenBar(scoutLastTokenCount);
               }

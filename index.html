@@ -6869,6 +6869,53 @@ function stalkerUpdateBadge() {
   else badge.style.display = 'none';
 }
 
+
+function stalkerBuildSellerRow(s) {
+  const AVATARCOLORS = ['#4d8ef5','#9b6dff','#00e88a','#f0a500','#f03b50','#00c9ff'];
+  const flagI      = STALKER_FLAGS[s.market] || '🌐';
+  const tld        = STALKER_MARKETS[s.market] || 'co.uk';
+  const snap       = stalkerSnapshots[s.uid];
+  const newCount   = stalkerFeedItems.filter(function(f){ return f.sellerId === s.id && f.type==='new' && f.detectedAt >= new Date().setHours(0,0,0,0); }).length;
+  const isChecking = s.status === 'checking';
+  const dotClass   = isChecking ? 'checking' : s.status==='error' ? 'error' : s.status==='baseline' ? 'baseline' : '';
+  const lastChk    = s.lastCheck ? stalkerFmtTime(s.lastCheck) : '—';
+  const ac         = AVATARCOLORS[stalkerSellers.indexOf(s) % AVATARCOLORS.length];
+  const initial    = (s.name||'?')[0].toUpperCase();
+  const uid        = s.uid;
+  var html = '';
+  html += '<tr id="stalkerCard_' + uid + '">';
+  html += '<td><span class="stalker-status-dot ' + dotClass + '"></span>';
+  html += '<span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">' + (isChecking?'Checking':s.status==='error'?'Error':'Active') + '</span></td>';
+  html += '<td><div style="display:flex;align-items:center;gap:10px;">';
+  html += '<div class="stalker-seller-avatar" style="background:' + ac + '22;color:' + ac + ';">' + initial + '</div>';
+  html += '<div><div style="font-size:13.5px;font-weight:600;color:var(--text);">' + s.name + '</div>';
+  html += '<a href="https://keepa.com/#!seller/' + s.market + '-' + s.id + '" target="_blank" style="font-family:var(--mono);font-size:10.5px;color:var(--blue);text-decoration:none;">' + s.id + '</a>';
+  html += '</div></div></td>';
+  html += '<td style="font-family:var(--mono);font-size:12px;color:var(--text-2);">' + flagI + ' ' + tld + '</td>';
+  html += '<td style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);">' + (s.asinCount !== null ? s.asinCount.toLocaleString() : '—') + '</td>';
+  html += '<td style="font-family:var(--mono);font-size:13px;color:' + (newCount>0?'var(--green)':'var(--text-3)') + ';">' + (newCount > 0 ? '+'+newCount : '0') + '</td>';
+  html += '<td style="font-family:var(--mono);font-size:11px;color:var(--text-3);">' + lastChk + '</td>';
+  html += '<td>';
+  html += '<input type="file" id="stalkerCSVInput_' + uid + '" accept=".csv" style="display:none" onchange="stalkerHandleCSV(&quot;' + uid + '&quot;,this)">';
+  html += '<div style="display:flex;gap:6px;align-items:center;">';
+  if (snap && snap.asins && snap.asins.length) {
+    html += '<button class="stalker-btn" style="color:var(--text-2);font-size:11px;" onclick="stalkerFetchProducts(&quot;' + uid + '&quot;)">&#8595; Fetch</button>';
+  }
+  html += '<button class="stalker-btn refresh" onclick="stalkerCheckSeller(stalkerSellers.find(function(x){return x.uid===&quot;' + uid + '&quot;}))" ' + (isChecking?'disabled':'') + ' title="Refresh">&#8635;</button>';
+  html += '<button class="stalker-btn" onclick="stalkerImportCSV(&quot;' + uid + '&quot;)" title="Import CSV">&#8593;</button>';
+  html += '<button class="stalker-btn" onclick="stalkerRename(&quot;' + uid + '&quot;)" title="Rename">&#9998;</button>';
+  html += '<button class="stalker-btn del" onclick="stalkerRemoveSeller(&quot;' + uid + '&quot;)">&#10005;</button>';
+  html += '</div></td></tr>';
+  return html;
+}
+
+function stalkerBuildSellerGroup(label, flag, sellers) {
+    if (!sellers.length) return '';
+    var header = '<tr><td colspan="7" style="padding:10px 0 4px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);border-top:1px solid var(--border2);">' + flag + ' ' + label + '</td></tr>';
+    return header + sellers.map(stalkerBuildSellerRow).join('');
+  }
+
+
 function stalkerRenderSellers() {
   const tbody = document.getElementById('stalkerSellerTableBody');
   if (!tbody) return;
@@ -6888,59 +6935,15 @@ function stalkerRenderSellers() {
     return;
   }
 
-  const AVATARCOLORS = ['#4d8ef5','#9b6dff','#00e88a','#f0a500','#f03b50','#00c9ff'];
-
   // Split into UK / US / EU groups
   const ukSellers  = stalkerSellers.filter(s => s.market === '2');
   const usSellers  = stalkerSellers.filter(s => s.market === '1');
   const euSellers  = stalkerSellers.filter(s => !['1','2'].includes(s.market));
   const AVATARCOLORS = ['#4d8ef5','#9b6dff','#00e88a','#f0a500','#f03b50','#00c9ff'];
 
-  function renderSellerRow(s) {
-    const flagI      = STALKER_FLAGS[s.market] || '🌐';
-    const tld        = STALKER_MARKETS[s.market] || 'co.uk';
-    const snap       = stalkerSnapshots[s.uid];
-    const newCount   = stalkerFeedItems.filter(function(f){ return f.sellerId === s.id && f.type==='new' && f.detectedAt >= new Date().setHours(0,0,0,0); }).length;
-    const isChecking = s.status === 'checking';
-    const dotClass   = isChecking ? 'checking' : s.status==='error' ? 'error' : s.status==='baseline' ? 'baseline' : '';
-    const lastChk    = s.lastCheck ? stalkerFmtTime(s.lastCheck) : '—';
-    const ac         = AVATARCOLORS[stalkerSellers.indexOf(s) % AVATARCOLORS.length];
-    const initial    = (s.name||'?')[0].toUpperCase();
-    const fetchBtn   = (snap && snap.asins && snap.asins.length)
-      ? '<button class="stalker-btn" style="color:var(--text-2);font-size:11px;" onclick="stalkerFetchProducts('' + s.uid + '')">↓ Fetch</button>'
-      : '';
-    return '<tr id="stalkerCard_' + s.uid + '">'
-      + '<td><span class="stalker-status-dot ' + dotClass + '"></span><span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">' + (isChecking?'Checking':s.status==='error'?'Error':'Active') + '</span></td>'
-      + '<td><div style="display:flex;align-items:center;gap:10px;">'
-      +   '<div class="stalker-seller-avatar" style="background:' + ac + '22;color:' + ac + ';">' + initial + '</div>'
-      +   '<div><div style="font-size:13.5px;font-weight:600;color:var(--text);">' + s.name + '</div>'
-      +   '<a href="https://keepa.com/#!seller/' + s.market + '-' + s.id + '" target="_blank" style="font-family:var(--mono);font-size:10.5px;color:var(--blue);text-decoration:none;">' + s.id + '</a>'
-      +   '</div></div></td>'
-      + '<td style="font-family:var(--mono);font-size:12px;color:var(--text-2);">' + flagI + ' ' + tld + '</td>'
-      + '<td style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);">' + (s.asinCount !== null ? s.asinCount.toLocaleString() : '—') + '</td>'
-      + '<td style="font-family:var(--mono);font-size:13px;color:' + (newCount>0?'var(--green)':'var(--text-3)') + ';">' + (newCount > 0 ? '+'+newCount : '0') + '</td>'
-      + '<td style="font-family:var(--mono);font-size:11px;color:var(--text-3);">' + lastChk + '</td>'
-      + '<td>'
-      +   '<input type="file" id="stalkerCSVInput_' + s.uid + '" accept=".csv" style="display:none" onchange="stalkerHandleCSV('' + s.uid + '',this)">'
-      +   '<div style="display:flex;gap:6px;align-items:center;">'
-      +   fetchBtn
-      +   '<button class="stalker-btn refresh" onclick="stalkerCheckSeller(stalkerSellers.find(function(x){return x.uid==='' + s.uid + ''}))" ' + (isChecking?'disabled':'') + ' title="Refresh">↻</button>'
-      +   '<button class="stalker-btn" onclick="stalkerImportCSV('' + s.uid + '')" title="Import CSV">↑</button>'
-      +   '<button class="stalker-btn" onclick="stalkerRename('' + s.uid + '')" title="Rename">✎</button>'
-      +   '<button class="stalker-btn del" onclick="stalkerRemoveSeller('' + s.uid + '')">✕</button>'
-      +   '</div></td>'
-      + '</tr>';
-  }
-
-  function renderSellerGroup(label, flag, sellers) {
-    if (!sellers.length) return '';
-    var header = '<tr><td colspan="7" style="padding:10px 0 4px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);border-top:1px solid var(--border2);">' + flag + ' ' + label + '</td></tr>';
-    return header + sellers.map(renderSellerRow).join('');
-  }
-
-  tbody.innerHTML = renderSellerGroup('UK — amazon.co.uk', '🇬🇧', ukSellers)
-    + renderSellerGroup('US — amazon.com', '🇺🇸', usSellers)
-    + renderSellerGroup('EU Marketplaces', '🇪🇺', euSellers);
+  tbody.innerHTML = stalkerBuildSellerGroup('UK — amazon.co.uk', '🇬🇧', ukSellers)
+    + stalkerBuildSellerGroup('US — amazon.com', '🇺🇸', usSellers)
+    + stalkerBuildSellerGroup('EU Marketplaces', '🇪🇺', euSellers);
 }
 
 

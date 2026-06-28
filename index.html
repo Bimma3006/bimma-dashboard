@@ -5962,13 +5962,12 @@ async function scoutRefreshTokens() {
     const data = await res.json();
     if (data.tokensLeft != null) {
       scoutLastTokenCount = data.tokensLeft;
-      if (tkData.refillRate && tkData.refillRate > 0) {
-        scoutRefillRate = tkData.refillRate;
-        // Token capacity = 1 hour of refill (Keepa refills to a 1hr cap)
-        const derivedMax = tkData.refillRate * 60;
+      if (data.refillRate && data.refillRate > 0) {
+        scoutRefillRate = data.refillRate;
+        const derivedMax = data.refillRate * 60;
         if (derivedMax > scoutTokenMax) scoutTokenMax = derivedMax;
       }
-      if (tkData.tokensLeft > scoutTokenMax) scoutTokenMax = Math.ceil(tkData.tokensLeft / 100) * 100;
+      if (data.tokensLeft > scoutTokenMax) scoutTokenMax = Math.ceil(data.tokensLeft / 100) * 100;
       scoutUpdateTokenBar(scoutLastTokenCount);
     } else {
       toast('Could not read token count', 'error');
@@ -5979,6 +5978,14 @@ async function scoutRefreshTokens() {
     if (btn) btn.classList.remove('spinning');
   }
 }
+
+// Auto-refresh tokens whenever Scout page is opened
+document.addEventListener('bimma:pagechange', function(e) {
+  if (e.detail === 'scout') {
+    const apiKey = (document.getElementById('scoutApiKey')?.value || localStorage.getItem('bimma_keepa_key') || '').trim();
+    if (apiKey) scoutRefreshTokens();
+  }
+});
 
 async function scoutWaitForTokens(apiKey, needed) {
   if (scoutLastTokenCount === null || scoutLastTokenCount >= needed) return;

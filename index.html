@@ -6890,44 +6890,41 @@ function stalkerRenderSellers() {
 
   const AVATARCOLORS = ['#4d8ef5','#9b6dff','#00e88a','#f0a500','#f03b50','#00c9ff'];
 
-  tbody.innerHTML = stalkerSellers.map((s, i) => {
-    const flag     = STALKER_FLAGS[s.market] || '🌐';
-    const tld      = STALKER_MARKETS[s.market] || 'co.uk';
-    const snap     = stalkerSnapshots[s.uid];
-    const newCount = stalkerFeedItems.filter(f => f.sellerId === s.id && f.type==='new' && f.detectedAt >= new Date().setHours(0,0,0,0)).length;
-    const isChecking = s.status === 'checking';
-    const dotClass = isChecking ? 'checking' : s.status==='error' ? 'error' : s.status==='baseline' ? 'baseline' : '';
-    const lastCheckStr = s.lastCheck ? stalkerFmtTime(s.lastCheck) : '—';
-    const avatarColor  = AVATARCOLORS[i % AVATARCOLORS.length];
-    const initial      = (s.name||'?')[0].toUpperCase();
+  // Split into UK / US / EU groups
+  const ukSellers  = stalkerSellers.filter(s => s.market === '2');
+  const usSellers  = stalkerSellers.filter(s => s.market === '1');
+  const euSellers  = stalkerSellers.filter(s => !['1','2'].includes(s.market));
+  const AVATARCOLORS = ['#4d8ef5','#9b6dff','#00e88a','#f0a500','#f03b50','#00c9ff'];
 
-    return `<tr id="stalkerCard_${s.uid}">
+  const renderSellerGroup = (label, flag, sellers) => {
+    if (!sellers.length) return '';
+    const header = `<tr><td colspan="7" style="padding:10px 0 4px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);border-top:1px solid var(--border2);">${flag} ${label}</td></tr>`;
+    const rows = sellers.map(s => {
+      const flagI    = STALKER_FLAGS[s.market] || '🌐';
+      const tld      = STALKER_MARKETS[s.market] || 'co.uk';
+      const snap     = stalkerSnapshots[s.uid];
+      const newCount = stalkerFeedItems.filter(f => f.sellerId === s.id && f.type==='new' && f.detectedAt >= new Date().setHours(0,0,0,0)).length;
+      const isChecking = s.status === 'checking';
+      const dotClass = isChecking ? 'checking' : s.status==='error' ? 'error' : s.status==='baseline' ? 'baseline' : '';
+      const lastCheckStr = s.lastCheck ? stalkerFmtTime(s.lastCheck) : '—';
+      const avatarColor  = AVATARCOLORS[stalkerSellers.indexOf(s) % AVATARCOLORS.length];
+      const initial      = (s.name||'?')[0].toUpperCase();
+      return `<tr id="stalkerCard_${s.uid}">
       <td><span class="stalker-status-dot ${dotClass}"></span><span style="font-family:var(--mono);font-size:11px;color:var(--text-3);" title="${s.status==='error'?(s.errorMsg||'Error'):''}">${isChecking?'Checking':s.status==='error'?'Error':'Active'}</span></td>
-      <td>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div class="stalker-seller-avatar" style="background:${avatarColor}22;color:${avatarColor};">${initial}</div>
-          <div>
-            <div style="font-size:13.5px;font-weight:600;color:var(--text);">${s.name}</div>
-            <a href="https://keepa.com/#!seller/${s.market}-${s.id}" target="_blank" style="font-family:var(--mono);font-size:10.5px;color:var(--blue);text-decoration:none;">${s.id}</a>
-          </div>
-        </div>
-      </td>
-      <td style="font-family:var(--mono);font-size:12px;color:var(--text-2);">${flag} ${tld}</td>
+      <td><div style="display:flex;align-items:center;gap:10px;"><div class="stalker-seller-avatar" style="background:${avatarColor}22;color:${avatarColor};">${initial}</div><div><div style="font-size:13.5px;font-weight:600;color:var(--text);">${s.name}</div><a href="https://keepa.com/#!seller/${s.market}-${s.id}" target="_blank" style="font-family:var(--mono);font-size:10.5px;color:var(--blue);text-decoration:none;">${s.id}</a></div></div></td>
+      <td style="font-family:var(--mono);font-size:12px;color:var(--text-2);">${flagI} ${tld}</td>
       <td style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);">${s.asinCount !== null ? s.asinCount.toLocaleString() : '—'}</td>
       <td style="font-family:var(--mono);font-size:13px;color:${newCount>0?'var(--green)':'var(--text-3)'};">${newCount > 0 ? '+'+newCount : '0'}</td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${lastCheckStr}</td>
-      <td>
-        <input type="file" id="stalkerCSVInput_${s.uid}" accept=".csv" style="display:none" onchange="stalkerHandleCSV('${s.uid}',this)">
-        <div style="display:flex;gap:6px;align-items:center;">
-          ${snap && snap.asins && snap.asins.length ? `<button class="stalker-btn" style="color:var(--text-2);font-size:11px;" onclick="stalkerFetchProducts('${s.uid}')">↓ Fetch</button>` : ''}
-          <button class="stalker-btn refresh" onclick="stalkerCheckSeller(stalkerSellers.find(x=>x.uid==='${s.uid}'))" ${isChecking?'disabled':''} title="Refresh">↻</button>
-          <button class="stalker-btn" onclick="stalkerImportCSV('${s.uid}')" title="Import CSV">↑</button>
-          <button class="stalker-btn" onclick="stalkerRename('${s.uid}')" title="Rename">✎</button>
-          <button class="stalker-btn del" onclick="stalkerRemoveSeller('${s.uid}')">✕</button>
-        </div>
-      </td>
+      <td><input type="file" id="stalkerCSVInput_${s.uid}" accept=".csv" style="display:none" onchange="stalkerHandleCSV('${s.uid}',this)"><div style="display:flex;gap:6px;align-items:center;">${snap && snap.asins && snap.asins.length ? `<button class="stalker-btn" style="color:var(--text-2);font-size:11px;" onclick="stalkerFetchProducts('${s.uid}')">↓ Fetch</button>` : ''}<button class="stalker-btn refresh" onclick="stalkerCheckSeller(stalkerSellers.find(x=>x.uid==='${s.uid}'))" ${isChecking?'disabled':''} title="Refresh">↻</button><button class="stalker-btn" onclick="stalkerImportCSV('${s.uid}')" title="Import CSV">↑</button><button class="stalker-btn" onclick="stalkerRename('${s.uid}')" title="Rename">✎</button><button class="stalker-btn del" onclick="stalkerRemoveSeller('${s.uid}')">✕</button></div></td>
     </tr>`;
-  }).join('');
+    }).join('');
+    return header + rows;
+  };
+
+  tbody.innerHTML = renderSellerGroup('UK — amazon.co.uk', '🇬🇧', ukSellers)
+    + renderSellerGroup('US — amazon.com', '🇺🇸', usSellers)
+    + renderSellerGroup('EU Marketplaces', '🇪🇺', euSellers);
 }
 
 
@@ -6940,20 +6937,38 @@ function stalkerRenderFeedFilters() {
   // Collect unique sellers from feed
   const seen = new Map();
   stalkerFeedItems.forEach(item => {
-    if (item.sellerId && !seen.has(item.sellerId)) seen.set(item.sellerId, item.sellerName || item.sellerId);
+    if (item.sellerId && !seen.has(item.sellerId)) seen.set(item.sellerId, { name: item.sellerName || item.sellerId, market: item.market });
   });
 
-  if (seen.size <= 1) { bar.style.display = 'none'; return; }
-
   bar.style.display = 'flex';
-  const pills = [['all', `All (${stalkerFeedItems.length})`], ...Array.from(seen.entries()).map(([id, name]) => {
-    const count = stalkerFeedItems.filter(f => f.sellerId === id).length;
-    return [id, `${name} (${count})`];
-  })];
-  bar.innerHTML = pills.map(([id, label]) => {
-    const active = stalkerFeedFilter === id;
-    return `<button onclick="stalkerSetFeedFilter('${id}')" style="font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:var(--r-xs);border:1px solid ${active ? 'var(--accent)' : 'var(--border2)'};background:${active ? 'var(--accent-glow)' : 'transparent'};color:${active ? 'var(--accent)' : 'var(--text-3)'};cursor:pointer;transition:all 0.15s;white-space:nowrap;">${label}</button>`;
-  }).join('');
+  bar.style.flexWrap = 'wrap';
+  bar.style.gap = '6px';
+  bar.style.alignItems = 'center';
+
+  // Market group tabs first
+  const ukItems = stalkerFeedItems.filter(f => f.market === '2');
+  const usItems = stalkerFeedItems.filter(f => f.market === '1');
+  const hasUK = ukItems.length > 0;
+  const hasUS = usItems.length > 0;
+
+  const mkBtn = (id, label, active) =>
+    `<button onclick="stalkerSetFeedFilter('${id}')" style="font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:var(--r-xs);border:1px solid ${active ? 'var(--accent)' : 'var(--border2)'};background:${active ? 'var(--accent-glow)' : 'transparent'};color:${active ? 'var(--accent)' : 'var(--text-3)'};cursor:pointer;transition:all 0.15s;white-space:nowrap;">${label}</button>`;
+
+  let html = mkBtn('all', `All (${stalkerFeedItems.length})`, stalkerFeedFilter === 'all');
+  if (hasUK) html += mkBtn('market_2', `🇬🇧 UK (${ukItems.length})`, stalkerFeedFilter === 'market_2');
+  if (hasUS) html += mkBtn('market_1', `🇺🇸 US (${usItems.length})`, stalkerFeedFilter === 'market_1');
+
+  if (seen.size > 1) {
+    html += `<span style="font-family:var(--mono);font-size:9px;color:var(--border3);margin:0 2px;">│</span>`;
+    seen.forEach(({ name, market }, id) => {
+      const count = stalkerFeedItems.filter(f => f.sellerId === id).length;
+      const flag = STALKER_FLAGS[market] || '';
+      const active = stalkerFeedFilter === id;
+      html += mkBtn(id, `${flag} ${name} (${count})`, active);
+    });
+  }
+
+  bar.innerHTML = html;
 }
 
 function stalkerSetFeedFilter(id) {
@@ -6996,7 +7011,9 @@ function stalkerRenderFeed() {
   // Apply seller filter
   const visibleItems = stalkerFeedFilter === 'all'
     ? stalkerFeedItems
-    : stalkerFeedItems.filter(f => f.sellerId === stalkerFeedFilter);
+    : stalkerFeedFilter.startsWith('market_')
+      ? stalkerFeedItems.filter(f => f.market === stalkerFeedFilter.replace('market_', ''))
+      : stalkerFeedItems.filter(f => f.sellerId === stalkerFeedFilter);
 
   // Group items by date
   const today = new Date(); today.setHours(0,0,0,0);

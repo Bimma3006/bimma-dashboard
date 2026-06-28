@@ -6201,18 +6201,7 @@ async function scoutRun() {
         const batchNum = Math.floor(i / batchSize) + 1;
         const pct = 20 + (i / qualifiedAsins.length) * 70;
 
-        // ── Token-optimised EU fetch ──
-        // 1. Pre-filter to ASINs with a known UK sell price (skip unknowns)
-        // 2. Fetch primary market (DE) first — covers ~70% of deals
-        // 3. Only hit remaining markets for ASINs that got no price from DE
-        // 4. only_live=1 skips dead listings — saves ~30% tokens
-        const filteredBatch = csvHasBB ? batch.filter(a => scoutCsvBBMap[a] > 0) : batch;
-        if (!filteredBatch.length) { scoutRenderPartial(asins, ukMap, euData, euSourceData, markets, marketFx, shipping, prep, minRoi, csvHasBB); continue; }
-
-        const euFirst = [...markets].sort((a,b) => ({DE:0,FR:1,IT:2,ES:3,US:4,JP:5}[a]??9) - ({DE:0,FR:1,IT:2,ES:3,US:4,JP:5}[b]??9));
-        const primaryMarket = euFirst[0];
-        const remainingMarkets = euFirst.slice(1);
-
+        // Fetch all selected markets in parallel for this batch
         const fetchMarket = async (market, asinList) => {
           if (!asinList.length) return;
           try {
@@ -6240,25 +6229,15 @@ async function scoutRun() {
           } catch(e) { console.warn(`${market} batch:`, e.message); }
         };
 
-        const primaryNeeded = filteredBatch.length * 3 + 20;
-        if (scoutLastTokenCount !== null && scoutLastTokenCount < primaryNeeded) await scoutWaitForTokens(apiKey, primaryNeeded);
+        scoutSetStatus(`Batch ${batchNum}/${totalBatches} — ${batch.length} ASINs × ${markets.length} markets`, pct);
+
+        const euNeeded = batch.length * markets.length * 3 + 20;
+        if (scoutLastTokenCount !== null && scoutLastTokenCount < euNeeded) {
+          await scoutWaitForTokens(apiKey, euNeeded);
+        }
         if (scoutShouldStop) break;
 
-        scoutSetStatus(`Batch ${batchNum}/${totalBatches} — ${filteredBatch.length} ASINs → ${primaryMarket} first`, pct);
-        await fetchMarket(primaryMarket, filteredBatch);
-
-        if (remainingMarkets.length > 0 && !scoutShouldStop) {
-          const needMore = filteredBatch.filter(a => !euData[a]?.[primaryMarket]);
-          if (needMore.length > 0) {
-            scoutSetStatus(`Batch ${batchNum}/${totalBatches} — ${needMore.length} ASINs missed ${primaryMarket}, trying ${remainingMarkets.join('/')}`, pct);
-            const remNeeded = needMore.length * remainingMarkets.length * 3 + 20;
-            if (scoutLastTokenCount !== null && scoutLastTokenCount < remNeeded) await scoutWaitForTokens(apiKey, remNeeded);
-            if (!scoutShouldStop) await Promise.all(remainingMarkets.map(m => fetchMarket(m, needMore)));
-          }
-        }
-
-        // Render after each batch
-        scoutRenderPartial(asins, ukMap, euData, euSourceData, markets, marketFx, shipping, prep, minRoi, csvHasBB);
+        await Promise.all(markets.map(m => fetchMarket(m, batch)));
       }
     }
     scoutSetStatus('Computing best deals…', 85);

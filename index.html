@@ -6248,7 +6248,6 @@ async function scoutRun() {
           scoutUpdateTokenBar(scoutLastTokenCount);
         }
         if (data.error) throw new Error(data.error.message || 'Keepa error');
-        console.log(`[Scout] ${market}: ${data.products?.length ?? 0} products returned, tokensLeft: ${data.tokensLeft}`);
         (data.products || []).forEach(p => {
           if (!p.asin) return;
           if (!euData[p.asin]) euData[p.asin] = {};
@@ -6294,9 +6293,6 @@ async function scoutRun() {
       await Promise.all(markets.map(m => fetchMarket(m, batch)));
       asinsScanned += batch.length;
       updateLiveStats();
-      // Debug: log how many EU prices found this batch
-      const euFound = batch.filter(a => Object.keys(euData[a] || {}).length > 0).length;
-      console.log(`[Scout] Batch ${Math.floor(i/BATCH)+1}: ${batch.length} ASINs, ${euFound} got EU prices, euData keys: ${Object.keys(euData).length}`);
       scoutRenderPartial(qualifiedAsins, ukMap, euData, euSourceData, markets, marketFx, shipping, prep, minRoi, csvHasBB);
     }
 

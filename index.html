@@ -4792,16 +4792,13 @@ function daAnalyseRow(row) {
   const ST_CAP = 1.30;
   const avgCandidates = [avg90, avg180, (avg365 && avg90 && avg365 > avg90 * 1.15 ? null : avg365)].filter(v => v != null && v > 0);
   const bestAvg = avgCandidates.length ? Math.max(...avgCandidates) : null;
-  const UPLIFT = bestAvg == null ? 1.20
-    : bestAvg < 100  ? 1.20
-    : bestAvg < 300  ? 1.17
-    : bestAvg < 600  ? 1.13
-    : bestAvg < 1000 ? 1.07
-    : 1.03;
+  const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
+  const UPLIFT = tieredUplift(bestAvg);
   const stCapped = stPrice && bestAvg && stPrice > bestAvg && stPrice <= bestAvg * ST_CAP ? stPrice : null;
   const spIncVat = stCapped && bestAvg ? Math.max(bestAvg * UPLIFT, stCapped) : stCapped ?? (bestAvg ? bestAvg * UPLIFT : null) ?? daParseNum(row[cfg.sellCol]);
   const whichAvg = bestAvg === avg90 ? '90d' : bestAvg === avg365 ? '365d' : '180d';
-  const spSource = stCapped && spIncVat === stCapped ? 'ST' : `${whichAvg}×1.2`;
+  const upliftPct = Math.round((UPLIFT - 1) * 100);
+  const spSource = stCapped && spIncVat === stCapped ? 'ST' : `${whichAvg}×1.${String(upliftPct).padStart(2,'0')}`;
   const sp = spIncVat ? spIncVat / (1 + vat) : null;
 
   // FBA fee: use actual if present, otherwise estimate from sell price
@@ -5753,7 +5750,8 @@ function scoutFileChosen(file, slot=1) {
             const bbSt   = getNum(bbStIdx);
             const pexVal = getNum(pexIdx);
             const title  = (cols[titleIdx]||'').replace(/"/g,'').trim();
-            const UPLIFT = 1.08;
+            const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
+            const UPLIFT = tieredUplift(bestAvg);
             const ST_CAP = 1.30;
             const valid = v => !isNaN(v) && v > 0;
             let bestSell = null, sellSource = '';
@@ -5762,7 +5760,8 @@ function scoutFileChosen(file, slot=1) {
             const stCapped = valid(bbSt) && bestAvg && bbSt > bestAvg && bbSt <= bestAvg * ST_CAP ? bbSt : null;
             const avgFallback = stCapped && bestAvg ? Math.max(bestAvg * UPLIFT, stCapped) : stCapped ?? (bestAvg ? bestAvg * UPLIFT : null);
             if (valid(bbCur)) {
-              bestSell = bbCur * 1.2; sellSource = 'BB×1.2';
+              const bbUplift = bbCur < 50 ? 1.20 : bbCur < 100 ? 1.15 : bbCur < 150 ? 1.10 : bbCur < 200 ? 1.075 : 1.05;
+              bestSell = bbCur * bbUplift; sellSource = 'BB now';
             } else if (avgFallback) {
               const whichAvg = bestAvg === bb90 ? '90d' : bestAvg === bb365 ? '365d' : '180d';
               bestSell = avgFallback; sellSource = stCapped && avgFallback === stCapped ? 'ST' : whichAvg + '+8%';
@@ -6019,7 +6018,8 @@ function scoutGetBB180(product) {
   const avg365 = stats.avg365?.[18];
   const avg90  = stats.avg90?.[18];
 
-  const UPLIFT = 1.08;
+  const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
+  const UPLIFT = tieredUplift(bestAvg ? bestAvg / 100 : null);
   const ST_CAP = 1.30;
 
   let stPrice = null;
@@ -6036,7 +6036,10 @@ function scoutGetBB180(product) {
   // Current BB × 1.2 — primary sell price
   const curRaw = stats.current?.[18];
   const bbCurrent = curRaw && curRaw > 0 ? curRaw / 100 : null;
-  if (bbCurrent) return { price: bbCurrent * 1.2, source: 'BB×1.2' };
+  if (bbCurrent) {
+    const bbUplift = bbCurrent < 50 ? 1.20 : bbCurrent < 100 ? 1.15 : bbCurrent < 150 ? 1.10 : bbCurrent < 200 ? 1.075 : 1.05;
+    return { price: bbCurrent * bbUplift, source: 'BB now' };
+  }
 
   // Fallback: best avg + 8% (or ST if capped within 1.3×)
   const avgCands = [avg90, avg180, avg365].filter(v => v != null && v > 0);

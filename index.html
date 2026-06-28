@@ -6218,13 +6218,10 @@ async function scoutRun() {
     let totalScraped = 0;
     let tokensSpent = 0;
     let asinsScanned = 0;
-
-    // Token cost per ASIN = 3 tokens × markets; batch size = what fits in a full refill
     const tokenCostPerAsin = 3 * markets.length;
-    const dynamicBatchSize = Math.max(10, Math.floor(scoutTokenMax / tokenCostPerAsin));
-    const firstBatchSize   = Math.max(10, Math.floor((scoutLastTokenCount ?? scoutTokenMax) / tokenCostPerAsin));
+    const BATCH = 100; // fixed batch size — simple and predictable
 
-    // Show live stats panel
+    // Show live stats
     const liveStats = document.getElementById('scoutLiveStats');
     if (liveStats) liveStats.style.display = 'flex';
     const updateLiveStats = () => {
@@ -6233,93 +6230,74 @@ async function scoutRun() {
       if (el('scoutStatTotal'))    el('scoutStatTotal').textContent    = qualifiedAsins.length;
       if (el('scoutStatUsed'))     el('scoutStatUsed').textContent     = tokensSpent;
       if (el('scoutStatCostPer'))  el('scoutStatCostPer').textContent  = tokenCostPerAsin + ' tokens';
-      if (el('scoutStatCapacity')) el('scoutStatCapacity').textContent = (asinsScanned === 0 ? firstBatchSize : dynamicBatchSize) + ' ASINs';
-      const refillMins = Math.ceil(scoutTokenMax / scoutRefillRate);
-      if (el('scoutStatCycle'))    el('scoutStatCycle').textContent    = `~${refillMins}min refill @ ${scoutRefillRate}/min`;
+      if (el('scoutStatCapacity')) el('scoutStatCapacity').textContent = Math.floor((scoutLastTokenCount ?? 0) / tokenCostPerAsin) + ' ASINs';
+      if (el('scoutStatCycle'))    el('scoutStatCycle').textContent    = `${scoutRefillRate}/min refill`;
     };
     updateLiveStats();
 
-    if (qualifiedAsins.length > 0) {
-      const totalBatches = Math.ceil(qualifiedAsins.length / dynamicBatchSize);
+    const fetchMarket = async (market, asinList) => {
+      if (!asinList.length) return;
+      try {
+        const pex = document.getElementById('scoutPrimeExclusive')?.checked;
+        const url = `https://api.keepa.com/product?key=${apiKey}&domain=${SCOUT_DOMAINS[market].id}&asin=${asinList.join(',')}&stats=180&buybox=1${pex ? '&csv=16' : ''}`;
+        const r = await fetch(url);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        if (data.tokensLeft !== undefined) {
+          const prev = scoutLastTokenCount ?? data.tokensLeft;
+          scoutLastTokenCount = data.tokensLeft;
+          tokensSpent += Math.max(0, prev - data.tokensLeft);
+          scoutUpdateTokenBar(scoutLastTokenCount);
+        }
+        if (data.error) throw new Error(data.error.message || 'Keepa error');
+        (data.products || []).forEach(p => {
+          if (!p.asin) return;
+          if (!euData[p.asin]) euData[p.asin] = {};
+          const pex2 = document.getElementById('scoutPrimeExclusive')?.checked;
+          const result = pex2 ? scoutGetPrimeExclusivePrice(p) : { price: scoutGetCurrentBB(p), source: 'BB' };
+          const bb = result?.price ?? null;
+          const ukBBForCheck = scoutCsvBBMap[p.asin] || null;
+          const euBelowUkBB = pex2 ? true : (!ukBBForCheck || (bb < ukBBForCheck));
+          if (bb && bb > 0.5 && bb < 3000 && euBelowUkBB) {
+            euData[p.asin][market] = bb;
+            if (result?.source) { if (!euSourceData[p.asin]) euSourceData[p.asin] = {}; euSourceData[p.asin][market] = result.source; }
+          }
+        });
+      } catch(e) { console.warn(`${market}:`, e.message); }
+    };
 
-      const fetchMarket = async (market, asinList) => {
-        if (!asinList.length) return;
+    for (let i = 0; i < qualifiedAsins.length && !scoutShouldStop; i += BATCH) {
+      const batch = qualifiedAsins.slice(i, i + BATCH);
+      const batchCost = batch.length * tokenCostPerAsin;
+      const pct = 20 + (i / qualifiedAsins.length) * 70;
+
+      // Wait for enough tokens if needed — poll every 30s
+      while (!scoutShouldStop && (scoutLastTokenCount ?? 9999) < batchCost) {
+        const have = Math.floor(scoutLastTokenCount ?? 0);
+        const need = batchCost - have;
+        const waitSecs = Math.max(30, Math.ceil((need / scoutRefillRate) * 60));
+        const mins = Math.floor(waitSecs / 60), secs = String(waitSecs % 60).padStart(2,'0');
+        scoutSetStatus(`⏸ ${have} tokens — need ${batchCost} for next ${batch.length} ASINs — refilling in ~${mins}:${secs} · ${asinsScanned}/${qualifiedAsins.length} done`, -1);
+        await new Promise(res => setTimeout(res, 30000));
         try {
-          const pex = document.getElementById('scoutPrimeExclusive')?.checked;
-          const url = `https://api.keepa.com/product?key=${apiKey}&domain=${SCOUT_DOMAINS[market].id}&asin=${asinList.join(',')}&stats=180&buybox=1${pex ? '&csv=16' : ''}`;
-          const r = await fetch(url);
-          if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          const data = await r.json();
-          if (data.tokensLeft !== undefined) {
-            const prev = scoutLastTokenCount ?? data.tokensLeft;
-            scoutLastTokenCount = data.tokensLeft;
-            tokensSpent += Math.max(0, prev - data.tokensLeft);
+          const tk = await fetch(`https://api.keepa.com/token?key=${apiKey}`);
+          const td = await tk.json();
+          if (td.tokensLeft != null) {
+            scoutLastTokenCount = td.tokensLeft;
+            if (td.refillRate > 0) { scoutRefillRate = td.refillRate; scoutTokenMax = Math.max(scoutTokenMax, td.refillRate * 60); }
             scoutUpdateTokenBar(scoutLastTokenCount);
           }
-          if (data.error) throw new Error(data.error.message || 'Keepa error');
-          (data.products || []).forEach(p => {
-            if (!p.asin) return;
-            if (!euData[p.asin]) euData[p.asin] = {};
-            const pex2 = document.getElementById('scoutPrimeExclusive')?.checked;
-            const result = pex2 ? scoutGetPrimeExclusivePrice(p) : { price: scoutGetCurrentBB(p), source: 'BB' };
-            const bb = result?.price ?? null;
-            const ukBBForCheck = scoutCsvBBMap[p.asin] || null;
-            const euBelowUkBB = pex2 ? true : (!ukBBForCheck || (bb < ukBBForCheck));
-            if (bb && bb > 0.5 && bb < 3000 && euBelowUkBB) {
-              euData[p.asin][market] = bb;
-              if (result?.source) { if (!euSourceData[p.asin]) euSourceData[p.asin] = {}; euSourceData[p.asin][market] = result.source; }
-              totalScraped++;
-            }
-          });
-        } catch(e) { console.warn(`${market} batch:`, e.message); }
-      };
-
-      for (let i = 0; i < qualifiedAsins.length; ) {
-        if (scoutShouldStop) break;
-        const thisBatchSize = i === 0 ? firstBatchSize : dynamicBatchSize;
-        const batch = qualifiedAsins.slice(i, i + thisBatchSize);
-        const batchNum = Math.floor(i / dynamicBatchSize) + 1;
-        const pct = 20 + (i / qualifiedAsins.length) * 70;
-
-        // Wait until we have enough tokens for this full batch
-        const batchCost = batch.length * tokenCostPerAsin;
-        if (scoutLastTokenCount !== null && scoutLastTokenCount < batchCost) {
-          while (scoutLastTokenCount < batchCost && !scoutShouldStop) {
-            const deficit = batchCost - scoutLastTokenCount;
-            const waitSecs = Math.max(30, Math.ceil((deficit / scoutRefillRate) * 60));
-            for (let rem = waitSecs * 1000; rem > 0; rem -= 5000) {
-              if (scoutShouldStop) break;
-              const secs = Math.ceil(rem / 1000);
-              const m2 = Math.floor(secs / 60), s2 = String(secs % 60).padStart(2,'0');
-              scoutSetStatus(`⏸ Waiting for tokens — ${Math.floor(scoutLastTokenCount)} / ${batchCost} needed — ${m2}:${s2} · Batch ${batchNum}/${totalBatches} · ${asinsScanned}/${qualifiedAsins.length} ASINs done · ${tokensSpent} tokens used`, -1);
-              await new Promise(r => setTimeout(r, Math.min(5000, rem)));
-            }
-            try {
-              const tkRes = await fetch(`https://api.keepa.com/token?key=${apiKey}`);
-              const tkData = await tkRes.json();
-              if (tkData.tokensLeft != null) {
-                scoutLastTokenCount = tkData.tokensLeft;
-                if (tkData.refillRate && tkData.refillRate > 0) {
-                  scoutRefillRate = tkData.refillRate;
-                  const derivedMax = tkData.refillRate * 60;
-                  if (derivedMax > scoutTokenMax) scoutTokenMax = derivedMax;
-                }
-                if (tkData.tokensLeft > scoutTokenMax) scoutTokenMax = Math.ceil(tkData.tokensLeft / 100) * 100;
-                scoutUpdateTokenBar(scoutLastTokenCount);
-              }
-            } catch(_) {}
-          }
-        }
-        if (scoutShouldStop) break;
-
-        scoutSetStatus(`Batch ${batchNum}/${totalBatches} · ${batch.length} ASINs × ${markets.length} markets · ${asinsScanned}/${qualifiedAsins.length} done · ${Math.floor(scoutLastTokenCount ?? 0)} tokens left`, pct);
-        await Promise.all(markets.map(m => fetchMarket(m, batch)));
-        asinsScanned += batch.length;
-        i += batch.length;
-        updateLiveStats();
-        scoutRenderPartial(qualifiedAsins, ukMap, euData, euSourceData, markets, marketFx, shipping, prep, minRoi, csvHasBB);
+        } catch(_) {}
       }
+      if (scoutShouldStop) break;
+
+      scoutSetStatus(`Scanning ${asinsScanned + 1}–${Math.min(asinsScanned + batch.length, qualifiedAsins.length)} of ${qualifiedAsins.length} · ${Math.floor(scoutLastTokenCount ?? 0)} tokens left`, pct);
+      await Promise.all(markets.map(m => fetchMarket(m, batch)));
+      asinsScanned += batch.length;
+      updateLiveStats();
+      scoutRenderPartial(qualifiedAsins, ukMap, euData, euSourceData, markets, marketFx, shipping, prep, minRoi, csvHasBB);
     }
+
     if (liveStats) liveStats.style.display = 'none';
     scoutSetStatus('Computing best deals…', 85);
     scoutResults = asins.map(asin => {

@@ -6221,9 +6221,8 @@ async function scoutRun() {
 
     // Token cost per ASIN = 3 tokens × markets; batch size = what fits in a full refill
     const tokenCostPerAsin = 3 * markets.length;
-    const dynamicBatchSize = Math.max(10, Math.floor((scoutTokenMax * 0.95) / tokenCostPerAsin));
-    // First batch uses current balance (don't wait), subsequent batches wait for full refill
-    const firstBatchSize = Math.max(10, Math.floor(((scoutLastTokenCount ?? scoutTokenMax) * 0.95) / tokenCostPerAsin));
+    const dynamicBatchSize = Math.max(10, Math.floor(scoutTokenMax / tokenCostPerAsin));
+    const firstBatchSize   = Math.max(10, Math.floor((scoutLastTokenCount ?? scoutTokenMax) / tokenCostPerAsin));
 
     // Show live stats panel
     const liveStats = document.getElementById('scoutLiveStats');
@@ -6283,7 +6282,7 @@ async function scoutRun() {
         const pct = 20 + (i / qualifiedAsins.length) * 70;
 
         // Wait until we have enough tokens for this full batch
-        const batchCost = batch.length * tokenCostPerAsin + 20;
+        const batchCost = batch.length * tokenCostPerAsin;
         if (scoutLastTokenCount !== null && scoutLastTokenCount < batchCost) {
           while (scoutLastTokenCount < batchCost && !scoutShouldStop) {
             const deficit = batchCost - scoutLastTokenCount;

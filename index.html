@@ -6617,8 +6617,18 @@ function keepaMinToDate(keepaMin) {
 
 function stalkerSave() {
   localStorage.setItem('bimma_stalker_sellers', JSON.stringify(stalkerSellers));
-  localStorage.setItem('bimma_stalker_snaps',   JSON.stringify(stalkerSnapshots));
-  localStorage.setItem('bimma_stalker_feed',    JSON.stringify(stalkerFeedItems.slice(0, 500)));
+  // Save snapshots separately — can be large, keep separate key so feed clear never touches it
+  try {
+    localStorage.setItem('bimma_stalker_snaps', JSON.stringify(stalkerSnapshots));
+  } catch(e) {
+    // If storage full, trim each snapshot to last 2000 ASINs (enough for diff)
+    const trimmed = {};
+    Object.entries(stalkerSnapshots).forEach(([k,v]) => {
+      trimmed[k] = { ...v, asins: (v.asins || []).slice(-2000) };
+    });
+    try { localStorage.setItem('bimma_stalker_snaps', JSON.stringify(trimmed)); } catch(_) {}
+  }
+  localStorage.setItem('bimma_stalker_feed', JSON.stringify(stalkerFeedItems.slice(0, 500)));
 }
 
 function stalkerSaveKey() {
@@ -7106,12 +7116,16 @@ function stalkerRenderFeed() {
 }
 
 function stalkerClearFeed() {
-  if (!confirm('Clear all feed items?')) return;
+  if (!confirm('Clear all feed items? Snapshots are kept so previously seen ASINs won\'t re-appear.')) return;
   stalkerFeedItems = [];
   stalkerFeedFilter = 'all';
   stalkerSellers.forEach(s => { if (s.status === 'has-new') s.status = 'ok'; });
-  stalkerSave();
+  // Save feed + sellers but explicitly preserve snapshots
+  localStorage.setItem('bimma_stalker_sellers', JSON.stringify(stalkerSellers));
+  localStorage.setItem('bimma_stalker_feed', JSON.stringify([]));
+  // snapshots intentionally NOT cleared — keeps baseline so old ASINs don't re-surface
   stalkerRenderSellers();
+  stalkerRenderFeedFilters();
   stalkerUpdateBadge();
   const feedEl  = document.getElementById('stalkerFeed');
   const emptyEl = document.getElementById('stalkerFeedEmpty');

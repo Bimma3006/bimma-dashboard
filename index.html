@@ -887,8 +887,8 @@ input::placeholder { color: var(--text-4); }
 .da-table thead th {
   font-family: var(--mono); font-size: 10px; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--text-2); text-align: right;
-  padding: 12px 16px; border-bottom: 1px solid var(--border3);
+  color: var(--text-3); text-align: right;
+  padding: 10px 16px; border-bottom: 1px solid var(--border2);
   cursor: pointer; user-select: none; white-space: nowrap;
   background: var(--surface3); position: sticky; top: 0; z-index: 5;
 }
@@ -901,13 +901,13 @@ input::placeholder { color: var(--text-4); }
 .da-table tbody tr:hover { background: rgba(255,255,255,0.035); }
 .da-table tbody tr.approved { border-left: 3px solid var(--green); }
 .da-table tbody tr.rejected { border-left: 3px solid var(--red); opacity: 0.4; }
-.da-table td { padding: 14px 16px; vertical-align: middle; font-size: 14px; }
+.da-table td { padding: 12px 16px; vertical-align: middle; font-size: 13px; }
 
 /* Product cell */
-.td-product { max-width: 280px; min-width: 190px; }
+.td-product { max-width: 320px; min-width: 200px; }
 .td-product-title {
-  font-size: 13px; font-weight: 500; color: var(--text);
-  line-height: 1.4; margin-bottom: 3px;
+  font-size: 13.5px; font-weight: 500; color: var(--text);
+  line-height: 1.45; margin-bottom: 4px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .td-product-badges {
@@ -954,12 +954,12 @@ input::placeholder { color: var(--text-4); }
 }
 
 /* Number cells */
-.td-num { text-align: right; font-family: var(--mono); font-size: 14px; color: var(--text-2); white-space: nowrap; padding: 14px 16px; }
+.td-num { text-align: right; font-family: var(--mono); font-size: 13px; color: var(--text-2); white-space: nowrap; padding: 12px 16px; }
 .td-center { text-align: center !important; }
 .td-profit { color: var(--green) !important; font-weight: 600; }
 
 /* ROI cell */
-.td-roi { text-align: right; font-family: var(--mono); font-size: 15px; font-weight: 700; white-space: nowrap; padding: 14px 16px; }
+.td-roi { text-align: right; font-family: var(--mono); font-size: 15px; font-weight: 700; white-space: nowrap; padding: 12px 16px; }
 .td-roi.green { color: var(--green); }
 .td-roi.amber { color: var(--amber); }
 .td-roi.red { color: var(--red); opacity: 0.75; }
@@ -968,8 +968,8 @@ input::placeholder { color: var(--text-4); }
 /* SP source tag */
 .sp-tag {
   display: inline-block; margin-left: 4px;
-  font-family: var(--mono); font-size: 7px; font-weight: 700; letter-spacing: 0.08em;
-  padding: 1px 4px; border-radius: 3px; vertical-align: middle;
+  font-family: var(--mono); font-size: 8px; font-weight: 700; letter-spacing: 0.06em;
+  padding: 1px 5px; border-radius: 3px; vertical-align: middle;
   background: rgba(0,229,132,0.08); color: var(--green); border: 1px solid rgba(0,229,132,0.18);
 }
 .sp-tag.st { background: rgba(240,165,0,0.08); color: var(--amber); border-color: rgba(240,165,0,0.25); }
@@ -2005,7 +2005,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v5.9.1 · 02 Jul 26</div>
+    <div class="sidebar-version">v5.9.2 · 02 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -5404,7 +5404,7 @@ function daRenderHeaders() {
     ${r15Cols}
     ${ssCols}
     <th data-col="bizRoi" data-type="num" style="color:var(--amber);" title="ROI using Amazon Business Price">💼 Biz ROI</th>
-    <th data-col="lastPriceChange" data-type="str" title="Date of last Buy Box price change">Last Change</th>
+    <th data-col="lastPriceChange" data-type="str" title="Date of last Buy Box price change" style="text-align:left;min-width:140px;">Last Change</th>
     <th data-col="boughtPerMonth" data-type="num">Sold/mo</th>
     <th class="no-sort" style="width:56px;"></th>
   </tr>`;
@@ -5478,7 +5478,7 @@ function daRenderTable() {
       ${ssCells}
       <td class="td-num" style="color:${deal.bbDrop30d == null ? 'var(--text-3)' : deal.bbDrop30d < -5 ? 'var(--green)' : deal.bbDrop30d > 5 ? 'var(--red)' : 'var(--text-2)'};">${deal.bbDrop30d != null ? (deal.bbDrop30d > 0 ? '+' : '') + deal.bbDrop30d.toFixed(1) + '%' : '—'}</td>
       <td class="td-num" style="color:${deal.bizRoi == null ? 'var(--text-4)' : deal.bizRoi >= 0.20 ? 'var(--green)' : deal.bizRoi >= 0.15 ? 'var(--amber)' : 'var(--text-3)'};">${deal.hasBizPrice ? (deal.bizRoi != null ? `<span style="font-weight:700;">${(deal.bizRoi*100).toFixed(1)}%</span><div style="font-family:var(--mono);font-size:9px;color:var(--amber);margin-top:1px;">-${deal.bizDiscount?.toFixed(0)}% off</div>` : '—') : '<span style="color:var(--text-4);">—</span>'}</td>
-      <td class="td-num" style="color:var(--text-3);font-size:11px;">${deal.lastPriceChange || '—'}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text-3);padding:14px 16px;text-align:left;white-space:nowrap;">${deal.lastPriceChange || '—'}</td>
       <td class="td-num td-center">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
       <td class="td-actions">
         <button class="btn-approve ${deal.decision==='approved'?'active':''}" onclick="daSetDecision(${idx},'approved',this)" title="Approve">✓</button>

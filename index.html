@@ -2005,7 +2005,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v5.9 · 02 Jul 26</div>
+    <div class="sidebar-version">v5.9.1 · 02 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -4927,12 +4927,28 @@ function daAnalyseRow(row) {
 
 
   const rankDrops = daParseNum(row['Sales Rank: Drops last 30 days']);
-  // Business Price — Amazon B2B pricing (often 10-40% below Buy Box)
-  const bizPriceRaw = daParseNum(row['Buy Box: Business Price'])
-    ?? daParseNum(row['Business Price'])
-    ?? daParseNum(row['Amazon Business Price'])
-    ?? daParseNum(row['B2B Price'])
-    ?? null;
+  // Business Price — Keepa exports as a discount % off the Buy Box price
+  // Column: "Business Discount: Percentage" or "Business Dis..." variants
+  const bizDiscountPct = daParseNum(row['Business Discount: Percentage'])
+    ?? daParseNum(row['Business Discount: %'])
+    ?? daParseNum(row['Business Discount'])
+    ?? daParseNum(row['Business Dis...'])
+    ?? (() => {
+        // Scan for any column that looks like a business discount
+        for (const k of Object.keys(row)) {
+          if (k.toLowerCase().includes('business') && (k.toLowerCase().includes('discount') || k.toLowerCase().includes('dis'))) {
+            const v = daParseNum(row[k]);
+            if (v !== null && v > 0 && v <= 100) return v;
+          }
+        }
+        return null;
+      })();
+  // Calculate actual business price from discount % applied to buy price
+  const bizPriceRaw = (bizDiscountPct !== null && buyRaw !== null)
+    ? buyRaw * (1 - bizDiscountPct / 100)
+    : daParseNum(row['Buy Box: Business Price'])
+      ?? daParseNum(row['Business Price'])
+      ?? null;
   // Use business price as buy price if it's lower than the regular buy price
   const lastPriceChange = row['Buy Box: Last Price Change'] || row['Last Price Change'] || null;
   const boughtPerMonth = daParseNum(row['Bought in past month'])
@@ -4982,7 +4998,7 @@ function daAnalyseRow(row) {
   const bizIncVat  = bizRawAdj !== null ? bizRawAdj : null;
   const bizExVat   = bizIncVat !== null ? bizIncVat / (1 + vat) : null;
   const hasBizPrice = bizExVat !== null && (buyExVat === null || bizExVat < buyExVat);
-  const bizDiscount = (hasBizPrice && buyIncVat) ? ((1 - bizIncVat / buyIncVat) * 100) : null;
+  const bizDiscount = bizDiscountPct ?? (hasBizPrice && buyIncVat ? ((1 - bizIncVat / buyIncVat) * 100) : null);
 
   // Recovery score — calculated first as it drives sell price selection
   let recoveries = null;

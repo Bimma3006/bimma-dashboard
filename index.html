@@ -4956,12 +4956,12 @@ function daAnalyseRow(row) {
   const bbCurrent = daParseNum(row['Buy Box: Current']);
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
   // Sell price: highest of 90d/180d/365d BB avg × tiered multiplier
-  const ST_CAP = 1.30;
+  const ST_MAX = 1.20; // ST capped at 1.2× bestAvg — benefit from ST signal without inflating
   const avgCandidates = [avg90, avg180, (avg365 && avg90 && avg365 > avg90 * 1.15 ? null : avg365)].filter(v => v != null && v > 0);
   const bestAvg = avgCandidates.length ? Math.max(...avgCandidates) : null;
   const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
   const UPLIFT = tieredUplift(bestAvg);
-  const stCapped = stPrice && bestAvg && stPrice > bestAvg && stPrice <= bestAvg * ST_CAP ? stPrice : null;
+  const stCapped = stPrice && bestAvg && stPrice > bestAvg ? Math.min(stPrice, bestAvg * ST_MAX) : null;
   const spIncVat = stCapped && bestAvg ? Math.max(bestAvg * UPLIFT, stCapped) : stCapped ?? (bestAvg ? bestAvg * UPLIFT : null) ?? daParseNum(row[cfg.sellCol]);
   const whichAvg = bestAvg === avg90 ? '90d' : bestAvg === avg365 ? '365d' : '180d';
   const upliftPct = Math.round((UPLIFT - 1) * 100);
@@ -5916,14 +5916,14 @@ function scoutFileChosen(file, slot=1) {
             const bbSt   = getNum(bbStIdx);
             const pexVal = getNum(pexIdx);
             const title  = (cols[titleIdx]||'').replace(/"/g,'').trim();
-            const ST_CAP = 1.30;
+            const ST_MAX = 1.20;
             const valid = v => !isNaN(v) && v > 0;
             let bestSell = null, sellSource = '';
             const avgCands = [bb90, bb180, bb365].filter(valid);
             const bestAvg = avgCands.length ? Math.max(...avgCands) : null;
             const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
             const UPLIFT = tieredUplift(bestAvg);
-            const stCapped = valid(bbSt) && bestAvg && bbSt > bestAvg && bbSt <= bestAvg * ST_CAP ? bbSt : null;
+            const stCapped = valid(bbSt) && bestAvg && bbSt > bestAvg ? Math.min(bbSt, bestAvg * ST_MAX) : null;
             const avgFallback = stCapped && bestAvg ? Math.max(bestAvg * UPLIFT, stCapped) : stCapped ?? (bestAvg ? bestAvg * UPLIFT : null);
             if (valid(bbCur)) {
               const bbUplift = bbCur < 50 ? 1.20 : bbCur < 100 ? 1.15 : bbCur < 150 ? 1.10 : bbCur < 200 ? 1.075 : 1.05;
@@ -6191,7 +6191,7 @@ function scoutGetBB180(product) {
 
   const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
   const UPLIFT = tieredUplift(bestAvg ? bestAvg / 100 : null);
-  const ST_CAP = 1.30;
+  const ST_MAX = 1.20;
 
   let stPrice = null;
   try {
@@ -6218,7 +6218,7 @@ function scoutGetBB180(product) {
   const bestAvgRaw = Math.max(...avgCands);
   const bestAvg = bestAvgRaw / 100;
   const whichAvg = (avg90 && avg90 === bestAvgRaw) ? '90d' : (avg365 && avg365 === bestAvgRaw) ? '365d' : '180d';
-  const stCapped = stPrice && stPrice > bestAvg && stPrice <= bestAvg * ST_CAP ? stPrice : null;
+  const stCapped = stPrice && stPrice > bestAvg ? Math.min(stPrice, bestAvg * ST_MAX) : null;
   const spBase = stCapped ? Math.max(bestAvg * UPLIFT, stCapped) : bestAvg * UPLIFT;
   const spSource = stCapped && spBase === stCapped ? 'ST' : whichAvg + '+8%';
   return { price: spBase, source: spSource };

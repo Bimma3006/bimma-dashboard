@@ -2005,7 +2005,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v5.7 · 02 Jul 26</div>
+    <div class="sidebar-version">v5.8 · 02 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -2586,6 +2586,7 @@ input::placeholder { color: var(--text-4); }
           <button class="a2a-fpill fp-amber" id="daPillAmber" onclick="daSetFilter('amber',this)"><span class="a2a-fpill-dot fp-amber-dot"></span>Marginal</button>
           <button class="a2a-fpill fp-red" id="daPillRed" onclick="daSetFilter('red',this)"><span class="a2a-fpill-dot fp-red-dot"></span>Reject</button>
           <button class="a2a-fpill fp-purple" id="daPillSS" onclick="daSetFilter('subsave',this)"><span class="a2a-fpill-dot fp-purple-dot"></span>♻ S&amp;S</button>
+          <button class="a2a-fpill" id="daPillDrop" onclick="daSetFilter('pricedrop',this)" style="border-color:rgba(0,232,138,.3);color:var(--green);">📉 Price Drop</button>
           <span class="da-spike-notice" id="spikeNotice" style="display:none;"></span>
           <button class="a2a-fpill" id="daPillExcRecent" onclick="daToggleExcludeRecent(this)" style="margin-left:8px;border-style:dashed;">🚫 Bought &lt;3d</button>
         </div>
@@ -4926,6 +4927,9 @@ function daAnalyseRow(row) {
 
 
   const rankDrops = daParseNum(row['Sales Rank: Drops last 30 days']);
+  const bbDrop1d  = daParseNum(row['Buy Box: 1 day drop %']) ?? daParseNum(row['Buy Box: 1 day drop']);
+  const bbDrop30d = daParseNum(row['Buy Box: 30 days drop %']) ?? daParseNum(row['Buy Box: 30 days drop']);
+  const lastPriceChange = row['Buy Box: Last Price Change'] || row['Last Price Change'] || null;
   const boughtPerMonth = daParseNum(row['Bought in past month'])
     ?? daParseNum(row['Monthly Sales Trends: Bought in past month'])
     ?? daParseNum(row['Bought in past 30 days'])
@@ -5089,7 +5093,7 @@ function daAnalyseRow(row) {
   if (fbaFeeEst && reason && colour !== 'grey') reason += ' · FBA est.';
   const sortOrder = colour === 'green' ? 0 : colour === 'amber' ? 1 : spikeFlag ? 4 : colour === 'red' ? 2 : 3;
 
-  return { title, asin, brand, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, bbCurrent, avg180, decision: null };
+  return { title, asin, brand, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, bbCurrent, avg180, bbDrop1d, bbDrop30d, lastPriceChange, decision: null };
 }
 
 // ════════════════════════════════════════
@@ -5363,6 +5367,8 @@ function daRenderHeaders() {
     <th data-col="roi" data-type="num">ROI</th>
     ${r15Cols}
     ${ssCols}
+    <th data-col="bbDrop30d" data-type="num" title="Buy Box price drop % over last 30 days — negative = price fell">30d Δ%</th>
+    <th data-col="lastPriceChange" data-type="str" title="Date of last Buy Box price change">Last Change</th>
     <th data-col="boughtPerMonth" data-type="num">Sold/mo</th>
     <th class="no-sort" style="width:56px;"></th>
   </tr>`;
@@ -5380,6 +5386,8 @@ function daRenderTable() {
     ? daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15)
     : daFilter === 'retailer'
     ? daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15))
+    : daFilter === 'pricedrop'
+    ? daDeals.filter(d => d.bbDrop30d != null && d.bbDrop30d < -5).sort((a,b) => (a.bbDrop30d ?? 0) - (b.bbDrop30d ?? 0))
     : daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter && !d.ss);
   if (daBrandFilter) filtered = filtered.filter(d => (d.brand||'').toLowerCase() === daBrandFilter.toLowerCase());
   if (daExcludeRecent) filtered = filtered.filter(d => d.boughtDaysAgo == null || d.boughtDaysAgo > 3);
@@ -5432,6 +5440,8 @@ function daRenderTable() {
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
       ${ssCells}
+      <td class="td-num" style="color:${deal.bbDrop30d == null ? 'var(--text-3)' : deal.bbDrop30d < -5 ? 'var(--green)' : deal.bbDrop30d > 5 ? 'var(--red)' : 'var(--text-2)'};">${deal.bbDrop30d != null ? (deal.bbDrop30d > 0 ? '+' : '') + deal.bbDrop30d.toFixed(1) + '%' : '—'}</td>
+      <td class="td-num" style="color:var(--text-3);font-size:11px;">${deal.lastPriceChange || '—'}</td>
       <td class="td-num td-center">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
       <td class="td-actions">
         <button class="btn-approve ${deal.decision==='approved'?'active':''}" onclick="daSetDecision(${idx},'approved',this)" title="Approve">✓</button>
@@ -5458,11 +5468,12 @@ function daUpdatePillCounts() {
     red:      daDeals.filter(d => d.colour === 'red').length,
     giftcard: daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15)).length,
     subsave:  daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15).length,
+    pricedrop: daDeals.filter(d => d.bbDrop30d != null && d.bbDrop30d < -5).length,
     retailer: daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15)).length,
   };
   const ssEl = document.getElementById('daCountSS'); if (ssEl) ssEl.textContent = counts.subsave;
   const r15El = document.getElementById('daCountR15'); if (r15El) r15El.textContent = counts.retailer;
-  [['daPillAll','all'],['daPillGreen','green'],['daPillAmber','amber'],['daPillRed','red'],['daPillGC','giftcard'],['daPillSS','subsave'],['daPillR15','retailer']].forEach(([id, key]) => {
+  [['daPillAll','all'],['daPillGreen','green'],['daPillAmber','amber'],['daPillRed','red'],['daPillGC','giftcard'],['daPillSS','subsave'],['daPillDrop','pricedrop']].forEach(([id, key]) => {
     const el = document.getElementById(id); if (!el) return;
     let span = el.querySelector('.pill-count');
     if (!span) { span = document.createElement('span'); span.className = 'pill-count'; el.appendChild(span); }

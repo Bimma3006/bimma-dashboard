@@ -2216,239 +2216,383 @@ input::placeholder { color: var(--text-4); }
 
   <!-- ══ PAGE: A2A ANALYSER ══ -->
   <div class="page" id="page-a2a">
-  <div class="a2a-wrap">
-    <!-- PAGE HEADER -->
-    <div class="a2a-page-header">
-      <div class="a2a-page-header-left">
+  <style>
+    /* ── Deal Analyser ────────────────────────────── */
+    .da-wrap          { padding: 40px 52px 64px; }
+    .da-top           { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:32px; flex-wrap:wrap; }
+    .da-top-left      { flex:1; min-width:0; }
+    .da-top-right     { display:flex; gap:12px; flex-wrap:wrap; }
+
+    /* Market selector */
+    .da-market-bar    { display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+    .da-mkt-btn       { display:flex; flex-direction:column; gap:4px; padding:14px 18px; min-width:150px;
+                        background:var(--surface2); border:1.5px solid var(--border2);
+                        border-radius:var(--r-md); cursor:pointer; transition:all .15s; text-align:left; }
+    .da-mkt-btn:hover { border-color:var(--border3); background:var(--surface3); }
+    .da-mkt-btn.active{ border-color:var(--green); background:rgba(0,232,138,.07); }
+    .da-mkt-top       { display:flex; align-items:center; gap:8px; }
+    .da-mkt-flag      { font-size:20px; line-height:1; }
+    .da-mkt-name      { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--text); letter-spacing:.02em; }
+    .da-mkt-btn.active .da-mkt-name { color:var(--green); }
+    .da-mkt-desc      { font-family:var(--mono); font-size:10px; color:var(--text-3); line-height:1.4; }
+    .da-mkt-tags      { display:flex; gap:4px; flex-wrap:wrap; }
+    .da-mkt-tag       { font-family:var(--mono); font-size:9px; font-weight:600; padding:2px 6px;
+                        border-radius:3px; background:var(--surface3); border:1px solid var(--border2);
+                        color:var(--text-3); letter-spacing:.05em; }
+    .da-mkt-btn.active .da-mkt-tag { background:rgba(0,232,138,.1); border-color:rgba(0,232,138,.25); color:var(--green); }
+
+    /* Upload zone */
+    .da-upload-zone   { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md);
+                        padding:24px; margin-bottom:20px; }
+    .da-upload-hdr    { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .da-upload-title  { font-size:15px; font-weight:600; color:var(--text); }
+    .da-upload-sub    { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:3px; }
+    .da-slots         { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:16px; }
+    .da-slot          { position:relative; display:flex; flex-direction:column; align-items:center;
+                        justify-content:center; gap:6px; padding:22px 16px; min-height:100px;
+                        background:var(--surface3); border:1.5px dashed var(--border2);
+                        border-radius:var(--r-sm); cursor:pointer; transition:all .15s; }
+    .da-slot input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .da-slot:hover    { border-color:var(--green); background:rgba(0,232,138,.03); }
+    .da-slot.drag-over{ border-color:var(--green); background:rgba(0,232,138,.07); }
+    .da-slot.loaded   { border-style:solid; border-color:var(--green); background:rgba(0,232,138,.06); }
+    .da-slot-num      { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.12em;
+                        color:var(--text-3); position:absolute; top:8px; left:10px; }
+    .da-slot-icon     { font-size:20px; color:var(--text-3); line-height:1; pointer-events:none; }
+    .da-slot.loaded .da-slot-icon { color:var(--green); }
+    .da-slot-label    { font-family:var(--mono); font-size:11px; font-weight:600; color:var(--text-2);
+                        text-align:center; pointer-events:none; }
+    .da-slot-sub      { font-family:var(--mono); font-size:9px; color:var(--blue); letter-spacing:.1em;
+                        text-transform:uppercase; pointer-events:none; }
+    .da-slot-name     { font-family:var(--mono); font-size:9px; color:var(--green); word-break:break-all;
+                        max-width:90%; text-align:center; pointer-events:none; line-height:1.3; }
+    .da-slot-clear    { position:absolute; top:6px; right:8px; background:none; border:none;
+                        color:var(--text-3); cursor:pointer; font-size:13px; padding:2px 4px; z-index:2; }
+    .da-slot-clear:hover { color:var(--red); }
+    .da-slot[style*="display:none"] { display:none !important; }
+
+    /* Mode info strip */
+    .da-info-strip    { display:flex; align-items:center; gap:12px; padding:10px 16px;
+                        background:var(--surface3); border-radius:var(--r-sm); margin-bottom:16px;
+                        border-left:3px solid var(--green); font-size:12px; }
+    .da-info-pill     { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.06em;
+                        text-transform:uppercase; color:var(--green); white-space:nowrap; }
+    .da-info-divider  { width:1px; height:14px; background:var(--border2); flex-shrink:0; }
+    .da-info-desc     { font-size:12px; color:var(--text-3); line-height:1.5; }
+    .da-info-desc strong { color:var(--text-2); }
+
+    /* Go button */
+    .da-go-btn        { width:100%; padding:14px; font-family:var(--mono); font-size:13px; font-weight:700;
+                        letter-spacing:.08em; text-transform:uppercase; border:none; border-radius:var(--r-sm);
+                        cursor:pointer; transition:all .15s; background:var(--surface3); color:var(--text-3);
+                        border:1px solid var(--border2); }
+    .da-go-btn.ready  { background:var(--green); color:#000; border-color:var(--green); }
+    .da-go-btn.ready:hover { background:#00ff98; }
+
+    /* Widgets */
+    .da-widgets       { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+    .da-widget        { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); padding:16px 18px; }
+    .da-widget-title  { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.1em;
+                        text-transform:uppercase; color:var(--text-3); margin-bottom:10px; }
+    .da-widget-row    { display:flex; align-items:center; gap:8px; }
+    .da-widget-prefix { font-family:var(--mono); font-size:16px; font-weight:700; color:var(--text-3); }
+    .da-widget-input  { background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm);
+                        color:var(--text); font-family:var(--mono); font-size:13px; padding:8px 10px;
+                        width:110px; outline:none; transition:border-color .15s;
+                        -moz-appearance:textfield; }
+    .da-widget-input::-webkit-outer-spin-button,
+    .da-widget-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+    .da-widget-input:focus { border-color:var(--green); }
+    .da-widget-arrow  { font-size:14px; color:var(--text-3); }
+    .da-widget-result { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--green); min-width:80px; }
+    .da-widget-sub    { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:2px; }
+    .da-calc-items    { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+    .da-calc-row      { display:flex; align-items:center; justify-content:space-between; }
+    .da-calc-lbl      { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+    .da-calc-price    { font-family:var(--mono); font-size:12px; font-weight:600; color:var(--text-2); }
+    .da-calc-save     { font-family:var(--mono); font-size:10px; color:var(--green); margin-left:4px; }
+    .da-calc-divider  { border:none; border-top:1px solid var(--border); margin:6px 0; }
+
+    /* Results area */
+    .da-results-bar   { display:flex; align-items:center; justify-content:space-between;
+                        gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+    .da-filter-pills  { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+    .da-filter-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    /* Table */
+    .da-table-wrap    { background:var(--surface2); border:1px solid var(--border2);
+                        border-radius:var(--r-md); overflow:hidden; }
+    .da-table-inner   { overflow-x:auto; }
+    .da-table         { width:100%; border-collapse:collapse; }
+    .da-table thead th{ font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.1em;
+                        text-transform:uppercase; color:var(--text-2); text-align:right;
+                        padding:12px 16px; border-bottom:1px solid var(--border2);
+                        cursor:pointer; user-select:none; white-space:nowrap;
+                        background:var(--surface3); position:sticky; top:0; z-index:5; }
+    .da-table thead th.th-left { text-align:left; }
+    .da-table thead th:hover:not(.no-sort) { color:var(--text); }
+    .da-table thead th.sort-asc::after  { content:' ↑'; color:var(--green); }
+    .da-table thead th.sort-desc::after { content:' ↓'; color:var(--green); }
+    .da-table tbody tr{ border-bottom:1px solid var(--border); transition:background .1s; }
+    .da-table tbody tr:last-child { border-bottom:none; }
+    .da-table tbody tr:hover { background:rgba(255,255,255,.035); }
+    .da-table tbody tr.approved { border-left:3px solid var(--green); }
+    .da-table tbody tr.rejected { border-left:3px solid var(--red); opacity:.4; }
+    .da-table td      { padding:13px 16px; vertical-align:middle; font-size:14px; }
+    .td-num           { text-align:right; font-family:var(--mono); font-size:13px; color:var(--text-2); white-space:nowrap; }
+    .td-roi           { text-align:right; font-family:var(--mono); font-size:15px; font-weight:700; white-space:nowrap; }
+    .td-center        { text-align:center; }
+    .da-product-title { font-size:13px; color:var(--text); line-height:1.3; max-width:280px;
+                        white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+    .da-asin-row      { display:flex; align-items:center; gap:8px; margin-top:3px; }
+    .da-asin-link     { font-family:var(--mono); font-size:10.5px; color:var(--blue); text-decoration:none; }
+    .da-asin-link:hover { text-decoration:underline; }
+    .da-sp-badge      { font-family:var(--mono); font-size:9px; font-weight:700; padding:1px 5px;
+                        border-radius:3px; background:var(--surface3); color:var(--text-3);
+                        border:1px solid var(--border2); }
+    .da-spike-badge   { font-family:var(--mono); font-size:9px; color:var(--amber); margin-top:2px; }
+    .da-brand-pill    { font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px;
+                        border-radius:3px; background:var(--surface3); border:1px solid var(--border2);
+                        color:var(--text-3); max-width:80px; overflow:hidden; text-overflow:ellipsis;
+                        white-space:nowrap; display:inline-block; }
+    .da-row-actions   { display:flex; gap:4px; justify-content:flex-end; }
+    .da-row-btn       { font-family:var(--mono); font-size:10px; padding:3px 8px; border-radius:3px;
+                        border:1px solid var(--border2); background:transparent; color:var(--text-3);
+                        cursor:pointer; transition:all .12s; white-space:nowrap; }
+    .da-row-btn:hover { border-color:var(--border3); color:var(--text); }
+    .da-row-btn.approve { border-color:rgba(0,232,138,.4); color:var(--green); }
+    .da-row-btn.reject  { border-color:rgba(240,59,80,.3); color:var(--red); }
+    .da-seen-badge    { font-family:var(--mono); font-size:9px; color:var(--text-3);
+                        background:var(--surface3); border:1px solid var(--border2);
+                        border-radius:3px; padding:1px 5px; display:inline-flex; align-items:center; gap:3px; }
+    .da-seen-x        { cursor:pointer; color:var(--red); font-size:11px; line-height:1; }
+    .da-bought-badge  { font-family:var(--mono); font-size:9px; background:rgba(240,165,0,.15);
+                        color:var(--amber); border:1px solid rgba(240,165,0,.3);
+                        border-radius:3px; padding:1px 5px; }
+    /* Retailer strip */
+    .da-retailer-strip{ display:flex; align-items:center; gap:8px; padding:8px 16px;
+                        background:var(--surface3); border:1px solid var(--border2);
+                        border-radius:var(--r-sm); margin-bottom:12px; cursor:pointer; }
+    .da-retailer-strip:hover { border-color:var(--border3); }
+    .da-retailer-label{ font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text-2); }
+    .da-retailer-count{ font-family:var(--mono); font-size:10px; color:var(--text-3); }
+    .da-retailer-chevron{ font-size:10px; color:var(--text-3); margin-left:auto; transition:transform .15s; }
+    .da-retailer-strip.open .da-retailer-chevron { transform:rotate(90deg); }
+    .da-retailer-expanded { display:none; padding:12px 16px; background:var(--surface2);
+                        border:1px solid var(--border2); border-top:none;
+                        border-radius:0 0 var(--r-sm) var(--r-sm); margin-top:-12px; margin-bottom:12px; }
+    .da-retailer-expanded.open { display:block; }
+    .da-retailer-tags { display:flex; flex-wrap:wrap; gap:6px; }
+    .da-retailer-tag  { font-family:var(--mono); font-size:10px; padding:3px 8px;
+                        background:var(--surface3); border:1px solid var(--border2);
+                        border-radius:3px; color:var(--text-2); }
+    .da-retailer-edit-wrap { display:none; margin-top:10px; }
+    .da-retailer-edit-wrap.open { display:flex; gap:8px; align-items:center; }
+    .da-retailer-input{ flex:1; background:var(--surface3); border:1px solid var(--border2);
+                        border-radius:var(--r-sm); color:var(--text); font-family:var(--mono);
+                        font-size:12px; padding:7px 10px; outline:none; }
+    .da-retailer-input:focus { border-color:var(--green); }
+    .da-retailer-save-btn,.da-retailer-edit-btn {
+                        font-family:var(--mono); font-size:10px; font-weight:700; padding:6px 12px;
+                        border-radius:var(--r-sm); border:1px solid var(--border2);
+                        background:var(--surface3); color:var(--text-2); cursor:pointer; transition:all .12s; }
+    .da-retailer-save-btn:hover,.da-retailer-edit-btn:hover { border-color:var(--green); color:var(--green); }
+    .da-loading       { display:none; text-align:center; padding:48px; font-family:var(--mono);
+                        font-size:12px; color:var(--text-3); letter-spacing:.08em; }
+    .da-loading.visible { display:block; }
+    .da-empty-state   { text-align:center; padding:56px 32px; color:var(--text-3);
+                        font-family:var(--mono); font-size:11px; letter-spacing:.08em; }
+    .da-search        { background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm);
+                        color:var(--text); font-family:var(--mono); font-size:12px;
+                        padding:7px 12px; outline:none; width:200px; transition:border-color .15s; }
+    .da-search:focus  { border-color:var(--green); }
+    .da-result-total  { font-family:var(--mono); font-size:11px; color:var(--text-3); white-space:nowrap; }
+    .da-action-btn    { font-family:var(--mono); font-size:10px; font-weight:700; padding:6px 12px;
+                        border-radius:var(--r-sm); border:1px solid var(--border2);
+                        background:transparent; color:var(--text-2); cursor:pointer; transition:all .12s; }
+    .da-action-btn:hover { border-color:var(--border3); color:var(--text); }
+    .da-action-green  { color:var(--green) !important; border-color:rgba(0,232,138,.4) !important; }
+    .da-rejected-badge{ font-family:var(--mono); font-size:10px; color:var(--red);
+                        border:1px solid rgba(240,59,80,.3); border-radius:3px; padding:2px 8px; }
+    .da-spike-notice  { font-family:var(--mono); font-size:10px; color:var(--amber);
+                        background:rgba(240,165,0,.1); border:1px solid rgba(240,165,0,.25);
+                        border-radius:3px; padding:3px 8px; }
+    .da-table-wrap.visible { display:block; }
+  </style>
+
+  <div class="da-wrap">
+
+    <!-- HEADER -->
+    <div class="da-top">
+      <div class="da-top-left">
         <div class="page-header-label">Deal Analysis</div>
         <div class="page-header-title">Deal Analyser</div>
-        <div class="page-header-sub">Score bulk Keepa exports for profitability — EU→UK, UK→UK, and Used LN modes</div>
+        <div class="page-header-sub">Score bulk Keepa exports for profitability — UK, US, EU→UK, Used LN, and Prime Exclusive modes</div>
       </div>
-      <!-- header right: EUR converter + quick breakdown side by side -->
-      <div style="display:flex;align-items:flex-end;gap:10px;">
-
-      <!-- EUR → GBP converter widget -->
-      <div class="a2a-price-calc">
-        <div class="a2a-price-calc-label" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>EUR → GBP</span>
-          <button onclick="daRefreshFx()" id="daFxRefreshBtn" style="font-family:var(--mono);font-size:9px;padding:3px 8px;background:rgba(77,142,245,0.12);border:1px solid rgba(77,142,245,0.4);color:var(--blue);border-radius:var(--r-xs);cursor:pointer;letter-spacing:0.04em;transition:all 0.15s;">↻ live</button>
-        </div>
-        <div class="a2a-price-calc-input-row">
-          <span class="a2a-price-calc-prefix" style="color:var(--text-3);">€</span>
-          <input type="number" class="a2a-price-calc-input" id="daFxEurInput"
-            placeholder="0.00" step="0.01" min="0" oninput="fxConvertUpdate()">
-        </div>
-        <div class="a2a-calc-results" id="daFxCalcResults">
-          <div class="a2a-calc-row">
-            <span class="a2a-calc-lbl">£ GBP</span>
-            <span class="a2a-calc-price" id="daFxGbpOut" style="color:var(--green);"></span>
+      <div class="da-top-right">
+        <!-- EUR → GBP widget -->
+        <div class="da-widget" style="min-width:200px;">
+          <div class="da-widget-title">EUR → GBP <button onclick="daRefreshFx()" id="daFxRefreshBtn" style="font-family:var(--mono);font-size:9px;padding:2px 7px;background:rgba(77,142,245,.1);border:1px solid rgba(77,142,245,.3);color:var(--blue);border-radius:3px;cursor:pointer;margin-left:6px;">↻ live</button></div>
+          <div class="da-widget-row">
+            <span class="da-widget-prefix" style="color:var(--text-3);">€</span>
+            <input type="number" class="da-widget-input" id="daFxEurInput" placeholder="0.00" step="0.01" min="0" oninput="fxConvertUpdate()">
+            <span class="da-widget-arrow">→</span>
+            <span class="da-widget-result" id="daFxGbpOut">—</span>
           </div>
-          <div class="a2a-calc-row">
-            <span class="a2a-calc-lbl" style="color:var(--text-3);">Rate</span>
-            <span class="a2a-calc-price" style="color:var(--text-3);font-size:11px;">£<span id="daFxRateDisplay">0.8600</span></span>
-          </div>
+          <div class="da-widget-sub">Rate: £<span id="daFxRateDisplay">0.8600</span> · <span id="daFxTs" style="color:var(--text-3);"></span></div>
         </div>
-      </div>
-
-      <div class="a2a-price-calc">
-        <div class="a2a-price-calc-label">Quick Price Breakdown</div>
-        <div class="a2a-price-calc-input-row">
-          <span class="a2a-price-calc-prefix">£</span>
-          <input type="number" class="a2a-price-calc-input" id="daPriceCalcInput"
-            placeholder="0.00" step="0.01" min="0" oninput="daPriceCalc()">
-        </div>
-        <div class="a2a-calc-results" id="daPriceCalcResults">
-          <div class="a2a-calc-row">
-            <span class="a2a-calc-lbl">🎁 5% Discount</span>
-            <span><span class="a2a-calc-price" id="daPcGc5"></span><span class="a2a-calc-save" id="daPcGc5Save"></span></span>
+        <!-- Quick price calc widget -->
+        <div class="da-widget" style="min-width:220px;">
+          <div class="da-widget-title">Quick Price Breakdown</div>
+          <div class="da-widget-row">
+            <span class="da-widget-prefix">£</span>
+            <input type="number" class="da-widget-input" id="daPriceCalcInput" placeholder="0.00" step="0.01" min="0" oninput="daPriceCalc()">
           </div>
-          <div class="a2a-calc-row">
-            <span class="a2a-calc-lbl">🎁 10% Gift Card</span>
-            <span><span class="a2a-calc-price" id="daPcGc10"></span><span class="a2a-calc-save" id="daPcGc10Save"></span></span>
-          </div>
-          <hr class="a2a-calc-divider">
-          <div class="a2a-calc-row">
-            <span class="a2a-calc-lbl">♻ S&amp;S (15% sub discount)</span>
-            <span><span class="a2a-calc-price" id="daPcSS"></span><span class="a2a-calc-save" id="daPcSSSave"></span></span>
+          <div class="da-calc-items" id="daPriceCalcResults">
+            <div class="da-calc-row"><span class="da-calc-lbl">🎁 5% off</span><span><span class="da-calc-price" id="daPcGc5"></span><span class="da-calc-save" id="daPcGc5Save"></span></span></div>
+            <div class="da-calc-row"><span class="da-calc-lbl">🎁 10% Gift Card</span><span><span class="da-calc-price" id="daPcGc10"></span><span class="da-calc-save" id="daPcGc10Save"></span></span></div>
+            <hr class="da-calc-divider">
+            <div class="da-calc-row"><span class="da-calc-lbl">♻ S&amp;S 15%</span><span><span class="da-calc-price" id="daPcSS"></span><span class="da-calc-save" id="daPcSSSave"></span></span></div>
           </div>
         </div>
       </div>
-
-      </div><!-- /header-right flex wrapper -->
     </div>
 
-    <!-- MODE SELECTOR -->
-    <div class="a2a-mode-bar">
-      <button class="a2a-mode-btn a2a-mode-uk active" onclick="setMode('uk',this)">
-        <div class="a2a-mode-top">
-          <span class="a2a-mode-icon">🇬🇧</span>
-          <span class="a2a-mode-badge">UK → UK</span>
-        </div>
-        <span class="a2a-mode-desc">Buy and sell within UK Amazon</span>
-        <div class="a2a-mode-tags">
-          <span class="a2a-mtag">UK Buy Box</span>
-          <span class="a2a-mtag">New</span>
-        </div>
+    <!-- MARKET / MODE SELECTOR -->
+    <div class="da-market-bar" id="daModeBar">
+      <button class="da-mkt-btn active" onclick="setMode('uk',this)" data-mode="uk">
+        <div class="da-mkt-top"><span class="da-mkt-flag">🇬🇧</span><span class="da-mkt-name">UK → UK</span></div>
+        <div class="da-mkt-desc">Buy and sell on Amazon UK</div>
+        <div class="da-mkt-tags"><span class="da-mkt-tag">UK Buy Box</span><span class="da-mkt-tag">New</span></div>
       </button>
-      <button class="a2a-mode-btn a2a-mode-eu" onclick="setMode('eu',this)">
-        <div class="a2a-mode-top">
-          <span class="a2a-mode-icon">🌍</span>
-          <span class="a2a-mode-badge">EU → UK</span>
-        </div>
-        <span class="a2a-mode-desc">Source from EU marketplace, sell on UK</span>
-        <div class="a2a-mode-tags">
-          <span class="a2a-mtag">EU Buy Box</span>
-          <span class="a2a-mtag">+£2 ship</span>
-          <span class="a2a-mtag">New</span>
-        </div>
+      <button class="da-mkt-btn" onclick="setMode('us',this)" data-mode="us">
+        <div class="da-mkt-top"><span class="da-mkt-flag">🇺🇸</span><span class="da-mkt-name">US → US</span></div>
+        <div class="da-mkt-desc">Buy and sell on Amazon US</div>
+        <div class="da-mkt-tags"><span class="da-mkt-tag">US Buy Box</span><span class="da-mkt-tag">No VAT</span></div>
       </button>
-      <button class="a2a-mode-btn a2a-mode-uln" onclick="setMode('uln',this)">
-        <div class="a2a-mode-top">
-          <span class="a2a-mode-icon">♻</span>
-          <span class="a2a-mode-badge">Used LN</span>
-        </div>
-        <span class="a2a-mode-desc">Buy Used Like New, list as Used LN on UK</span>
-        <div class="a2a-mode-tags">
-          <span class="a2a-mtag">Used LN buy</span>
-          <span class="a2a-mtag">No ST cap</span>
-        </div>
+      <button class="da-mkt-btn" onclick="setMode('eu',this)" data-mode="eu">
+        <div class="da-mkt-top"><span class="da-mkt-flag">🌍</span><span class="da-mkt-name">EU → UK</span></div>
+        <div class="da-mkt-desc">Source EU, sell UK — needs UK sell price</div>
+        <div class="da-mkt-tags"><span class="da-mkt-tag">EU Buy Box</span><span class="da-mkt-tag">+£2 shipping</span></div>
       </button>
-      <button class="a2a-mode-btn a2a-mode-pex" onclick="setMode('pex',this)">
-        <div class="a2a-mode-top">
-          <span class="a2a-mode-icon">⭐</span>
-          <span class="a2a-mode-badge">Prime Exclusive</span>
-        </div>
-        <span class="a2a-mode-desc">New, Prime Exclusive vs 180d Buy Box — Prime Day comparison</span>
-        <div class="a2a-mode-tags">
-          <span class="a2a-mtag">New, Prime exclusive</span>
-          <span class="a2a-mtag">vs 180d BB</span>
-        </div>
+      <button class="da-mkt-btn" onclick="setMode('uln',this)" data-mode="uln">
+        <div class="da-mkt-top"><span class="da-mkt-flag">♻</span><span class="da-mkt-name">Used LN</span></div>
+        <div class="da-mkt-desc">Buy Used Like New, list as Used LN on UK</div>
+        <div class="da-mkt-tags"><span class="da-mkt-tag">Used LN price</span><span class="da-mkt-tag">UK</span></div>
+      </button>
+      <button class="da-mkt-btn" onclick="setMode('pex',this)" data-mode="pex">
+        <div class="da-mkt-top"><span class="da-mkt-flag">⭐</span><span class="da-mkt-name">Prime Exclusive</span></div>
+        <div class="da-mkt-desc">EU Prime Exclusive vs 180d UK Buy Box</div>
+        <div class="da-mkt-tags"><span class="da-mkt-tag">PEX Price</span><span class="da-mkt-tag">Prime Day</span></div>
       </button>
     </div>
 
     <!-- MODE INFO STRIP -->
-    <div class="a2a-info-strip" id="modeBanner">
-      <div class="a2a-info-mode" id="modePill">UK → UK</div>
-      <div class="a2a-info-divider"></div>
-      <div class="a2a-info-desc" id="modeDesc">Buy price: <strong>Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong> &nbsp;·&nbsp; Slots: <strong>2× UK exports (deduped)</strong></div>
+    <div class="da-info-strip" id="modeBanner">
+      <div class="da-info-pill" id="modePill">UK → UK</div>
+      <div class="da-info-divider"></div>
+      <div class="da-info-desc" id="modeDesc">Buy price: <strong>Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong></div>
     </div>
 
-    <!-- RETAILER BRAND FILTER -->
-    <div class="a2a-retailer-strip" id="daRetailerStrip" onclick="daToggleRetailerExpand()">
-      <span class="a2a-retailer-label">🏪 Retailer brands</span>
-      <span class="a2a-retailer-count" id="daRetailerCount"></span>
-      <span class="a2a-retailer-chevron">▸</span>
+    <!-- RETAILER BRANDS -->
+    <div class="da-retailer-strip" id="daRetailerStrip" onclick="daToggleRetailerExpand()">
+      <span class="da-retailer-label">🏪 Retailer brands</span>
+      <span class="da-retailer-count" id="daRetailerCount"></span>
+      <span class="da-retailer-chevron">▸</span>
     </div>
-    <div class="a2a-retailer-expanded" id="daRetailerExpanded">
-      <div class="a2a-retailer-tags" id="daRetailerTagsEl" style="margin-bottom:8px;"></div>
-      <div class="a2a-retailer-edit-wrap" id="daRetailerEditWrap">
-        <span class="a2a-retailer-edit-hint">Brands (comma-separated):</span>
-        <input type="text" class="a2a-retailer-input" id="daRetailerInput"
-          placeholder="Shark, Vax, Samsung, LG, Sony…"
-          onkeydown="if(event.key==='Enter')daSaveRetailerBrands()">
-        <button class="a2a-retailer-save-btn" onclick="daSaveRetailerBrands()">Save</button>
+    <div class="da-retailer-expanded" id="daRetailerExpanded">
+      <div class="da-retailer-tags" id="daRetailerTagsEl" style="margin-bottom:8px;"></div>
+      <div class="da-retailer-edit-wrap" id="daRetailerEditWrap">
+        <input type="text" class="da-retailer-input" id="daRetailerInput" placeholder="Shark, Vax, Samsung, LG, Sony…" onkeydown="if(event.key==='Enter')daSaveRetailerBrands()">
+        <button class="da-retailer-save-btn" onclick="daSaveRetailerBrands()">Save</button>
       </div>
-      <button class="a2a-retailer-edit-btn" id="daRetailerEditBtn" onclick="daToggleRetailerEdit()" style="margin-top:8px;">Edit brands</button>
+      <button class="da-retailer-edit-btn" id="daRetailerEditBtn" onclick="daToggleRetailerEdit()" style="margin-top:8px;">Edit brands</button>
     </div>
 
-    <!-- FILE DROP ZONE -->
-    <div class="a2a-upload-zone" id="daDropzone">
-      <div class="a2a-upload-header">
-        <div class="a2a-upload-header-left">
-          <div class="a2a-upload-title">Keepa Product Finder Export</div>
-          <div class="a2a-upload-sub">Drop up to 3 CSV files — duplicate ASINs removed automatically</div>
-        </div>
-        <div class="a2a-upload-header-right" id="daSlotHint">
-          <span class="a2a-upload-hint-icon">⌘</span>
-          <span class="a2a-upload-hint-text">Drop anywhere or click a slot</span>
+    <!-- UPLOAD ZONE -->
+    <div class="da-upload-zone" id="daDropzone">
+      <div class="da-upload-hdr">
+        <div>
+          <div class="da-upload-title">Keepa Product Finder Export</div>
+          <div class="da-upload-sub" id="daUploadSub">Drop up to 3 CSV files — duplicate ASINs removed automatically</div>
         </div>
       </div>
-      <div class="a2a-slots">
-        <div class="a2a-slot" id="daSlot1" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,1)">
+      <div class="da-slots" id="daSlotGrid">
+        <div class="da-slot" id="daSlot1" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,1)">
           <input type="file" id="daFileInput1" accept=".csv" onchange="daFileChosen(1,this.files[0])">
-          <div class="a2a-slot-num">01</div>
-          <div class="a2a-slot-icon" id="daSlot1Icon">↑</div>
-          <div class="a2a-slot-label" id="daSlot1Label">File 1 — UK Keepa export (1–5k)</div>
-          <div class="a2a-slot-sub" id="daSlot1Sub">REQUIRED</div>
-          <div class="a2a-slot-name" id="daSlot1Name"></div>
-          <button class="a2a-slot-clear" id="daSlot1Clear" onclick="daClearSlot(event,1)">✕</button>
+          <div class="da-slot-num">01</div>
+          <div class="da-slot-icon" id="daSlot1Icon">↑</div>
+          <div class="da-slot-label" id="daSlot1Label">File 1 — Keepa export</div>
+          <div class="da-slot-sub" id="daSlot1Sub">REQUIRED</div>
+          <div class="da-slot-name" id="daSlot1Name"></div>
+          <button class="da-slot-clear" id="daSlot1Clear" onclick="daClearSlot(event,1)">✕</button>
         </div>
-        <div class="a2a-slot" id="daSlot2" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,2)">
+        <div class="da-slot" id="daSlot2" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,2)">
           <input type="file" id="daFileInput2" accept=".csv" onchange="daFileChosen(2,this.files[0])">
-          <div class="a2a-slot-num">02</div>
-          <div class="a2a-slot-icon" id="daSlot2Icon">↑</div>
-          <div class="a2a-slot-label" id="daSlot2Label">File 2 — UK Keepa export (5k–10k)</div>
-          <div class="a2a-slot-sub" id="daSlot2Sub">OPTIONAL — second batch</div>
-          <div class="a2a-slot-name" id="daSlot2Name"></div>
-          <button class="a2a-slot-clear" id="daSlot2Clear" onclick="daClearSlot(event,2)">✕</button>
+          <div class="da-slot-num">02</div>
+          <div class="da-slot-icon" id="daSlot2Icon">↑</div>
+          <div class="da-slot-label" id="daSlot2Label">File 2 — optional 2nd batch</div>
+          <div class="da-slot-sub" id="daSlot2Sub">OPTIONAL</div>
+          <div class="da-slot-name" id="daSlot2Name"></div>
+          <button class="da-slot-clear" id="daSlot2Clear" onclick="daClearSlot(event,2)">✕</button>
         </div>
-        <div class="a2a-slot" id="daSlot3" style="display:none;" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,3)">
+        <div class="da-slot" id="daSlot3" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,3)">
           <input type="file" id="daFileInput3" accept=".csv" onchange="daFileChosen(3,this.files[0])">
-          <div class="a2a-slot-num">03</div>
-          <div class="a2a-slot-icon" id="daSlot3Icon">↑</div>
-          <div class="a2a-slot-label" id="daSlot3Label">🇬🇧 UK Sell Prices</div>
-          <div class="a2a-slot-sub" id="daSlot3Sub">UK SELL PRICES · REQUIRED</div>
-          <div class="a2a-slot-name" id="daSlot3Name"></div>
-          <button class="a2a-slot-clear" id="daSlot3Clear" onclick="daClearSlot(event,3)">✕</button>
+          <div class="da-slot-num">03</div>
+          <div class="da-slot-icon" id="daSlot3Icon">↑</div>
+          <div class="da-slot-label" id="daSlot3Label">🇬🇧 UK Sell Prices</div>
+          <div class="da-slot-sub" id="daSlot3Sub">UK SELL PRICES · REQUIRED FOR EU MODE</div>
+          <div class="da-slot-name" id="daSlot3Name"></div>
+          <button class="da-slot-clear" id="daSlot3Clear" onclick="daClearSlot(event,3)">✕</button>
         </div>
       </div>
-      <button class="a2a-go-btn a2a-go-eu" id="daGoBtn" onclick="daRunAnalysis()">
-        <span class="a2a-go-arrow">→</span> ANALYSE DEALS
-      </button>
+      <button class="da-go-btn" id="daGoBtn" onclick="daRunAnalysis()">→ ANALYSE DEALS</button>
     </div>
 
     <!-- LOADING -->
-    <div class="a2a-loading" id="daLoading"><span class="loading-dots">Analysing deals</span></div>
+    <div class="da-loading" id="daLoading"><span class="loading-dots">Analysing deals</span></div>
 
-    <!-- RESULTS HEADER + FILTER BAR -->
-    <div class="a2a-results-header" id="daFilters">
-      <div class="a2a-filter-pills">
-        <button class="a2a-fpill active" id="daPillAll" onclick="daSetFilter('all',this)">All</button>
-        <button class="a2a-fpill fp-green" id="daPillGreen" onclick="daSetFilter('green',this)">
-          <span class="a2a-fpill-dot fp-green-dot"></span>Strong
-        </button>
-        <button class="a2a-fpill fp-amber" id="daPillAmber" onclick="daSetFilter('amber',this)">
-          <span class="a2a-fpill-dot fp-amber-dot"></span>Marginal
-        </button>
-        <button class="a2a-fpill fp-red" id="daPillRed" onclick="daSetFilter('red',this)">
-          <span class="a2a-fpill-dot fp-red-dot"></span>Reject
-        </button>
-        <button class="a2a-fpill fp-purple" id="daPillSS" onclick="daSetFilter('subsave',this)">
-          <span class="a2a-fpill-dot fp-purple-dot"></span>♻ Sub &amp; Save
-        </button>
-        <button class="a2a-fpill fp-blue" id="daPillR15" onclick="daSetFilter('retailer',this)">
-          <span class="a2a-fpill-dot fp-blue-dot"></span>🏪 Currys/Argos
-        </button>
-        <span class="a2a-spike-notice" id="spikeNotice" style="display:none;margin-left:4px;"></span>
-        <button class="a2a-fpill" id="daPillExcRecent" onclick="daToggleExcludeRecent(this)" title="Hide products bought in the last 3 days" style="margin-left:8px;border-style:dashed;">🚫 Bought &lt;3d</button>
+    <!-- RESULTS -->
+    <div id="daFilters" style="display:none;">
+      <div class="da-results-bar">
+        <div class="da-filter-pills">
+          <button class="a2a-fpill active" id="daPillAll" onclick="daSetFilter('all',this)">All</button>
+          <button class="a2a-fpill fp-green" id="daPillGreen" onclick="daSetFilter('green',this)"><span class="a2a-fpill-dot fp-green-dot"></span>Strong</button>
+          <button class="a2a-fpill fp-amber" id="daPillAmber" onclick="daSetFilter('amber',this)"><span class="a2a-fpill-dot fp-amber-dot"></span>Marginal</button>
+          <button class="a2a-fpill fp-red" id="daPillRed" onclick="daSetFilter('red',this)"><span class="a2a-fpill-dot fp-red-dot"></span>Reject</button>
+          <button class="a2a-fpill fp-purple" id="daPillSS" onclick="daSetFilter('subsave',this)"><span class="a2a-fpill-dot fp-purple-dot"></span>♻ S&amp;S</button>
+          <button class="a2a-fpill fp-blue" id="daPillR15" onclick="daSetFilter('retailer',this)"><span class="a2a-fpill-dot fp-blue-dot"></span>🏪 Retailer</button>
+          <span class="da-spike-notice" id="spikeNotice" style="display:none;"></span>
+          <button class="a2a-fpill" id="daPillExcRecent" onclick="daToggleExcludeRecent(this)" style="margin-left:8px;border-style:dashed;">🚫 Bought &lt;3d</button>
+        </div>
+        <div class="da-filter-actions">
+          <span id="daResultCount" class="da-result-total"></span>
+          <input type="text" id="daSearch" class="da-search" placeholder="Search ASIN or title…" oninput="daRenderTable()">
+          <span class="da-rejected-badge" id="daRejectedCount" style="display:none;"></span>
+          <button class="da-action-btn" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;">Clear rejected</button>
+          <button class="da-action-btn" id="daClearViewedBtn" onclick="daClearAllViewed()" style="display:none;">👁 Clear viewed</button>
+          <button class="da-action-btn" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
+          <button class="da-action-btn da-action-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export CSV</button>
+        </div>
+        <span id="daCountGreen" style="display:none;"></span>
+        <span id="daCountAmber" style="display:none;"></span>
+        <span id="daCountRed" style="display:none;"></span>
+        <span id="daCountGC" style="display:none;"></span>
+        <span id="daCountSS" style="display:none;"></span>
+        <span id="daCountR15" style="display:none;"></span>
       </div>
-      <div class="a2a-filter-actions">
-        <span id="daResultCount" class="a2a-result-total"></span>
-        <input type="text" id="daSearch" class="da-search" placeholder="Search ASIN or title…" oninput="daRenderTable()">
-        <span class="a2a-rejected-badge" id="daRejectedCount" style="display:none;"></span>
-        <button class="a2a-action-btn" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;">Clear rejected</button>
-        <button class="a2a-action-btn" id="daClearViewedBtn" onclick="daClearAllViewed()" style="display:none;color:var(--red);border-color:rgba(240,59,80,0.35);" title="Remove SEEN badge from all deals">👁 Clear all viewed</button>
-        <button class="a2a-action-btn" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
-        <button class="a2a-action-btn a2a-action-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export CSV</button>
+      <div class="da-table-wrap" id="daTableWrap">
+        <div class="da-table-inner">
+          <table class="da-table">
+            <thead id="daTableHead"></thead>
+            <tbody id="daTableBody"></tbody>
+          </table>
+        </div>
       </div>
-      <!-- Hidden spans required by JS -->
-      <span id="daCountGreen" style="display:none;"></span>
-      <span id="daCountAmber" style="display:none;"></span>
-      <span id="daCountRed" style="display:none;"></span>
-      <span id="daCountGC" style="display:none;"></span>
-      <span id="daCountSS" style="display:none;"></span>
-      <span id="daCountR15" style="display:none;"></span>
     </div>
 
-
-    <div class="a2a-table-wrap" id="daTableWrap">
-      <table class="da-table">
-        <thead id="daTableHead"></thead>
-        <tbody id="daTableBody"></tbody>
-      </table>
-    </div>
-  </div>
-  </div><!-- /a2a-wrap -->
+  </div><!-- /da-wrap -->
+  </div><!-- /page-a2a -->
 
   <!-- ══ PAGE: PURCHASES ══ -->
   <div class="page" id="page-purchases">
@@ -4452,24 +4596,37 @@ function rmRemoveRequest(asin){
 // CONFIG
 // ════════════════════════════════════════
 const MODES = {
-  eu: {
-    label: 'EU → UK',
-    pillClass: 'eu',
-    desc: 'Buy price: <strong>EU Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK Buy Box 180d avg</strong> &nbsp;·&nbsp; Extra cost: <strong>+£2.00 shipping</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong>',
-    buyCol: 'Buy Box: Current',           // EU Buy Box current
-    sellCol: 'Buy Box: 180 days avg.',    // UK 180d avg
-    extraCost: BIMMA_CFG.euShipping,      // shipping per unit
-    condition: 'new',
-    minROI: 0.15, strongROI: 0.20,
-  },
   uk: {
     label: 'UK → UK',
     pillClass: '',
-    desc: 'Buy price: <strong>Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong> &nbsp;·&nbsp; Slots: <strong>2× UK exports (deduped)</strong>',
+    desc: 'Buy price: <strong>Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong>',
     buyCol: 'Buy Box: Current',
     sellCol: 'Buy Box: 180 days avg.',
     extraCost: 0,
     condition: 'new',
+    market: 'uk',
+    minROI: 0.15, strongROI: 0.20,
+  },
+  us: {
+    label: 'US → US',
+    pillClass: 'us',
+    desc: 'Buy price: <strong>Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>US BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong> &nbsp;·&nbsp; No VAT · 15% referral',
+    buyCol: 'Buy Box: Current',
+    sellCol: 'Buy Box: 180 days avg.',
+    extraCost: 0,
+    condition: 'new',
+    market: 'us',
+    minROI: 0.15, strongROI: 0.20,
+  },
+  eu: {
+    label: 'EU → UK',
+    pillClass: 'eu',
+    desc: 'Buy price: <strong>EU Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK Buy Box 180d avg</strong> &nbsp;·&nbsp; Extra cost: <strong>+£2.00 shipping</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong>',
+    buyCol: 'Buy Box: Current',
+    sellCol: 'Buy Box: 180 days avg.',
+    extraCost: BIMMA_CFG.euShipping,
+    condition: 'new',
+    market: 'uk',
     minROI: 0.15, strongROI: 0.20,
   },
   uln: {
@@ -4480,6 +4637,7 @@ const MODES = {
     sellCol: 'Used, like new: 180 days avg.',
     extraCost: 0,
     condition: 'used',
+    market: 'uk',
     minROI: 0.15, strongROI: 0.20,
   },
   pex: {
@@ -4490,6 +4648,7 @@ const MODES = {
     sellCol: 'Buy Box: 180 days avg.',
     extraCost: 0,
     condition: 'new',
+    market: 'uk',
     minROI: 0.15, strongROI: 0.20,
   },
 };
@@ -4499,6 +4658,14 @@ const FEES = {
   referralPct: 0.15,
   prepFee: 0.45,
   dsFeeRate: 0.00535,
+};
+
+// US-specific fees (no VAT, similar referral)
+const FEES_US = {
+  vat: 0,           // No VAT on Amazon US
+  referralPct: 0.15,
+  prepFee: 0.45,
+  dsFeeRate: 0,
 };
 
 // ════════════════════════════════════════
@@ -4624,44 +4791,43 @@ function daSaveRejected() {
 function setMode(mode, btn) {
   currentMode = mode;
   const cfg = MODES[mode];
-  // tabs
-  document.querySelectorAll('.a2a-mode-btn').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  // info strip
+  // Update active button
+  document.querySelectorAll('.da-mkt-btn').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  // Info strip
   document.getElementById('modePill').textContent = cfg.label;
   document.getElementById('modeDesc').innerHTML = cfg.desc;
-  // Update slot labels based on mode
-  const slot1Label = document.getElementById('daSlot1Label');
-  const slot2Label = document.getElementById('daSlot2Label');
-  const slot1Sub   = document.getElementById('daSlot1Sub');
-  const slot2Sub   = document.getElementById('daSlot2Sub');
-  const slot3 = document.getElementById('daSlot3');
-  const slot3Sub = document.getElementById('daSlot3Sub');
+  // Slot labels and visibility
+  const s1Label = document.getElementById('daSlot1Label');
+  const s2Label = document.getElementById('daSlot2Label');
+  const s1Sub   = document.getElementById('daSlot1Sub');
+  const s2Sub   = document.getElementById('daSlot2Sub');
+  const slot3   = document.getElementById('daSlot3');
   if (mode === 'eu') {
-    slot1Label.textContent = '🇪🇺 EU Source — export 1';
-    slot2Label.textContent = '🇪🇺 EU Source — export 2';
-    slot1Sub.textContent = 'EU BUY PRICES · REQUIRED'; slot1Sub.style.display = '';
-    slot2Sub.textContent = 'EU BUY PRICES · OPTIONAL 2nd batch'; slot2Sub.style.display = '';
-    slot3Sub.style.display = '';
-    slot3.style.display = ''; // show slot 3
-  } else if (mode === 'uk') {
-    slot1Label.textContent = 'File 1 — UK Keepa export (1–5k)';
-    slot2Label.textContent = 'File 2 — UK Keepa export (5k–10k)';
-    slot1Sub.textContent = 'REQUIRED'; slot1Sub.style.display = '';
-    slot2Sub.textContent = 'OPTIONAL — second batch'; slot2Sub.style.display = '';
+    s1Label.textContent = '🇪🇺 EU Source — export 1';
+    s2Label.textContent = '🇪🇺 EU Source — export 2';
+    s1Sub.textContent = 'EU BUY PRICES · REQUIRED';
+    s2Sub.textContent = 'EU BUY PRICES · OPTIONAL';
+    slot3.style.display = '';
+  } else if (mode === 'us') {
+    s1Label.textContent = '🇺🇸 US Keepa export (1–5k)';
+    s2Label.textContent = '🇺🇸 US Keepa export (5k–10k)';
+    s1Sub.textContent = 'REQUIRED';
+    s2Sub.textContent = 'OPTIONAL';
     slot3.style.display = 'none';
   } else {
-    slot1Label.textContent = 'File 1 — drop CSV here';
-    slot2Label.textContent = 'File 2 — optional second export';
-    slot1Sub.style.display = 'none'; slot2Sub.style.display = 'none';
+    s1Label.textContent = 'File 1 — Keepa export (1–5k)';
+    s2Label.textContent = 'File 2 — optional 2nd batch';
+    s1Sub.textContent = 'REQUIRED';
+    s2Sub.textContent = 'OPTIONAL';
     slot3.style.display = 'none';
   }
-  // EU requires slots 1 + 3 (slot 2 is optional); others only need slot 1
+  // Go button
   const goBtn = document.getElementById('daGoBtn');
   const ready = mode === 'eu' ? (!!daSlotFiles[1] && !!daSlotFiles[3]) : !!daSlotFiles[1];
-  goBtn.className = 'a2a-go-btn a2a-go-' + mode + (ready ? ' ready' : '');
-  // reset if results showing
-  if (document.getElementById('daTableWrap').classList.contains('visible')) daReset();
+  goBtn.className = 'da-go-btn' + (ready ? ' ready' : '');
+  // Reset if results showing
+  if (document.getElementById('daFilters').style.display !== 'none') daReset();
 }
 
 // ════════════════════════════════════════
@@ -4717,8 +4883,9 @@ function daFbaFee(price) {
 }
 
 function daAnalyseRow(row) {
-  const cfg = MODES[currentMode];
-  const { vat, prepFee, dsFeeRate } = FEES;
+  const cfg  = MODES[currentMode];
+  const fees = cfg.market === 'us' ? FEES_US : FEES;
+  const { vat, prepFee, dsFeeRate } = fees;
 
   const buyRaw   = daParseNum(row[cfg.buyCol]) ?? (cfg.buyCol === 'New, Prime Exclusive: Current' ? daParseNum(row['New, Prime exclusive: Current']) : null);
   const avg90    = daParseNum(row['Buy Box: 90 days avg.']);
@@ -4946,8 +5113,7 @@ setTimeout(() => {
           b.classList.toggle('active', (b.getAttribute('onclick')||'').includes("'"+savedMode+"'"));
         });
         const dz = document.getElementById('daDropzone'); if (dz) dz.style.display = 'none';
-        const df = document.getElementById('daFilters'); if (df) df.classList.add('visible');
-        const tw = document.getElementById('daTableWrap'); if (tw) tw.classList.add('visible');
+        const df = document.getElementById('daFilters'); if (df) df.style.display = 'block';
         const rb = document.getElementById('daResetBtn'); if (rb) rb.style.display = '';
         document.getElementById('daCountGreen').textContent = daDeals.filter(d => d.colour === 'green').length;
         const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
@@ -5001,7 +5167,7 @@ function daRunAnalysis() {
   const activeSlots = [1,2,3].filter(n => daSlotFiles[n] || daSlotTexts[n]);
   if (!activeSlots.length) return;
   document.getElementById('daDropzone').style.display = 'none';
-  document.getElementById('daLoading').classList.add('visible');
+  document.getElementById('daLoading').style.display = 'block';
   const getText = n => daSlotTexts[n] ? Promise.resolve(daSlotTexts[n]) : new Promise(res => { const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsText(daSlotFiles[n]); });
   Promise.all(activeSlots.map(n => getText(n))).then(results => {
     setTimeout(() => { try { // tick 1: parse + analyse (CPU-heavy)
@@ -5130,21 +5296,21 @@ function daRunAnalysis() {
 
       // tick 2: yield to browser so spinner can update, then render
       setTimeout(() => { try {
-        document.getElementById('daLoading').classList.remove('visible');
-        document.getElementById('daFilters').classList.add('visible');
-        document.getElementById('daTableWrap').classList.add('visible');
+        document.getElementById('daLoading').style.display = 'none';
+        document.getElementById('daFilters').style.display = 'block';
+        
         document.getElementById('daResetBtn').style.display = '';
         daUpdateRejectedCount(); daRenderHeaders(); daInitSort(); daRenderTable(); daUpdatePillCounts();
         try { const slim = daDeals.map(d => { const {title,asin,brand,buyExVat,buyIncVat,spIncVat,spSource,sp,dip,recoveries,profit,roi,gcProfit,gcRoi,ssProfit,ssRoi,r15Profit,r15Roi,rankDrops,boughtPerMonth,ss,priceTrendWarning,spikeFlag,strength,colour,reason,sortOrder,fbaFeeEst,toHouse,maxDim,bbCurrent,avg180,decision,priceChanged,priceMoved,priceMovePct,boughtDaysAgo}=d; return {title,asin,brand,buyExVat,buyIncVat,spIncVat,spSource,sp,dip,recoveries,profit,roi,gcProfit,gcRoi,ssProfit,ssRoi,r15Profit,r15Roi,rankDrops,boughtPerMonth,ss,priceTrendWarning,spikeFlag,strength,colour,reason,sortOrder,fbaFeeEst,toHouse,maxDim,bbCurrent,avg180,decision,priceChanged,priceMoved,priceMovePct,boughtDaysAgo}; }); localStorage.setItem('bimma_da_results', JSON.stringify(slim)); localStorage.setItem('bimma_da_results_mode', currentMode); } catch(e) { console.warn('DA persist failed:', e); }
         try { const snap = {}; daDeals.forEach(d => { if (d.asin && d.buyIncVat != null) snap[d.asin.toUpperCase()] = d.buyIncVat; }); localStorage.setItem('bimma_da_price_snap', JSON.stringify(snap)); } catch(e) {}
       } catch(err) {
-        document.getElementById('daLoading').classList.remove('visible');
+        document.getElementById('daLoading').style.display = 'none';
         document.getElementById('daDropzone').style.display = '';
         console.error('Analysis error:', err);
         toast('Analysis error: ' + (err.message || 'unknown error'), 'error');
       }}, 0);
     } catch(err) {
-      document.getElementById('daLoading').classList.remove('visible');
+      document.getElementById('daLoading').style.display = 'none';
       document.getElementById('daDropzone').style.display = '';
       console.error('Analysis error:', err);
       toast('Analysis error: ' + (err.message || 'unknown error'), 'error');
@@ -5229,8 +5395,8 @@ function daRenderTable() {
         <div class="td-product-title">${deal.title}</div>
         <div class="td-product-badges">${deal.ss ? '<span class="ss-badge">S&S</span> ' : ''}${deal.boughtDaysAgo != null ? `<span class="inv-badge">📦 bought ${deal.boughtDaysAgo}d ago</span> ` : ''}${deal.toHouse ? `<span class="to-house-badge">🏠 To house${deal.maxDim ? ' '+deal.maxDim.toFixed(0)+'cm' : ''}</span> ` : ''}${deal.priceChanged ? '<span class="pc-badge">↓ PRICE DROP</span> ' : ''}${deal.priceMoved === 'down' ? `<span class="pc-badge">↓ ${Math.abs(deal.priceMovePct*100).toFixed(1)}% cheaper</span> ` : ''}${trendWarn}${spikeWarn}${daViewedList.has(deal.asin) ? `<span class="viewed-badge">SEEN<span onclick="event.stopPropagation();daUnmarkViewed('${deal.asin}')" style="cursor:pointer;color:var(--red);margin-left:3px;font-size:10px;line-height:1;" title="Unmark as viewed">×</span></span>` : ''}</div>
         <div class="td-asin-row">
-          <a href="https://www.amazon.co.uk/dp/${deal.asin}" target="_blank" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">${deal.asin}</a>
-          <a href="https://www.keepa.com/#product/2-${deal.asin}" target="_blank" class="keepa-link" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">Keepa ↗</a>
+          <a href="https://www.amazon.${MODES[currentMode].market === 'us' ? 'com' : 'co.uk'}/dp/${deal.asin}" target="_blank" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">${deal.asin}</a>
+          <a href="https://www.keepa.com/#product/${MODES[currentMode].market === 'us' ? '1' : '2'}-${deal.asin}" target="_blank" class="keepa-link" onclick="setTimeout(()=>daMarkViewed('${deal.asin}'),0)">Keepa ↗</a>
         </div>
       </td>
       <td style="vertical-align:middle;">
@@ -5419,9 +5585,9 @@ function daReset() {
     document.getElementById('daFileInput' + n).value = '';
   });
   document.getElementById('daDropzone').style.display = '';
-  document.getElementById('daFilters').classList.remove('visible');
-  document.getElementById('daTableWrap').classList.remove('visible');
-  document.getElementById('daLoading').classList.remove('visible');
+  document.getElementById('daFilters').style.display = 'none';
+  
+  document.getElementById('daLoading').style.display = 'none';
   document.getElementById('daResetBtn').style.display = 'none';
   document.getElementById('daExportBtn').style.display = 'none';
   document.getElementById('spikeNotice').style.display = 'none';

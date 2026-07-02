@@ -4956,7 +4956,7 @@ function daAnalyseRow(row) {
   const bbCurrent = daParseNum(row['Buy Box: Current']);
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
   // Sell price: highest of 90d/180d/365d BB avg × tiered multiplier
-  const ST_MAX = 1.20; // ST capped at 1.2× bestAvg — benefit from ST signal without inflating
+  const ST_MAX = 1.10; // ST capped at 1.2× bestAvg — benefit from ST signal without inflating
   const avgCandidates = [avg90, avg180, (avg365 && avg90 && avg365 > avg90 * 1.15 ? null : avg365)].filter(v => v != null && v > 0);
   const bestAvg = avgCandidates.length ? Math.max(...avgCandidates) : null;
   const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
@@ -5916,7 +5916,7 @@ function scoutFileChosen(file, slot=1) {
             const bbSt   = getNum(bbStIdx);
             const pexVal = getNum(pexIdx);
             const title  = (cols[titleIdx]||'').replace(/"/g,'').trim();
-            const ST_MAX = 1.20;
+            const ST_MAX = 1.10;
             const valid = v => !isNaN(v) && v > 0;
             let bestSell = null, sellSource = '';
             const avgCands = [bb90, bb180, bb365].filter(valid);
@@ -6191,7 +6191,7 @@ function scoutGetBB180(product) {
 
   const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
   const UPLIFT = tieredUplift(bestAvg ? bestAvg / 100 : null);
-  const ST_MAX = 1.20;
+  const ST_MAX = 1.10;
 
   let stPrice = null;
   try {

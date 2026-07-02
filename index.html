@@ -2005,7 +2005,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v5.6 · 02 Jul 26</div>
+    <div class="sidebar-version">v5.7 · 02 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -2586,7 +2586,6 @@ input::placeholder { color: var(--text-4); }
           <button class="a2a-fpill fp-amber" id="daPillAmber" onclick="daSetFilter('amber',this)"><span class="a2a-fpill-dot fp-amber-dot"></span>Marginal</button>
           <button class="a2a-fpill fp-red" id="daPillRed" onclick="daSetFilter('red',this)"><span class="a2a-fpill-dot fp-red-dot"></span>Reject</button>
           <button class="a2a-fpill fp-purple" id="daPillSS" onclick="daSetFilter('subsave',this)"><span class="a2a-fpill-dot fp-purple-dot"></span>♻ S&amp;S</button>
-          <button class="a2a-fpill fp-blue" id="daPillR15" onclick="daSetFilter('retailer',this)"><span class="a2a-fpill-dot fp-blue-dot"></span>🏪 Retailer</button>
           <span class="da-spike-notice" id="spikeNotice" style="display:none;"></span>
           <button class="a2a-fpill" id="daPillExcRecent" onclick="daToggleExcludeRecent(this)" style="margin-left:8px;border-style:dashed;">🚫 Bought &lt;3d</button>
         </div>
@@ -2604,7 +2603,6 @@ input::placeholder { color: var(--text-4); }
         <span id="daCountRed" style="display:none;"></span>
         <span id="daCountGC" style="display:none;"></span>
         <span id="daCountSS" style="display:none;"></span>
-        <span id="daCountR15" style="display:none;"></span>
       </div>
       <div class="da-table-wrap" id="daTableWrap">
         <div class="da-table-inner">
@@ -5353,8 +5351,7 @@ function daRenderHeaders() {
   const spLabel  = cfg.condition === 'used' ? 'SP Used' : 'SP 180d';
   const ssCols  = daFilter === 'subsave'
     ? `<th data-col="ssRoi" data-type="num" style="color:var(--purple);" title="ROI on Subscribe & Save">♻ S&S</th>` : '';
-  const r15Cols = daFilter === 'retailer'
-    ? `<th data-col="r15Roi" data-type="num" style="color:var(--blue);" title="ROI buying from Currys/Argos with 15% gift card">🏪 15%</th>` : '';
+  const r15Cols = '';
   const brandFilterLabel = daBrandFilter ? ` <span style="color:var(--green);font-size:9px;cursor:pointer;" onclick="daClearBrandFilter()" title="Clear brand filter">✕ ${daBrandFilter}</span>` : '';
   document.getElementById('daTableHead').innerHTML = `<tr>
     <th class="no-sort th-left" style="min-width:220px;max-width:300px;">Product</th>
@@ -5434,7 +5431,6 @@ function daRenderTable() {
       <td class="td-num" style="color:${deal.bbCurrent && deal.avg180 && deal.bbCurrent > deal.avg180 * 1.05 ? 'var(--green)' : deal.bbCurrent && deal.avg180 && deal.bbCurrent < deal.avg180 * 0.95 ? 'var(--red)' : 'var(--text-3)'};">${deal.bbCurrent ? '£'+deal.bbCurrent.toFixed(2) : '—'}</td>
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
-      ${daFilter === 'retailer' ? `<td class="td-num" style="color:${r15Colour(deal.r15Roi)}">${fmtP(deal.r15Roi)}</td>` : ''}
       ${ssCells}
       <td class="td-num td-center">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
       <td class="td-actions">

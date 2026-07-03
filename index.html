@@ -2005,7 +2005,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v6.0 · 03 Jul 26</div>
+    <div class="sidebar-version">v6.1 · 03 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -4623,8 +4623,9 @@ const MODES = {
   uk: {
     label: 'UK → UK',
     pillClass: '',
-    desc: 'Buy price: <strong>Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong>',
-    buyCol: 'Buy Box: Current',
+    desc: 'Buy price: <strong>Amazon: Current</strong> (Amazon-direct only, not 3rd party) &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong>',
+    buyCol: 'Amazon: Current',
+    buyColFallback: 'Buy Box: Current',
     sellCol: 'Buy Box: 180 days avg.',
     extraCost: 0,
     condition: 'new',
@@ -4634,8 +4635,9 @@ const MODES = {
   us: {
     label: 'US → US',
     pillClass: 'us',
-    desc: 'Buy price: <strong>Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>US BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong> &nbsp;·&nbsp; No VAT · 15% referral',
-    buyCol: 'Buy Box: Current',
+    desc: 'Buy price: <strong>Amazon: Current</strong> (Amazon-direct only, not 3rd party) &nbsp;·&nbsp; Sell price: <strong>US BB avg / strikethrough</strong> &nbsp;·&nbsp; No VAT · 15% referral',
+    buyCol: 'Amazon: Current',
+    buyColFallback: 'Buy Box: Current',
     sellCol: 'Buy Box: 180 days avg.',
     extraCost: 0,
     condition: 'new',
@@ -4647,6 +4649,7 @@ const MODES = {
     pillClass: 'eu',
     desc: 'Buy price: <strong>EU Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK Buy Box 180d avg</strong> &nbsp;·&nbsp; Extra cost: <strong>+£2.00 shipping</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong>',
     buyCol: 'Buy Box: Current',
+    buyColFallback: null,
     sellCol: 'Buy Box: 180 days avg.',
     extraCost: BIMMA_CFG.euShipping,
     condition: 'new',
@@ -4911,7 +4914,9 @@ function daAnalyseRow(row) {
   const fees = cfg.market === 'us' ? FEES_US : FEES;
   const { vat, prepFee, dsFeeRate } = fees;
 
-  const buyRaw   = daParseNum(row[cfg.buyCol]) ?? (cfg.buyCol === 'New, Prime Exclusive: Current' ? daParseNum(row['New, Prime exclusive: Current']) : null);
+  const buyRaw   = daParseNum(row[cfg.buyCol])
+    ?? (cfg.buyColFallback ? daParseNum(row[cfg.buyColFallback]) : null)
+    ?? (cfg.buyCol === 'New, Prime Exclusive: Current' ? daParseNum(row['New, Prime exclusive: Current']) : null);
   const avg90    = daParseNum(row['Buy Box: 90 days avg.']);
   const avg180   = daParseNum(row['Buy Box: 180 days avg.']);
   const avg365   = daParseNum(row['Buy Box: 365 days avg.']);
@@ -5295,7 +5300,7 @@ function daRunAnalysis() {
         if (!daRejectedList.has(asin)) return true;
         const rejection = daRejectedList.get(asin);
         if (!rejection || rejection.price == null) return true; // no price stored — show as clearable rejected
-        const currentPrice = daParseNum(row[cfg.buyCol]);
+        const currentPrice = daParseNum(row[cfg.buyCol]) ?? (cfg.buyColFallback ? daParseNum(row[cfg.buyColFallback]) : null);
         if (currentPrice == null) return false;
         const priceDiff = Math.abs(currentPrice - rejection.price) / rejection.price;
         if (priceDiff > 0.05) {
@@ -5312,7 +5317,7 @@ function daRunAnalysis() {
       // Filter out rows missing essential price data — no FBA fee = can't calculate P&L
       // These would all come back as NO DATA grey rows and are useless noise
       const priceable = preFiltered.filter(row => {
-        const buyRaw = daParseNum(row[cfg.buyCol]) ?? (cfg.buyCol === 'New, Prime Exclusive: Current' ? daParseNum(row['New, Prime exclusive: Current']) : null);
+        const buyRaw = daParseNum(row[cfg.buyCol]) ?? (cfg.buyColFallback ? daParseNum(row[cfg.buyColFallback]) : null) ?? (cfg.buyCol === 'New, Prime Exclusive: Current' ? daParseNum(row['New, Prime exclusive: Current']) : null);
         const sellPrice = daParseNum(row['Buy Box: 180 days avg.']) || daParseNum(row[cfg.sellCol]);
         return buyRaw !== null && sellPrice !== null;
       });

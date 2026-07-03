@@ -2005,7 +2005,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v6.1 · 03 Jul 26</div>
+    <div class="sidebar-version">v6.2 · 03 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -5017,12 +5017,13 @@ function daAnalyseRow(row) {
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
   // Sell price: highest of 90d/180d/365d BB avg × tiered multiplier
   const ST_MAX = 1.10; // ST capped at 1.2× bestAvg — benefit from ST signal without inflating
-  // Smart avg selection: only use a higher avg if it's meaningfully above 180d (>10% upward trend)
-  // This prevents 365d inflating the sell price when the market has since dropped
-  const _base = avg180 || avg90 || null;
-  const _use365 = avg365 && _base && avg365 > _base * 1.20;
-  const _use90  = avg90  && _base && avg90  > _base * 1.20;
-  const bestAvg = _use365 ? avg365 : _use90 ? avg90 : _base;
+  // Avg selection: use 180d as the base (most stable)
+  // 90d only used if meaningfully above 180d (>20% — genuine recent rise)
+  // 365d NEVER used as upward driver — only as floor if 180d is missing
+  // This prevents outlier periods (e.g. Amazon briefly at £2200) skewing the sell price
+  const _base = avg180 || (avg365 && !avg180 ? avg365 : null) || avg90 || null;
+  const _use90 = avg90 && _base && avg90 > _base * 1.20;
+  const bestAvg = _use90 ? avg90 : _base;
   const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
   const UPLIFT = tieredUplift(bestAvg);
   const stCapped = stPrice && bestAvg && stPrice > bestAvg ? Math.min(stPrice, bestAvg * ST_MAX) : null;
@@ -5998,10 +5999,9 @@ function scoutFileChosen(file, slot=1) {
             const ST_MAX = 1.10;
             const valid = v => !isNaN(v) && v > 0;
             let bestSell = null, sellSource = '';
-            const _base = (valid(bb180) ? bb180 : null) || (valid(bb90) ? bb90 : null) || null;
-            const _use365 = valid(bb365) && _base && bb365 > _base * 1.20;
-            const _use90  = valid(bb90)  && _base && bb90  > _base * 1.20;
-            const bestAvg = _use365 ? bb365 : _use90 ? bb90 : _base;
+            const _base = (valid(bb180) ? bb180 : null) || (valid(bb365) && !valid(bb180) ? bb365 : null) || (valid(bb90) ? bb90 : null) || null;
+            const _use90 = valid(bb90) && _base && bb90 > _base * 1.20;
+            const bestAvg = _use90 ? bb90 : _base;
             const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
             const UPLIFT = tieredUplift(bestAvg);
             const stCapped = valid(bbSt) && bestAvg && bbSt > bestAvg ? Math.min(bbSt, bestAvg * ST_MAX) : null;
@@ -6295,12 +6295,11 @@ function scoutGetBB180(product) {
 
   // Fallback: best avg + 8% (or ST if capped within 1.3×)
   if (!avg180 && !avg90) return null;
-  const _baseRaw = avg180 || avg90;
-  const _use365 = avg365 && avg365 > _baseRaw * 1.20;
-  const _use90  = avg90  && avg90  > (_baseRaw || 0) * 1.20 && avg90 !== _baseRaw;
-  const bestAvgRaw = _use365 ? avg365 : _use90 ? avg90 : _baseRaw;
+  const _baseRaw = avg180 || (!avg180 && avg365 ? avg365 : null) || avg90;
+  const _use90 = avg90 && _baseRaw && avg90 > _baseRaw * 1.20 && avg90 !== _baseRaw;
+  const bestAvgRaw = _use90 ? avg90 : _baseRaw;
   const bestAvg = bestAvgRaw / 100;
-  const whichAvg = (_use365) ? '365d' : (_use90) ? '90d' : '180d';
+  const whichAvg = _use90 ? '90d' : '180d';
   const stCapped = stPrice && stPrice > bestAvg ? Math.min(stPrice, bestAvg * ST_MAX) : null;
   const spBase = stCapped ? Math.max(bestAvg * UPLIFT, stCapped) : bestAvg * UPLIFT;
   const spSource = stCapped && spBase === stCapped ? 'ST' : whichAvg + '+8%';

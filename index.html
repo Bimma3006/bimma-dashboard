@@ -1444,7 +1444,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="giftcards" onclick="showPage('giftcards',this)"><span class="nav-icon">◈</span>Gift Cards</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v6.7 · 04 Jul 26</div>
+    <div class="sidebar-version">v6.8 · 04 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -1720,282 +1720,253 @@ input::placeholder { color: var(--text-4); }
   <!-- ══ PAGE: A2A ANALYSER ══ -->
   <div class="page" id="page-a2a">
   <style>
-    /* ── Deal Analyser ────────────────────────────── */
-    .da-wrap          { padding: 40px 52px 64px; }
-    .da-top           { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:32px; flex-wrap:wrap; }
-    .da-top-left      { flex:1; min-width:0; }
-    .da-top-right     { display:flex; gap:12px; flex-wrap:wrap; }
+    .da-wrap { padding:40px 52px 64px; }
 
-    /* Market selector */
-    .da-market-bar    { display:flex; gap:8px; margin-bottom:20px; }
-    .da-mkt-btn       { display:flex; flex-direction:column; gap:5px; padding:14px 18px; min-width:160px; flex:1;
-                        background:var(--surface2); border:1.5px solid var(--border2);
-                        border-radius:var(--r-md); cursor:pointer; transition:all .15s; text-align:left; }
-    .da-mkt-btn:hover { border-color:var(--border3); background:var(--surface3); }
-    .da-mkt-btn.active{ border-color:var(--green); background:rgba(0,232,138,.07); }
-    .da-mkt-top       { display:flex; align-items:center; gap:8px; }
-    .da-mkt-flag      { font-size:20px; line-height:1; }
-    .da-mkt-name      { font-family:var(--mono); font-size:14px; font-weight:700; color:var(--text); letter-spacing:.01em; }
-    .da-mkt-btn.active .da-mkt-name { color:var(--green); }
-    .da-mkt-desc      { font-size:12px; color:var(--text-3); line-height:1.4; }
-    .da-mkt-tags      { display:flex; gap:4px; flex-wrap:wrap; }
-    .da-mkt-tag       { font-family:var(--mono); font-size:9px; font-weight:600; padding:2px 6px;
-                        border-radius:3px; background:var(--surface3); border:1px solid var(--border2);
-                        color:var(--text-3); letter-spacing:.05em; }
-    .da-mkt-btn.active .da-mkt-tag { background:rgba(0,232,138,.1); border-color:rgba(0,232,138,.25); color:var(--green); }
+    /* ── TOP BAR ─────────────────── */
+    .da-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:32px; gap:20px; flex-wrap:wrap; }
+    .da-topbar-left { flex:1; }
+    .da-topbar-right { display:flex; gap:10px; flex-shrink:0; }
+    .da-topbar-widget { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); padding:12px 16px; display:flex; align-items:center; gap:10px; min-width:180px; }
+    .da-topbar-widget-label { font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3); margin-bottom:4px; }
+    .da-topbar-widget-row { display:flex; align-items:center; gap:8px; }
+    .da-topbar-widget-prefix { font-family:var(--mono); font-size:16px; font-weight:700; color:var(--text-3); }
+    .da-topbar-widget-input { background:transparent; border:none; color:var(--text); font-family:var(--mono); font-size:16px; font-weight:700; outline:none; width:80px; -moz-appearance:textfield; }
+    .da-topbar-widget-input::-webkit-outer-spin-button,.da-topbar-widget-input::-webkit-inner-spin-button{-webkit-appearance:none;}
+    .da-topbar-widget-arrow { color:var(--text-3); font-size:14px; }
+    .da-topbar-widget-result { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--green); }
+    .da-fx-refresh { font-family:var(--mono); font-size:9px; padding:2px 6px; background:rgba(91,155,248,.1); border:1px solid rgba(91,155,248,.25); color:var(--blue); border-radius:3px; cursor:pointer; transition:all .15s; }
+    .da-fx-refresh:hover { background:rgba(91,155,248,.2); }
 
-    /* Upload zone */
-    .da-upload-zone   { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md);
-                        padding:24px; margin-bottom:20px; }
-    .da-upload-hdr    { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-    .da-upload-title  { font-size:15px; font-weight:600; color:var(--text); }
-    .da-upload-sub    { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:3px; }
-    .da-slots         { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:16px; }
-    .da-slot          { position:relative; display:flex; flex-direction:column; align-items:center;
-                        justify-content:center; gap:8px; padding:26px 16px; min-height:110px;
-                        background:var(--surface3); border:1.5px dashed var(--border2);
-                        border-radius:var(--r-md); cursor:pointer; transition:all .15s; }
-    .da-slot input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
-    .da-slot:hover    { border-color:var(--green); background:rgba(0,232,138,.03); }
-    .da-slot.drag-over{ border-color:var(--green); background:rgba(0,232,138,.07); }
-    .da-slot.loaded   { border-style:solid; border-color:var(--green); background:rgba(0,232,138,.06); }
-    .da-slot-num      { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.12em;
-                        color:var(--text-3); position:absolute; top:8px; left:10px; }
-    .da-slot-icon     { font-size:20px; color:var(--text-3); line-height:1; pointer-events:none; }
+    /* ── MODE SELECTOR ───────────── */
+    .da-modes { display:flex; gap:0; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); overflow:hidden; margin-bottom:20px; }
+    .da-mode { flex:1; display:flex; flex-direction:column; padding:16px 18px; cursor:pointer; border-right:1px solid var(--border2); transition:all .15s; border:none; border-right:1px solid var(--border2); background:transparent; text-align:left; position:relative; }
+    .da-mode:last-child { border-right:none; }
+    .da-mode:hover { background:rgba(255,255,255,.03); }
+    .da-mode.active { background:rgba(0,224,135,.07); }
+    .da-mode.active::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--green); }
+    .da-mode-flag { font-size:20px; margin-bottom:8px; line-height:1; }
+    .da-mode-name { font-family:var(--mono); font-size:13px; font-weight:800; color:var(--text); letter-spacing:.01em; margin-bottom:3px; }
+    .da-mode.active .da-mode-name { color:var(--green); }
+    .da-mode-desc { font-size:11px; color:var(--text-3); line-height:1.4; }
+    .da-mode-tags { display:flex; gap:4px; margin-top:8px; flex-wrap:wrap; }
+    .da-mode-tag { font-family:var(--mono); font-size:9px; font-weight:600; padding:2px 6px; border-radius:3px; background:var(--surface3); border:1px solid var(--border2); color:var(--text-3); letter-spacing:.04em; }
+    .da-mode.active .da-mode-tag { background:rgba(0,224,135,.1); border-color:rgba(0,224,135,.25); color:var(--green); }
+
+    /* ── INFO STRIP ──────────────── */
+    .da-info { display:flex; align-items:center; gap:12px; padding:10px 16px; background:rgba(0,224,135,.05); border:1px solid rgba(0,224,135,.18); border-radius:var(--r-sm); margin-bottom:16px; }
+    .da-info-pill { font-family:var(--mono); font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--green); white-space:nowrap; }
+    .da-info-sep { width:1px; height:14px; background:rgba(0,224,135,.25); flex-shrink:0; }
+    .da-info-text { font-size:12px; color:var(--text-3); line-height:1.5; }
+    .da-info-text strong { color:var(--text-2); }
+
+    /* ── RETAILER BRANDS ─────────── */
+    .da-brands-bar { display:flex; align-items:center; gap:10px; padding:10px 16px; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-sm); margin-bottom:16px; cursor:pointer; transition:all .15s; }
+    .da-brands-bar:hover { border-color:var(--border3); }
+    .da-brands-label { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text-2); }
+    .da-brands-count { font-family:var(--mono); font-size:10px; color:var(--text-3); }
+    .da-brands-chevron { font-size:10px; color:var(--text-3); margin-left:auto; transition:transform .15s; }
+    .da-brands-bar.open .da-brands-chevron { transform:rotate(90deg); }
+    .da-brands-body { display:none; padding:14px 16px; background:var(--surface2); border:1px solid var(--border2); border-top:none; border-radius:0 0 var(--r-sm) var(--r-sm); margin-top:-16px; margin-bottom:16px; }
+    .da-brands-body.open { display:block; }
+
+    /* ── UPLOAD ZONE ─────────────── */
+    .da-upload { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); padding:24px; margin-bottom:20px; }
+    .da-upload-hdr { margin-bottom:18px; }
+    .da-upload-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:4px; }
+    .da-upload-sub { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+    .da-slots { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:16px; }
+    .da-slot { position:relative; min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:24px 16px; background:var(--surface3); border:1.5px dashed var(--border2); border-radius:var(--r-md); cursor:pointer; transition:all .15s; text-align:center; }
+    .da-slot input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .da-slot:hover { border-color:var(--green); background:rgba(0,224,135,.03); }
+    .da-slot.drag-over { border-color:var(--green); border-style:solid; background:rgba(0,224,135,.07); }
+    .da-slot.loaded { border-style:solid; border-color:var(--green); background:rgba(0,224,135,.05); }
+    .da-slot-num { position:absolute; top:8px; left:10px; font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.1em; color:var(--text-3); }
+    .da-slot-icon { font-size:22px; color:var(--text-3); line-height:1; transition:color .15s; }
     .da-slot.loaded .da-slot-icon { color:var(--green); }
-    .da-slot-label    { font-family:var(--mono); font-size:11px; font-weight:600; color:var(--text-2);
-                        text-align:center; pointer-events:none; }
-    .da-slot-sub      { font-family:var(--mono); font-size:9px; color:var(--blue); letter-spacing:.1em;
-                        text-transform:uppercase; pointer-events:none; }
-    .da-slot-name     { font-family:var(--mono); font-size:9px; color:var(--green); word-break:break-all;
-                        max-width:90%; text-align:center; pointer-events:none; line-height:1.3; }
-    .da-slot-clear    { position:absolute; top:6px; right:8px; background:none; border:none;
-                        color:var(--text-3); cursor:pointer; font-size:13px; padding:2px 4px; z-index:2; }
+    .da-slot-label { font-family:var(--mono); font-size:12px; font-weight:600; color:var(--text-2); }
+    .da-slot-sub { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); }
+    .da-slot-name { font-family:var(--mono); font-size:10px; color:var(--green); word-break:break-all; max-width:100%; line-height:1.3; }
+    .da-slot-clear { position:absolute; top:6px; right:8px; background:none; border:none; color:var(--text-3); cursor:pointer; font-size:13px; padding:2px 4px; z-index:2; }
     .da-slot-clear:hover { color:var(--red); }
-    .da-slot[style*="display:none"] { display:none !important; }
+    .da-go { width:100%; padding:16px; font-family:var(--mono); font-size:13px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; background:var(--surface3); border:1.5px dashed var(--border2); border-radius:var(--r-sm); color:var(--text-3); cursor:pointer; transition:all .2s; }
+    .da-go.ready { background:var(--green); color:#000; border-style:solid; border-color:var(--green); }
+    .da-go.ready:hover { background:#12f2aa; box-shadow:0 0 28px rgba(0,224,135,.35); transform:translateY(-1px); }
 
-    /* Mode info strip */
-    .da-info-strip    { display:flex; align-items:center; gap:14px; padding:12px 18px;
-                        background:rgba(0,224,135,.05); border:1px solid rgba(0,224,135,.2);
-                        border-radius:var(--r-sm); margin-bottom:16px;
-                        border-left:3px solid var(--green); font-size:12px; }
-    .da-info-pill     { font-family:var(--mono); font-size:11px; font-weight:800; letter-spacing:.06em;
-                        text-transform:uppercase; color:var(--green); white-space:nowrap; }
-    .da-info-divider  { width:1px; height:14px; background:var(--border2); flex-shrink:0; }
-    .da-info-desc     { font-size:12px; color:var(--text-3); line-height:1.5; }
-    .da-info-desc strong { color:var(--text-2); }
+    /* ── LOADING ─────────────────── */
+    .da-loading { display:none; text-align:center; padding:56px; font-family:var(--mono); font-size:12px; color:var(--text-3); letter-spacing:.08em; }
+    .da-loading.visible { display:block; }
 
-    /* Go button */
-    .da-go-btn        { width:100%; padding:15px; font-family:var(--mono); font-size:12px; font-weight:800;
-                        letter-spacing:.1em; text-transform:uppercase; border:none; border-radius:var(--r-sm);
-                        cursor:pointer; transition:all .15s; background:var(--surface3); color:var(--text-3);
-                        border:1.5px dashed var(--border2); margin-top:12px; }
-    .da-go-btn.ready  { background:var(--green); color:#000; border-color:var(--green); border-style:solid; }
-    .da-go-btn.ready:hover { background:#12f2aa; box-shadow:0 0 24px rgba(0,224,135,.3); }
+    /* ── RESULTS HEADER ──────────── */
+    .da-results-header { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md) var(--r-md) 0 0; border-bottom:none; padding:14px 18px; display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
+    .da-pill-row { display:flex; gap:6px; flex-wrap:wrap; align-items:center; flex:1; }
+    .da-pill { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.04em; padding:5px 12px; border-radius:20px; border:1px solid var(--border2); background:transparent; color:var(--text-3); cursor:pointer; transition:all .12s; white-space:nowrap; display:flex; align-items:center; gap:5px; }
+    .da-pill:hover { border-color:var(--border3); color:var(--text-2); }
+    .da-pill.active { border-color:rgba(255,255,255,.2); color:var(--text); background:var(--surface3); }
+    .da-pill-green.active { border-color:var(--green); color:var(--green); background:rgba(0,224,135,.08); }
+    .da-pill-amber.active { border-color:var(--amber); color:var(--amber); background:rgba(245,166,35,.08); }
+    .da-pill-red.active   { border-color:var(--red); color:var(--red); background:rgba(242,65,86,.08); }
+    .da-pill-purple.active{ border-color:var(--purple); color:var(--purple); background:rgba(155,109,255,.08); }
+    .da-pill-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .da-pill-dot-green { background:var(--green); }
+    .da-pill-dot-amber { background:var(--amber); }
+    .da-pill-dot-red   { background:var(--red); }
+    .da-pill-dot-purple { background:var(--purple); }
+    .da-actions-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .da-count { font-family:var(--mono); font-size:11px; color:var(--text-3); white-space:nowrap; }
+    .da-search-input { background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm); color:var(--text); font-family:var(--mono); font-size:12px; padding:6px 12px; outline:none; width:200px; transition:border-color .15s; }
+    .da-search-input:focus { border-color:var(--green); }
+    .da-act-btn { font-family:var(--mono); font-size:10px; font-weight:700; padding:6px 12px; border:1px solid var(--border2); border-radius:var(--r-sm); background:transparent; color:var(--text-3); cursor:pointer; transition:all .12s; white-space:nowrap; }
+    .da-act-btn:hover { border-color:var(--border3); color:var(--text); }
+    .da-act-btn-green { color:var(--green) !important; border-color:rgba(0,224,135,.3) !important; }
+    .da-act-btn-red { color:var(--red); border-color:rgba(242,65,86,.3); }
 
-    /* Widgets */
-    .da-widgets       { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
-    .da-widget        { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); padding:16px 18px; }
-    .da-widget-title  { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.1em;
-                        text-transform:uppercase; color:var(--text-3); margin-bottom:10px; }
-    .da-widget-row    { display:flex; align-items:center; gap:8px; }
-    .da-widget-prefix { font-family:var(--mono); font-size:16px; font-weight:700; color:var(--text-3); }
-    .da-widget-input  { background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm);
-                        color:var(--text); font-family:var(--mono); font-size:13px; padding:8px 10px;
-                        width:110px; outline:none; transition:border-color .15s;
-                        -moz-appearance:textfield; }
-    .da-widget-input::-webkit-outer-spin-button,
-    .da-widget-input::-webkit-inner-spin-button { -webkit-appearance:none; }
-    .da-widget-input:focus { border-color:var(--green); }
-    .da-widget-arrow  { font-size:14px; color:var(--text-3); }
-    .da-widget-result { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--green); min-width:80px; }
-    .da-widget-sub    { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:2px; }
-    .da-calc-items    { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
-    .da-calc-row      { display:flex; align-items:center; justify-content:space-between; }
-    .da-calc-lbl      { font-family:var(--mono); font-size:11px; color:var(--text-3); }
-    .da-calc-price    { font-family:var(--mono); font-size:12px; font-weight:600; color:var(--text-2); }
-    .da-calc-save     { font-family:var(--mono); font-size:10px; color:var(--green); margin-left:4px; }
-    .da-calc-divider  { border:none; border-top:1px solid var(--border); margin:6px 0; }
-
-    /* Results area */
-    .da-results-bar   { display:flex; align-items:center; justify-content:space-between;
-                        gap:12px; margin-bottom:16px; flex-wrap:wrap; }
-    .da-filter-pills  { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
-    .da-filter-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-
-    /* Table */
-    .da-table-wrap    { background:var(--surface2); border:1px solid var(--border2);
-                        border-radius:var(--r-md); overflow:hidden; }
-    .da-table-inner   { overflow-x:auto; }
-    .da-table         { width:100%; border-collapse:collapse; }
-    .da-table thead th{ font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.1em;
-                        text-transform:uppercase; color:var(--text-2); text-align:right;
-                        padding:12px 16px; border-bottom:1px solid var(--border2);
-                        cursor:pointer; user-select:none; white-space:nowrap;
-                        background:var(--surface3); position:sticky; top:0; z-index:5; }
+    /* ── TABLE ───────────────────── */
+    .da-table-outer { background:var(--surface2); border:1px solid var(--border2); border-radius:0 0 var(--r-md) var(--r-md); overflow:hidden; }
+    .da-table-scroll { overflow-x:auto; }
+    .da-table { width:100%; border-collapse:collapse; }
+    .da-table thead th { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); padding:11px 16px; text-align:right; background:var(--surface3); border-bottom:1px solid var(--border2); cursor:pointer; user-select:none; white-space:nowrap; position:sticky; top:0; z-index:5; transition:color .12s; }
     .da-table thead th.th-left { text-align:left; }
-    .da-table thead th:hover:not(.no-sort) { color:var(--text); }
-    .da-table thead th.sort-asc::after  { content:' ↑'; color:var(--green); }
+    .da-table thead th:hover:not(.no-sort) { color:var(--text-2); }
+    .da-table thead th.sort-asc::after { content:' ↑'; color:var(--green); }
     .da-table thead th.sort-desc::after { content:' ↓'; color:var(--green); }
-    .da-table tbody tr{ border-bottom:1px solid var(--border); transition:background .1s; }
+    .da-table tbody tr { border-bottom:1px solid var(--border); transition:background .1s; }
     .da-table tbody tr:last-child { border-bottom:none; }
-    .da-table tbody tr:hover { background:rgba(255,255,255,.035); }
-    .da-table tbody tr.approved { border-left:3px solid var(--green); }
-    .da-table tbody tr.rejected { border-left:3px solid var(--red); opacity:.4; }
-    .da-table td      { padding:13px 16px; vertical-align:middle; font-size:14px; }
-    .td-num           { text-align:right; font-family:var(--mono); font-size:13px; color:var(--text-2); white-space:nowrap; }
-    .td-roi           { text-align:right; font-family:var(--mono); font-size:15px; font-weight:700; white-space:nowrap; }
-    .td-center        { text-align:center; }
-    .da-product-title { font-size:13px; color:var(--text); line-height:1.3; max-width:280px;
-                        white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
-    .da-asin-row      { display:flex; align-items:center; gap:8px; margin-top:3px; }
-    .da-asin-link     { font-family:var(--mono); font-size:10.5px; color:var(--blue); text-decoration:none; }
+    .da-table tbody tr:hover { background:rgba(255,255,255,.04); }
+    .da-table tbody tr.da-row-green { background:rgba(0,224,135,.025); border-left:2px solid var(--green); }
+    .da-table tbody tr.da-row-amber { border-left:2px solid var(--amber); }
+    .da-table tbody tr.approved { border-left:3px solid var(--green); background:rgba(0,224,135,.04); }
+    .da-table tbody tr.rejected { border-left:3px solid var(--red); opacity:.35; }
+    .da-table td { padding:12px 16px; vertical-align:middle; font-size:13px; }
+    .td-num { text-align:right; font-family:var(--mono); font-size:13px; color:var(--text-2); white-space:nowrap; }
+    .td-roi { text-align:right; font-family:var(--mono); font-size:15px; font-weight:700; white-space:nowrap; }
+    .td-center { text-align:center; }
+    .da-empty { text-align:center; padding:56px; color:var(--text-3); font-family:var(--mono); font-size:11px; letter-spacing:.08em; }
+
+    /* Product cell */
+    .da-product-title { font-size:13.5px; font-weight:500; color:var(--text); line-height:1.35; margin-bottom:4px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; max-width:280px; }
+    .da-asin-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .da-asin-link { font-family:var(--mono); font-size:10.5px; color:var(--blue); text-decoration:none; }
     .da-asin-link:hover { text-decoration:underline; }
-    .da-sp-badge      { font-family:var(--mono); font-size:9px; font-weight:700; padding:1px 5px;
-                        border-radius:3px; background:var(--surface3); color:var(--text-3);
-                        border:1px solid var(--border2); }
-    .da-spike-badge   { font-family:var(--mono); font-size:9px; color:var(--amber); margin-top:2px; }
-    .da-brand-pill    { font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px;
-                        border-radius:3px; background:var(--surface3); border:1px solid var(--border2);
-                        color:var(--text-3); max-width:80px; overflow:hidden; text-overflow:ellipsis;
-                        white-space:nowrap; display:inline-block; }
-    .da-row-actions   { display:flex; gap:4px; justify-content:flex-end; }
-    .da-row-btn       { font-family:var(--mono); font-size:10px; padding:3px 8px; border-radius:3px;
-                        border:1px solid var(--border2); background:transparent; color:var(--text-3);
-                        cursor:pointer; transition:all .12s; white-space:nowrap; }
+    .da-sp-badge { font-family:var(--mono); font-size:8px; font-weight:700; padding:1px 5px; border-radius:3px; background:var(--surface3); color:var(--text-3); border:1px solid var(--border2); }
+    .da-spike-badge { font-family:var(--mono); font-size:9px; color:var(--amber); margin-top:2px; display:block; }
+    .da-brand-pill { font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px; background:var(--surface3); border:1px solid var(--border2); color:var(--text-3); max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block; }
+    .da-seen-badge { font-family:var(--mono); font-size:9px; color:var(--text-3); background:var(--surface3); border:1px solid var(--border2); border-radius:3px; padding:1px 5px; display:inline-flex; align-items:center; gap:3px; }
+    .da-seen-x { cursor:pointer; color:var(--red); font-size:11px; line-height:1; }
+    .da-bought-badge { font-family:var(--mono); font-size:9px; background:rgba(240,165,0,.12); color:var(--amber); border:1px solid rgba(240,165,0,.25); border-radius:3px; padding:1px 5px; }
+    .da-row-btn { font-family:var(--mono); font-size:10px; padding:3px 8px; border-radius:3px; border:1px solid var(--border2); background:transparent; color:var(--text-3); cursor:pointer; transition:all .12s; white-space:nowrap; }
     .da-row-btn:hover { border-color:var(--border3); color:var(--text); }
-    .da-row-btn.approve { border-color:rgba(0,232,138,.4); color:var(--green); }
-    .da-row-btn.reject  { border-color:rgba(240,59,80,.3); color:var(--red); }
-    .da-seen-badge    { font-family:var(--mono); font-size:9px; color:var(--text-3);
-                        background:var(--surface3); border:1px solid var(--border2);
-                        border-radius:3px; padding:1px 5px; display:inline-flex; align-items:center; gap:3px; }
-    .da-seen-x        { cursor:pointer; color:var(--red); font-size:11px; line-height:1; }
-    .da-bought-badge  { font-family:var(--mono); font-size:9px; background:rgba(240,165,0,.15);
-                        color:var(--amber); border:1px solid rgba(240,165,0,.3);
-                        border-radius:3px; padding:1px 5px; }
-    /* Retailer strip */
-    .da-retailer-strip{ display:flex; align-items:center; gap:8px; padding:8px 16px;
-                        background:var(--surface3); border:1px solid var(--border2);
-                        border-radius:var(--r-sm); margin-bottom:12px; cursor:pointer; }
+    .da-row-btn.approve { border-color:rgba(0,224,135,.4); color:var(--green); }
+    .da-row-btn.reject { border-color:rgba(242,65,86,.3); color:var(--red); }
+
+    /* Price calc */
+    .da-price-calc { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); padding:14px 16px; min-width:200px; }
+    .da-price-calc-title { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3); margin-bottom:10px; }
+    .da-price-calc-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; }
+    .da-price-calc-lbl { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+    .da-price-calc-val { font-family:var(--mono); font-size:12px; font-weight:600; color:var(--text-2); }
+    .da-price-calc-save { font-family:var(--mono); font-size:10px; color:var(--green); margin-left:4px; }
+    .da-price-calc-div { border:none; border-top:1px solid var(--border); margin:5px 0; }
+
+    /* Spike/rejected badges */
+    .da-spike-notice { font-family:var(--mono); font-size:10px; color:var(--amber); background:rgba(245,166,35,.1); border:1px solid rgba(245,166,35,.25); border-radius:3px; padding:3px 8px; }
+    .da-rejected-badge { font-family:var(--mono); font-size:10px; color:var(--red); border:1px solid rgba(242,65,86,.3); border-radius:3px; padding:2px 8px; }
+
+    /* Retailer */
+    .da-retailer-strip { display:flex; align-items:center; gap:10px; padding:10px 16px; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-sm); margin-bottom:16px; cursor:pointer; }
     .da-retailer-strip:hover { border-color:var(--border3); }
-    .da-retailer-label{ font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text-2); }
-    .da-retailer-count{ font-family:var(--mono); font-size:10px; color:var(--text-3); }
-    .da-retailer-chevron{ font-size:10px; color:var(--text-3); margin-left:auto; transition:transform .15s; }
+    .da-retailer-label { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text-2); }
+    .da-retailer-count { font-family:var(--mono); font-size:10px; color:var(--text-3); }
+    .da-retailer-chevron { font-size:10px; color:var(--text-3); margin-left:auto; transition:transform .15s; }
     .da-retailer-strip.open .da-retailer-chevron { transform:rotate(90deg); }
-    .da-retailer-expanded { display:none; padding:12px 16px; background:var(--surface2);
-                        border:1px solid var(--border2); border-top:none;
-                        border-radius:0 0 var(--r-sm) var(--r-sm); margin-top:-12px; margin-bottom:12px; }
+    .da-retailer-expanded { display:none; padding:12px 16px; background:var(--surface2); border:1px solid var(--border2); border-top:none; border-radius:0 0 var(--r-sm) var(--r-sm); margin-top:-16px; margin-bottom:16px; }
     .da-retailer-expanded.open { display:block; }
     .da-retailer-tags { display:flex; flex-wrap:wrap; gap:6px; }
-    .da-retailer-tag  { font-family:var(--mono); font-size:10px; padding:3px 8px;
-                        background:var(--surface3); border:1px solid var(--border2);
-                        border-radius:3px; color:var(--text-2); }
+    .da-retailer-tag { font-family:var(--mono); font-size:10px; padding:3px 8px; background:var(--surface3); border:1px solid var(--border2); border-radius:3px; color:var(--text-2); }
     .da-retailer-edit-wrap { display:none; margin-top:10px; }
     .da-retailer-edit-wrap.open { display:flex; gap:8px; align-items:center; }
-    .da-retailer-input{ flex:1; background:var(--surface3); border:1px solid var(--border2);
-                        border-radius:var(--r-sm); color:var(--text); font-family:var(--mono);
-                        font-size:12px; padding:7px 10px; outline:none; }
+    .da-retailer-input { flex:1; background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm); color:var(--text); font-family:var(--mono); font-size:12px; padding:7px 10px; outline:none; }
     .da-retailer-input:focus { border-color:var(--green); }
-    .da-retailer-save-btn,.da-retailer-edit-btn {
-                        font-family:var(--mono); font-size:10px; font-weight:700; padding:6px 12px;
-                        border-radius:var(--r-sm); border:1px solid var(--border2);
-                        background:var(--surface3); color:var(--text-2); cursor:pointer; transition:all .12s; }
+    .da-retailer-save-btn,.da-retailer-edit-btn { font-family:var(--mono); font-size:10px; font-weight:700; padding:6px 12px; border-radius:var(--r-sm); border:1px solid var(--border2); background:var(--surface3); color:var(--text-2); cursor:pointer; transition:all .12s; }
     .da-retailer-save-btn:hover,.da-retailer-edit-btn:hover { border-color:var(--green); color:var(--green); }
-    .da-loading       { display:none; text-align:center; padding:48px; font-family:var(--mono);
-                        font-size:12px; color:var(--text-3); letter-spacing:.08em; }
-    .da-loading.visible { display:block; }
-    .da-empty-state   { text-align:center; padding:56px 32px; color:var(--text-3);
-                        font-family:var(--mono); font-size:11px; letter-spacing:.08em; }
-    .da-search        { background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm);
-                        color:var(--text); font-family:var(--mono); font-size:12px;
-                        padding:7px 12px; outline:none; width:200px; transition:border-color .15s; }
-    .da-search:focus  { border-color:var(--green); }
-    .da-result-total  { font-family:var(--mono); font-size:11px; color:var(--text-3); white-space:nowrap; }
-    .da-action-btn    { font-family:var(--mono); font-size:10px; font-weight:700; padding:6px 12px;
-                        border-radius:var(--r-sm); border:1px solid var(--border2);
-                        background:transparent; color:var(--text-2); cursor:pointer; transition:all .12s; }
-    .da-action-btn:hover { border-color:var(--border3); color:var(--text); }
-    .da-action-green  { color:var(--green) !important; border-color:rgba(0,232,138,.4) !important; }
-    .da-rejected-badge{ font-family:var(--mono); font-size:10px; color:var(--red);
-                        border:1px solid rgba(240,59,80,.3); border-radius:3px; padding:2px 8px; }
-    .da-spike-notice  { font-family:var(--mono); font-size:10px; color:var(--amber);
-                        background:rgba(240,165,0,.1); border:1px solid rgba(240,165,0,.25);
-                        border-radius:3px; padding:3px 8px; }
-    .da-table-wrap.visible { display:block; }
   </style>
 
   <div class="da-wrap">
 
-    <!-- HEADER -->
-    <div class="da-top">
-      <div class="da-top-left">
+    <!-- TOP BAR -->
+    <div class="da-topbar">
+      <div class="da-topbar-left">
         <div class="page-header-label">Deal Analysis</div>
         <div class="page-header-title">Deal Analyser</div>
-        <div class="page-header-sub">Score bulk Keepa exports for profitability — UK, US, EU→UK, Used LN, and Prime Exclusive modes</div>
+        <div class="page-header-sub">Score Keepa exports in bulk — UK, US, EU→UK, Used LN, Prime Exclusive</div>
       </div>
-      <div class="da-top-right">
-        <!-- EUR → GBP widget -->
-        <div class="da-widget" style="min-width:200px;">
-          <div class="da-widget-title">EUR → GBP <button onclick="daRefreshFx()" id="daFxRefreshBtn" style="font-family:var(--mono);font-size:9px;padding:2px 7px;background:rgba(77,142,245,.1);border:1px solid rgba(77,142,245,.3);color:var(--blue);border-radius:3px;cursor:pointer;margin-left:6px;">↻ live</button></div>
-          <div class="da-widget-row">
-            <span class="da-widget-prefix" style="color:var(--text-3);">€</span>
-            <input type="number" class="da-widget-input" id="daFxEurInput" placeholder="0.00" step="0.01" min="0" oninput="fxConvertUpdate()">
-            <span class="da-widget-arrow">→</span>
-            <span class="da-widget-result" id="daFxGbpOut">—</span>
+      <div class="da-topbar-right">
+        <div class="da-topbar-widget">
+          <div>
+            <div class="da-topbar-widget-label">EUR → GBP <button onclick="daRefreshFx()" id="daFxRefreshBtn" class="da-fx-refresh">↻</button></div>
+            <div class="da-topbar-widget-row">
+              <span class="da-topbar-widget-prefix">€</span>
+              <input type="number" class="da-topbar-widget-input" id="daFxEurInput" placeholder="0.00" step="0.01" min="0" oninput="fxConvertUpdate()">
+              <span class="da-topbar-widget-arrow">→</span>
+              <span class="da-topbar-widget-result" id="daFxGbpOut">—</span>
+            </div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:4px;">£<span id="daFxRateDisplay">0.8600</span> · <span id="daFxTs"></span></div>
           </div>
-          <div class="da-widget-sub">Rate: £<span id="daFxRateDisplay">0.8600</span> · <span id="daFxTs" style="color:var(--text-3);"></span></div>
         </div>
-        <!-- Quick price calc widget -->
-        <div class="da-widget" style="min-width:220px;">
-          <div class="da-widget-title">Quick Price Breakdown</div>
-          <div class="da-widget-row">
-            <span class="da-widget-prefix">£</span>
-            <input type="number" class="da-widget-input" id="daPriceCalcInput" placeholder="0.00" step="0.01" min="0" oninput="daPriceCalc()">
+        <div class="da-price-calc" style="min-width:200px;">
+          <div class="da-price-calc-title">Quick Breakdown</div>
+          <div class="da-topbar-widget-row" style="gap:6px;margin-bottom:10px;">
+            <span class="da-topbar-widget-prefix">£</span>
+            <input type="number" class="da-topbar-widget-input" id="daPriceCalcInput" placeholder="0.00" step="0.01" min="0" oninput="daPriceCalc()">
           </div>
-          <div class="da-calc-items" id="daPriceCalcResults">
-            <div class="da-calc-row"><span class="da-calc-lbl">🎁 5% off</span><span><span class="da-calc-price" id="daPcGc5"></span><span class="da-calc-save" id="daPcGc5Save"></span></span></div>
-            <div class="da-calc-row"><span class="da-calc-lbl">🎁 10% Gift Card</span><span><span class="da-calc-price" id="daPcGc10"></span><span class="da-calc-save" id="daPcGc10Save"></span></span></div>
-            <hr class="da-calc-divider">
-            <div class="da-calc-row"><span class="da-calc-lbl">♻ S&amp;S 15%</span><span><span class="da-calc-price" id="daPcSS"></span><span class="da-calc-save" id="daPcSSSave"></span></span></div>
+          <div id="daPriceCalcResults">
+            <div class="da-price-calc-row"><span class="da-price-calc-lbl">🎁 5% off</span><span><span class="da-price-calc-val" id="daPcGc5"></span><span class="da-price-calc-save" id="daPcGc5Save"></span></span></div>
+            <div class="da-price-calc-row"><span class="da-price-calc-lbl">🎁 10% GC</span><span><span class="da-price-calc-val" id="daPcGc10"></span><span class="da-price-calc-save" id="daPcGc10Save"></span></span></div>
+            <hr class="da-price-calc-div">
+            <div class="da-price-calc-row"><span class="da-price-calc-lbl">♻ S&amp;S 15%</span><span><span class="da-price-calc-val" id="daPcSS"></span><span class="da-price-calc-save" id="daPcSSSave"></span></span></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- MARKET / MODE SELECTOR -->
-    <div class="da-market-bar" id="daModeBar">
-      <button class="da-mkt-btn active" onclick="setMode('uk',this)" data-mode="uk">
-        <div class="da-mkt-top"><span class="da-mkt-flag">🇬🇧</span><span class="da-mkt-name">UK → UK</span></div>
-        <div class="da-mkt-desc">Buy and sell on Amazon UK</div>
-        <div class="da-mkt-tags"><span class="da-mkt-tag">UK Buy Box</span><span class="da-mkt-tag">New</span></div>
+    <!-- MODE SELECTOR -->
+    <div class="da-modes" id="daModeBar">
+      <button class="da-mode active" onclick="setMode('uk',this)" data-mode="uk">
+        <div class="da-mode-flag">🇬🇧</div>
+        <div class="da-mode-name">UK → UK</div>
+        <div class="da-mode-desc">Amazon UK, buy and sell</div>
+        <div class="da-mode-tags"><span class="da-mode-tag">Amazon price</span><span class="da-mode-tag">New</span></div>
       </button>
-      <button class="da-mkt-btn" onclick="setMode('us',this)" data-mode="us">
-        <div class="da-mkt-top"><span class="da-mkt-flag">🇺🇸</span><span class="da-mkt-name">US → US</span></div>
-        <div class="da-mkt-desc">Buy and sell on Amazon US</div>
-        <div class="da-mkt-tags"><span class="da-mkt-tag">US Buy Box</span><span class="da-mkt-tag">No VAT</span></div>
+      <button class="da-mode" onclick="setMode('us',this)" data-mode="us">
+        <div class="da-mode-flag">🇺🇸</div>
+        <div class="da-mode-name">US → US</div>
+        <div class="da-mode-desc">Amazon US, no VAT</div>
+        <div class="da-mode-tags"><span class="da-mode-tag">Amazon price</span><span class="da-mode-tag">No VAT</span></div>
       </button>
-      <button class="da-mkt-btn" onclick="setMode('eu',this)" data-mode="eu">
-        <div class="da-mkt-top"><span class="da-mkt-flag">🌍</span><span class="da-mkt-name">EU → UK</span></div>
-        <div class="da-mkt-desc">Source EU, sell UK — needs UK sell price</div>
-        <div class="da-mkt-tags"><span class="da-mkt-tag">EU Buy Box</span><span class="da-mkt-tag">+£2 shipping</span></div>
+      <button class="da-mode" onclick="setMode('eu',this)" data-mode="eu">
+        <div class="da-mode-flag">🌍</div>
+        <div class="da-mode-name">EU → UK</div>
+        <div class="da-mode-desc">Source EU, sell UK</div>
+        <div class="da-mode-tags"><span class="da-mode-tag">EU Buy Box</span><span class="da-mode-tag">+£2 shipping</span></div>
       </button>
-      <button class="da-mkt-btn" onclick="setMode('uln',this)" data-mode="uln">
-        <div class="da-mkt-top"><span class="da-mkt-flag">♻</span><span class="da-mkt-name">Used LN</span></div>
-        <div class="da-mkt-desc">Buy Used Like New, list as Used LN on UK</div>
-        <div class="da-mkt-tags"><span class="da-mkt-tag">Used LN price</span><span class="da-mkt-tag">UK</span></div>
+      <button class="da-mode" onclick="setMode('uln',this)" data-mode="uln">
+        <div class="da-mode-flag">♻</div>
+        <div class="da-mode-name">Used LN</div>
+        <div class="da-mode-desc">Buy Used LN, sell UK</div>
+        <div class="da-mode-tags"><span class="da-mode-tag">Used LN price</span></div>
       </button>
-      <button class="da-mkt-btn" onclick="setMode('pex',this)" data-mode="pex">
-        <div class="da-mkt-top"><span class="da-mkt-flag">⭐</span><span class="da-mkt-name">Prime Exclusive</span></div>
-        <div class="da-mkt-desc">EU Prime Exclusive vs 180d UK Buy Box</div>
-        <div class="da-mkt-tags"><span class="da-mkt-tag">PEX Price</span><span class="da-mkt-tag">Prime Day</span></div>
+      <button class="da-mode" onclick="setMode('pex',this)" data-mode="pex">
+        <div class="da-mode-flag">⭐</div>
+        <div class="da-mode-name">Prime Exclusive</div>
+        <div class="da-mode-desc">EU PEX vs UK 180d BB</div>
+        <div class="da-mode-tags"><span class="da-mode-tag">PEX Price</span><span class="da-mode-tag">Prime Day</span></div>
       </button>
     </div>
 
-    <!-- MODE INFO STRIP -->
-    <div class="da-info-strip" id="modeBanner">
+    <!-- INFO STRIP -->
+    <div class="da-info" id="modeBanner">
       <div class="da-info-pill" id="modePill">UK → UK</div>
-      <div class="da-info-divider"></div>
-      <div class="da-info-desc" id="modeDesc">Buy price: <strong>Buy Box: Current</strong> &nbsp;·&nbsp; Sell price: <strong>UK BB avg / strikethrough</strong> &nbsp;·&nbsp; Extra cost: <strong>None</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong></div>
+      <div class="da-info-sep"></div>
+      <div class="da-info-text" id="modeDesc">Buy price: <strong>Amazon: Current</strong> &nbsp;·&nbsp; Sell: <strong>UK BB avg</strong> &nbsp;·&nbsp; Listed as: <strong>New</strong></div>
     </div>
 
     <!-- RETAILER BRANDS -->
@@ -2013,13 +1984,11 @@ input::placeholder { color: var(--text-4); }
       <button class="da-retailer-edit-btn" id="daRetailerEditBtn" onclick="daToggleRetailerEdit()" style="margin-top:8px;">Edit brands</button>
     </div>
 
-    <!-- UPLOAD ZONE -->
-    <div class="da-upload-zone" id="daDropzone">
+    <!-- UPLOAD -->
+    <div class="da-upload" id="daDropzone">
       <div class="da-upload-hdr">
-        <div>
-          <div class="da-upload-title">Keepa Product Finder Export</div>
-          <div class="da-upload-sub" id="daUploadSub">Drop up to 3 CSV files — duplicate ASINs removed automatically</div>
-        </div>
+        <div class="da-upload-title">Upload Keepa Export</div>
+        <div class="da-upload-sub" id="daUploadSub">Drop up to 3 CSV files · duplicates removed automatically</div>
       </div>
       <div class="da-slots" id="daSlotGrid">
         <div class="da-slot" id="daSlot1" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,1)">
@@ -2040,17 +2009,17 @@ input::placeholder { color: var(--text-4); }
           <div class="da-slot-name" id="daSlot2Name"></div>
           <button class="da-slot-clear" id="daSlot2Clear" onclick="daClearSlot(event,2)">✕</button>
         </div>
-        <div class="da-slot" id="daSlot3" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,3)">
+        <div class="da-slot" id="daSlot3" ondragover="daDragOver(event,this)" ondragleave="daDragLeave(this)" ondrop="daDrop(event,3)" style="display:none;">
           <input type="file" id="daFileInput3" accept=".csv" onchange="daFileChosen(3,this.files[0])">
           <div class="da-slot-num">03</div>
           <div class="da-slot-icon" id="daSlot3Icon">↑</div>
           <div class="da-slot-label" id="daSlot3Label">🇬🇧 UK Sell Prices</div>
-          <div class="da-slot-sub" id="daSlot3Sub">UK SELL PRICES · REQUIRED FOR EU MODE</div>
+          <div class="da-slot-sub" id="daSlot3Sub">UK SELL PRICES · EU MODE</div>
           <div class="da-slot-name" id="daSlot3Name"></div>
           <button class="da-slot-clear" id="daSlot3Clear" onclick="daClearSlot(event,3)">✕</button>
         </div>
       </div>
-      <button class="da-go-btn" id="daGoBtn" onclick="daRunAnalysis()">→ ANALYSE DEALS</button>
+      <button class="da-go" id="daGoBtn" onclick="daRunAnalysis()">→ ANALYSE DEALS</button>
     </div>
 
     <!-- LOADING -->
@@ -2058,25 +2027,25 @@ input::placeholder { color: var(--text-4); }
 
     <!-- RESULTS -->
     <div id="daFilters" style="display:none;">
-      <div class="da-results-bar">
-        <div class="da-filter-pills">
-          <button class="a2a-fpill active" id="daPillAll" onclick="daSetFilter('all',this)">All</button>
-          <button class="a2a-fpill fp-green" id="daPillGreen" onclick="daSetFilter('green',this)"><span class="a2a-fpill-dot fp-green-dot"></span>Strong</button>
-          <button class="a2a-fpill fp-amber" id="daPillAmber" onclick="daSetFilter('amber',this)"><span class="a2a-fpill-dot fp-amber-dot"></span>Marginal</button>
-          <button class="a2a-fpill fp-red" id="daPillRed" onclick="daSetFilter('red',this)"><span class="a2a-fpill-dot fp-red-dot"></span>Reject</button>
-          <button class="a2a-fpill fp-purple" id="daPillSS" onclick="daSetFilter('subsave',this)"><span class="a2a-fpill-dot fp-purple-dot"></span>♻ S&amp;S</button>
-          <button class="a2a-fpill" id="daPillBiz" onclick="daSetFilter('bizprice',this)" style="border-color:rgba(245,166,35,.3);color:var(--amber);">💼 Biz Price</button>
+      <div class="da-results-header">
+        <div class="da-pill-row">
+          <button class="da-pill active" id="daPillAll" onclick="daSetFilter('all',this)">All</button>
+          <button class="da-pill da-pill-green" id="daPillGreen" onclick="daSetFilter('green',this)"><span class="da-pill-dot da-pill-dot-green"></span>Strong</button>
+          <button class="da-pill da-pill-amber" id="daPillAmber" onclick="daSetFilter('amber',this)"><span class="da-pill-dot da-pill-dot-amber"></span>Marginal</button>
+          <button class="da-pill da-pill-red" id="daPillRed" onclick="daSetFilter('red',this)"><span class="da-pill-dot da-pill-dot-red"></span>Reject</button>
+          <button class="da-pill da-pill-purple" id="daPillSS" onclick="daSetFilter('subsave',this)"><span class="da-pill-dot da-pill-dot-purple"></span>♻ S&S</button>
+          <button class="da-pill" id="daPillBiz" onclick="daSetFilter('bizprice',this)" style="border-color:rgba(245,166,35,.3);color:var(--amber);">💼 Biz</button>
           <span class="da-spike-notice" id="spikeNotice" style="display:none;"></span>
-          <button class="a2a-fpill" id="daPillExcRecent" onclick="daToggleExcludeRecent(this)" style="margin-left:8px;border-style:dashed;">🚫 Bought &lt;3d</button>
+          <button class="da-pill" id="daPillExcRecent" onclick="daToggleExcludeRecent(this)" style="border-style:dashed;">🚫 &lt;3d</button>
         </div>
-        <div class="da-filter-actions">
-          <span id="daResultCount" class="da-result-total"></span>
-          <input type="text" id="daSearch" class="da-search" placeholder="Search ASIN or title…" oninput="daRenderTable()">
+        <div class="da-actions-row">
+          <span id="daResultCount" class="da-count"></span>
+          <input type="text" id="daSearch" class="da-search-input" placeholder="Search…" oninput="daRenderTable()">
           <span class="da-rejected-badge" id="daRejectedCount" style="display:none;"></span>
-          <button class="da-action-btn" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;">Clear rejected</button>
-          <button class="da-action-btn" id="daClearViewedBtn" onclick="daClearAllViewed()" style="display:none;">👁 Clear viewed</button>
-          <button class="da-action-btn" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
-          <button class="da-action-btn da-action-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export CSV</button>
+          <button class="da-act-btn da-act-btn-red" id="daClearRejectedBtn" onclick="daClearRejected()" style="display:none;">Clear rejected</button>
+          <button class="da-act-btn" id="daClearViewedBtn" onclick="daClearAllViewed()" style="display:none;">👁 Clear viewed</button>
+          <button class="da-act-btn" id="daResetBtn" onclick="daReset()" style="display:none;">↺ Reset</button>
+          <button class="da-act-btn da-act-btn-green" id="daExportBtn" onclick="daExportApproved()" style="display:none;">↓ Export CSV</button>
         </div>
         <span id="daCountGreen" style="display:none;"></span>
         <span id="daCountAmber" style="display:none;"></span>
@@ -2084,8 +2053,8 @@ input::placeholder { color: var(--text-4); }
         <span id="daCountGC" style="display:none;"></span>
         <span id="daCountSS" style="display:none;"></span>
       </div>
-      <div class="da-table-wrap" id="daTableWrap">
-        <div class="da-table-inner">
+      <div class="da-table-outer" id="daTableWrap">
+        <div class="da-table-scroll">
           <table class="da-table">
             <thead id="daTableHead"></thead>
             <tbody id="daTableBody"></tbody>
@@ -2374,163 +2343,167 @@ input::placeholder { color: var(--text-4); }
 <div class="page" id="page-scout">
 
   <style>
-    /* ── Scout page ─────────────────────────── */
-    .sc-wrap          { padding: 36px 48px 72px; max-width: 1600px; }
-    .sc-header        { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; gap:16px; flex-wrap:wrap; }
-    .sc-header-left   { flex:1; }
-    .sc-label         { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--green); margin-bottom:8px; }
-    .sc-title         { font-size:28px; font-weight:700; color:var(--text); line-height:1.1; margin-bottom:8px; }
-    .sc-sub           { font-family:var(--mono); font-size:11px; color:var(--text-3); }
-    .sc-actions       { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-    .sc-btn           { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.05em; padding:9px 18px; border-radius:var(--r-sm); border:1px solid var(--border2); background:var(--surface2); color:var(--text-2); cursor:pointer; transition:all .15s; white-space:nowrap; }
-    .sc-btn:hover     { border-color:var(--border3); color:var(--text); }
-    .sc-btn:disabled  { opacity:.35; cursor:not-allowed; }
-    .sc-btn-primary   { background:var(--green); border-color:var(--green); color:#000; }
-    .sc-btn-primary:hover { background:#00ff98; border-color:#00ff98; }
-    .sc-btn-danger    { background:rgba(240,59,80,.1); border-color:var(--red); color:var(--red); }
-    .sc-btn-danger:hover { background:rgba(240,59,80,.18); }
-    .sc-token         { font-family:var(--mono); font-size:11px; color:var(--green); }
-    .sc-token-bar     { display:flex; align-items:center; gap:10px; margin-top:8px; }
-    .sc-token-bar-track { flex:1; max-width:220px; height:5px; background:var(--border2); border-radius:3px; overflow:hidden; }
-    .sc-token-bar-fill  { height:100%; width:0%; border-radius:3px; background:var(--green); transition:width .6s, background .4s; }
-    .sc-token-bar-label { font-family:var(--mono); font-size:10px; color:var(--text-3); white-space:nowrap; }
-    .sc-token-refresh   { font-family:var(--mono); font-size:13px; color:var(--text-3); background:none; border:none; cursor:pointer; padding:0 2px; line-height:1; transition:color .15s, transform .3s; }
-    .sc-token-refresh:hover { color:var(--green); }
-    .sc-token-refresh.spinning { animation:sc-spin .6s linear infinite; }
-    @keyframes sc-spin { to { transform:rotate(360deg); } }
+  .sc-wrap { padding:40px 52px 64px; }
 
-    /* Config grid — 3 columns: ASIN source wide, markets, costs */
-    .sc-config        { display:grid; grid-template-columns:1.6fr 1fr 1.2fr; gap:20px; margin-bottom:24px; }
-    .sc-config-wide   { grid-column:span 1; }
-    .sc-panel         { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); padding:22px 24px; }
-    .sc-panel-title   { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); margin-bottom:16px; display:flex; align-items:center; gap:6px; }
-    .sc-panel-title span { font-size:13px; }
+  /* ── HEADER ─────────────────────────── */
+  .sc-topbar { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; gap:20px; flex-wrap:wrap; }
+  .sc-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .sc-btn { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.05em; padding:9px 18px; border-radius:var(--r-sm); border:1px solid var(--border2); background:var(--surface2); color:var(--text-2); cursor:pointer; transition:all .15s; white-space:nowrap; }
+  .sc-btn:hover { border-color:var(--border3); color:var(--text); background:var(--surface3); }
+  .sc-btn:disabled { opacity:.3; cursor:not-allowed; }
+  .sc-btn-run { background:var(--green); border-color:var(--green); color:#000; font-weight:800; }
+  .sc-btn-run:hover { background:#12f2aa; box-shadow:0 0 20px rgba(0,224,135,.3); }
+  .sc-btn-stop { background:rgba(242,65,86,.1); border-color:var(--red); color:var(--red); }
+  .sc-btn-stop:hover { background:rgba(242,65,86,.18); }
 
-    /* Tabs */
-    .sc-tabs          { display:flex; gap:6px; margin-bottom:14px; }
-    .sc-tab           { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:6px 14px; border-radius:var(--r-xs); border:1px solid var(--border2); background:transparent; color:var(--text-3); cursor:pointer; transition:all .15s; }
-    .sc-tab.active    { background:rgba(0,229,132,.1); border-color:var(--green); color:var(--green); }
-    .sc-tab:hover:not(.active) { border-color:var(--border3); color:var(--text-2); }
+  /* ── TOKEN BAR ───────────────────────── */
+  .sc-token-row { display:flex; align-items:center; gap:10px; margin-top:6px; }
+  .sc-token-track { flex:1; max-width:240px; height:4px; background:var(--border2); border-radius:2px; overflow:hidden; }
+  .sc-token-fill { height:100%; width:0%; border-radius:2px; background:var(--green); transition:width .6s, background .4s; }
+  .sc-token-label { font-family:var(--mono); font-size:10px; color:var(--text-3); white-space:nowrap; }
+  .sc-token-refresh { font-family:var(--mono); font-size:14px; color:var(--text-3); background:none; border:none; cursor:pointer; padding:0; transition:color .15s, transform .3s; line-height:1; }
+  .sc-token-refresh:hover { color:var(--green); }
+  .sc-token-refresh.spinning { animation:sc-spin .6s linear infinite; }
+  @keyframes sc-spin { to { transform:rotate(360deg); } }
 
-    /* Drop zones */
-    .sc-dropgrid      { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .sc-drop          { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:28px 16px; background:var(--surface3); border:1.5px dashed var(--border2); border-radius:var(--r-sm); cursor:pointer; transition:all .15s; min-height:100px; }
-    .sc-drop:hover    { border-color:var(--green); background:rgba(0,229,132,.04); }
-    .sc-drop.drag-over{ border-color:var(--green); background:rgba(0,229,132,.08); }
-    .sc-drop.loaded   { border-style:solid; border-color:var(--green); background:rgba(0,229,132,.06); }
-    .sc-drop-icon     { font-size:20px; color:var(--text-3); line-height:1; }
-    .sc-drop-label    { font-family:var(--mono); font-size:11px; font-weight:600; color:var(--text-2); }
-    .sc-drop-sub      { font-family:var(--mono); font-size:10px; color:var(--text-3); }
-    .sc-drop-file     { font-family:var(--mono); font-size:10px; color:var(--green); font-weight:600; text-align:center; word-break:break-all; }
-    .sc-drop-clear    { position:absolute; top:6px; right:8px; background:none; border:none; color:var(--text-3); cursor:pointer; font-size:13px; padding:2px 4px; line-height:1; }
-    .sc-drop-clear:hover { color:var(--red); }
-    .sc-asin-meta     { margin-top:12px; display:flex; align-items:center; gap:12px; }
-    .sc-paste         { width:100%; height:110px; resize:vertical; background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm); color:var(--text); font-family:var(--mono); font-size:11px; padding:10px 12px; outline:none; transition:border-color .15s; }
-    .sc-paste:focus   { border-color:var(--green); }
+  /* ── LIVE STATS ──────────────────────── */
+  .sc-live-stats { display:none; align-items:center; gap:18px; flex-wrap:wrap; padding:10px 16px; background:var(--surface3); border-radius:var(--r-sm); margin-top:8px; font-family:var(--mono); font-size:10px; color:var(--text-3); }
+  .sc-live-stat strong { color:var(--text-2); }
 
-    /* Market buttons — 3 per row */
-    .sc-markets       { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-    .sc-market        { display:flex; align-items:center; gap:8px; padding:10px 12px; background:var(--surface3); border:1.5px solid var(--border2); border-radius:var(--r-sm); cursor:pointer; transition:all .15s; user-select:none; }
-    .sc-market input  { display:none; }
-    .sc-market:hover  { border-color:var(--border3); }
-    .sc-market.on     { border-color:var(--green); background:rgba(0,229,132,.07); }
-    .sc-market-flag   { font-size:16px; line-height:1; }
-    .sc-market-name   { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text-2); letter-spacing:.04em; }
-    .sc-market.on .sc-market-name { color:var(--green); }
+  /* ── CONFIG GRID ─────────────────────── */
+  .sc-config { display:grid; grid-template-columns:1.5fr 1fr 1.1fr; gap:16px; margin-bottom:20px; }
+  .sc-panel { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); padding:20px 22px; }
+  .sc-panel-title { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
 
-    /* Settings */
-    .sc-fields        { display:grid; grid-template-columns:1fr 1fr; gap:12px 16px; }
-    .sc-field         { display:flex; flex-direction:column; gap:6px; }
-    .sc-field-label   { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); }
-    .sc-input         { background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm); color:var(--text); font-family:var(--mono); font-size:12px; padding:8px 10px; outline:none; width:100%; transition:border-color .15s; -moz-appearance:textfield; }
-    .sc-input:focus   { border-color:var(--green); }
-    .sc-input::-webkit-outer-spin-button,.sc-input::-webkit-inner-spin-button { -webkit-appearance:none; }
-    .sc-input-pw      { -webkit-text-security:disc; }
-    .sc-divider       { border:none; border-top:1px solid var(--border); margin:16px 0; }
-    .sc-fx-btn        { font-family:var(--mono); font-size:10px; font-weight:700; padding:8px 12px; background:rgba(77,142,245,.1); border:1px solid var(--blue); color:var(--blue); border-radius:var(--r-sm); cursor:pointer; white-space:nowrap; transition:all .15s; }
-    .sc-fx-btn:hover  { background:rgba(77,142,245,.2); }
-    .sc-fx-row        { display:flex; align-items:center; gap:8px; }
-    .sc-fx-out        { font-family:var(--mono); font-size:20px; font-weight:700; color:var(--green); min-width:70px; }
-    .sc-pex-row       { display:flex; align-items:flex-start; gap:10px; padding:12px 0 0; }
-    .sc-pex-check     { accent-color:var(--green); width:14px; height:14px; margin-top:2px; flex-shrink:0; cursor:pointer; }
-    .sc-pex-label     { font-family:var(--mono); font-size:10px; font-weight:700; color:var(--text-2); letter-spacing:.05em; cursor:pointer; }
-    .sc-pex-sub       { font-family:var(--mono); font-size:9px; color:var(--text-3); margin-top:3px; line-height:1.5; }
-    .sc-note          { font-family:var(--mono); font-size:9px; color:var(--text-3); margin-top:8px; line-height:1.5; }
+  /* Source tabs */
+  .sc-tabs { display:flex; gap:0; background:var(--surface3); border-radius:var(--r-sm); padding:3px; margin-bottom:14px; }
+  .sc-tab { flex:1; font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:7px 12px; border-radius:var(--r-xs); border:none; background:transparent; color:var(--text-3); cursor:pointer; transition:all .15s; text-align:center; }
+  .sc-tab.active { background:var(--surface2); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.3); }
 
-    /* Progress */
-    .sc-progress-wrap { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-sm); padding:16px 20px; margin-bottom:20px; }
-    .sc-progress-top  { display:flex; justify-content:space-between; margin-bottom:10px; }
-    .sc-progress-text { font-family:var(--mono); font-size:11px; color:var(--text-2); }
-    .sc-progress-pct  { font-family:var(--mono); font-size:11px; color:var(--text-3); }
-    .sc-progress-bar  { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; }
-    .sc-progress-fill { height:100%; width:0%; background:var(--green); transition:width .3s; border-radius:2px; }
+  /* Drop zones */
+  .sc-dropgrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .sc-drop { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:28px 16px; background:var(--surface3); border:1.5px dashed var(--border2); border-radius:var(--r-md); cursor:pointer; transition:all .15s; min-height:100px; text-align:center; }
+  .sc-drop:hover { border-color:var(--green); background:rgba(0,224,135,.04); }
+  .sc-drop.drag-over { border-color:var(--green); border-style:solid; background:rgba(0,224,135,.07); }
+  .sc-drop.loaded { border-style:solid; border-color:var(--green); background:rgba(0,224,135,.05); }
+  .sc-drop-icon { font-size:20px; color:var(--text-3); line-height:1; transition:color .15s; }
+  .sc-drop.loaded .sc-drop-icon { color:var(--green); }
+  .sc-drop-label { font-family:var(--mono); font-size:11px; font-weight:600; color:var(--text-2); }
+  .sc-drop-sub { font-family:var(--mono); font-size:9px; color:var(--text-3); letter-spacing:.06em; text-transform:uppercase; }
+  .sc-drop-file { font-family:var(--mono); font-size:10px; color:var(--green); font-weight:600; word-break:break-all; }
+  .sc-drop-clear { position:absolute; top:6px; right:8px; background:none; border:none; color:var(--text-3); cursor:pointer; font-size:13px; padding:2px 4px; }
+  .sc-drop-clear:hover { color:var(--red); }
+  .sc-asin-meta { margin-top:10px; display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  .sc-paste { width:100%; height:108px; resize:vertical; background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm); color:var(--text); font-family:var(--mono); font-size:11px; padding:10px 12px; outline:none; transition:border-color .15s; box-sizing:border-box; }
+  .sc-paste:focus { border-color:var(--green); }
 
-    /* Cache banner */
-    .sc-cache-banner  { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-sm); padding:12px 18px; margin-bottom:20px; font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  /* Markets */
+  .sc-markets { display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; }
+  .sc-market { display:flex; align-items:center; gap:8px; padding:9px 12px; background:var(--surface3); border:1.5px solid var(--border2); border-radius:var(--r-sm); cursor:pointer; transition:all .15s; user-select:none; }
+  .sc-market input { display:none; }
+  .sc-market:hover { border-color:var(--border3); }
+  .sc-market.on { border-color:var(--green); background:rgba(0,224,135,.07); }
+  .sc-market-flag { font-size:15px; line-height:1; }
+  .sc-market-name { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text-2); }
+  .sc-market.on .sc-market-name { color:var(--green); }
 
-    /* Results */
-    .sc-results-wrap  { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); overflow:hidden; }
-    .sc-results-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border2); flex-wrap:wrap; gap:10px; }
-    .sc-results-title { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-2); }
-    .sc-results-badge { font-family:var(--mono); font-size:10px; background:var(--surface3); border:1px solid var(--border2); border-radius:10px; padding:2px 10px; color:var(--text-3); }
-    .sc-legend        { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:10px; color:var(--text-3); }
-    .sc-filter-row    { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-    .sc-filter-btn    { font-family:var(--mono); font-size:10px; font-weight:600; padding:4px 12px; border-radius:10px; border:1px solid var(--border2); background:transparent; color:var(--text-3); cursor:pointer; transition:all .15s; white-space:nowrap; }
-    .sc-filter-btn.active,.sc-filter-btn:hover { border-color:var(--green); color:var(--green); background:rgba(0,229,132,.08); }
-    .sc-filter-btn.danger { border-color:rgba(240,59,80,.35); color:var(--red); }
-    .sc-filter-btn.danger:hover { background:rgba(240,59,80,.08); }
-    .sc-table-scroll  { overflow-x:auto; }
-    .sc-table         { width:100%; border-collapse:collapse; font-size:12px; }
-    .sc-table th      { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-3); padding:11px 16px; text-align:right; border-bottom:1px solid var(--border2); white-space:nowrap; background:var(--surface3); }
-    .sc-table th:first-child,.sc-table th:nth-child(2) { text-align:left; }
-    .sc-table th.sortable { cursor:pointer; user-select:none; }
-    .sc-table th.sortable:hover { color:var(--text-2); }
-    .sc-table td      { padding:12px 16px; text-align:right; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:11px; color:var(--text-2); vertical-align:middle; }
-    .sc-table td:first-child,.sc-table td:nth-child(2) { text-align:left; }
-    .sc-table tr:last-child td { border-bottom:none; }
-    .sc-table tr:hover td { background:var(--surface3); }
-    .sc-table .empty  { text-align:center; padding:48px; color:var(--text-3); font-family:var(--mono); font-size:11px; }
-    .sc-asin-link     { color:var(--blue); text-decoration:none; font-family:var(--mono); font-size:10px; }
-    .sc-asin-link:hover { text-decoration:underline; }
-    .sc-title-cell    { max-width:360px; min-width:200px; }
-    .sc-title-text    { color:var(--text); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:340px; display:block; }
-    .sc-asin-row      { display:flex; align-items:center; gap:8px; margin-top:3px; }
-    .sc-src-badge     { font-family:var(--mono); font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; background:var(--surface4); color:var(--text-3); }
-    .sc-pex-badge     { font-family:var(--mono); font-size:9px; font-weight:700; color:#c084fc; background:rgba(192,132,252,.12); border:1px solid rgba(192,132,252,.25); border-radius:3px; padding:1px 5px; margin-top:3px; display:inline-block; }
-    .sc-row-green td  { background:rgba(0,217,126,.04); }
-    .sc-row-amber td  { background:rgba(240,165,0,.035); }
-    .sc-row-red td    { background:rgba(240,59,80,.035); }
-  </style>
+  /* API Key */
+  .sc-input { width:100%; background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm); color:var(--text); font-family:var(--mono); font-size:13px; padding:9px 12px; outline:none; transition:border-color .15s; box-sizing:border-box; -webkit-text-security:disc; }
+  .sc-input:focus { border-color:var(--green); }
+
+  /* Settings */
+  .sc-fields { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; }
+  .sc-field { display:flex; flex-direction:column; gap:5px; }
+  .sc-field-label { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); }
+  .sc-num-input { background:var(--surface3); border:1px solid var(--border2); border-radius:var(--r-sm); color:var(--text); font-family:var(--mono); font-size:13px; padding:8px 10px; outline:none; width:100%; transition:border-color .15s; -moz-appearance:textfield; box-sizing:border-box; }
+  .sc-num-input::-webkit-outer-spin-button,.sc-num-input::-webkit-inner-spin-button{-webkit-appearance:none;}
+  .sc-num-input:focus { border-color:var(--green); }
+  .sc-divider { border:none; border-top:1px solid var(--border); margin:14px 0; }
+  .sc-fx-btn { font-family:var(--mono); font-size:10px; font-weight:700; padding:7px 12px; background:rgba(77,142,245,.1); border:1px solid rgba(77,142,245,.25); color:var(--blue); border-radius:var(--r-sm); cursor:pointer; transition:all .15s; }
+  .sc-fx-btn:hover { background:rgba(77,142,245,.18); }
+  .sc-pex-row { display:flex; align-items:flex-start; gap:10px; padding:10px 0 0; cursor:pointer; }
+  .sc-pex-check { accent-color:var(--green); width:14px; height:14px; margin-top:2px; flex-shrink:0; cursor:pointer; }
+  .sc-pex-text strong { font-family:var(--mono); font-size:10px; font-weight:700; color:var(--text-2); display:block; margin-bottom:3px; }
+  .sc-pex-text span { font-family:var(--mono); font-size:9px; color:var(--text-3); line-height:1.4; }
+  .sc-fx-converter-row { display:flex; align-items:center; gap:8px; }
+  .sc-fx-converter-prefix { font-family:var(--mono); font-size:15px; font-weight:700; color:var(--text-3); }
+  .sc-fx-out { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--green); min-width:70px; }
+
+  /* Progress */
+  .sc-progress-wrap { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-sm); padding:14px 18px; margin-bottom:16px; }
+  .sc-progress-top { display:flex; justify-content:space-between; margin-bottom:8px; }
+  .sc-progress-text { font-family:var(--mono); font-size:11px; color:var(--text-2); }
+  .sc-progress-pct { font-family:var(--mono); font-size:11px; color:var(--text-3); }
+  .sc-progress-bar { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; }
+  .sc-progress-fill { height:100%; width:0%; background:var(--green); transition:width .3s; border-radius:2px; }
+
+  /* Results */
+  .sc-results-wrap { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); overflow:hidden; }
+  .sc-results-header { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border2); flex-wrap:wrap; gap:10px; }
+  .sc-results-title { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-2); }
+  .sc-results-badge { font-family:var(--mono); font-size:10px; background:var(--surface3); border:1px solid var(--border2); border-radius:10px; padding:2px 10px; color:var(--text-3); }
+  .sc-legend { display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:10px; color:var(--text-3); }
+  .sc-filter-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .sc-filter-btn { font-family:var(--mono); font-size:10px; font-weight:600; padding:4px 10px; border-radius:10px; border:1px solid var(--border2); background:transparent; color:var(--text-3); cursor:pointer; transition:all .15s; white-space:nowrap; }
+  .sc-filter-btn.active,.sc-filter-btn:hover { border-color:var(--green); color:var(--green); background:rgba(0,224,135,.08); }
+  .sc-filter-btn.danger { border-color:rgba(242,65,86,.35); color:var(--red); }
+  .sc-filter-btn.danger:hover { background:rgba(242,65,86,.08); }
+  .sc-table-scroll { overflow-x:auto; }
+  .sc-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .sc-table th { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-3); padding:10px 16px; text-align:right; border-bottom:1px solid var(--border2); white-space:nowrap; background:var(--surface3); }
+  .sc-table th:first-child,.sc-table th:nth-child(2) { text-align:left; }
+  .sc-table th.sortable { cursor:pointer; user-select:none; }
+  .sc-table th.sortable:hover { color:var(--text-2); }
+  .sc-table td { padding:11px 16px; text-align:right; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:12px; color:var(--text-2); vertical-align:middle; }
+  .sc-table td:first-child,.sc-table td:nth-child(2) { text-align:left; }
+  .sc-table tr:last-child td { border-bottom:none; }
+  .sc-table tr:hover td { background:var(--surface3); }
+  .sc-table .empty { text-align:center; padding:48px; color:var(--text-3); font-family:var(--mono); font-size:11px; }
+  .sc-asin-link { color:var(--blue); text-decoration:none; font-family:var(--mono); font-size:11px; }
+  .sc-asin-link:hover { text-decoration:underline; }
+  .sc-title-text { color:var(--text); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px; display:block; }
+  .sc-src-badge { font-family:var(--mono); font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; background:var(--surface4); color:var(--text-3); }
+  .sc-pex-badge { font-family:var(--mono); font-size:9px; color:var(--purple); margin-top:2px; display:block; }
+  .sc-row-green td { background:rgba(0,217,126,.03); }
+  .sc-row-amber td { background:rgba(240,165,0,.03); }
+  .sc-cache-banner { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-sm); padding:10px 16px; margin-bottom:16px; font-family:var(--mono); font-size:11px; color:var(--text-3); }
+</style>
 
   <div class="sc-wrap">
 
     <!-- HEADER -->
-    <div class="sc-header">
-      <div class="sc-header-left">
-        <div class="sc-label">Sourcing</div>
-        <div class="sc-title">Deal Scout</div>
-        <div class="sc-sub">Live Keepa fetch — EU buy box vs UK 180-day average</div>
-        <div class="sc-token-bar" id="scoutTokenBar">
-          <div class="sc-token-bar-track">
-            <div class="sc-token-bar-fill" id="scoutTokenBarFill"></div>
+    <div class="sc-topbar">
+      <div>
+        <div class="page-header-label">Sourcing</div>
+        <div class="page-header-title">Deal Scout</div>
+        <div class="page-header-sub">Live Keepa fetch — EU buy prices vs UK 180d average · find the best arbitrage deals</div>
+        <div class="sc-token-row">
+          <div class="sc-token-track" id="scoutTokenBar">
+            <div class="sc-token-fill" id="scoutTokenBarFill"></div>
           </div>
-          <span class="sc-token-bar-label" id="scoutTokenDisplay">— tokens</span>
-          <button class="sc-token-refresh" id="scoutTokenRefreshBtn" onclick="scoutRefreshTokens()" title="Refresh token count">↻</button>
+          <span class="sc-token-label" id="scoutTokenDisplay">— tokens</span>
+          <button class="sc-token-refresh" id="scoutTokenRefreshBtn" onclick="scoutRefreshTokens()" title="Refresh tokens">↻</button>
         </div>
-        <div id="scoutLiveStats" style="display:none;font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:8px;display:none;flex-wrap:wrap;gap:12px;">
-          <span>🔍 Scanned: <strong id="scoutStatScanned" style="color:var(--text-2);">0</strong> / <span id="scoutStatTotal">0</span></span>
-          <span>💰 Tokens used: <strong id="scoutStatUsed" style="color:var(--amber);">0</strong></span>
-          <span>📦 Cost/ASIN: <strong id="scoutStatCostPer" style="color:var(--text-2);">—</strong></span>
-          <span>🔋 Batch capacity: <strong id="scoutStatCapacity" style="color:var(--green);">—</strong> ASINs</span>
-          <span>⏱ Cycle: <strong id="scoutStatCycle" style="color:var(--text-2);">—</strong></span>
+        <div class="sc-live-stats" id="scoutLiveStats">
+          <span>🔍 Scanned: <strong id="scoutStatScanned">0</strong> / <span id="scoutStatTotal">0</span></span>
+          <span>💰 Used: <strong id="scoutStatUsed">0</strong> tokens</span>
+          <span>📦 Cost/ASIN: <strong id="scoutStatCostPer">—</strong></span>
+          <span>🔋 Batch: <strong id="scoutStatCapacity">—</strong> ASINs</span>
+          <span>⏱ <strong id="scoutStatCycle">—</strong></span>
         </div>
       </div>
       <div class="sc-actions">
-        <button class="sc-btn" id="scoutExportBtn" onclick="scoutExport()" disabled>↓ Export TSV</button>
-        <button class="sc-btn" onclick="scoutClear()">✕ Clear</button>
-        <button class="sc-btn sc-btn-danger" onclick="scoutStop()" id="scoutStopBtn" style="display:none;">⏹ Stop</button>
-        <button class="sc-btn sc-btn-primary" onclick="scoutRun()" id="scoutRunBtn">🔍 Run Scout</button>
+        <button class="sc-btn sc-btn-run" id="scoutRunBtn" onclick="scoutRun()">▶ Run Scout</button>
+        <button class="sc-btn sc-btn-stop" id="scoutStopBtn" onclick="scoutStop()" style="display:none;">⏹ Stop</button>
+        <button class="sc-btn" id="scoutExportBtn" onclick="scoutExport()" disabled>↓ Export CSV</button>
+        <button class="sc-btn" id="scoutClearBtn" onclick="scoutReset()">↺ Reset</button>
       </div>
+    </div>
+
+    <!-- CACHE BANNER -->
+    <div id="scoutCacheBanner" class="sc-cache-banner" style="display:none;">
+      <span>⚡ Showing cached results from last scan</span>
+      <button class="sc-btn" onclick="scoutClearCache()" style="padding:5px 12px;">Clear cache</button>
     </div>
 
     <!-- CONFIG -->
@@ -2538,43 +2511,39 @@ input::placeholder { color: var(--text-4); }
 
       <!-- ASIN SOURCE -->
       <div class="sc-panel">
-        <div class="sc-panel-title"><span>📁</span> ASIN Source</div>
+        <div class="sc-panel-title"><span>📋</span> ASIN Source</div>
         <div class="sc-tabs">
-          <button class="sc-tab active" id="scoutTabCsv" onclick="scoutSetTab('csv')">Upload CSV</button>
-          <button class="sc-tab" id="scoutTabPaste" onclick="scoutSetTab('paste')">Paste ASINs</button>
+          <button class="sc-tab active" id="scoutTabCsv" onclick="scoutSetInputTab('csv')">CSV Files</button>
+          <button class="sc-tab" id="scoutTabPaste" onclick="scoutSetInputTab('paste')">Paste ASINs</button>
         </div>
-        <div id="scoutCsvPane">
+        <div id="scoutCsvArea">
           <div class="sc-dropgrid">
-            <div class="sc-drop" id="scoutDropzone1"
-              ondragover="scoutDragOver(event,1)" ondragleave="scoutDragLeave(event,1)" ondrop="scoutDrop(event,1)"
-              onclick="document.getElementById('scoutCsvInput1').click()">
-              <input type="file" id="scoutCsvInput1" accept=".csv,.txt" style="display:none;" onchange="scoutFileChosen(this.files[0],1)">
+            <div class="sc-drop" id="scoutDropzone1" ondragover="scoutDragOver(event,this)" ondragleave="scoutDragLeave(this)" ondrop="scoutDrop(event,1)">
+              <input type="file" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" accept=".csv" id="scoutFileInput1" onchange="scoutFileChosen(1,this.files[0])">
               <div class="sc-drop-icon" id="scoutDropIcon1">↑</div>
-              <div class="sc-drop-label" id="scoutDropLabel1">CSV 1 — up to 5,000 ASINs</div>
-              <div class="sc-drop-sub" id="scoutDropSub1">Drop Keepa export here</div>
+              <div class="sc-drop-label">File 1</div>
+              <div class="sc-drop-sub" id="scoutDropSub1">UK KEEPA CSV</div>
               <div class="sc-drop-file" id="scoutDropFilename1"></div>
-              <button class="sc-drop-clear" id="scoutClearFile1" onclick="scoutClearFile1(event)" style="display:none;">✕</button>
+              <button class="sc-drop-clear" id="scoutClearFile1" onclick="scoutClearSlot(event,1)" style="display:none;">✕</button>
             </div>
-            <div class="sc-drop" id="scoutDropzone2"
-              ondragover="scoutDragOver(event,2)" ondragleave="scoutDragLeave(event,2)" ondrop="scoutDrop(event,2)"
-              onclick="document.getElementById('scoutCsvInput2').click()">
-              <input type="file" id="scoutCsvInput2" accept=".csv,.txt" style="display:none;" onchange="scoutFileChosen(this.files[0],2)">
+            <div class="sc-drop" id="scoutDropzone2" ondragover="scoutDragOver(event,this)" ondragleave="scoutDragLeave(this)" ondrop="scoutDrop(event,2)">
+              <input type="file" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" accept=".csv" id="scoutFileInput2" onchange="scoutFileChosen(2,this.files[0])">
               <div class="sc-drop-icon" id="scoutDropIcon2">↑</div>
-              <div class="sc-drop-label" id="scoutDropLabel2">CSV 2 — up to 5,000 ASINs</div>
-              <div class="sc-drop-sub" id="scoutDropSub2">Drop Keepa export here</div>
+              <div class="sc-drop-label">File 2</div>
+              <div class="sc-drop-sub" id="scoutDropSub2">OPTIONAL</div>
               <div class="sc-drop-file" id="scoutDropFilename2"></div>
-              <button class="sc-drop-clear" id="scoutClearFile2" onclick="scoutClearFile2(event)" style="display:none;">✕</button>
+              <button class="sc-drop-clear" id="scoutClearFile2" onclick="scoutClearSlot(event,2)" style="display:none;">✕</button>
             </div>
           </div>
+          <div class="sc-asin-meta">
+            <span id="scoutAsinCount" style="font-family:var(--mono);font-size:11px;color:var(--text-3);">0 ASINs ready</span>
+          </div>
         </div>
-        <div id="scoutPastePane" style="display:none;">
-          <textarea id="scoutAsinInput" class="sc-paste"
-            placeholder="Paste ASINs in any format — newline, comma, space or mixed&#10;B01N5IB20Q, B07ZPKBL9V&#10;B08KTZ8249"
-            oninput="scoutCountASINs()"></textarea>
-        </div>
-        <div class="sc-asin-meta">
-          <span id="scoutAsinCount" style="color:var(--text-3);font-family:var(--mono);font-size:11px;">0 ASINs detected</span>
-          <span id="scoutAsinWarning" style="color:var(--amber);font-family:var(--mono);font-size:11px;display:none;">⚠ Max <span id="scoutMaxDisplay">20</span> — extras ignored</span>
+        <div id="scoutPasteArea" style="display:none;">
+          <textarea class="sc-paste" id="scoutAsinPaste" placeholder="Paste ASINs here — one per line or comma-separated&#10;&#10;B0XXXXXXXX&#10;B0YYYYYYYY" oninput="scoutCountASINs()"></textarea>
+          <div class="sc-asin-meta">
+            <span id="scoutPasteCount" style="font-family:var(--mono);font-size:11px;color:var(--text-3);">0 ASINs</span>
+          </div>
         </div>
       </div>
 
@@ -2582,182 +2551,104 @@ input::placeholder { color: var(--text-4); }
       <div class="sc-panel">
         <div class="sc-panel-title"><span>🌍</span> Source Markets</div>
         <div class="sc-markets">
-          <label class="sc-market on" id="scoutLabelDE" onclick="scoutToggleMarket('DE',this)">
-            <input type="checkbox" id="scoutDE" checked>
+          <label class="sc-market on" id="scoutDE" for="scoutDEcheck">
+            <input type="checkbox" id="scoutDEcheck" checked onchange="scoutToggleMarket('DE',this)">
             <span class="sc-market-flag">🇩🇪</span><span class="sc-market-name">DE</span>
           </label>
-          <label class="sc-market on" id="scoutLabelFR" onclick="scoutToggleMarket('FR',this)">
-            <input type="checkbox" id="scoutFR" checked>
+          <label class="sc-market on" id="scoutFR" for="scoutFRcheck">
+            <input type="checkbox" id="scoutFRcheck" checked onchange="scoutToggleMarket('FR',this)">
             <span class="sc-market-flag">🇫🇷</span><span class="sc-market-name">FR</span>
           </label>
-          <label class="sc-market on" id="scoutLabelIT" onclick="scoutToggleMarket('IT',this)">
-            <input type="checkbox" id="scoutIT" checked>
+          <label class="sc-market on" id="scoutIT" for="scoutITcheck">
+            <input type="checkbox" id="scoutITcheck" checked onchange="scoutToggleMarket('IT',this)">
             <span class="sc-market-flag">🇮🇹</span><span class="sc-market-name">IT</span>
           </label>
-          <label class="sc-market on" id="scoutLabelES" onclick="scoutToggleMarket('ES',this)">
-            <input type="checkbox" id="scoutES" checked>
+          <label class="sc-market on" id="scoutES" for="scoutEScheck">
+            <input type="checkbox" id="scoutEScheck" checked onchange="scoutToggleMarket('ES',this)">
             <span class="sc-market-flag">🇪🇸</span><span class="sc-market-name">ES</span>
           </label>
-          <label class="sc-market" id="scoutLabelUS" onclick="scoutToggleMarket('US',this)">
-            <input type="checkbox" id="scoutUS">
+          <label class="sc-market" id="scoutUS" for="scoutUScheck">
+            <input type="checkbox" id="scoutUScheck" onchange="scoutToggleMarket('US',this)">
             <span class="sc-market-flag">🇺🇸</span><span class="sc-market-name">US</span>
           </label>
-          <label class="sc-market" id="scoutLabelJP" onclick="scoutToggleMarket('JP',this)">
-            <input type="checkbox" id="scoutJP">
+          <label class="sc-market" id="scoutJP" for="scoutJPcheck">
+            <input type="checkbox" id="scoutJPcheck" onchange="scoutToggleMarket('JP',this)">
             <span class="sc-market-flag">🇯🇵</span><span class="sc-market-name">JP</span>
           </label>
         </div>
         <hr class="sc-divider">
-        <div class="sc-panel-title" style="margin-bottom:10px;"><span>🔑</span> Keepa API Key</div>
-        <input type="password" id="scoutApiKey" class="sc-input sc-input-pw" placeholder="Paste your Keepa API key…" oninput="scoutSyncApiKey()">
-        <div class="sc-note">Stored in browser only.</div>
-      </div>
-
-      <!-- COSTS -->
-      <div class="sc-panel">
-        <div class="sc-panel-title"><span>⚙</span> Cost Settings</div>
-        <div class="sc-fields">
-          <div class="sc-field">
-            <div class="sc-field-label">EUR / GBP</div>
-            <input id="scoutEurGbp" type="number" value="0.86" step="0.001" min="0.1" max="2" class="sc-input" oninput="fxConvertUpdate()">
-          </div>
-          <div class="sc-field">
-            <div class="sc-field-label">USD / GBP</div>
-            <input id="scoutUsdGbp" type="number" value="0.79" step="0.001" min="0.1" max="2" class="sc-input">
-          </div>
-          <div class="sc-field">
-            <div class="sc-field-label">JPY / GBP</div>
-            <input id="scoutJpyGbp" type="number" value="0.0051" step="0.0001" min="0.001" max="0.1" class="sc-input">
-          </div>
-          <div class="sc-field" style="justify-content:flex-end;">
-            <div class="sc-field-label">&nbsp;</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <button onclick="scoutRefreshFx()" id="scoutFxRefreshBtn" class="sc-fx-btn">↻ Live rates</button>
-              <span id="scoutFxTs" style="font-family:var(--mono);font-size:9px;color:var(--text-3);line-height:1.3;"></span>
-            </div>
-          </div>
-          <div class="sc-field">
-            <div class="sc-field-label">Min ROI %</div>
-            <input id="scoutMinRoi" type="number" value="15" step="1" min="0" class="sc-input">
-          </div>
-          <div class="sc-field">
-            <div class="sc-field-label">Shipping £</div>
-            <input id="scoutShipping" type="number" value="2.00" step="0.01" min="0" class="sc-input">
-          </div>
-          <div class="sc-field">
-            <div class="sc-field-label">Prep £</div>
-            <input id="scoutPrep" type="number" value="0.45" step="0.01" min="0" class="sc-input">
-          </div>
-          <div class="sc-field">
-            <div class="sc-field-label">Max ASINs</div>
-            <input id="scoutMaxAsins" type="number" value="10000" step="100" min="1" max="10000" class="sc-input" oninput="scoutCountASINs()">
-          </div>
-        </div>
-
+        <div class="sc-panel-title"><span>🔑</span> Keepa API Key</div>
+        <input type="password" class="sc-input" id="scoutApiKey" placeholder="Paste Keepa key…" oninput="scoutSaveKey()">
         <hr class="sc-divider">
-
-        <!-- PEX toggle -->
-        <label class="sc-pex-row" style="cursor:pointer;">
-          <input type="checkbox" id="scoutPrimeExclusive" class="sc-pex-check">
-          <div>
-            <div class="sc-pex-label">⭐ Prime Exclusive Price</div>
-            <div class="sc-pex-sub">Fetches Prime Exclusive price (csv[33]) from each EU market instead of Buy Box — use for Prime Day lead sourcing</div>
+        <label class="sc-pex-row">
+          <input type="checkbox" class="sc-pex-check" id="scoutPrimeExclusive">
+          <div class="sc-pex-text">
+            <strong>Prime Exclusive mode</strong>
+            <span>Compares PEX price vs UK 180d BB avg — ideal for Prime Day scouting</span>
           </div>
         </label>
+      </div>
 
-        <hr class="sc-divider">
-
-        <!-- FX converter -->
-        <div class="sc-field-label" style="margin-bottom:8px;">€ → £ Converter</div>
-        <div class="sc-fx-row">
-          <span style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text-3);">€</span>
-          <input type="number" id="scoutFxEurInput" placeholder="0.00" step="0.01" min="0" class="sc-input" style="width:90px;" oninput="fxConvertUpdate()">
-          <span style="font-family:var(--mono);font-size:13px;color:var(--text-3);">→</span>
-          <span class="sc-fx-out" id="scoutFxGbpOut">—</span>
+      <!-- COSTS & RATES -->
+      <div class="sc-panel">
+        <div class="sc-panel-title"><span>⚙</span> Costs & Rates</div>
+        <div class="sc-fields">
+          <div class="sc-field"><span class="sc-field-label">EUR/GBP rate</span><input type="number" class="sc-num-input" id="scoutEurGbp" value="0.86" step="0.001" min="0.1"></div>
+          <div class="sc-field"><span class="sc-field-label">USD/GBP rate</span><input type="number" class="sc-num-input" id="scoutUsdGbp" value="0.79" step="0.001" min="0.1"></div>
+          <div class="sc-field"><span class="sc-field-label">JPY/GBP rate</span><input type="number" class="sc-num-input" id="scoutJpyGbp" value="0.0051" step="0.0001" min="0.0001"></div>
+          <div class="sc-field"><span class="sc-field-label">Min ROI %</span><input type="number" class="sc-num-input" id="scoutMinRoi" value="15" step="1" min="0"></div>
+          <div class="sc-field"><span class="sc-field-label">Shipping £</span><input type="number" class="sc-num-input" id="scoutShipping" value="2.00" step="0.10" min="0"></div>
+          <div class="sc-field"><span class="sc-field-label">Prep fee £</span><input type="number" class="sc-num-input" id="scoutPrep" value="0.45" step="0.05" min="0"></div>
         </div>
-        <div class="sc-note">Uses EUR/GBP rate above · live as you type</div>
+        <hr class="sc-divider">
+        <button class="sc-fx-btn" onclick="scoutRefreshFx()" id="scoutFxBtn">↻ Refresh exchange rates</button>
       </div>
 
     </div><!-- /sc-config -->
 
-    <!-- PROGRESS -->
-    <div id="scoutStatus" style="display:none;" class="sc-progress-wrap">
-      <div class="sc-progress-top">
-        <span id="scoutStatusText" class="sc-progress-text">Starting…</span>
-        <span id="scoutStatusPct" class="sc-progress-pct">0%</span>
+    <!-- STATUS -->
+    <div style="display:none;" id="scoutStatusWrap">
+      <div class="sc-progress-wrap">
+        <div class="sc-progress-top">
+          <span class="sc-progress-text" id="scoutStatusText">—</span>
+          <span class="sc-progress-pct" id="scoutStatusPct"></span>
+        </div>
+        <div class="sc-progress-bar">
+          <div class="sc-progress-fill" id="scoutProgressFill"></div>
+        </div>
       </div>
-      <div class="sc-progress-bar">
-        <div id="scoutProgressFill" class="sc-progress-fill"></div>
-      </div>
-    </div>
-
-    <!-- CACHE BANNER -->
-    <div id="scoutCacheBanner" style="display:none;" class="sc-cache-banner">
-      <span>📋 Showing saved scan from <strong id="scoutCacheDate" style="color:var(--text-2);"></strong> — <strong id="scoutCacheCount" style="color:var(--text-2);"></strong> ASINs</span>
-      <button onclick="scoutClearCache()" class="sc-btn" style="font-size:10px;padding:5px 10px;">✕ Clear &amp; start fresh</button>
     </div>
 
     <!-- RESULTS -->
-    <div class="sc-results-wrap" id="scoutTableWrap">
-      <div class="sc-results-header">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span class="sc-results-title">Results</span>
-          <span id="scoutResultCount" class="sc-results-badge"></span>
-        </div>
-        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+    <div id="scoutResultsWrap" style="display:none;">
+      <div class="sc-results-wrap">
+        <div class="sc-results-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="sc-results-title">Results</span>
+            <span class="sc-results-badge" id="scoutResultCount">0 deals</span>
+          </div>
           <div class="sc-legend">
-            <span><span style="color:var(--green);">■</span> <span id="scoutLegendStrong">≥20% ROI</span></span>
-            <span><span style="color:var(--amber);">■</span> <span id="scoutLegendMod">≥15% ROI</span></span>
-            <span><span style="color:var(--red);">■</span> below</span>
+            <span style="color:var(--green);">■</span><span id="scoutLegendStrong">≥20% ROI</span>
+            <span style="color:var(--amber);">■</span><span id="scoutLegendMod">≥15% ROI</span>
           </div>
           <div class="sc-filter-row">
-            <button onclick="scoutSetFilter('all')"      id="scoutFilterAll"      class="sc-filter-btn active">All</button>
-            <button onclick="scoutSetFilter('strong')"   id="scoutFilterStrong"   class="sc-filter-btn">💚 Strong</button>
-            <button onclick="scoutSetFilter('moderate')" id="scoutFilterModerate" class="sc-filter-btn">🟡 Moderate</button>
-            <button onclick="scoutSetFilter('reject')"   id="scoutFilterReject"   class="sc-filter-btn">🔴 Reject</button>
-            <button onclick="scoutSetFilter('noprice')"  id="scoutFilterNoprice"  class="sc-filter-btn">— No EU Price</button>
-            <button onclick="scoutSetFilter('giftcard')" id="scoutFilterGiftcard" class="sc-filter-btn">🎁 GC Only</button>
-            <button onclick="scoutClearAllViewed()" id="scoutClearViewedBtn" class="sc-filter-btn danger" style="display:none;" title="Remove viewed badges">👁 Clear viewed</button>
+            <button class="sc-filter-btn active" id="scoutFilterAll" onclick="scoutSetFilter('all',this)">All</button>
+            <button class="sc-filter-btn" id="scoutFilterStrong" onclick="scoutSetFilter('strong',this)">Strong</button>
+            <button class="sc-filter-btn" id="scoutFilterMod" onclick="scoutSetFilter('moderate',this)">Marginal</button>
+            <button class="sc-filter-btn danger" id="scoutFilterNew" onclick="scoutSetFilter('new',this)">◉ New only</button>
           </div>
         </div>
-      </div>
-      <div class="sc-table-scroll">
-        <table class="sc-table" id="scoutTable">
-          <thead>
-            <tr>
-              <th style="text-align:left;">ASIN</th>
-              <th style="text-align:left;">Title</th>
-              <th style="text-align:center;">Src</th>
-              <th class="sortable" onclick="scoutSetSort('euPrice')" id="scoutEuPriceHeader"><span class="sc-eu-col-label">EU Price</span> <span id="scoutSortEuPrice" style="color:var(--green);font-size:9px;"></span></th>
-              <th class="sortable" onclick="scoutSetSort('landed')">Landed £ <span id="scoutSortLanded" style="color:var(--green);font-size:9px;"></span></th>
-              <th class="sortable" onclick="scoutSetSort('ukBB')">UK BB 180d <span id="scoutSortUkBB" style="color:var(--green);font-size:9px;"></span></th>
-              <th class="sortable" onclick="scoutSetSort('fees')">Fees <span id="scoutSortFees" style="color:var(--green);font-size:9px;"></span></th>
-              <th class="sortable" onclick="scoutSetSort('profit')">Profit <span id="scoutSortProfit" style="color:var(--green);font-size:9px;"></span></th>
-              <th class="sortable" onclick="scoutSetSort('roi')">ROI % <span id="scoutSortRoi" style="color:var(--green);font-size:9px;"></span></th>
-            </tr>
-          </thead>
-          <tbody id="scoutTableBody">
-            <tr><td colspan="9" class="empty">Upload an ASIN list and click Run Scout to begin</td></tr>
-          </tbody>
-        </table>
+        <div class="sc-table-scroll">
+          <table class="sc-table" id="scoutResultsTable">
+            <thead id="scoutTableHead"></thead>
+            <tbody id="scoutTableBody"><tr><td class="empty" colspan="8">Run the scout to see results</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
   </div><!-- /sc-wrap -->
-
-</div><!-- /page-scout -->
-
-
-
-
-<style>
-.inv-icon-btn{background:none;border:1px solid var(--border2);border-radius:var(--r-xs);color:var(--blue);cursor:pointer;font-size:13px;padding:2px 8px;transition:border-color var(--transition),color var(--transition);}
-.inv-icon-btn:hover{border-color:var(--blue);color:var(--text);}
-.inv-drop-zone { border:1.5px dashed var(--border2); border-radius:var(--r-md); padding:48px 32px; text-align:center; cursor:pointer; transition:all .2s; background:var(--surface3); margin-bottom:24px; }
-.inv-drop-zone:hover, .inv-drop-zone.drag-over { border-color:var(--green); background:rgba(0,232,138,.04); border-style:solid; }
-</style>
-
-<div class="page" id="page-invoices">
+id="page-invoices">
   <div class="page-inner">
     <div class="page-header">
       <div class="page-header-label">Inventory</div>
@@ -4448,11 +4339,11 @@ function setMode(mode, btn) {
   currentMode = mode;
   const cfg = MODES[mode];
   // Update active button
-  document.querySelectorAll('.da-mkt-btn').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.da-mode').forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
   // Info strip
-  document.getElementById('modePill').textContent = cfg.label;
-  document.getElementById('modeDesc').innerHTML = cfg.desc;
+  const _pill = document.getElementById('modePill'); if(_pill) _pill.textContent = cfg.label;
+  const _desc = document.getElementById('modeDesc'); if(_desc) _desc.innerHTML = cfg.desc;
   // Slot labels and visibility
   const s1Label = document.getElementById('daSlot1Label');
   const s2Label = document.getElementById('daSlot2Label');
@@ -4481,7 +4372,7 @@ function setMode(mode, btn) {
   // Go button
   const goBtn = document.getElementById('daGoBtn');
   const ready = mode === 'eu' ? (!!daSlotFiles[1] && !!daSlotFiles[3]) : !!daSlotFiles[1];
-  goBtn.className = 'da-go-btn' + (ready ? ' ready' : '');
+  goBtn.className = 'da-go' + (ready ? ' ready' : '');
   // Reset if results showing
   if (document.getElementById('daFilters').style.display !== 'none') daReset();
 }
@@ -5206,7 +5097,7 @@ document.addEventListener('click', e => {
 
 function daSetFilter(f, btn) {
   daFilter = f;
-  document.querySelectorAll('#daFilters .a2a-fpill').forEach(b => { if (b.id !== 'daPillExcRecent') b.classList.remove('active'); });
+  document.querySelectorAll('#daFilters .da-pill').forEach(b => { if (b.id !== 'daPillExcRecent') b.classList.remove('active'); });
   btn.classList.add('active');
   daSort = { col: null, dir: 1 }; // reset sort so new columns don't inherit stale sort state
   daRenderHeaders();
@@ -5309,7 +5200,7 @@ function daReset() {
   const r15ResetEl = document.getElementById('daCountR15'); if(r15ResetEl) r15ResetEl.textContent = '0';
   document.getElementById('daGoBtn').classList.remove('ready');
   document.getElementById('daTableBody').innerHTML = '';
-  document.querySelectorAll('#daFilters .a2a-fpill').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.querySelectorAll('#daFilters .da-pill').forEach((b, i) => b.classList.toggle('active', i === 0));
   const ds = document.getElementById('daSearch'); if (ds) ds.value = '';
   try { localStorage.removeItem('bimma_da_results'); localStorage.removeItem('bimma_da_results_mode'); } catch {}
 }
@@ -5514,7 +5405,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const ageH = ts ? (Date.now() - ts) / 3600000 : 999;
       if (results && results.length && ageH < 24) {
         scoutResults = results;
-        scoutRenderTable();
+        const rw = document.getElementById('scoutResultsWrap'); if(rw) rw.style.display='block';
+  scoutRenderTable();
         scoutShowCacheBanner();
         document.getElementById('scoutExportBtn').disabled = false;
       } else if (ageH >= 24) {
@@ -5998,11 +5890,11 @@ function scoutGetPrimeExclusivePrice(product) {
 
 // ── Progress ──
 function scoutSetStatus(text, pct) {
-  const s = document.getElementById('scoutStatus');
+  const wrap = document.getElementById('scoutStatusWrap');
   const t = document.getElementById('scoutStatusText');
   const p = document.getElementById('scoutStatusPct');
   const f = document.getElementById('scoutProgressFill');
-  if (s) s.style.display = 'block';
+  if (wrap) wrap.style.display = text ? 'block' : 'none';
   if (t) t.textContent = text;
   if (pct >= 0) {
     if (p) p.textContent = Math.round(pct) + '%';
@@ -6010,8 +5902,8 @@ function scoutSetStatus(text, pct) {
   }
 }
 function scoutHideStatus() {
-  const s = document.getElementById('scoutStatus');
-  if (s) s.style.display = 'none';
+  const wrap = document.getElementById('scoutStatusWrap');
+  if (wrap) wrap.style.display = 'none';
 }
 
 // ── Main run ──
@@ -6035,6 +5927,8 @@ async function scoutRun() {
 
   document.getElementById('scoutRunBtn').disabled = true;
   document.getElementById('scoutExportBtn').disabled = true;
+  const _rw = document.getElementById('scoutResultsWrap'); if(_rw) _rw.style.display = 'none';
+  const _sw = document.getElementById('scoutStatusWrap'); if(_sw) _sw.style.display = 'none';
   document.getElementById('scoutStopBtn').style.display = 'inline-flex';
   document.getElementById('scoutStopBtn').textContent = '⏹ Stop';
   scoutShouldStop = false;

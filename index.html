@@ -370,10 +370,9 @@ body::before {
    TABLES
 ═══════════════════════════════════════ */
 .table-wrap {
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-md);
   overflow: hidden; overflow-x: auto;
-  box-shadow: var(--shadow-sm);
 }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 thead th {
@@ -427,73 +426,49 @@ input::placeholder { color: var(--text-4); }
 }
 .drop-zone {
   position: relative;
-  border: 1px dashed rgba(255,255,255,0.08);
-  border-radius: var(--r);
-  padding: 32px 20px 26px;
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--r-md);
+  padding: 28px 20px;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.25s, box-shadow 0.25s, transform 0.18s;
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.022) 0%, transparent 68%),
-    linear-gradient(170deg, var(--surface2) 0%, var(--surface3) 100%);
+  transition: all 0.2s;
+  background: var(--surface3);
   overflow: hidden;
 }
-.drop-zone::before {
-  content: '';
-  position: absolute; inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(ellipse at 50% 0%, rgba(0,232,138,0.1) 0%, transparent 68%);
-  opacity: 0; transition: opacity 0.25s; pointer-events: none;
-}
-.drop-zone:hover::before, .drop-zone.drag-over::before { opacity: 1; }
 .drop-zone:hover {
-  border-color: rgba(0,232,138,0.38);
-  box-shadow: 0 0 0 1px rgba(0,232,138,0.07), 0 8px 30px rgba(0,232,138,0.09);
-  transform: translateY(-2px);
+  border-color: var(--green);
+  background: rgba(0,232,138,.04);
 }
 .drop-zone.drag-over {
   border-color: var(--green); border-style: solid;
-  transform: translateY(-2px);
-  animation: dz-pulse 1.5s ease-out infinite;
+  background: rgba(0,232,138,.07);
 }
 .drop-zone.loaded {
-  border-style: solid; border-color: rgba(0,232,138,0.26);
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(0,232,138,0.07) 0%, transparent 65%),
-    linear-gradient(170deg, rgba(0,232,138,0.04) 0%, var(--surface3) 100%);
-  box-shadow: inset 0 1px 0 rgba(0,232,138,0.14);
-}
-.drop-zone.loaded::after {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--green) 0%, rgba(0,232,138,0.2) 100%);
-  border-radius: var(--r) var(--r) 0 0;
+  border-style: solid; border-color: rgba(0,232,138,0.4);
+  background: rgba(0,232,138,.05);
 }
 .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .drop-icon {
-  width: 44px; height: 44px;
+  width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 12px;
-  background: linear-gradient(145deg, var(--surface4) 0%, rgba(255,255,255,0.018) 100%);
+  margin: 0 auto 10px;
+  background: var(--surface4);
   border: 1px solid var(--border2);
-  border-radius: 12px;
-  font-size: 19px;
-  transition: all 0.22s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04);
+  border-radius: var(--r-sm);
+  font-size: 18px;
+  transition: all 0.2s;
 }
 .drop-zone:hover .drop-icon, .drop-zone.drag-over .drop-icon {
-  background: linear-gradient(145deg, rgba(0,232,138,0.13) 0%, rgba(0,232,138,0.04) 100%);
-  border-color: rgba(0,232,138,0.35);
-  box-shadow: 0 2px 12px rgba(0,232,138,0.22), inset 0 1px 0 rgba(0,232,138,0.1);
+  background: rgba(0,232,138,.12);
+  border-color: rgba(0,232,138,.4);
 }
 .drop-zone.loaded .drop-icon {
-  background: linear-gradient(145deg, rgba(0,232,138,0.15) 0%, rgba(0,232,138,0.05) 100%);
-  border-color: rgba(0,232,138,0.4);
-  box-shadow: 0 2px 10px rgba(0,232,138,0.18), inset 0 1px 0 rgba(0,232,138,0.12);
+  background: rgba(0,232,138,.15);
+  border-color: rgba(0,232,138,.5);
 }
-.drop-text { font-size: 13px; color: var(--text-3); line-height: 1.55; }
-.drop-text strong { color: var(--text-2); font-weight: 500; }
-.drop-hint { font-size: 10px; color: var(--text-4); margin-top: 6px; font-family: var(--mono); letter-spacing: 0.03em; }
+.drop-text { font-size: 13px; color: var(--text-2); line-height: 1.55; }
+.drop-text strong { color: var(--text); font-weight: 600; }
+.drop-hint { font-size: 10px; color: var(--text-3); margin-top: 6px; font-family: var(--mono); letter-spacing: 0.03em; line-height: 1.5; }
 .drop-filename { font-family: var(--mono); font-size: 11px; color: var(--green); margin-top: 8px; font-weight: 600; }
 
 /* ═══════════════════════════════════════
@@ -575,7 +550,7 @@ input::placeholder { color: var(--text-4); }
 /* ═══════════════════════════════════════
    FILTER ROW & PILLS
 ═══════════════════════════════════════ */
-.filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+.filter-row { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r-md); }
 .filter-btn {
   font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; font-weight: 600;
   padding: 5px 12px; border-radius: 99px; border: 1px solid var(--border);
@@ -1372,36 +1347,61 @@ input::placeholder { color: var(--text-4); }
 /* ═══════════════════════════════════════
    ACTIVITY STRIP
 ═══════════════════════════════════════ */
+/* ── Dashboard redesign ─────────────────────────── */
+.db-header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:28px; flex-wrap:wrap; }
+.db-greeting { font-size:28px; font-weight:700; letter-spacing:-0.02em; color:var(--text); line-height:1.1; }
+.db-date { font-family:var(--mono); font-size:11px; color:var(--text-3); margin-top:5px; }
+.db-kpi-row { display:flex; align-items:stretch; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); margin-bottom:32px; overflow:hidden; }
+.db-kpi { flex:1; padding:16px 18px; min-width:0; }
+.db-kpi-clickable { cursor:pointer; transition:background .15s; }
+.db-kpi-clickable:hover { background:rgba(0,224,135,.05); }
+.db-kpi-divider { width:1px; background:var(--border2); flex-shrink:0; }
+.db-kpi-label { font-family:var(--mono); font-size:9px; letter-spacing:.13em; text-transform:uppercase; color:var(--text-3); margin-bottom:8px; white-space:nowrap; }
+.db-kpi-value { font-family:var(--mono); font-size:20px; font-weight:700; letter-spacing:-0.02em; color:var(--text); line-height:1; }
+.db-kpi-sub { font-family:var(--mono); font-size:9px; color:var(--text-3); margin-top:4px; }
+.db-section-label { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text-3); margin-bottom:14px; }
+.db-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:32px; }
+.db-action-card { display:flex; align-items:center; gap:14px; padding:16px 18px; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); cursor:pointer; transition:all .15s; }
+.db-action-card:hover { border-color:var(--border3); background:var(--surface3); transform:translateY(-1px); }
+.db-action-primary { border-color:rgba(0,224,135,.2); background:rgba(0,224,135,.03); }
+.db-action-primary:hover { border-color:var(--green); background:rgba(0,224,135,.07); }
+.db-action-icon { font-size:20px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:var(--surface3); border-radius:var(--r-sm); flex-shrink:0; }
+.db-action-primary .db-action-icon { background:rgba(0,224,135,.1); }
+.db-action-body { flex:1; min-width:0; }
+.db-action-title { font-size:14px; font-weight:600; color:var(--text); margin-bottom:3px; }
+.db-action-desc { font-size:12px; color:var(--text-3); line-height:1.4; }
+.db-action-arrow { font-size:16px; color:var(--text-3); transition:all .15s; }
+.db-action-card:hover .db-action-arrow { color:var(--green); transform:translateX(3px); }
+
 .activity-strip {
   display: flex;
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-md);
   overflow: hidden;
   margin-top: 12px;
   margin-bottom: 28px;
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  background: var(--surface2);
 }
 .activity-item {
   flex: 1;
-  padding: 18px 24px;
+  padding: 16px 20px;
   border-right: 1px solid var(--border2);
   transition: background var(--transition);
 }
 .activity-item:last-child { border-right: none; }
-.activity-item[style*="cursor:pointer"]:hover { background: rgba(0,224,135,.04); border-color: rgba(0,224,135,.15); }
+.activity-item[style*="cursor:pointer"]:hover { background: rgba(0,224,135,.04); }
 .activity-label {
-  font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--text-2); margin-bottom: 8px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-3); margin-bottom: 8px;
   display: block;
 }
 .activity-value {
-  font-family: var(--mono); font-size: 24px; font-weight: 700;
+  font-family: var(--mono); font-size: 22px; font-weight: 700;
   letter-spacing: -0.02em; display: block; line-height: 1; color: var(--text);
 }
 .activity-sub {
-  font-family: var(--mono); font-size: 10.5px; color: var(--text-3);
-  margin-top: 5px; display: block;
+  font-family: var(--mono); font-size: 10px; color: var(--text-3);
+  margin-top: 4px; display: block;
 }
 
 </style>
@@ -1441,7 +1441,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="giftcards" onclick="showPage('giftcards',this)"><span class="nav-icon">◈</span>Gift Cards</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v6.4 · 03 Jul 26</div>
+    <div class="sidebar-version">v6.5 · 03 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -1478,77 +1478,98 @@ input::placeholder { color: var(--text-4); }
   <!-- ══ PAGE: DASHBOARD ══ -->
   <div class="page active" id="page-dashboard">
     <div class="page-inner">
-      <div class="page-header">
+      <div class="db-header">
         <div>
-          <div class="page-header-label">Overview</div>
-          <div class="page-header-title" id="dashGreeting"><script>const _h=new Date().getHours();document.write(_h<12?'Good morning':'Good afternoon')</script>, James.</div>
-          <div class="page-header-sub">Your FBA operation at a glance — deals, spend, and activity.</div>
+          <div class="db-greeting" id="dashGreeting"><script>const _h=new Date().getHours();document.write(_h<12?'Good morning':'Good afternoon')</script>, James.</div>
+          <div class="db-date" id="dashDate"></div>
         </div>
-      </div>
-      <div class="stat-grid stat-grid-4">
-        <div class="stat-card stat-card-red"><div class="stat-label">Capital Deployed</div><div class="stat-value" id="s-spend" style="color:var(--text);">—</div></div>
-        <div class="stat-card stat-card-blue"><div class="stat-label">Total Deals</div><div class="stat-value" id="s-deals" style="color:var(--blue);">—</div></div>
-        <div class="stat-card stat-card-green"><div class="stat-label">On Amazon</div><div class="stat-value" id="s-uploaded" style="color:var(--green);">—</div><div class="stat-sub">units listed</div></div>
-        <div class="stat-card stat-card-amber"><div class="stat-label">This Month</div><div class="stat-value" id="s-month" style="color:var(--amber);">—</div><div class="stat-sub">deals bought</div></div>
-      </div>
-      <div class="activity-strip">
-        <div class="activity-item">
-          <span class="activity-label">This Week</span>
-          <span class="activity-value" id="s-week" style="color:var(--green);">—</span>
-          <span class="activity-sub">deals bought</span>
-        </div>
-        <div class="activity-item" style="cursor:pointer;" onclick="showPage('stalker',document.querySelector('[data-page=stalker]'))">
-          <span class="activity-label">New ASINs</span>
-          <span class="activity-value" id="s-stalker-new" style="color:var(--blue);">—</span>
-          <span class="activity-sub">detected today →</span>
-        </div>
-        <div class="activity-item" style="border-right:none;">
-          <span class="activity-label">Keepa Tokens</span>
-          <span class="activity-value" id="s-tokens" style="color:var(--purple);">—</span>
-          <span class="activity-sub" id="s-tokens-sub">remaining</span>
-        </div>
-      </div>
-<div id="bulkUploadBanner" class="bulk-banner" style="display:none;">
-        <div><div style="font-weight:600;font-size:13px;color:var(--amber)" id="bulkBannerText">—</div><div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:3px">Mark all existing purchases as uploaded so only new deals go into the Listing loader queue</div></div>
-        <button class="btn-sm btn-ghost" id="bulkMarkBtn" onclick="bulkMarkUploaded()">MARK ALL AS UPLOADED</button>
-      </div>
-      <!-- Quick Actions -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px;">
-        <div class="quick-action-card" onclick="showPage('a2a', document.querySelector('[data-page=a2a]'))">
-          <div class="qa-icon" style="font-size:18px;">⚡</div>
-          <div class="qa-body">
-            <div class="qa-title">Deal Analyser</div>
-            <div class="qa-sub">Score Keepa exports in seconds</div>
-          </div>
-          <div class="qa-arrow">→</div>
-        </div>
-        <div class="quick-action-card" onclick="showPage('scout', document.querySelector('[data-page=scout]'))">
-          <div class="qa-icon" style="font-size:18px;">🔍</div>
-          <div class="qa-body">
-            <div class="qa-title">Deal Scout</div>
-            <div class="qa-sub">Hunt EU→UK arbitrage live</div>
-          </div>
-          <div class="qa-arrow">→</div>
-        </div>
-        <div class="quick-action-card" onclick="showPage('stalker', document.querySelector('[data-page=stalker]'))">
-          <div class="qa-icon" style="font-size:18px;">👁</div>
-          <div class="qa-body">
-            <div class="qa-title">Storefront Stalker</div>
-            <div class="qa-sub">Watch competitors for new drops</div>
-          </div>
-          <div class="qa-arrow">→</div>
-        </div>
-        <div class="quick-action-card" onclick="showPage('purchases', document.querySelector('[data-page=purchases]'))">
-          <div class="qa-icon" style="font-size:18px;">📋</div>
-          <div class="qa-body">
-            <div class="qa-title">Purchases</div>
-            <div class="qa-sub">Full deal history and P&amp;L</div>
-          </div>
-          <div class="qa-arrow">→</div>
+        <div id="bulkUploadBanner" class="bulk-banner" style="display:none;">
+          <div><div style="font-weight:600;font-size:13px;color:var(--amber)" id="bulkBannerText">—</div></div>
+          <button class="btn-sm btn-ghost" id="bulkMarkBtn" onclick="bulkMarkUploaded()">Mark uploaded</button>
         </div>
       </div>
 
-      <div class="section-title">Monthly Breakdown</div>
+      <!-- KPI row -->
+      <div class="db-kpi-row">
+        <div class="db-kpi">
+          <div class="db-kpi-label">Capital Deployed</div>
+          <div class="db-kpi-value" id="s-spend">—</div>
+        </div>
+        <div class="db-kpi-divider"></div>
+        <div class="db-kpi">
+          <div class="db-kpi-label">Total Deals</div>
+          <div class="db-kpi-value" id="s-deals">—</div>
+        </div>
+        <div class="db-kpi-divider"></div>
+        <div class="db-kpi">
+          <div class="db-kpi-label">On Amazon</div>
+          <div class="db-kpi-value" style="color:var(--green);" id="s-uploaded">—</div>
+          <div class="db-kpi-sub">units live</div>
+        </div>
+        <div class="db-kpi-divider"></div>
+        <div class="db-kpi">
+          <div class="db-kpi-label">This Month</div>
+          <div class="db-kpi-value" style="color:var(--amber);" id="s-month">—</div>
+          <div class="db-kpi-sub">deals bought</div>
+        </div>
+        <div class="db-kpi-divider"></div>
+        <div class="db-kpi">
+          <div class="db-kpi-label">This Week</div>
+          <div class="db-kpi-value" style="color:var(--blue);" id="s-week">—</div>
+          <div class="db-kpi-sub">deals bought</div>
+        </div>
+        <div class="db-kpi-divider"></div>
+        <div class="db-kpi db-kpi-clickable" onclick="showPage('stalker',document.querySelector('[data-page=stalker]'))">
+          <div class="db-kpi-label">New ASINs Today ↗</div>
+          <div class="db-kpi-value" style="color:var(--blue);" id="s-stalker-new">—</div>
+          <div class="db-kpi-sub">from stalker</div>
+        </div>
+        <div class="db-kpi-divider"></div>
+        <div class="db-kpi">
+          <div class="db-kpi-label">Keepa Tokens</div>
+          <div class="db-kpi-value" style="color:var(--purple);" id="s-tokens">—</div>
+          <div class="db-kpi-sub" id="s-tokens-sub">remaining</div>
+        </div>
+      </div>
+
+      <!-- Primary actions -->
+      <div class="db-section-label">Quick Access</div>
+      <div class="db-actions">
+        <div class="db-action-card db-action-primary" onclick="showPage('a2a', document.querySelector('[data-page=a2a]'))">
+          <div class="db-action-icon">⚡</div>
+          <div class="db-action-body">
+            <div class="db-action-title">Deal Analyser</div>
+            <div class="db-action-desc">Drop a Keepa export · score profitability · approve deals</div>
+          </div>
+          <div class="db-action-arrow">→</div>
+        </div>
+        <div class="db-action-card db-action-primary" onclick="showPage('scout', document.querySelector('[data-page=scout]'))">
+          <div class="db-action-icon">◎</div>
+          <div class="db-action-body">
+            <div class="db-action-title">Deal Scout</div>
+            <div class="db-action-desc">Live Keepa fetch · EU buy box vs UK 180d average</div>
+          </div>
+          <div class="db-action-arrow">→</div>
+        </div>
+        <div class="db-action-card" onclick="showPage('stalker', document.querySelector('[data-page=stalker]'))">
+          <div class="db-action-icon">◉</div>
+          <div class="db-action-body">
+            <div class="db-action-title">Storefront Stalker</div>
+            <div class="db-action-desc">Watch competitor storefronts · new ASIN alerts</div>
+          </div>
+          <div class="db-action-arrow">→</div>
+        </div>
+        <div class="db-action-card" onclick="showPage('purchases', document.querySelector('[data-page=purchases]'))">
+          <div class="db-action-icon">≡</div>
+          <div class="db-action-body">
+            <div class="db-action-title">Purchases</div>
+            <div class="db-action-desc">Full deal ledger · P&amp;L · upload status</div>
+          </div>
+          <div class="db-action-arrow">→</div>
+        </div>
+      </div>
+
+      <div class="db-section-label">Monthly Breakdown</div>
       <div class="month-grid" id="monthsGrid"><div class="empty-state">Connect to Google Sheets to load data</div></div>
     </div>
   </div>
@@ -3166,6 +3187,8 @@ function renderDashboard() {
   }
 
   const months={}, order=[];
+  const dateEl = document.getElementById('dashDate');
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
   allRows.forEach(r=>{ const k=monthKey(r.date); if(!k)return; if(!months[k]){months[k]=[];order.push(k);} months[k].push(r); });
   const uniq=[...new Set(order)];
   const grid = document.getElementById('monthsGrid');

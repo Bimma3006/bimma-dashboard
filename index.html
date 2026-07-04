@@ -2005,7 +2005,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="stalker" onclick="showPage('stalker',this)" id="stalkerNavItem"><span class="nav-icon">👁</span>Storefront Stalker<span id="stalkerBadge" style="display:none;background:var(--green);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;"></span></div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v6.2 · 03 Jul 26</div>
+    <div class="sidebar-version">v6.3 · 03 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -5453,7 +5453,8 @@ function daRenderTable() {
     if (deal.decision === 'approved') tr.classList.add('approved');
     if (deal.decision === 'rejected') tr.classList.add('rejected');
     if (daViewedList.has(deal.asin)) tr.classList.add('viewed');
-    const fmtN = (n, p='£', dp=2) => n == null ? '—' : p + n.toFixed(dp);
+    const currencyPrefix = MODES[currentMode]?.market === 'us' ? '$' : '£';
+    const fmtN = (n, p=currencyPrefix, dp=2) => n == null ? '—' : p + n.toFixed(dp);
     const fmtP = n => n == null ? '—' : (n * 100).toFixed(1) + '%';
     const roiColour = deal.roi !== null && deal.roi >= 0.20 ? 'var(--green)' : deal.roi !== null && deal.roi >= 0.15 ? 'var(--amber)' : deal.colour === 'red' ? 'var(--red)' : 'var(--text-3)';
     const spTag = deal.spSource === 'ST' ? '<span class="sp-tag st">ST</span>' : deal.spSource === '365d' ? '<span class="sp-tag">365d</span>' : '';
@@ -5639,8 +5640,8 @@ function daPriceCalc() {
   const results = document.getElementById('daPriceCalcResults');
   if (!raw || raw <= 0) { results.classList.remove('has-value'); return; }
   results.classList.add('has-value');
-  const fmt  = v => '£' + v.toFixed(2);
-  const save = v => ' −£' + (raw - v).toFixed(2);
+  const fmt  = v => (MODES[currentMode]?.market === 'us' ? '$' : '£') + v.toFixed(2);
+  const save = v => ' −' + (MODES[currentMode]?.market === 'us' ? '$' : '£') + (raw - v).toFixed(2);
   const gc5   = raw * 0.95;
   const gc10  = raw * 0.90;
   const ss    = raw * 0.85;

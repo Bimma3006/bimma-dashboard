@@ -589,9 +589,10 @@ input::placeholder { color: var(--text-4); }
 /* ═══════════════════════════════════════
    CALC PREVIEW & BANNERS
 ═══════════════════════════════════════ */
-.calc-preview { display: none; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 14px 16px; margin-top: 14px; }
+.calc-preview { display: none; background: var(--surface3); border: 1px solid var(--border2); border-radius: var(--r-sm); padding: 14px 18px; margin-top: 14px; }
 .calc-preview.show { display: block; }
-.cp-row { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; padding: 4px 0; }
+.cp-row { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+.cp-row:last-child { border-bottom: none; }
 .cp-label { color: var(--text-3); }
 .bulk-banner {
   background: linear-gradient(135deg, rgba(240,165,0,0.07) 0%, rgba(240,165,0,0.03) 100%);
@@ -730,20 +731,23 @@ input::placeholder { color: var(--text-4); }
 
 .exp-stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
 .exp-stat {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 20px 22px;
-  position: relative; overflow: hidden;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--r-md); padding: 18px 20px;
 }
-.exp-stat::after {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-}
-.exp-stat-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
-.exp-stat-value { font-family: var(--mono); font-size: 24px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
-.exp-stat-sub { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 6px; }
+.exp-stat-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
+.exp-stat-value { font-family: var(--mono); font-size: 26px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+.exp-stat-sub { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 5px; }
 
-.exp-section-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-3); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+/* Step guide */
+.page-step-row { display:flex; align-items:center; gap:0; margin-bottom:24px; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); overflow:hidden; padding:16px 20px; flex-wrap:wrap; gap:12px; }
+.page-step { display:flex; align-items:center; gap:12px; }
+.page-step-num { width:28px; height:28px; border-radius:50%; background:var(--green); color:#000; font-family:var(--mono); font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.page-step-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:2px; }
+.page-step-desc { font-family:var(--mono); font-size:10px; color:var(--text-3); line-height:1.4; }
+.page-step-arrow { font-size:18px; color:var(--border3); flex-shrink:0; }
+
+.exp-section-label { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border2); display:flex; align-items:center; gap:8px; }
+.exp-section-label::before { content:''; flex:1; height:1px; background:linear-gradient(90deg, transparent, var(--border2)); }
 
 .exp-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(196px,1fr)); gap: 12px; margin-bottom: 24px; }
 
@@ -1440,7 +1444,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="giftcards" onclick="showPage('giftcards',this)"><span class="nav-icon">◈</span>Gift Cards</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v6.6 · 04 Jul 26</div>
+    <div class="sidebar-version">v6.7 · 04 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -1581,33 +1585,41 @@ input::placeholder { color: var(--text-4); }
         <div class="page-header-title">Refund Monitor</div>
         <div class="page-header-sub">Cross-match Amazon refunds against your STK orders to surface recoverable COGS</div>
       </div>
+      <!-- Step guide -->
+      <div class="page-step-row">
+        <div class="page-step"><div class="page-step-num">1</div><div class="page-step-body"><div class="page-step-title">Amazon Transactions</div><div class="page-step-desc">Payments → Transaction View → Refund → Download</div></div></div>
+        <div class="page-step-arrow">→</div>
+        <div class="page-step"><div class="page-step-num">2</div><div class="page-step-body"><div class="page-step-title">STK Orders Export</div><div class="page-step-desc">SellerToolKit_Orders_Detailed export</div></div></div>
+        <div class="page-step-arrow">→</div>
+        <div class="page-step"><div class="page-step-num">3</div><div class="page-step-body"><div class="page-step-title">Run Analysis</div><div class="page-step-desc">Mismatched refunds surface automatically</div></div></div>
+      </div>
       <div class="cogs-grid" id="rmFileGrid" style="margin-bottom:20px;">
         <div class="cogs-card">
-          <div class="cogs-card-label">Amazon Transactions Report</div>
+          <div class="cogs-card-label">1 — Amazon Transactions Report</div>
           <div class="drop-zone" id="rm-dz-txn">
             <input type="file" id="rm-inp-txn" accept=".csv,.txt">
             <div class="drop-icon">📄</div>
-            <div class="drop-text"><strong>Drop file here</strong> or click</div>
+            <div class="drop-text"><strong>Drop file here</strong> or click to browse</div>
             <div class="drop-hint">Payments → Transaction View → Refund → Download</div>
             <div class="drop-filename" id="rm-fn-txn"></div>
           </div>
         </div>
         <div class="cogs-card">
-          <div class="cogs-card-label">STK Orders Export</div>
+          <div class="cogs-card-label">2 — STK Orders Export</div>
           <div class="drop-zone" id="rm-dz-stk">
             <input type="file" id="rm-inp-stk" accept=".csv,.txt,.tsv">
             <div class="drop-icon">📊</div>
-            <div class="drop-text"><strong>Drop STK orders here</strong></div>
+            <div class="drop-text"><strong>Drop STK orders here</strong> or click to browse</div>
             <div class="drop-hint">SellerToolKit_Orders_Detailed export</div>
             <div class="drop-filename" id="rm-fn-stk"></div>
           </div>
         </div>
         <div class="cogs-card">
-          <div class="cogs-card-label">STK Stock Valuation <span class="optional-badge">optional</span></div>
+          <div class="cogs-card-label">3 — STK Stock Valuation <span class="optional-badge">optional</span></div>
           <div class="drop-zone" id="rm-dz-sv">
             <input type="file" id="rm-inp-sv" accept=".csv,.txt,.tsv">
             <div class="drop-icon">📦</div>
-            <div class="drop-text"><strong>Drop stock valuation here</strong></div>
+            <div class="drop-text"><strong>Drop stock valuation here</strong> or click</div>
             <div class="drop-hint">SellerToolKit_Stock_Valuation export</div>
             <div class="drop-filename" id="rm-fn-sv"></div>
           </div>
@@ -1628,6 +1640,13 @@ input::placeholder { color: var(--text-4); }
         <div class="page-header-label">Cost Analysis</div>
         <div class="page-header-title">COGS Calculator</div>
         <div class="page-header-sub">Import prep centre invoices, calculate per-unit cost, and push directly into STK</div>
+      </div>
+      <div class="page-step-row">
+        <div class="page-step"><div class="page-step-num">1</div><div class="page-step-body"><div class="page-step-title">Prep Centre CSV</div><div class="page-step-desc">Export from your prep centre portal</div></div></div>
+        <div class="page-step-arrow">→</div>
+        <div class="page-step"><div class="page-step-num">2</div><div class="page-step-body"><div class="page-step-title">STK COGS Report</div><div class="page-step-desc">Optional — merges into existing STK file</div></div></div>
+        <div class="page-step-arrow">→</div>
+        <div class="page-step"><div class="page-step-num">3</div><div class="page-step-body"><div class="page-step-title">Set Date Range & Run</div><div class="page-step-desc">Per-unit costs calculated automatically</div></div></div>
       </div>
       <div class="cogs-grid">
         <div class="cogs-card">
@@ -2091,10 +2110,10 @@ input::placeholder { color: var(--text-4); }
           <option value="all">All months</option>
         </select>
         <input type="text" id="searchInput" placeholder="Search SKU, title, ASIN…" oninput="filterPurchases()" style="width:240px;">
-        <span style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:auto;" id="purchaseCount"></span>
-        <button class="btn-sm btn-ghost" id="purchCopyBtn" onclick="purchasesCopyAll()" style="margin-left:10px;">📋 Copy for Prep Sheet</button>
-        <button class="btn-sm btn-green" id="purchPushBtn" onclick="purchasesPushToPrep()" style="margin-left:6px;">↑ Push to Prep Sheet</button>
-        <button class="btn-sm btn-ghost" style="color:var(--red);border-color:var(--red);margin-left:10px;" onclick="invDetachAll()">Detach All Invoices</button>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-left:auto;" id="purchaseCount"></span>
+        <button class="btn-sm btn-ghost" id="purchCopyBtn" onclick="purchasesCopyAll()">📋 Copy for Prep Sheet</button>
+        <button class="btn-sm btn-green" id="purchPushBtn" onclick="purchasesPushToPrep()">↑ Push to Prep Sheet</button>
+        <button class="btn-sm btn-ghost" style="color:var(--red);border-color:rgba(240,59,80,.3);" onclick="invDetachAll()">Detach Invoices</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -2124,9 +2143,9 @@ input::placeholder { color: var(--text-4); }
         <div class="page-header-sub">Export Amazon-ready XLSM files from your deal queue — all required fields pre-populated</div>
       </div>
       <div class="stat-grid stat-grid-3" style="margin-bottom:20px;">
-        <div class="stat-card"><div class="stat-label">Pending Upload</div><div class="stat-value" style="color:var(--amber);" id="ls-pending">—</div></div>
-        <div class="stat-card"><div class="stat-label">Uploaded</div><div class="stat-value" id="ls-done">—</div></div>
-        <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="ls-total">—</div></div>
+        <div class="stat-card stat-card-amber"><div class="stat-label">Pending Upload</div><div class="stat-value" style="color:var(--amber);" id="ls-pending">—</div><div class="stat-sub">awaiting XLSM export</div></div>
+        <div class="stat-card stat-card-green"><div class="stat-label">Uploaded</div><div class="stat-value" style="color:var(--green);" id="ls-done">—</div><div class="stat-sub">live on Amazon</div></div>
+        <div class="stat-card"><div class="stat-label">Total Deals</div><div class="stat-value" id="ls-total">—</div><div class="stat-sub">in purchase sheet</div></div>
       </div>
       <div class="filter-row">
         <select id="listingMonthFilter" onchange="filterListing()" style="width:160px;"><option value="all">All months</option></select>
@@ -2157,7 +2176,12 @@ input::placeholder { color: var(--text-4); }
 
   <!-- ══ PAGE: ADD PURCHASE ══ -->
   <div class="page" id="page-add">
-    <div class="page-inner" style="max-width:560px;">
+    <div class="page-inner" style="max-width:600px;">
+      <div class="page-header">
+        <div class="page-header-label">Inventory</div>
+        <div class="page-header-title">Add Purchase</div>
+        <div class="page-header-sub">Log a new deal to your purchase sheet</div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
         <div><div class="field-label">Date</div><input type="date" id="f-date"></div>
         <div><div class="field-label">Supplier</div><input type="text" id="f-supplier" placeholder="Amazon, eBay…" list="supplierList" autocomplete="off"><datalist id="supplierList"></datalist></div>
@@ -2263,8 +2287,8 @@ input::placeholder { color: var(--text-4); }
     <div class="page-inner">
       <div class="page-header">
         <div class="page-header-label">Finance</div>
-        <div class="page-header-title">Argos Gift Cards</div>
-        <div class="page-header-sub">Store your Argos gift card details and track remaining balances</div>
+        <div class="page-header-title">Gift Cards</div>
+        <div class="page-header-sub">Track Argos gift card balances — balances update as you spend</div>
       </div>
 
       <div class="exp-stat-grid" style="grid-template-columns:repeat(3,1fr);">
@@ -2729,6 +2753,8 @@ input::placeholder { color: var(--text-4); }
 <style>
 .inv-icon-btn{background:none;border:1px solid var(--border2);border-radius:var(--r-xs);color:var(--blue);cursor:pointer;font-size:13px;padding:2px 8px;transition:border-color var(--transition),color var(--transition);}
 .inv-icon-btn:hover{border-color:var(--blue);color:var(--text);}
+.inv-drop-zone { border:1.5px dashed var(--border2); border-radius:var(--r-md); padding:48px 32px; text-align:center; cursor:pointer; transition:all .2s; background:var(--surface3); margin-bottom:24px; }
+.inv-drop-zone:hover, .inv-drop-zone.drag-over { border-color:var(--green); background:rgba(0,232,138,.04); border-style:solid; }
 </style>
 
 <div class="page" id="page-invoices">
@@ -2744,11 +2770,13 @@ input::placeholder { color: var(--text-4); }
          ondragover="event.preventDefault();event.stopPropagation();this.classList.add('drag-over')"
          ondragleave="this.classList.remove('drag-over')"
          ondrop="event.stopPropagation();this.classList.remove('drag-over');invHandleDrop(event)">
-      <div class="inv-drop-icon">📁</div>
-      <div class="inv-drop-text">
-        Drop a folder or PDFs here · or <label>browse folder<input type="file" webkitdirectory multiple style="display:none" onchange="invHandleFiles(this.files);this.value=''"></label> · or <label>browse files<input type="file" accept=".pdf" multiple style="display:none" onchange="invHandleFiles(this.files);this.value=''"></label>
+      <div style="font-size:28px;margin-bottom:12px;">📁</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px;">Drop PDF invoices here</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-bottom:14px;">Folders and individual PDFs · parsed locally, no API key needed</div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <label style="cursor:pointer;"><span class="btn-sm btn-ghost" style="display:block;">Browse folder</span><input type="file" webkitdirectory multiple style="display:none" onchange="invHandleFiles(this.files);this.value=''"></label>
+        <label style="cursor:pointer;"><span class="btn-sm btn-ghost" style="display:block;">Browse files</span><input type="file" accept=".pdf" multiple style="display:none" onchange="invHandleFiles(this.files);this.value=''"></label>
       </div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:8px;">Folders and individual PDFs supported · parsed locally, no API key needed</div>
     </div>
 
     <!-- Progress (shown during batch processing) -->

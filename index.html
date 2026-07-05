@@ -6590,15 +6590,8 @@ async function stalkerCheckSeller(seller) {
     const newAsins  = currentAsinList.filter(a => !prevAsins.has(a));
 
     // Accumulate — add new ASINs to snapshot but never remove old ones
-    // This prevents re-surfacing ASINs that temporarily went out of stock
     const mergedAsins = [...new Set([...prevSnap.asins, ...currentAsinList])];
     stalkerSnapshots[seller.uid] = { asins: mergedAsins, ts: Date.now() };
-      stalkerRenderSellers();
-      return;
-    }
-
-    const prevAsins = new Set(prevSnap.asins);
-    const newAsins  = currentAsinList.filter(a => !prevAsins.has(a));
 
     if (newAsins.length > 0) {
       seller.status = 'has-new';

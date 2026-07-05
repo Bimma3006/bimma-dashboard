@@ -6487,6 +6487,16 @@ async function stalkerCheckAll() {
   }
 }
 
+async function stalkerRefreshAll() {
+  const key = stalkerGetKey();
+  if (!key) { alert('Enter your Keepa API key first.'); return; }
+  if (!stalkerSellers.length) { alert('No sellers added yet.'); return; }
+  for (const seller of stalkerSellers) {
+    if (seller.status === 'checking') continue;
+    await stalkerCheckSeller(seller);
+  }
+}
+
 async function stalkerCheckSeller(seller) {
   const key = stalkerGetKey();
   if (!key) { alert('Enter your Keepa API key first.'); return; }

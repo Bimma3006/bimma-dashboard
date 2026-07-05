@@ -1444,7 +1444,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="giftcards" onclick="showPage('giftcards',this)"><span class="nav-icon">◈</span>Gift Cards</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v7.2 · 05 Jul 26</div>
+    <div class="sidebar-version">v7.3 · 05 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -2691,8 +2691,8 @@ input::placeholder { color: var(--text-4); }
 
   /* ── Top config bar ───────────────────────────── */
   .sk-config-bar {
-    display:grid; grid-template-columns:1.2fr 1fr 1fr 1.4fr auto;
-    gap:16px; align-items:end;
+    display:grid; grid-template-columns:1.2fr 1fr 1fr 1.4fr;
+    gap:16px; align-items:center;
     background:var(--surface2); border:1px solid var(--border2);
     border-radius:var(--r-md); padding:20px 24px; margin-bottom:20px;
   }
@@ -2818,7 +2818,6 @@ input::placeholder { color: var(--text-4); }
     <div class="sk-config-field">
       <span class="sk-config-label">Keepa API Key</span>
       <input type="password" id="stalkerApiKey" class="sk-config-input" placeholder="Paste Keepa key…" oninput="stalkerSaveKey()">
-      <div class="sk-config-note">Stored locally · never shared</div>
     </div>
     <div class="sk-config-field">
       <span class="sk-config-label">Seller ID</span>
@@ -2842,18 +2841,10 @@ input::placeholder { color: var(--text-4); }
         <button class="sk-track-btn" onclick="stalkerAddSeller()">+ Track</button>
       </div>
     </div>
-    <div class="sk-config-field" style="justify-content:flex-end;">
-      <span class="sk-config-label">&nbsp;</span>
-      <div style="display:flex;gap:8px;">
-        <button class="sk-config-btn" onclick="stalkerExportBackup()">↓ Backup</button>
-        <button class="sk-config-btn" onclick="document.getElementById('stalkerImportFile').click()">↑ Restore</button>
-        <input type="file" id="stalkerImportFile" accept=".json" style="display:none" onchange="stalkerImportBackup(this)">
-      </div>
-    </div>
   </div>
-  <!-- hidden auto-refresh select kept for JS compatibility -->
   <select id="stalkerAutoRefresh" style="display:none;" onchange="stalkerSetAutoRefresh(this.value)"><option value="0">Off</option></select>
   <div id="stalkerNextCheck" style="display:none;"></div>
+  <input type="file" id="stalkerImportFile" accept=".json" style="display:none" onchange="stalkerImportBackup(this)">
 
   <!-- KPI STRIP -->
   <div class="sk-kpis">

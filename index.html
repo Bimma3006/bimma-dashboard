@@ -6527,7 +6527,6 @@ async function stalkerCheckSeller(seller) {
       const fmt = {
         sellerIds: [seller.id],
         asinsOnly: 1,
-        newOnly: 1,      // Only fetch New condition listings
         perPage: 100,
         page
       };
@@ -6579,7 +6578,7 @@ async function stalkerCheckSeller(seller) {
     const prevSnap = stalkerSnapshots[seller.uid];
 
     if (!prevSnap) {
-      // First scan — baseline only, no alerts
+      // First scan — save as baseline, no alerts
       stalkerSnapshots[seller.uid] = { asins: currentAsinList, ts: Date.now() };
       seller.status = 'baseline';
       stalkerSave();
@@ -6590,8 +6589,16 @@ async function stalkerCheckSeller(seller) {
     const prevAsins = new Set(prevSnap.asins);
     const newAsins  = currentAsinList.filter(a => !prevAsins.has(a));
 
-    // Always update snapshot to latest
-    stalkerSnapshots[seller.uid] = { asins: currentAsinList, ts: Date.now() };
+    // Accumulate — add new ASINs to snapshot but never remove old ones
+    // This prevents re-surfacing ASINs that temporarily went out of stock
+    const mergedAsins = [...new Set([...prevSnap.asins, ...currentAsinList])];
+    stalkerSnapshots[seller.uid] = { asins: mergedAsins, ts: Date.now() };
+      stalkerRenderSellers();
+      return;
+    }
+
+    const prevAsins = new Set(prevSnap.asins);
+    const newAsins  = currentAsinList.filter(a => !prevAsins.has(a));
 
     if (newAsins.length > 0) {
       seller.status = 'has-new';

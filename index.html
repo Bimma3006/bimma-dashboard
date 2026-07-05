@@ -4652,7 +4652,7 @@ setTimeout(() => {
           } catch {}
         });
         daDeals = parsed
-          .filter(d => !(d.ss && (d.ssRoi == null || d.ssRoi < 0.15)))
+          
           .map(d => {
             const asinUp = (d.asin || '').toUpperCase();
             const pd = _purchMap.get(asinUp);
@@ -4828,7 +4828,7 @@ function daRunAnalysis() {
           }
         }
         return deal;
-      }).filter(d => !(d.ss && (d.ssRoi == null || d.ssRoi < 0.15)))
+      })
         .sort((a, b) => a.sortOrder - b.sortOrder);
       document.getElementById('daCountGreen').textContent = daDeals.filter(d => d.colour === 'green').length;
       const amberEl = document.getElementById('daCountAmber'); if(amberEl) amberEl.textContent = daDeals.filter(d => d.colour === 'amber').length;
@@ -4908,12 +4908,12 @@ function daRenderTable() {
   let filtered = daFilter === 'giftcard'
     ? daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15))
     : daFilter === 'subsave'
-    ? daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15)
+    ? daDeals.filter(d => d.ss)
     : daFilter === 'retailer'
     ? daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15))
     : daFilter === 'bizprice'
     ? daDeals.filter(d => d.hasBizPrice && d.bizRoi != null && d.bizRoi >= 0.15).sort((a,b) => (b.bizRoi ?? 0) - (a.bizRoi ?? 0))
-    : daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter && !d.ss);
+    : daFilter === 'all' ? daDeals : daDeals.filter(d => d.colour === daFilter);
   if (daBrandFilter) filtered = filtered.filter(d => (d.brand||'').toLowerCase() === daBrandFilter.toLowerCase());
   if (daExcludeRecent) filtered = filtered.filter(d => d.boughtDaysAgo == null || d.boughtDaysAgo > 3);
   if (daSearchQ) filtered = filtered.filter(d => d.asin.toLowerCase().includes(daSearchQ) || d.title.toLowerCase().includes(daSearchQ));

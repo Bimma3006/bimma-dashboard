@@ -5425,20 +5425,24 @@ function scoutSyncApiKey() {
 
 function scoutSetTab(tab) {
   scoutCurrentTab = tab;
-  document.getElementById('scoutTabCsv').classList.toggle('active', tab === 'csv');
-  document.getElementById('scoutTabPaste').classList.toggle('active', tab === 'paste');
-  document.getElementById('scoutCsvPane').style.display = tab === 'csv' ? '' : 'none';
-  document.getElementById('scoutPastePane').style.display = tab === 'paste' ? '' : 'none';
+  const tabCsv = document.getElementById('scoutTabCsv');
+  const tabPaste = document.getElementById('scoutTabPaste');
+  if (tabCsv) tabCsv.classList.toggle('active', tab === 'csv');
+  if (tabPaste) tabPaste.classList.toggle('active', tab === 'paste');
+  const csvArea = document.getElementById('scoutCsvArea') || document.getElementById('scoutCsvPane');
+  const pasteArea = document.getElementById('scoutPasteArea') || document.getElementById('scoutPastePane');
+  if (csvArea) csvArea.style.display = tab === 'csv' ? '' : 'none';
+  if (pasteArea) pasteArea.style.display = tab === 'paste' ? '' : 'none';
   scoutCountASINs();
 }
+const scoutSetInputTab = scoutSetTab;
 
 function scoutToggleMarket(market, el) {
-  const label = document.getElementById('scoutLabel'+market);
+  const label = document.getElementById('scout'+market);
   if (!label) return;
-  // el may be the checkbox or the label itself depending on caller
-  const checkbox = document.getElementById('scout'+market);
-  if (!checkbox) return;
-  label.classList.toggle('on', checkbox.checked);
+  const checkbox = document.getElementById('scout'+market+'check') || document.getElementById('scout'+market);
+  const checked = checkbox?.checked ?? el?.checked ?? false;
+  label.classList.toggle('on', checked);
 }
 
 // ── CSV / File handling ──
@@ -5615,22 +5619,20 @@ function scoutExtractASINs(text) {
 }
 
 function scoutGetActiveASINs() {
-  const max = parseInt(document.getElementById('scoutMaxAsins')?.value || '20');
+  const max = parseInt(document.getElementById('scoutMaxAsins')?.value || '10000');
   if (scoutCurrentTab === 'csv') return [...new Set([...scoutLoadedAsins1,...scoutLoadedAsins2])].slice(0, max);
-  const raw = document.getElementById('scoutAsinInput')?.value || '';
+  const raw = document.getElementById('scoutAsinPaste')?.value || document.getElementById('scoutAsinInput')?.value || '';
   return scoutExtractASINs(raw).slice(0, max);
 }
 
 function scoutCountASINs() {
-  const max = parseInt(document.getElementById('scoutMaxAsins')?.value || '20');
-  const asins = scoutCurrentTab === 'csv' ? [...new Set([...scoutLoadedAsins1,...scoutLoadedAsins2])] : scoutExtractASINs(document.getElementById('scoutAsinInput')?.value || '');
+  const max = parseInt(document.getElementById('scoutMaxAsins')?.value || '10000');
+  const asins = scoutCurrentTab === 'csv'
+    ? [...new Set([...scoutLoadedAsins1,...scoutLoadedAsins2])]
+    : scoutExtractASINs(document.getElementById('scoutAsinPaste')?.value || document.getElementById('scoutAsinInput')?.value || '');
   const count = asins.length;
-  const el = document.getElementById('scoutAsinCount');
+  const el = document.getElementById('scoutAsinCount') || document.getElementById('scoutPasteCount');
   if (el) el.textContent = `${Math.min(count, max)} ASIN${Math.min(count,max) !== 1 ? 's' : ''} detected`;
-  const warn = document.getElementById('scoutAsinWarning');
-  const maxDisplay = document.getElementById('scoutMaxDisplay');
-  if (maxDisplay) maxDisplay.textContent = max;
-  if (warn) warn.style.display = (count > max) ? 'inline' : 'none';
 }
 
 // ── Fee calcs ──
@@ -5922,7 +5924,7 @@ async function scoutRun() {
   const shipping = parseFloat(document.getElementById('scoutShipping')?.value  || '2.00');
   const prep     = parseFloat(document.getElementById('scoutPrep')?.value      || '0.45');
   const minRoi   = parseFloat(document.getElementById('scoutMinRoi')?.value    || '15');
-  const markets  = Object.keys(SCOUT_DOMAINS).filter(k => document.getElementById('scout'+k)?.checked);
+  const markets  = Object.keys(SCOUT_DOMAINS).filter(k => document.getElementById('scout'+k+'check')?.checked || document.getElementById('scout'+k)?.checked);
   const marketFx = { DE:eurGbp, FR:eurGbp, IT:eurGbp, ES:eurGbp, US:usdGbp, JP:jpyGbp };
 
   if (!markets.length) { toast('Select at least one source market', 'error'); return; }

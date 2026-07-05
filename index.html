@@ -1444,7 +1444,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="giftcards" onclick="showPage('giftcards',this)"><span class="nav-icon">◈</span>Gift Cards</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v6.9 · 05 Jul 26</div>
+    <div class="sidebar-version">v6.9.1 · 05 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -2709,7 +2709,7 @@ input::placeholder { color: var(--text-4); }
   .sk-kpi-sub     { font-family:var(--mono); font-size:9px; color:var(--text-3); margin-top:4px; }
 
   /* Main layout */
-  .sk-body        { display:grid; grid-template-columns:280px 1fr; gap:20px; }
+  .sk-body        { display:grid; grid-template-columns:260px 1fr; gap:20px; align-items:start; }
 
   /* Setup panel */
   .sk-setup       { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); padding:0; overflow:hidden; align-self:start; }
@@ -2737,8 +2737,12 @@ input::placeholder { color: var(--text-4); }
 
   /* Sellers table */
   .sk-sellers     { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--r-md); overflow:hidden; }
-  .sk-sellers-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border2); background:var(--surface3); }
+  .sk-sellers-hdr { display:flex; align-items:center; justify-content:space-between; padding:12px 18px; border-bottom:1px solid var(--border2); background:var(--surface3); flex-wrap:wrap; gap:8px; }
   .sk-sellers-title { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-2); }
+  .sk-mkt-tabs { display:flex; gap:0; background:var(--surface2); border-radius:var(--r-sm); overflow:hidden; border:1px solid var(--border2); }
+  .sk-mkt-tab  { font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.04em; padding:5px 14px; border:none; background:transparent; color:var(--text-3); cursor:pointer; transition:all .15s; white-space:nowrap; }
+  .sk-mkt-tab.active { background:var(--green); color:#000; }
+  .sk-mkt-tab:not(.active):hover { color:var(--text-2); background:var(--surface3); }
   .sk-table       { width:100%; border-collapse:collapse; }
   .sk-table th    { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-3); padding:9px 16px; text-align:left; background:var(--surface3); border-bottom:1px solid var(--border2); white-space:nowrap; }
   .sk-table th.r  { text-align:right; }
@@ -2905,7 +2909,12 @@ input::placeholder { color: var(--text-4); }
       <div class="sk-sellers">
         <div class="sk-sellers-hdr">
           <span class="sk-sellers-title">Tracked Sellers</span>
-          <div style="display:flex;gap:8px;">
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div class="sk-mkt-tabs" id="skSellerMktTabs">
+              <button class="sk-mkt-tab active" onclick="skSetSellerMkt('all',this)">All</button>
+              <button class="sk-mkt-tab" onclick="skSetSellerMkt('uk',this)">🇬🇧 UK</button>
+              <button class="sk-mkt-tab" onclick="skSetSellerMkt('us',this)">🇺🇸 US</button>
+            </div>
             <button class="sk-btn" onclick="stalkerRefreshAll()" style="padding:5px 12px;">↻ Refresh all</button>
           </div>
         </div>
@@ -6365,6 +6374,20 @@ let stalkerSellers   = [];
 let stalkerFeedFilter = 'all';
 let stalkerSnapshots = {};
 let stalkerFeedItems = [];
+let skSellerMkt = 'all';
+
+function skSetSellerMkt(mkt, btn) {
+  skSellerMkt = mkt;
+  document.querySelectorAll('#skSellerMktTabs .sk-mkt-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  stalkerRenderSellers();
+  // Sync feed filter
+  if (mkt === 'uk')      stalkerFeedFilter = 'market_2';
+  else if (mkt === 'us') stalkerFeedFilter = 'market_1';
+  else                   stalkerFeedFilter = 'all';
+  stalkerRenderFeedFilters();
+  stalkerRenderFeed();
+}
 let stalkerLoaded    = false;
 let stalkerAutoInterval = null;
 let stalkerNextCheckAt  = null;
@@ -6691,14 +6714,25 @@ function stalkerRenderSellers() {
   if (el('stalkerStatNew'))      el('stalkerStatNew').textContent      = '+' + newToday;
 
   if (!stalkerSellers.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="font-family:var(--mono);font-size:12px;color:var(--text-3);text-align:center;padding:24px 0;">No sellers added yet</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px;font-family:var(--mono);font-size:11px;color:var(--text-3);">No sellers added yet — add one using the panel</td></tr>';
+    return;
+  }
+
+  // Filter by market tab
+  const marketFilter = typeof skSellerMkt !== 'undefined' ? skSellerMkt : 'all';
+  const visibleSellers = marketFilter === 'uk' ? stalkerSellers.filter(s => s.market === '2')
+    : marketFilter === 'us' ? stalkerSellers.filter(s => s.market === '1')
+    : stalkerSellers;
+
+  if (!visibleSellers.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px;font-family:var(--mono);font-size:11px;color:var(--text-3);">No sellers' + (marketFilter !== 'all' ? ' in this marketplace' : ' added yet') + '</td></tr>';
     return;
   }
 
   // Split into UK / US / EU groups
-  const ukSellers  = stalkerSellers.filter(s => s.market === '2');
-  const usSellers  = stalkerSellers.filter(s => s.market === '1');
-  const euSellers  = stalkerSellers.filter(s => !['1','2'].includes(s.market));
+  const ukSellers = visibleSellers.filter(s => s.market === '2');
+  const usSellers = visibleSellers.filter(s => s.market === '1');
+  const euSellers = visibleSellers.filter(s => !['1','2'].includes(s.market));
   const AVATARCOLORS = ['#4d8ef5','#9b6dff','#00e88a','#f0a500','#f03b50','#00c9ff'];
 
   tbody.innerHTML = stalkerBuildSellerGroup('UK — amazon.co.uk', '🇬🇧', ukSellers)

@@ -2033,7 +2033,7 @@ input::placeholder { color: var(--text-4); }
           <button class="da-pill da-pill-green" id="daPillGreen" onclick="daSetFilter('green',this)"><span class="da-pill-dot da-pill-dot-green"></span>Strong</button>
           <button class="da-pill da-pill-amber" id="daPillAmber" onclick="daSetFilter('amber',this)"><span class="da-pill-dot da-pill-dot-amber"></span>Marginal</button>
           <button class="da-pill da-pill-red" id="daPillRed" onclick="daSetFilter('red',this)"><span class="da-pill-dot da-pill-dot-red"></span>Reject</button>
-          <button class="da-pill da-pill-purple" id="daPillSS" onclick="daSetFilter('subsave',this)"><span class="da-pill-dot da-pill-dot-purple"></span>♻ S&S</button>
+          <button class="da-pill da-pill-purple" id="daPillSS" onclick="daSetFilter('subsave',this)"><span class="da-pill-dot da-pill-dot-purple"></span>♻ S&S viable</button>
           <button class="da-pill" id="daPillBiz" onclick="daSetFilter('bizprice',this)" style="border-color:rgba(245,166,35,.3);color:var(--amber);">💼 Biz</button>
           <span class="da-spike-notice" id="spikeNotice" style="display:none;"></span>
           <button class="da-pill" id="daPillExcRecent" onclick="daToggleExcludeRecent(this)" style="border-style:dashed;">🚫 &lt;3d</button>
@@ -4908,7 +4908,7 @@ function daRenderTable() {
   let filtered = daFilter === 'giftcard'
     ? daDeals.filter(d => d.gcRoi != null && d.gcRoi >= 0.15 && (d.roi == null || d.roi < 0.15))
     : daFilter === 'subsave'
-    ? daDeals.filter(d => d.ss)
+    ? daDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15).sort((a,b) => (b.ssRoi ?? 0) - (a.ssRoi ?? 0))
     : daFilter === 'retailer'
     ? daDeals.filter(d => d.r15Roi != null && d.r15Roi >= 0.15 && (d.roi == null || d.roi < 0.15))
     : daFilter === 'bizprice'
@@ -4945,7 +4945,7 @@ function daRenderTable() {
     const r15Colour = r => r == null ? 'var(--text-4)' : r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--blue)' : r > 0 ? 'var(--text-3)' : 'var(--red)';
     const ssColour  = r => r == null ? 'var(--text-4)' : r >= 0.20 ? 'var(--green)' : r >= 0.15 ? 'var(--purple)' : 'var(--red)';
     const ssCells = daFilter === 'subsave'
-      ? `<td class="td-num" style="color:${ssColour(deal.ssRoi)}">${fmtP(deal.ssRoi)}</td>` : '';
+      ? `<td class="td-num" style="color:${ssColour(deal.ssRoi)}">${deal.ssRoi != null ? fmtP(deal.ssRoi) : '—'}${deal.ss && deal.ssRoi != null && deal.ssRoi >= 0.15 && (deal.roi == null || deal.roi < 0.15) ? '<div style="font-family:var(--mono);font-size:9px;color:var(--purple);margin-top:1px;">rescued ↑</div>' : ''}</td>` : '';
     const idx = daDeals.indexOf(deal);
     tr.dataset.asin = deal.asin;
     tr.innerHTML = `

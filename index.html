@@ -105,7 +105,28 @@ body::before {
   top: 0; left: 0; bottom: 0;
   z-index: 200;
   overflow: hidden;
+  transition: width 0.22s cubic-bezier(.4,0,.2,1);
 }
+body.sidebar-collapsed { --sidebar-w: 0px; }
+body.sidebar-collapsed #sidebar { border-right: none; }
+body.sidebar-collapsed #main { margin-left: 0; }
+#sidebar-toggle {
+  position: fixed;
+  top: 14px;
+  left: calc(var(--sidebar-w) + 10px);
+  z-index: 300;
+  width: 26px; height: 26px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--text-3);
+  transition: left 0.22s cubic-bezier(.4,0,.2,1), color 0.15s, background 0.15s;
+  line-height: 1;
+}
+#sidebar-toggle:hover { color: var(--text); background: var(--surface3); border-color: var(--border3); }
+body.sidebar-collapsed #sidebar-toggle { left: 10px; }
 #sidebar::before {
   content: '';
   position: absolute;
@@ -228,7 +249,7 @@ body::before {
 /* ═══════════════════════════════════════
    LAYOUT
 ═══════════════════════════════════════ */
-#main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
+#main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); transition: margin-left 0.22s cubic-bezier(.4,0,.2,1); }
 
 /* ═══════════════════════════════════════
    TOPBAR
@@ -1411,6 +1432,7 @@ input::placeholder { color: var(--text-4); }
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
+<button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">◀</button>
 
 <div id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <!-- SIDEBAR -->
@@ -1444,7 +1466,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="giftcards" onclick="showPage('giftcards',this)"><span class="nav-icon">◈</span>Gift Cards</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v7.4 · 05 Jul 26</div>
+    <div class="sidebar-version">v7.5 · 06 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -2964,6 +2986,20 @@ input::placeholder { color: var(--text-4); }
 // ════════════════════════════════════════
 // NAV
 // ════════════════════════════════════════
+function toggleSidebar() {
+  const collapsed = document.body.classList.toggle('sidebar-collapsed');
+  const btn = document.getElementById('sidebar-toggle');
+  if (btn) btn.textContent = collapsed ? '▶' : '◀';
+  localStorage.setItem('bimma_sidebar_collapsed', collapsed ? '1' : '');
+}
+(function() {
+  if (localStorage.getItem('bimma_sidebar_collapsed')) {
+    document.body.classList.add('sidebar-collapsed');
+    const btn = document.getElementById('sidebar-toggle');
+    if (btn) btn.textContent = '▶';
+  }
+})();
+
 function showPage(name, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));

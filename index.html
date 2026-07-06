@@ -1435,7 +1435,6 @@ input::placeholder { color: var(--text-4); }
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-<button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">◀</button>
 
 <div id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <!-- SIDEBAR -->
@@ -2991,15 +2990,14 @@ input::placeholder { color: var(--text-4); }
 // ════════════════════════════════════════
 function toggleSidebar() {
   const collapsed = document.body.classList.toggle('sidebar-collapsed');
-  const btn = document.getElementById('sidebar-toggle');
-  if (btn) btn.textContent = collapsed ? '▶' : '◀';
+  const btn = document.getElementById('menuToggle');
+  if (btn) btn.style.opacity = collapsed ? '0.5' : '1';
   localStorage.setItem('bimma_sidebar_collapsed', collapsed ? '1' : '');
 }
 (function() {
   if (localStorage.getItem('bimma_sidebar_collapsed')) {
     document.body.classList.add('sidebar-collapsed');
-    const btn = document.getElementById('sidebar-toggle');
-    if (btn) btn.textContent = '▶';
+
   }
 })();
 

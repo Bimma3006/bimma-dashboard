@@ -107,9 +107,8 @@ body::before {
   overflow: hidden;
   transition: width 0.22s cubic-bezier(.4,0,.2,1);
 }
-body.sidebar-collapsed { --sidebar-w: 0px; }
-body.sidebar-collapsed #sidebar { border-right: none; }
-body.sidebar-collapsed #main { margin-left: 0; }
+body.sidebar-collapsed #sidebar { width: 0 !important; border-right: none; }
+body.sidebar-collapsed #main { margin-left: 0 !important; }
 #sidebar-toggle {
   position: fixed;
   top: 14px;

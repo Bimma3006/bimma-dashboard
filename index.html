@@ -850,8 +850,7 @@ input::placeholder { color: var(--text-4); }
 }
 #menuToggle { display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border2); border-radius: 6px; color: var(--text-2); cursor: pointer; padding: 5px 9px; font-size: 16px; line-height: 1; transition: all .15s; }
 #menuToggle:hover { border-color: var(--border3); color: var(--text); background: var(--surface3); }
-#sidebarOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; pointer-events: none; }
-#sidebarOverlay.visible { display: block; pointer-events: all; }
+#sidebarOverlay { display: none !important; }
 
 /* ═══ A2A ANALYSER — TABLE ═══ */
 /* .da-table is still used by <table class="da-table"> in the A2A results */
@@ -1437,7 +1436,7 @@ input::placeholder { color: var(--text-4); }
 </head>
 <body>
 
-<div id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
 <!-- SIDEBAR -->
 <nav id="sidebar">
   <div class="sidebar-logo">
@@ -6971,12 +6970,6 @@ document.addEventListener('bimma:pagechange', e => {
 // ════════════════════════════════════════
 
 
-function toggleSidebar() {
-  const sb = document.getElementById('sidebar');
-  const ov = document.getElementById('sidebarOverlay');
-  sb.classList.toggle('open');
-  if (ov) ov.classList.toggle('visible');
-}
 
 function stalkerRename(uid) {
   const seller = stalkerSellers.find(s => s.uid === uid);

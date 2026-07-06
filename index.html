@@ -848,7 +848,8 @@ input::placeholder { color: var(--text-4); }
   .cogs-grid { grid-template-columns: 1fr; }
   .rm-mini-stats { grid-template-columns: 1fr; }
 }
-#menuToggle { display: none; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-2); cursor: pointer; padding: 5px 9px; font-size: 16px; line-height: 1; }
+#menuToggle { display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border2); border-radius: 6px; color: var(--text-2); cursor: pointer; padding: 5px 9px; font-size: 16px; line-height: 1; transition: all .15s; }
+#menuToggle:hover { border-color: var(--border3); color: var(--text); background: var(--surface3); }
 #sidebarOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 199; pointer-events: none; }
 #sidebarOverlay.visible { display: block; pointer-events: all; }
 

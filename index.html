@@ -4999,7 +4999,7 @@ function daRenderTable() {
       </td>
       <td class="td-num">${fmtN(deal.buyIncVat)}</td>
       <td class="td-num">${fmtN(deal.spIncVat)}${spTag}</td>
-      <td class="td-num" style="color:${deal.bbCurrent && deal.avg180 && deal.bbCurrent > deal.avg180 * 1.05 ? 'var(--green)' : deal.bbCurrent && deal.avg180 && deal.bbCurrent < deal.avg180 * 0.95 ? 'var(--red)' : 'var(--text-3)'};">${deal.bbCurrent ? '£'+deal.bbCurrent.toFixed(2) : '—'}</td>
+      <td class="td-num" style="color:${deal.bbCurrent && deal.avg180 && deal.bbCurrent > deal.avg180 * 1.05 ? 'var(--green)' : deal.bbCurrent && deal.avg180 && deal.bbCurrent < deal.avg180 * 0.95 ? 'var(--red)' : 'var(--text-3)'};">${deal.bbCurrent ? currencyPrefix+deal.bbCurrent.toFixed(2) : '—'}</td>
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
       ${ssCells}

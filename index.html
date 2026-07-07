@@ -4535,8 +4535,10 @@ function daAnalyseRow(row) {
   const usdGbp = cfg.market === 'us'
     ? (parseFloat(document.getElementById('daUsdGbp')?.value) || parseFloat(localStorage.getItem('bimma_usd_gbp')) || 0.79)
     : 1;
-  const buyExVatGbp = buyExVat !== null ? buyExVat * usdGbp : null;
-  const buyIncVatGbp = buyIncVat !== null ? buyIncVat * usdGbp : null;
+  const buyExVatGbp = buyExVat !== null ? buyExVat : null; // already in GBP from Keepa UK export
+  const buyIncVatGbp = buyIncVat !== null ? buyIncVat : null;
+  // Display buy price in USD (convert GBP back to USD for display only)
+  const buyIncVatDisplay = (cfg.market === 'us' && buyIncVat !== null) ? buyIncVat / usdGbp : buyIncVat;
 
   // Business Price — use if available and lower than regular buy price
   const bizRawAdj  = bizPriceRaw !== null ? bizPriceRaw + cfg.extraCost : null;
@@ -4681,7 +4683,7 @@ function daAnalyseRow(row) {
   if (fbaFeeEst && reason && colour !== 'grey') reason += ' · FBA est.';
   const sortOrder = colour === 'green' ? 0 : colour === 'amber' ? 1 : spikeFlag ? 4 : colour === 'red' ? 2 : 3;
 
-  return { title, asin, brand, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, bbCurrent, avg180, lastPriceChange, bizIncVat, bizExVat, bizProfit, bizRoi, bizDiscount, hasBizPrice, decision: null };
+  return { title, asin, brand, buyExVat: buyExVatGbp, buyIncVat: buyIncVatDisplay, buyIncVatGbp, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, bbCurrent, avg180, lastPriceChange, bizIncVat, bizExVat, bizProfit, bizRoi, bizDiscount, hasBizPrice, decision: null };
 }
 
 // ════════════════════════════════════════

@@ -1936,18 +1936,7 @@ input::placeholder { color: var(--text-4); }
             <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:4px;">£<span id="daFxRateDisplay">0.8600</span> · <span id="daFxTs"></span></div>
           </div>
         </div>
-        <div class="da-topbar-widget" id="daUsdWidget" style="display:none;">
-          <div>
-            <div class="da-topbar-widget-label">USD → GBP <button onclick="daRefreshFx()" class="da-fx-refresh">↻</button></div>
-            <div class="da-topbar-widget-row">
-              <span class="da-topbar-widget-prefix">$</span>
-              <input type="number" class="da-topbar-widget-input" id="daUsdGbpInput" placeholder="0.00" step="0.001" min="0" oninput="daUsdGbpUpdate()">
-              <span class="da-topbar-widget-arrow">→</span>
-              <span class="da-topbar-widget-result" id="daUsdGbpOut">—</span>
-            </div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:4px;">Rate: £<span id="daUsdRateDisplay">0.7900</span></div>
-          </div>
-        </div>
+        <div class="da-price-calc" style="min-width:200px;">
           <div class="da-price-calc-title">Quick Breakdown</div>
           <div class="da-topbar-widget-row" style="gap:6px;margin-bottom:10px;">
             <span class="da-topbar-widget-prefix">£</span>
@@ -4376,12 +4365,7 @@ function setMode(mode, btn) {
     s2Sub.textContent = 'OPTIONAL';
     slot3.style.display = 'none';
   }
-  // Show/hide USD widget based on mode
-  const usdWidget = document.getElementById('daUsdWidget');
-  const fxWidget = document.getElementById('daFxWidget');
-  if (usdWidget) usdWidget.style.display = mode === 'us' ? 'block' : 'none';
-  // EU fx widget hidden in US mode
-  if (fxWidget) fxWidget.style.display = mode === 'eu' ? 'block' : 'none';
+  // Go button
   const goBtn = document.getElementById('daGoBtn');
   const ready = mode === 'eu' ? (!!daSlotFiles[1] && !!daSlotFiles[3]) : !!daSlotFiles[1];
   goBtn.className = 'da-go' + (ready ? ' ready' : '');
@@ -4530,16 +4514,6 @@ function daAnalyseRow(row) {
   const buyIncVat  = buyRawAdj !== null ? buyRawAdj + cfg.extraCost : null;
   const buyExVat   = buyIncVat !== null ? buyIncVat / (1 + vat) : null;
 
-  // For US mode: profit calc needs GBP values — convert using USD/GBP rate
-  // Display stays in USD, but all profit/ROI maths in GBP
-  const usdGbp = cfg.market === 'us'
-    ? (parseFloat(document.getElementById('daUsdGbp')?.value) || parseFloat(localStorage.getItem('bimma_usd_gbp')) || 0.79)
-    : 1;
-  const buyExVatGbp = buyExVat !== null ? buyExVat : null; // already in GBP from Keepa UK export
-  const buyIncVatGbp = buyIncVat !== null ? buyIncVat : null;
-  // Display buy price in USD (convert GBP back to USD for display only)
-  const buyIncVatDisplay = (cfg.market === 'us' && buyIncVat !== null) ? buyIncVat / usdGbp : buyIncVat;
-
   // Business Price — use if available and lower than regular buy price
   const bizRawAdj  = bizPriceRaw !== null ? bizPriceRaw + cfg.extraCost : null;
   const bizIncVat  = bizRawAdj !== null ? bizRawAdj : null;
@@ -4579,7 +4553,7 @@ function daAnalyseRow(row) {
   const fbaFee = fbaFeeRaw !== null ? fbaFeeRaw : (spIncVat ? daFbaFee(spIncVat) * (1 + vat) : null);
 
   // Dip vs buy
-  const dip = (sp && buyExVat && sp > 0) ? (sp - (cfg.market === 'us' ? buyExVatGbp : buyExVat)) / sp : null;
+  const dip = (sp && buyExVat && sp > 0) ? (sp - buyExVat) / sp : null;
 
   // Price trend warning: 180d avg vs 90d avg
   let priceTrendWarning = null;
@@ -4593,12 +4567,10 @@ function daAnalyseRow(row) {
   const fbaExVat = fbaFee ? fbaFee / (1 + vat) : null;
   const dsFee    = sp ? sp * dsFeeRate : null;
   let profit = null, roi = null;
-  const _buyExVat = cfg.market === 'us' ? buyExVatGbp : buyExVat;
-  const _buyIncVat = cfg.market === 'us' ? buyIncVatGbp : buyIncVat;
-  if (sp && _buyExVat && refFee !== null && fbaExVat !== null) {
-    const vatDue = (spIncVat * vat / (1 + vat)) - (_buyIncVat ? _buyIncVat * vat / (1 + vat) : 0);
-    profit = sp - _buyExVat - refFee - fbaExVat - prepFee - inboundShipping - (dsFee || 0) - vatDue;
-    roi = profit / _buyExVat;
+  if (sp && buyExVat && refFee !== null && fbaExVat !== null) {
+    const vatDue = (spIncVat * vat / (1 + vat)) - (buyIncVat ? buyIncVat * vat / (1 + vat) : 0);
+    profit = sp - buyExVat - refFee - fbaExVat - prepFee - inboundShipping - (dsFee || 0) - vatDue;
+    roi = profit / buyExVat;
   }
 
   // Business Price profit/ROI — separate calc using biz buy price
@@ -4683,7 +4655,7 @@ function daAnalyseRow(row) {
   if (fbaFeeEst && reason && colour !== 'grey') reason += ' · FBA est.';
   const sortOrder = colour === 'green' ? 0 : colour === 'amber' ? 1 : spikeFlag ? 4 : colour === 'red' ? 2 : 3;
 
-  return { title, asin, brand, buyExVat: buyExVatGbp, buyIncVat: buyIncVatDisplay, buyIncVatGbp, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, bbCurrent, avg180, lastPriceChange, bizIncVat, bizExVat, bizProfit, bizRoi, bizDiscount, hasBizPrice, decision: null };
+  return { title, asin, brand, buyExVat, buyIncVat, spIncVat, spSource, sp, dip, recoveries, profit, roi, gcProfit, gcRoi, ssProfit, ssRoi, r15Profit, r15Roi, rankDrops, boughtPerMonth, ss, priceTrendWarning, spikeFlag, strength, colour, reason, sortOrder, fbaFeeEst, toHouse, maxDim, bbCurrent, avg180, lastPriceChange, bizIncVat, bizExVat, bizProfit, bizRoi, bizDiscount, hasBizPrice, decision: null };
 }
 
 // ════════════════════════════════════════
@@ -7278,19 +7250,6 @@ function scoutStop() {
 // ── Shared EUR/GBP converter ──────────────────────────────────────────────────
 let bimmaEurGbpRate = parseFloat(localStorage.getItem('bimma_eur_gbp_rate')) || 0.86;
 
-function daUsdGbpUpdate() {
-  const rate = parseFloat(document.getElementById('daUsdGbpInput')?.value) || 0.79;
-  localStorage.setItem('bimma_usd_gbp', rate);
-  const rateEl = document.getElementById('daUsdRateDisplay');
-  if (rateEl) rateEl.textContent = rate.toFixed(4);
-  const inputEl = document.getElementById('daUsdGbpInput');
-  const outEl = document.getElementById('daUsdGbpOut');
-  if (inputEl && outEl) {
-    const usd = parseFloat(inputEl.value);
-    outEl.textContent = usd > 0 ? '£' + (usd * rate).toFixed(2) : '—';
-  }
-}
-
 function fxConvertUpdate() {
   const rate = bimmaEurGbpRate;
   // Scout converter
@@ -7335,12 +7294,7 @@ async function daRefreshFx() {
       const scoutEl = document.getElementById('scoutEurGbp');
       if (scoutEl) scoutEl.value = eurGbp.toFixed(4);
     }
-    if (usdGbp) {
-      const el = document.getElementById('scoutUsdGbp'); if (el) el.value = usdGbp.toFixed(4);
-      const daEl = document.getElementById('daUsdGbpInput');
-      if (daEl) { daEl.value = usdGbp.toFixed(4); localStorage.setItem('bimma_usd_gbp', usdGbp); daUsdGbpUpdate(); }
-      const daRate = document.getElementById('daUsdRateDisplay'); if (daRate) daRate.textContent = usdGbp.toFixed(4);
-    }
+    if (usdGbp) { const el = document.getElementById('scoutUsdGbp'); if (el) el.value = usdGbp.toFixed(4); }
     if (jpyGbp) { const el = document.getElementById('scoutJpyGbp'); if (el) el.value = jpyGbp.toFixed(6); }
     toast('EUR/GBP rate updated', 'success');
   } catch(e) {

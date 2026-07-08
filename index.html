@@ -4671,7 +4671,7 @@ setTimeout(() => {
   // Restore last analysis results from localStorage
   try {
     const savedDeals = localStorage.getItem('bimma_da_results');
-    const savedMode  = localStorage.getItem('bimma_da_results_mode') || 'eu';
+    const savedMode  = localStorage.getItem('bimma_da_results_mode') || currentMode || 'uk';
     if (savedDeals) {
       const parsed = JSON.parse(savedDeals);
       if (parsed && parsed.length > 0) {
@@ -4698,8 +4698,8 @@ setTimeout(() => {
             return d;
           });
         currentMode = savedMode;
-        document.querySelectorAll('.a2a-mode-btn').forEach(b => {
-          b.classList.toggle('active', (b.getAttribute('onclick')||'').includes("'"+savedMode+"'"));
+        document.querySelectorAll('.da-mode').forEach(b => {
+          b.classList.toggle('active', (b.getAttribute('data-mode') || '') === savedMode);
         });
         const dz = document.getElementById('daDropzone'); if (dz) dz.style.display = 'none';
         const df = document.getElementById('daFilters'); if (df) df.style.display = 'block';

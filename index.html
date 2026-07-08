@@ -4532,7 +4532,7 @@ function daAnalyseRow(row) {
   const bbCurrent = daParseNum(row['Buy Box: Current']);
   const stPrice = daParseNum(row['Buy Box: Strikethrough Price']);
   // Sell price: highest of 90d/180d/365d BB avg × tiered multiplier
-  const ST_MAX = 1.10; // ST capped at 1.2× bestAvg — benefit from ST signal without inflating
+  const ST_MAX = 1.20; // ST capped at 1.2× bestAvg — benefit from ST signal without inflating
   // Avg selection: use 180d as the base (most stable)
   // 90d only used if meaningfully above 180d (>20% — genuine recent rise)
   // 365d NEVER used as upward driver — only as floor if 180d is missing
@@ -5518,7 +5518,7 @@ function scoutFileChosen(file, slot=1) {
             const bbSt   = getNum(bbStIdx);
             const pexVal = getNum(pexIdx);
             const title  = (cols[titleIdx]||'').replace(/"/g,'').trim();
-            const ST_MAX = 1.10;
+            const ST_MAX = 1.20;
             const valid = v => !isNaN(v) && v > 0;
             let bestSell = null, sellSource = '';
             const _base = (valid(bb180) ? bb180 : null) || (valid(bb365) && !valid(bb180) ? bb365 : null) || (valid(bb90) ? bb90 : null) || null;
@@ -5792,7 +5792,7 @@ function scoutGetBB180(product) {
 
   const tieredUplift = v => v == null ? 1.20 : v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
   const UPLIFT = tieredUplift(bestAvg ? bestAvg / 100 : null);
-  const ST_MAX = 1.10;
+  const ST_MAX = 1.20;
 
   let stPrice = null;
   try {

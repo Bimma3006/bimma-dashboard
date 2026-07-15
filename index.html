@@ -4592,6 +4592,10 @@ function daAnalyseRow(row) {
   if (!spikeFlag && avg180 && avg365 && bbCurrent) {
     if (avg180 > avg365 * 1.30 && bbCurrent < avg180) spikeFlag = 'avg_skew';
   }
+  // If current BB is more than 40% below bestAvg, the avg is distorted by a spike
+  if (!spikeFlag && bestAvg && bbCurrent && bbCurrent < bestAvg * 0.60) {
+    spikeFlag = 'avg_skew';
+  }
 
   // Gift card: 10% off buy price
   const gcBuyExVat = buyExVat ? buyExVat * 0.90 : null;

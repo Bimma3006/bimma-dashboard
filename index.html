@@ -4925,7 +4925,7 @@ function daRenderHeaders() {
   const brandFilterLabel = daBrandFilter ? ` <span style="color:var(--green);font-size:9px;cursor:pointer;" onclick="daClearBrandFilter()" title="Clear brand filter">✕ ${daBrandFilter}</span>` : '';
   document.getElementById('daTableHead').innerHTML = `<tr>
     <th class="no-sort th-left" style="min-width:220px;max-width:300px;">Product</th>
-    <th class="no-sort th-left" style="min-width:90px;">Brand${brandFilterLabel}</th>
+    <th data-col="brand" data-type="str" class="th-left" style="min-width:90px;">Brand${brandFilterLabel}</th>
     <th data-col="buyIncVat" data-type="num">${buyLabel}</th>
     <th data-col="spIncVat" data-type="num">${spLabel}</th>
     <th data-col="bbCurrent" data-type="num" title="Current Buy Box — what it's selling for right now" style="color:var(--blue);">BB Now</th>
@@ -5103,7 +5103,7 @@ function daSetFilter(f, btn) {
   daFilter = f;
   document.querySelectorAll('#daFilters .da-pill').forEach(b => { if (b.id !== 'daPillExcRecent') b.classList.remove('active'); });
   btn.classList.add('active');
-  daSort = { col: null, dir: 1 }; // reset sort so new columns don't inherit stale sort state
+  daSort = { col: 'brand', dir: 1 }; // default: brand A→Z
   daRenderHeaders();
   daInitSort();
   daRenderTable();

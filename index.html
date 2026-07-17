@@ -4961,6 +4961,11 @@ function daRenderTable() {
   if (daSort.col) {
     filtered = [...filtered].sort((a, b) => {
       let av = a[daSort.col], bv = b[daSort.col];
+      const isStr = typeof av === 'string' || typeof bv === 'string';
+      if (isStr) {
+        av = av || ''; bv = bv || '';
+        return av.localeCompare(bv) * daSort.dir;
+      }
       if (av == null) av = daSort.dir > 0 ? Infinity : -Infinity;
       if (bv == null) bv = daSort.dir > 0 ? Infinity : -Infinity;
       return (av - bv) * daSort.dir;
@@ -4999,7 +5004,7 @@ function daRenderTable() {
         </div>
       </td>
       <td style="vertical-align:middle;">
-        ${deal.brand ? `<span class="da-brand-tag" data-brand="${deal.brand.replace(/"/g,'&quot;')}">${deal.brand}</span>` : '<span style="color:var(--text-4)">—</span>'}
+        ${deal.brand ? `<span class="da-brand-tag" data-brand="${deal.brand.replace(/"/g,'&quot;')}" onclick="daSetBrandFilter('${deal.brand.replace(/'/g,"\\'")}',this)">${deal.brand}</span>` : '<span style="color:var(--text-4)">—</span>'}
       </td>
       <td class="td-num">${fmtN(deal.buyIncVat)}</td>
       <td class="td-num">${fmtN(deal.spIncVat)}${spTag}</td>
@@ -5007,7 +5012,6 @@ function daRenderTable() {
       <td class="td-num td-profit" style="${deal.profit != null ? (deal.profit > 0 ? 'background:rgba(0,217,126,0.07);' : 'background:rgba(240,59,80,0.07);') : ''}">${fmtN(deal.profit)}</td>
       <td class="td-roi ${deal.colour}" style="${deal.colour === 'green' ? 'background:rgba(0,217,126,0.08);' : deal.colour === 'amber' ? 'background:rgba(240,165,0,0.07);' : deal.colour === 'red' ? 'background:rgba(240,59,80,0.07);' : ''}">${fmtP(deal.roi)}</td>
       ${ssCells}
-      <td class="td-num" style="color:${deal.bbDrop30d == null ? 'var(--text-3)' : deal.bbDrop30d < -5 ? 'var(--green)' : deal.bbDrop30d > 5 ? 'var(--red)' : 'var(--text-2)'};">${deal.bbDrop30d != null ? (deal.bbDrop30d > 0 ? '+' : '') + deal.bbDrop30d.toFixed(1) + '%' : '—'}</td>
       <td class="td-num" style="color:${deal.bizRoi == null ? 'var(--text-4)' : deal.bizRoi >= 0.20 ? 'var(--green)' : deal.bizRoi >= 0.15 ? 'var(--amber)' : 'var(--text-3)'};">${deal.hasBizPrice ? (deal.bizRoi != null ? `<span style="font-weight:700;">${(deal.bizRoi*100).toFixed(1)}%</span><div style="font-family:var(--mono);font-size:9px;color:var(--amber);margin-top:1px;">-${deal.bizDiscount?.toFixed(0)}% off</div>` : '—') : '<span style="color:var(--text-4);">—</span>'}</td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--text-3);padding:14px 16px;text-align:left;white-space:nowrap;">${deal.lastPriceChange || '—'}</td>
       <td class="td-num td-center">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>

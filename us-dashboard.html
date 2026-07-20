@@ -1157,8 +1157,7 @@ function usApprove(asin) {
   if (usAccessToken) {
     const qty = parseInt(prompt(`How many units of ${deal.asin}?`, '1')) || 1;
     const sell = parseFloat(prompt(`Sell price? (SP 180d: $${deal.sp?.toFixed(2)})`, deal.sp?.toFixed(2))) || deal.sp;
-    const sku = prompt('SKU (leave blank to skip):', '') || '';
-    usPushToSheet(deal, qty, sku, sell);
+    usPushToSheet(deal, qty, sell);
   }
   usRenderTable();
   usToast('Deal approved' + (usAccessToken ? ' — saving to Sheets…' : ' — connect Sheets to sync'), 'success');
@@ -1424,11 +1423,11 @@ async function usLoadSheet() {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${US_SHEET_ID}/values/${encodeURIComponent(US_PURCH_TAB)}!A2:K?valueRenderOption=FORMATTED_VALUE`;
     const r = await usFetch(url);
     usSheetRows = (r.values||[]).filter(row=>row[0]).map((row,i) => ({
-      date: usCleanDate(row[0]||''), sku: row[1]||'', title: row[2]||'', asin: row[3]||'',
+      date: usCleanDate(row[0]||''),
+      title: row[2]||'', asin: row[3]||'',
       buy: usCleanNum(row[4]), sell: usCleanNum(row[5]),
       qty: parseInt(String(row[6]||'0').replace(/[^0-9]/g,''))||0,
-      spend: usCleanNum(row[7]), supplier: row[8]||'',
-      uploaded: row[9]==='TRUE'||row[9]===true, rowIdx: i+2
+      rowIdx: i+2
     }));
     // Merge with localStorage
     localStorage.setItem('us_purchases', JSON.stringify(usSheetRows.map(r => ({
@@ -1441,11 +1440,11 @@ async function usLoadSheet() {
   } catch(e) { usToast('Load error: ' + e.message, 'error'); }
 }
 
-async function usPushToSheet(deal, qty, sku, sell) {
+async function usPushToSheet(deal, qty, sell) {
   if (!usAccessToken) { usToast('Connect to Google Sheets first', 'error'); return; }
   const date = new Date().toISOString().split('T')[0];
   const spend = deal.buyTotal * qty;
-  const row = [date, sku||'', deal.title||'', deal.asin||'', deal.buyTotal?.toFixed(2)||'', sell?.toFixed(2)||'', qty, spend.toFixed(2), deal.brand||'', 'FALSE'];
+  const row = [date, '', deal.title||'', deal.asin||'', deal.buyTotal?.toFixed(2)||'', sell?.toFixed(2)||'', qty, ''];
   const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const d = new Date(date); const monthTab = mn[d.getMonth()] + ' ' + d.getFullYear();
   try {

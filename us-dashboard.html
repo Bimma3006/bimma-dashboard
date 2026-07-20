@@ -577,7 +577,7 @@ body.us-collapsed #us-main { margin-left: 0; }
         </select>
         <input type="text" id="usPurchSearch" class="us-input" placeholder="Search ASIN, title, SKU…" oninput="usFilterPurchases()" style="width:240px;">
         <span class="us-result-count" id="usPurchCount" style="margin-left:auto;"></span>
-        <button class="us-btn us-btn-accent" onclick="usShowPage('add-purchase')">+ Add Purchase</button>
+        <button class="us-btn us-btn-accent" onclick="usOpenAddPurchase()">+ Add Purchase</button>
       </div>
       <div class="us-table-wrap">
         <table class="us-table" style="border-radius:0;">
@@ -662,6 +662,44 @@ body.us-collapsed #us-main { margin-left: 0; }
 
 </div><!-- /us-main -->
 </div><!-- /us-layout -->
+<div id="usAddPurchaseModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;">
+  <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:28px;width:480px;max-width:90vw;box-shadow:var(--shadow);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-size:16px;font-weight:700;color:var(--text);">Add Purchase</div>
+      <button onclick="usCloseAddPurchase()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:18px;">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="grid-column:1/-1;display:flex;flex-direction:column;gap:5px;">
+        <span class="us-label">ASIN *</span>
+        <input type="text" class="us-input" id="usManualAsin" placeholder="B0XXXXXXXX">
+      </div>
+      <div style="grid-column:1/-1;display:flex;flex-direction:column;gap:5px;">
+        <span class="us-label">Product Title</span>
+        <input type="text" class="us-input" id="usManualTitle" placeholder="e.g. Shark Hair Dryer…">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <span class="us-label">Brand</span>
+        <input type="text" class="us-input" id="usManualBrand" placeholder="e.g. Shark">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <span class="us-label">Date</span>
+        <input type="date" class="us-input" id="usManualDate">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <span class="us-label">Buy Price $ *</span>
+        <input type="number" class="us-input" id="usManualBuy" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <span class="us-label">Qty</span>
+        <input type="number" class="us-input" id="usManualQty" value="1" min="1" step="1">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="us-btn" onclick="usCloseAddPurchase()">Cancel</button>
+      <button class="us-btn us-btn-accent" onclick="usSaveManualPurchase()">Save Purchase</button>
+    </div>
+  </div>
+</div>
 <div id="us-toast"></div>
 
 <script>
@@ -738,6 +776,8 @@ window.addEventListener('DOMContentLoaded', () => {
   // Set default date on expenses
   const dateEl = document.getElementById('usExpDate');
   if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+  const manualDate = document.getElementById('usManualDate');
+  if (manualDate) manualDate.value = new Date().toISOString().split('T')[0];
 
   usRenderDashboard();
   usRenderPurchases();
@@ -926,8 +966,7 @@ function usAnalyseRow(row, inboundLbs) {
 
   // Fees — no VAT
   const refFee = sp * US_FEES.referralPct;
-  // FBA fee estimate (rough: 15% of SP as FBA)
-  const fbaFee = sp * 0.10;
+  const fbaFee = usFbaFee(sp);
   const profit = sp - buyTotal - refFee - fbaFee;
   const roi = buyTotal > 0 ? profit / buyTotal : null;
 
@@ -1282,7 +1321,51 @@ function usRenderDashboard() {
     </div>`).join('');
 }
 
-// ── TOAST ─────────────────────────────────
+// ── FBA FEE ESTIMATE (tiered by price) ─────
+function usFbaFee(sp) {
+  // Rough FBA fee tiers for standard size items
+  if (!sp) return sp * 0.10;
+  if (sp < 10)   return 3.22;
+  if (sp < 20)   return 4.45;
+  if (sp < 30)   return 5.32;
+  if (sp < 40)   return 6.01;
+  if (sp < 50)   return 6.85;
+  if (sp < 75)   return 7.53;
+  if (sp < 100)  return 8.40;
+  if (sp < 150)  return 9.73;
+  if (sp < 200)  return 11.85;
+  if (sp < 300)  return 14.30;
+  return sp * 0.06 + 5; // Large items
+}
+
+// ── MANUAL ADD PURCHASE ─────────────────────
+function usOpenAddPurchase() {
+  const modal = document.getElementById('usAddPurchaseModal');
+  if (modal) { modal.style.display = 'flex'; }
+}
+function usCloseAddPurchase() {
+  const modal = document.getElementById('usAddPurchaseModal');
+  if (modal) modal.style.display = 'none';
+}
+function usSaveManualPurchase() {
+  const asin  = document.getElementById('usManualAsin')?.value.trim();
+  const title = document.getElementById('usManualTitle')?.value.trim();
+  const brand = document.getElementById('usManualBrand')?.value.trim();
+  const buy   = parseFloat(document.getElementById('usManualBuy')?.value);
+  const qty   = parseInt(document.getElementById('usManualQty')?.value) || 1;
+  const date  = document.getElementById('usManualDate')?.value || new Date().toISOString().split('T')[0];
+  if (!asin || !buy || buy <= 0) { usToast('ASIN and buy price required', 'error'); return; }
+  const purchases = JSON.parse(localStorage.getItem('us_purchases') || '[]');
+  purchases.unshift({ asin, title, brand, buy, qty, date, uploaded: false });
+  localStorage.setItem('us_purchases', JSON.stringify(purchases));
+  usCloseAddPurchase();
+  usRenderPurchases();
+  usRenderDashboard();
+  usToast('Purchase added ✓', 'success');
+  // Clear form
+  ['usManualAsin','usManualTitle','usManualBrand','usManualBuy'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('usManualQty').value = '1';
+}
 function usToast(msg, type='') {
   const container = document.getElementById('us-toast');
   if (!container) return;

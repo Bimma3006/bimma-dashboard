@@ -396,9 +396,11 @@ body.us-collapsed #us-main { margin-left: 0; }
   <div class="us-sidebar-footer">
     <div class="us-version" id="usVersion">v1.0 · 20 Jul 26</div>
     <div class="us-auth-row">
-      <div class="us-auth-dot"></div>
-      <span style="font-size:10px;">US Dashboard</span>
+      <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
+      <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
     </div>
+    <button onclick="usHandleAuth()" id="usAuthBtn" style="margin-top:8px;width:100%;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.06em;padding:7px 12px;background:var(--accent);border:none;border-radius:var(--r-sm);color:#fff;cursor:pointer;transition:all var(--transition);">Connect Sheets</button>
+    <button onclick="usLoadSheet()" id="usRefreshBtn" disabled style="margin-top:6px;width:100%;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.04em;padding:6px 12px;background:transparent;border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;">↻ Refresh</button>
     <a href="index.html" class="us-switch-link">← Switch to UK Dashboard</a>
   </div>
 </div>
@@ -662,7 +664,18 @@ body.us-collapsed #us-main { margin-left: 0; }
 
 </div><!-- /us-main -->
 </div><!-- /us-layout -->
-<div id="usAddPurchaseModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;">
+<div id="usSetupModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:600;align-items:center;justify-content:center;">
+  <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:28px;width:500px;max-width:90vw;box-shadow:var(--shadow);">
+    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;">Connect Google Sheets</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-bottom:20px;line-height:1.6;">Enter your Google OAuth Client ID to sync purchases with your US spreadsheet.<br>Same Client ID as your UK dashboard.</div>
+    <label class="us-label">Google Client ID</label>
+    <input type="text" class="us-input" id="usClientIdInput" placeholder="xxxx.apps.googleusercontent.com" style="margin-bottom:16px;">
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="us-btn" onclick="document.getElementById('usSetupModal').style.display='none'">Cancel</button>
+      <button class="us-btn us-btn-accent" onclick="usSaveClientId()">Save &amp; Connect</button>
+    </div>
+  </div>
+</div> style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;">
   <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:28px;width:480px;max-width:90vw;box-shadow:var(--shadow);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div style="font-size:16px;font-weight:700;color:var(--text);">Add Purchase</div>
@@ -705,9 +718,10 @@ body.us-collapsed #us-main { margin-left: 0; }
 <script>
 'use strict';
 
-// ═══════════════════════════════════════════
-// CONFIG — US fees
-// ═══════════════════════════════════════════
+const US_SHEET_ID = '1JZqfn8y-r8i7Gct7n3WXith9cQS60-aYcsUmNiZDPxc';
+const US_PURCH_TAB = 'Purchasing sheet';
+const US_SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+let usTokenClient = null, usAccessToken = null, usSheetRows = [];
 const US_FEES = {
   vat:         0,       // No VAT on Amazon US
   referralPct: 0.15,    // 15% referral fee
@@ -778,6 +792,14 @@ window.addEventListener('DOMContentLoaded', () => {
   if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
   const manualDate = document.getElementById('usManualDate');
   if (manualDate) manualDate.value = new Date().toISOString().split('T')[0];
+
+  // Init Google auth if client ID already saved
+  const savedCid = localStorage.getItem('us_goog_cid');
+  if (savedCid) {
+    const inp = document.getElementById('usClientIdInput');
+    if (inp) inp.value = savedCid;
+    usLoadGIS();
+  }
 
   usRenderDashboard();
   usRenderPurchases();
@@ -1132,8 +1154,14 @@ function usApprove(asin) {
   if (!deal) return;
   deal.decision = 'approved';
   usSavePurchaseFromDeal(deal);
+  if (usAccessToken) {
+    const qty = parseInt(prompt(`How many units of ${deal.asin}?`, '1')) || 1;
+    const sell = parseFloat(prompt(`Sell price? (SP 180d: $${deal.sp?.toFixed(2)})`, deal.sp?.toFixed(2))) || deal.sp;
+    const sku = prompt('SKU (leave blank to skip):', '') || '';
+    usPushToSheet(deal, qty, sku, sell);
+  }
   usRenderTable();
-  usToast('Deal approved — added to Purchases', 'success');
+  usToast('Deal approved' + (usAccessToken ? ' — saving to Sheets…' : ' — connect Sheets to sync'), 'success');
 }
 function usReject(asin) {
   usRejectedList.set(asin, { date: new Date().toISOString().split('T')[0] });
@@ -1321,7 +1349,112 @@ function usRenderDashboard() {
     </div>`).join('');
 }
 
-// ── FBA FEE ESTIMATE (tiered by price) ─────
+// ── GOOGLE AUTH ────────────────────────────
+function usLoadGIS() {
+  const s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client';
+  s.onload = usInitToken;
+  document.head.appendChild(s);
+}
+function usInitToken() {
+  const clientId = localStorage.getItem('us_goog_cid') || '';
+  if (!clientId) return;
+  usTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId, scope: US_SCOPES,
+    callback: r => {
+      if (r.error) { usToast('Auth error: ' + r.error, 'error'); return; }
+      usAccessToken = r.access_token;
+      usSetConnected();
+      usLoadSheet();
+    }
+  });
+}
+function usHandleAuth() {
+  if (usAccessToken) { usSignOut(); return; }
+  const clientId = localStorage.getItem('us_goog_cid') || '';
+  if (!clientId) {
+    document.getElementById('usSetupModal').style.display = 'flex';
+    return;
+  }
+  if (!usTokenClient) { usLoadGIS(); setTimeout(() => usTokenClient?.requestAccessToken(), 900); return; }
+  usTokenClient.requestAccessToken();
+}
+function usSaveClientId() {
+  const v = document.getElementById('usClientIdInput')?.value.trim();
+  if (!v?.includes('.apps.googleusercontent.com')) { usToast('Enter a valid Google Client ID', 'error'); return; }
+  localStorage.setItem('us_goog_cid', v);
+  document.getElementById('usSetupModal').style.display = 'none';
+  usLoadGIS(); setTimeout(() => usTokenClient?.requestAccessToken(), 800);
+}
+function usSetConnected() {
+  const dot = document.getElementById('usAuthDot'); if (dot) dot.style.background = 'var(--green)';
+  const lbl = document.getElementById('usAuthLabel'); if (lbl) lbl.textContent = 'Connected';
+  const btn = document.getElementById('usAuthBtn'); if (btn) btn.textContent = 'Sign out';
+  const rb  = document.getElementById('usRefreshBtn'); if (rb) rb.disabled = false;
+}
+function usSignOut() {
+  if (typeof google !== 'undefined') google.accounts.oauth2.revoke(usAccessToken);
+  usAccessToken = null; usSheetRows = [];
+  const dot = document.getElementById('usAuthDot'); if (dot) dot.style.background = 'var(--red)';
+  const lbl = document.getElementById('usAuthLabel'); if (lbl) lbl.textContent = 'Not connected';
+  const btn = document.getElementById('usAuthBtn'); if (btn) btn.textContent = 'Connect';
+}
+async function usFetch(url, opts={}) {
+  const r = await fetch(url, { ...opts, headers: { 'Authorization': 'Bearer ' + usAccessToken, 'Content-Type': 'application/json', ...(opts.headers||{}) } });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || 'API error ' + r.status); }
+  return r.json();
+}
+
+// ── SHEET READ/WRITE ───────────────────────
+function usCleanDate(s) {
+  if (!s) return '';
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s;
+  const n = parseFloat(s);
+  if (!isNaN(n) && n > 1000) {
+    const d = new Date((n - 25569) * 86400 * 1000);
+    return d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2,'0') + '-' + String(d.getUTCDate()).padStart(2,'0');
+  }
+  return s;
+}
+function usCleanNum(v) { const n = parseFloat(String(v||'').replace(/[^0-9.-]/g,'')); return isNaN(n) ? 0 : n; }
+
+async function usLoadSheet() {
+  usToast('Loading purchases…', '');
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${US_SHEET_ID}/values/${encodeURIComponent(US_PURCH_TAB)}!A2:K?valueRenderOption=FORMATTED_VALUE`;
+    const r = await usFetch(url);
+    usSheetRows = (r.values||[]).filter(row=>row[0]).map((row,i) => ({
+      date: usCleanDate(row[0]||''), sku: row[1]||'', title: row[2]||'', asin: row[3]||'',
+      buy: usCleanNum(row[4]), sell: usCleanNum(row[5]),
+      qty: parseInt(String(row[6]||'0').replace(/[^0-9]/g,''))||0,
+      spend: usCleanNum(row[7]), supplier: row[8]||'',
+      uploaded: row[9]==='TRUE'||row[9]===true, rowIdx: i+2
+    }));
+    // Merge with localStorage
+    localStorage.setItem('us_purchases', JSON.stringify(usSheetRows.map(r => ({
+      asin: r.asin, title: r.title, brand: r.supplier, buy: r.buy,
+      qty: r.qty, date: r.date, uploaded: r.uploaded
+    }))));
+    usRenderDashboard();
+    usRenderPurchases();
+    usToast(`Loaded ${usSheetRows.length} purchases`, 'success');
+  } catch(e) { usToast('Load error: ' + e.message, 'error'); }
+}
+
+async function usPushToSheet(deal, qty, sku, sell) {
+  if (!usAccessToken) { usToast('Connect to Google Sheets first', 'error'); return; }
+  const date = new Date().toISOString().split('T')[0];
+  const spend = deal.buyTotal * qty;
+  const row = [date, sku||'', deal.title||'', deal.asin||'', deal.buyTotal?.toFixed(2)||'', sell?.toFixed(2)||'', qty, spend.toFixed(2), deal.brand||'', 'FALSE'];
+  const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const d = new Date(date); const monthTab = mn[d.getMonth()] + ' ' + d.getFullYear();
+  try {
+    await usFetch(`https://sheets.googleapis.com/v4/spreadsheets/${US_SHEET_ID}/values/${encodeURIComponent(US_PURCH_TAB)}!A:J:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, { method:'POST', body:JSON.stringify({values:[row]}) });
+    try { await usFetch(`https://sheets.googleapis.com/v4/spreadsheets/${US_SHEET_ID}/values/${encodeURIComponent(monthTab)}!A:J:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, { method:'POST', body:JSON.stringify({values:[row]}) }); } catch(_) {}
+    usToast('Saved to Google Sheets ✓', 'success');
+    usLoadSheet();
+  } catch(e) { usToast('Sheet error: ' + e.message, 'error'); }
+}
 function usFbaFee(sp) {
   // Rough FBA fee tiers for standard size items
   if (!sp) return sp * 0.10;

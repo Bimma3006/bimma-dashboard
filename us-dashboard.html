@@ -591,11 +591,12 @@ body.us-collapsed #us-main { margin-left: 0; }
           <thead>
             <tr>
               <th class="th-left" style="min-width:220px;">Product</th>
+              <th class="th-left">SKU</th>
               <th>Date</th>
               <th class="r">Buy $</th>
               <th class="r">Qty</th>
               <th class="r">Total $</th>
-              <th>Status</th>
+              <th>Supplier</th>
               <th></th>
             </tr>
           </thead>
@@ -1252,11 +1253,12 @@ function usRenderPurchases(monthFilter='all', search='') {
 
   tbody.innerHTML = purchases.map((p, i) => `<tr>
     <td><div style="font-size:13px;font-weight:500;color:var(--text);">${p.title||p.asin}</div><div style="font-family:var(--mono);font-size:10px;color:var(--accent);">${p.asin}</div></td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${p.sku||'—'}</td>
     <td class="td-r" style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${p.date||'—'}</td>
     <td class="td-r" style="font-family:var(--mono);">$${(p.buy||0).toFixed(2)}</td>
     <td class="td-r" style="font-family:var(--mono);">${p.qty||1}</td>
-    <td class="td-r" style="font-family:var(--mono);font-weight:700;">$${((p.buy||0)*(p.qty||1)).toFixed(2)}</td>
-    <td><span style="font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;background:${p.uploaded?'rgba(0,212,168,0.1)':'rgba(255,165,2,0.1)'};color:${p.uploaded?'var(--green)':'var(--amber)'};">${p.uploaded?'Uploaded':'Pending'}</span></td>
+    <td class="td-r" style="font-family:var(--mono);font-weight:700;">$${(p.total||(p.buy||0)*(p.qty||1)).toFixed(2)}</td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${p.supplier||p.brand||'—'}</td>
     <td><button class="us-row-btn reject" onclick="usDeletePurchase(${i})">✕</button></td>
   </tr>`).join('');
 }
@@ -1443,8 +1445,8 @@ async function usLoadSheet() {
     }));
     // Merge with localStorage
     localStorage.setItem('us_purchases', JSON.stringify(usSheetRows.map(r => ({
-      asin: r.asin, title: r.title, brand: r.supplier, buy: r.buy,
-      qty: r.qty, date: r.date, uploaded: r.uploaded
+      asin: r.asin, title: r.title, sku: r.sku, brand: r.supplier, supplier: r.supplier,
+      buy: r.buy, sell: r.sell, qty: r.qty, total: r.total, date: r.date
     }))));
     usRenderDashboard();
     usRenderPurchases();
@@ -1456,7 +1458,8 @@ async function usPushToSheet(deal, qty, sku, sell) {
   if (!usAccessToken) { usToast('Connect to Google Sheets first', 'error'); return; }
   const date = new Date().toISOString().split('T')[0];
   const spend = deal.buyTotal * qty;
-  const row = [date, sku||'', deal.title||'', deal.asin||'', deal.buyTotal?.toFixed(2)||'', sell?.toFixed(2)||'', qty, spend.toFixed(2), deal.brand||'', 'FALSE'];
+  const spend = deal.buyTotal * qty;
+  const row = [date, '', deal.title||'', deal.asin||'', deal.buyTotal?.toFixed(2)||'', sell?.toFixed(2)||'', qty, spend.toFixed(2), deal.brand||''];
   const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const d = new Date(date); const monthTab = mn[d.getMonth()] + ' ' + d.getFullYear();
   try {

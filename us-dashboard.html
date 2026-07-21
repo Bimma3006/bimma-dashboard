@@ -221,8 +221,8 @@ body.us-collapsed #us-main { margin-left: 0; }
 .us-label { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 5px; display: block; }
 
 /* ── DA MODE BAR ─────────────────────── */
-.us-modes { display: flex; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r-md); overflow: hidden; margin-bottom: 18px; }
-.us-mode { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 14px 16px; cursor: pointer; border-right: 1px solid var(--border2); background: transparent; border-top: none; border-bottom: none; border-left: none; text-align: left; position: relative; transition: all var(--transition); overflow: hidden; }
+.us-modes { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r-md); overflow: hidden; margin-bottom: 18px; }
+.us-mode { display: flex; flex-direction: column; padding: 16px 18px; cursor: pointer; border-right: 1px solid var(--border2); background: transparent; border-top: none; border-bottom: none; border-left: none; text-align: left; position: relative; transition: all var(--transition); min-width: 0; overflow: hidden; }
 .us-mode:last-child { border-right: none; }
 .us-mode:hover { background: rgba(79,143,255,0.05); }
 .us-mode.active { background: rgba(79,143,255,0.08); }
@@ -426,23 +426,23 @@ body.us-collapsed #us-main { margin-left: 0; }
     <div class="us-page-inner">
       <div class="us-page-label">Overview</div>
       <div class="us-page-title" id="usDashGreeting">Good morning, James.</div>
-      <div class="us-page-sub">Your US FBA operation at a glance</div>
+      <div class="us-page-sub" id="usDashDate"></div>
 
       <div class="us-kpi-strip">
-        <div class="us-kpi"><div class="us-kpi-label">Capital Deployed</div><div class="us-kpi-val" style="color:var(--accent);" id="us-s-spend">—</div><div class="us-kpi-sub">USD</div></div>
-        <div class="us-kpi"><div class="us-kpi-label">Total Deals</div><div class="us-kpi-val" id="us-s-deals">—</div></div>
+        <div class="us-kpi"><div class="us-kpi-label">Capital Deployed</div><div class="us-kpi-val" style="color:var(--accent);" id="us-s-spend">—</div><div class="us-kpi-sub">USD total</div></div>
+        <div class="us-kpi"><div class="us-kpi-label">Total Deals</div><div class="us-kpi-val" id="us-s-deals">—</div><div class="us-kpi-sub">in ledger</div></div>
         <div class="us-kpi"><div class="us-kpi-label">On Amazon</div><div class="us-kpi-val" style="color:var(--green);" id="us-s-uploaded">—</div><div class="us-kpi-sub">units live</div></div>
         <div class="us-kpi"><div class="us-kpi-label">This Month</div><div class="us-kpi-val" style="color:var(--amber);" id="us-s-month">—</div><div class="us-kpi-sub">deals bought</div></div>
         <div class="us-kpi"><div class="us-kpi-label">This Week</div><div class="us-kpi-val" style="color:var(--blue);" id="us-s-week">—</div><div class="us-kpi-sub">deals bought</div></div>
       </div>
 
-      <div class="us-section-label">Quick Access</div>
-      <div class="us-actions">
+      <div class="us-section-label" style="margin-bottom:14px;">Quick Access</div>
+      <div class="us-actions" style="margin-bottom:32px;">
         <div class="us-action us-action-primary" onclick="usShowPage('analyser',document.querySelector('[data-page=analyser]'))">
           <div class="us-action-icon">⚡</div>
           <div class="us-action-body">
             <div class="us-action-title">Deal Analyser</div>
-            <div class="us-action-desc">Score Keepa US exports · approve deals · $0.87/lb inbound</div>
+            <div class="us-action-desc">Score Keepa US exports · $0.87/lb inbound · approve deals</div>
           </div>
           <div class="us-action-arrow">→</div>
         </div>
@@ -450,15 +450,31 @@ body.us-collapsed #us-main { margin-left: 0; }
           <div class="us-action-icon">≡</div>
           <div class="us-action-body">
             <div class="us-action-title">Purchases</div>
-            <div class="us-action-desc">Full US deal ledger · P&amp;L</div>
+            <div class="us-action-desc">Full US deal ledger · P&amp;L tracking</div>
+          </div>
+          <div class="us-action-arrow">→</div>
+        </div>
+        <div class="us-action" onclick="usShowPage('stalker',document.querySelector('[data-page=stalker]'))">
+          <div class="us-action-icon">◉</div>
+          <div class="us-action-body">
+            <div class="us-action-title">Storefront Stalker</div>
+            <div class="us-action-desc">Monitor US competitor storefronts · new ASIN alerts</div>
+          </div>
+          <div class="us-action-arrow">→</div>
+        </div>
+        <div class="us-action" onclick="usShowPage('expenses',document.querySelector('[data-page=expenses]'))">
+          <div class="us-action-icon">◷</div>
+          <div class="us-action-body">
+            <div class="us-action-title">Expenses</div>
+            <div class="us-action-desc">Software · prep · shipping costs</div>
           </div>
           <div class="us-action-arrow">→</div>
         </div>
       </div>
 
-      <div class="us-section-label">Monthly Breakdown</div>
+      <div class="us-section-label" style="margin-bottom:14px;">Monthly Breakdown</div>
       <div class="us-month-grid" id="usDashMonths">
-        <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);padding:20px 0;">No purchases logged yet — add your first deal to get started.</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);padding:20px 0;">No purchases logged yet — connect Google Sheets or add a deal to get started.</div>
       </div>
     </div>
   </div>
@@ -991,13 +1007,7 @@ const US_MODES = {
     buyColFallback: 'Amazon: Current',
     condition: 'new', ss: false, thirdParty: true,
   },
-  'us-uln': {
-    label: 'Used LN',
-    desc: 'Buy: <strong>Used, like new: Current</strong> · Sell: <strong>Used LN 180d avg</strong> · Inbound: <strong>$0.87/lb</strong> · Prep: <strong>$1.20</strong>',
-    buyCol: 'Used, like new: Current',
-    buyColFallback: null,
-    condition: 'used', ss: false,
-  },
+
 };
 
 let usCurrentMode = 'us';
@@ -1032,6 +1042,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
   const g = document.getElementById('usDashGreeting');
   if (g) g.textContent = greet + ', James.';
+  const dateEl = document.getElementById('usDashDate');
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
   const d = document.getElementById('usTopbarDate');
   if (d) d.textContent = new Date().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
 

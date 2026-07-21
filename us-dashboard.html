@@ -1289,6 +1289,11 @@ function usAnalyseRow(row) {
   const roi = buyTotal > 0 ? profit / buyTotal : null;
 
   // Strength
+  // S&S ROI — 15% off buy price applied to all deals
+  const snsBuyTotal = buyRawSS + inboundCost + US_FEES.prepFee;
+  const ssProfit = sp - snsBuyTotal - (sp * US_FEES.referralPct) - usFbaFee(sp);
+  const ssRoi = snsBuyTotal > 0 ? ssProfit / snsBuyTotal : null;
+
   const minROI = 0.15, strongROI = 0.20;
   let colour = 'red', strength = 0;
   if (roi !== null) {
@@ -1304,11 +1309,6 @@ function usAnalyseRow(row) {
   const lastPriceChange = row['Buy Box: Last Price Change'] || null;
 
   const spSource = stCapped && spBase === stCapped ? 'ST' : (avg90 && _use90 ? '90d' : '180d') + '+' + Math.round((uplift-1)*100) + '%';
-
-  // S&S ROI — 15% off buy price applied to all deals
-  const snsBuyTotal = buyRawSS + inboundCost + US_FEES.prepFee;
-  const ssProfit = sp - snsBuyTotal - (sp * US_FEES.referralPct) - usFbaFee(sp);
-  const ssRoi = snsBuyTotal > 0 ? ssProfit / snsBuyTotal : null;
 
   return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: true, ssRoi, snsPriceRaw, avg180: bestAvg, weightLbs, inboundCost, decision: null };
 }

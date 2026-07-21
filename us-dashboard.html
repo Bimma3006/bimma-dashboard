@@ -1294,6 +1294,8 @@ function usAnalyseRow(row) {
   if (roi !== null) {
     if (roi >= strongROI) { colour = 'green'; strength = 3; }
     else if (roi >= minROI) { colour = 'amber'; strength = 2; }
+    else if (ssRoi !== null && ssRoi >= strongROI) { colour = 'green'; strength = 3; } // S&S rescues to strong
+    else if (ssRoi !== null && ssRoi >= minROI) { colour = 'amber'; strength = 2; }    // S&S rescues to marginal
     else { colour = 'red'; strength = 1; }
   }
   if (spikeFlag) { colour = 'red'; strength = 0; }

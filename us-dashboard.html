@@ -1238,7 +1238,7 @@ function usAnalyseRow(row) {
   if (!bestAvg) return null;
 
   const tieredUp = v => is3P
-    ? (v < 50 ? 1.05 : v < 100 ? 1.04 : v < 200 ? 1.03 : 1.02) // very modest for 3P
+    ? 1.10 // flat 10% uplift for 3rd party
     : (v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05);
   const uplift = tieredUp(bestAvg);
   const ST_MAX = 1.20;

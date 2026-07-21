@@ -2866,8 +2866,8 @@ input::placeholder { color: var(--text-4); }
       <span class="sk-sellers-title">Tracked Sellers</span>
       <div style="display:flex;gap:10px;align-items:center;">
         <div class="sk-mkt-tabs" id="skSellerMktTabs">
-          <button class="sk-mkt-tab active" onclick="skSetSellerMkt('all',this)">All</button>
-          <button class="sk-mkt-tab" onclick="skSetSellerMkt('uk',this)">🇬🇧 UK</button>
+          <button class="sk-mkt-tab" onclick="skSetSellerMkt('all',this)">All</button>
+          <button class="sk-mkt-tab active" onclick="skSetSellerMkt('uk',this)">🇬🇧 UK</button>
         </div>
         <button class="sk-btn" onclick="stalkerRefreshAll()" style="padding:5px 12px;">↻ Refresh all</button>
       </div>
@@ -6508,7 +6508,7 @@ let stalkerSellers   = [];
 let stalkerFeedFilter = 'all';
 let stalkerSnapshots = {};
 let stalkerFeedItems = [];
-let skSellerMkt = 'all';
+let skSellerMkt = 'uk';
 
 function skSetSellerMkt(mkt, btn) {
   skSellerMkt = mkt;

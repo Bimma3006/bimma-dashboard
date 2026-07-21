@@ -871,8 +871,8 @@ body.us-collapsed #us-main { margin-left: 0; }
       <span class="sk-sellers-title">Tracked Sellers</span>
       <div style="display:flex;gap:10px;align-items:center;">
         <div class="sk-mkt-tabs" id="skSellerMktTabs">
-          <button class="sk-mkt-tab active" onclick="skSetSellerMkt('all',this)">All</button>
-          <button class="sk-mkt-tab" onclick="skSetSellerMkt('us',this)">🇺🇸 US</button>
+          <button class="sk-mkt-tab" onclick="skSetSellerMkt('all',this)">All</button>
+          <button class="sk-mkt-tab active" onclick="skSetSellerMkt('us',this)">🇺🇸 US</button>
         </div>
         <button class="sk-btn" onclick="stalkerRefreshAll()" style="padding:5px 12px;">↻ Refresh all</button>
       </div>
@@ -1028,7 +1028,7 @@ function usShowPage(page, el) {
   if (el) el.classList.add('active');
   const titles = { dashboard:'Dashboard', analyser:'Deal Analyser', purchases:'Purchases', expenses:'Expenses', stalker:'Storefront Stalker' };
   document.getElementById('usTopbarTitle').textContent = titles[page] || page;
-  if (page === 'stalker') { stalkerInit(); setTimeout(() => skSetSellerMkt('us', document.querySelector('#skSellerMktTabs .sk-mkt-tab:last-child')), 100); }
+  if (page === 'stalker') { stalkerInit(); }
 }
 
 function usToggleSidebar() {
@@ -1784,7 +1784,7 @@ let stalkerSellers   = [];
 let stalkerFeedFilter = 'all';
 let stalkerSnapshots = {};
 let stalkerFeedItems = [];
-let skSellerMkt = 'all';
+let skSellerMkt = 'us';
 
 function skSetSellerMkt(mkt, btn) {
   skSellerMkt = mkt;

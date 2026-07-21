@@ -1273,14 +1273,14 @@ function usAnalyseRow(row) {
   const spBase = stCapped && bestAvg ? Math.max(bestAvg * uplift, stCapped) : (bestAvg * uplift);
   const sp = spBase; // no VAT on US
 
-  // Spike detection
+  // Spike detection — disabled for 3rd party mode (uses 90d avg which handles this)
   let spikeFlag = null;
-  // Only flag spike if BB now is well below the projected sell price AND we have 365d data to compare
-  if (avg365 && avg180 && bbCurrent) {
-    if (avg180 > avg365 * 1.30 && bbCurrent < avg180 * 0.75) spikeFlag = 'avg_skew';
+  if (!is3P) {
+    if (avg365 && avg180 && bbCurrent) {
+      if (avg180 > avg365 * 1.30 && bbCurrent < avg180 * 0.75) spikeFlag = 'avg_skew';
+    }
+    if (!spikeFlag && bestAvg && bbCurrent && bbCurrent < bestAvg * 0.50) spikeFlag = 'avg_skew';
   }
-  // Hard spike: BB now is less than 50% of bestAvg (was 60% — too aggressive for 3P)
-  if (!spikeFlag && bestAvg && bbCurrent && bbCurrent < bestAvg * 0.50) spikeFlag = 'avg_skew';
 
   // Fees — no VAT
   const refFee = sp * US_FEES.referralPct;

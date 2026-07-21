@@ -68,14 +68,18 @@ html, body { height: 100%; font-family: var(--sans); background: var(--bg); colo
   transition: width 0.22s cubic-bezier(.4,0,.2,1);
 }
 body.us-collapsed #us-sidebar { width: 0 !important; border-right: none; }
-body.us-collapsed #us-main { margin-left: 0 !important; }
 
 #us-main {
   margin-left: var(--sidebar-w);
   flex: 1; min-height: 100vh;
   display: flex; flex-direction: column;
   transition: margin-left 0.22s cubic-bezier(.4,0,.2,1);
-  width: 100%;
+  min-width: 0;
+  width: calc(100% - var(--sidebar-w));
+}
+body.us-collapsed #us-main {
+  margin-left: 0 !important;
+  width: 100% !important;
 }
 
 /* ── SIDEBAR ─────────────────────────── */

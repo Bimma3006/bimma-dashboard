@@ -1304,9 +1304,12 @@ function usAnalyseRow(row) {
     if (!spikeFlag && bestAvg && bbCurrent && bbCurrent < bestAvg * 0.50) spikeFlag = 'avg_skew';
   }
 
-  // Fees — no VAT
-  const refFee = sp * US_FEES.referralPct;
-  const fbaFee = usFbaFee(sp);
+  // Fees — use Keepa's actual values if available, else estimate
+  // Keepa exports referral fee % and FBA fees directly
+  const keepaReferralPct = usPNum(row['Referral Fee %']) || usPNum(row['Referral Fee Percent']);
+  const keepaFbaFee = usPNum(row['FBA Fees']) || usPNum(row['FBA Fee']) || usPNum(row['Fulfillment Fee']);
+  const refFee = sp * (keepaReferralPct ? keepaReferralPct / 100 : US_FEES.referralPct);
+  const fbaFee = keepaFbaFee && keepaFbaFee > 0 ? keepaFbaFee : usFbaFee(sp);
   const profit = sp - buyTotal - refFee - fbaFee;
   const roi = buyTotal > 0 ? profit / buyTotal : null;
 
@@ -1818,19 +1821,20 @@ async function usPushToSheet(deal, qty, sku, sell) {
   } catch(e) { usToast('Sheet error: ' + e.message, 'error'); }
 }
 function usFbaFee(sp) {
-  // Rough FBA fee tiers for standard size items
-  if (!sp) return sp * 0.10;
-  if (sp < 10)   return 3.22;
-  if (sp < 20)   return 4.45;
-  if (sp < 30)   return 5.32;
-  if (sp < 40)   return 6.01;
-  if (sp < 50)   return 6.85;
-  if (sp < 75)   return 7.53;
-  if (sp < 100)  return 8.40;
-  if (sp < 150)  return 9.73;
-  if (sp < 200)  return 11.85;
-  if (sp < 300)  return 14.30;
-  return sp * 0.06 + 5; // Large items
+  // Amazon US FBA fee estimates by price (standard size, approx 1lb)
+  // These are estimates — use Keepa's actual FBA fee column when available
+  if (!sp) return 3.22;
+  if (sp < 10)  return 3.22;
+  if (sp < 20)  return 4.45;
+  if (sp < 30)  return 4.75;
+  if (sp < 40)  return 5.00;
+  if (sp < 50)  return 5.14;
+  if (sp < 75)  return 5.50;
+  if (sp < 100) return 6.00;
+  if (sp < 150) return 7.50;
+  if (sp < 200) return 9.00;
+  if (sp < 300) return 11.00;
+  return sp * 0.04 + 5;
 }
 
 // ── MANUAL ADD PURCHASE ─────────────────────

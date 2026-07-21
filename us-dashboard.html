@@ -1437,7 +1437,7 @@ async function usLoadSheet() {
     usSheetRows = (r.values||[]).filter(row=>row[0]).map((row,i) => ({
       date: usCleanDate(row[0]||''), sku: row[1]||'', title: row[2]||'', asin: row[3]||'',
       buy: usCleanNum(row[4]), sell: usCleanNum(row[5]),
-      qty: (() => { const v = parseInt(String(row[6]||'1').replace(/[^0-9]/g,'')); return (v > 0 && v < 1000) ? v : 1; })(),
+      qty: parseInt(String(row[6]||'1').replace(/[^0-9]/g,''))||1,
       spend: usCleanNum(row[7]), supplier: row[8]||'',
       uploaded: row[9]==='TRUE'||row[9]===true, rowIdx: i+2
     }));

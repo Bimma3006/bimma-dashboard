@@ -1224,15 +1224,6 @@ function usAnalyseRow(row) {
   const title = row['Product Name'] || row['Title'] || row['title'] || '';
   const brand = row['Brand'] || row['brand'] || '';
 
-  // Weight from Keepa CSV — try multiple column names, convert to lbs if in kg/g
-  let weightLbs = 0;
-  const weightRaw = usPNum(row['Weight: Pounds']) || usPNum(row['Item Weight: Pounds']) || usPNum(row['Package Weight: Pounds']);
-  if (weightRaw) {
-    weightLbs = weightRaw;
-  } else {
-    const weightKg = usPNum(row['Weight: Kg']) || usPNum(row['Item Weight: Kg']) || usPNum(row['Package Weight: Kg']) || usPNum(row['Weight']);
-    if (weightKg) weightLbs = weightKg * 2.20462;
-  }
 
   // Buy price
   let buyRaw = usPNum(row[cfg.buyCol]);
@@ -1309,28 +1300,14 @@ function usAnalyseRow(row) {
 
   // Fees — use Keepa's actual values if available, else estimate
   // Keepa exports referral fee % and FBA fees directly
-  // Referral fee — scan all columns for referral rate
-  let keepaReferralPct = usPNum(row['Referral Fee %']) || usPNum(row['Referral Fee Percent']) || usPNum(row['Referral fee %']);
-  if (!keepaReferralPct) {
-    for (const key of Object.keys(row)) {
-      if (key.toLowerCase().includes('referral') && key.toLowerCase().includes('%')) {
-        const v = usPNum(row[key]);
-        if (v && v > 0 && v < 100) { keepaReferralPct = v; break; }
-      }
-    }
-  }
-  // FBA fee — scan columns
-  let keepaFbaFee = usPNum(row['FBA Fees']) || usPNum(row['FBA Fee']) || usPNum(row['Fulfillment Fee']) || usPNum(row['FBA fees']);
-  if (!keepaFbaFee) {
-    for (const key of Object.keys(row)) {
-      if (key.toLowerCase().includes('fba') && (key.toLowerCase().includes('fee') || key.toLowerCase().includes('fees'))) {
-        const v = usPNum(row[key]);
-        if (v && v > 0 && v < 100) { keepaFbaFee = v; break; }
-      }
-    }
-  }
-  const refFee = sp * (keepaReferralPct ? keepaReferralPct / 100 : US_FEES.referralPct);
-  const fbaFee = keepaFbaFee && keepaFbaFee > 0 ? keepaFbaFee : usFbaFee(sp);
+  // Referral fee — use exact % from Keepa CSV
+  const referralPctRaw = usPNum(row['Referral Fee %']) || usPNum(row['Referral fee %']) || null;
+  const refFee = sp * (referralPctRaw ? referralPctRaw / 100 : US_FEES.referralPct);
+  const fbaFee = usFbaFee(sp);
+
+  // Weight — Keepa exports in grams, convert to lbs
+  const weightG = usPNum(row['Weight (g)']) || usPNum(row['Item Weight (g)']) || 0;
+  const weightLbs = weightG > 0 ? weightG / 453.592 : (usPNum(row['Weight: Pounds']) || usPNum(row['Item Weight: Pounds']) || 0);
   const profit = sp - buyTotal - refFee - fbaFee;
   const roi = buyTotal > 0 ? profit / buyTotal : null;
 

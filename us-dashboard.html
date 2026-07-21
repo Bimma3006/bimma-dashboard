@@ -479,7 +479,12 @@ body.us-collapsed #us-main { margin-left: 0; }
           <div class="us-mode-desc">S&amp;S discount applied to buy price</div>
           <div class="us-mode-tags"><span class="us-mode-tag">15% off</span><span class="us-mode-tag">US</span></div>
         </button>
-        <button class="us-mode" data-mode="us-uln" onclick="usSetMode('us-uln',this)">
+        <button class="us-mode" data-mode="us-3p" onclick="usSetMode('us-3p',this)">
+          <div class="us-mode-flag">🏪</div>
+          <div class="us-mode-name">3rd Party</div>
+          <div class="us-mode-desc">Buy from 3P sellers, sell on US — conservative SP</div>
+          <div class="us-mode-tags"><span class="us-mode-tag">90d avg only</span><span class="us-mode-tag">No ST uplift</span></div>
+        </button>
           <div class="us-mode-flag">♺</div>
           <div class="us-mode-name">Used LN</div>
           <div class="us-mode-desc">Buy Used Like New, sell US</div>
@@ -586,17 +591,16 @@ body.us-collapsed #us-main { margin-left: 0; }
           <thead>
             <tr>
               <th class="th-left" style="min-width:220px;">Product</th>
-              <th class="th-left">SKU</th>
               <th>Date</th>
-              <th>Buy $</th>
-              <th>Qty</th>
-              <th>Total $</th>
+              <th class="r">Buy $</th>
+              <th class="r">Qty</th>
+              <th class="r">Total $</th>
               <th>Status</th>
               <th></th>
             </tr>
           </thead>
           <tbody id="usPurchTableBody">
-            <tr><td colspan="8" class="us-empty">No purchases yet — analyse some deals and approve them to start tracking</td></tr>
+            <tr><td colspan="7" class="us-empty">No purchases yet — analyse some deals and approve them to start tracking</td></tr>
           </tbody>
         </table>
       </div>
@@ -744,7 +748,13 @@ const US_MODES = {
     buyColFallback: 'Buy Box: Current',
     condition: 'new', ss: true,
   },
-  'us-uln': {
+  'us-3p': {
+    label: '3rd Party US',
+    desc: 'Buy: <strong>Buy Box: Current</strong> (3P price) · Sell: <strong>90d avg only — no ST uplift</strong> · Conservative pricing · Inbound: <strong>$0.87/lb</strong>',
+    buyCol: 'Buy Box: Current',
+    buyColFallback: 'Amazon: Current',
+    condition: 'new', ss: false, thirdParty: true,
+  },
     label: 'Used LN',
     desc: 'Buy: <strong>Used, like new: Current</strong> · Sell: <strong>Used LN 180d avg</strong> · Inbound: <strong>$0.87/lb</strong> · Prep: <strong>$1.20</strong>',
     buyCol: 'Used, like new: Current',
@@ -882,8 +892,7 @@ async function usRunAnalysis() {
     const inboundLbs = parseFloat(document.getElementById('usWeightLbs')?.value) || 0;
     const deals = rows.map(r => usAnalyseRow(r, inboundLbs)).filter(Boolean);
     usAllDeals = deals;
-    localStorage.setItem('us_results', JSON.stringify({ deals, mode: usCurrentMode, ts: Date.now() }));
-
+    // Don't cache results in localStorage — too large
     usFilter = 'all';
     usSort = { col: 'brand', dir: 1 };
     document.getElementById('usLoading').classList.remove('visible');
@@ -968,16 +977,19 @@ function usAnalyseRow(row, inboundLbs) {
   const ulnAvg = usPNum(row['Used, like new: 180 days avg.']);
   const ulnBuy = usPNum(row['Used, like new: Current']);
 
+  // Sell price — 3P mode uses 90d avg only, no ST, modest uplift
+  const is3P = cfg.thirdParty;
   const _base = (cfg.condition === 'used') ? ulnAvg : (avg180 || null);
   const _use90 = avg90 && _base && avg90 > _base * 1.20;
-  const bestAvg = _use90 ? avg90 : _base;
+  const bestAvg = is3P ? (avg90 || avg180 || null) : (_use90 ? avg90 : _base);
   if (!bestAvg) return null;
 
-  // Tiered uplift (same as UK logic)
-  const tieredUp = v => v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05;
+  const tieredUp = v => is3P
+    ? (v < 50 ? 1.05 : v < 100 ? 1.04 : v < 200 ? 1.03 : 1.02) // very modest for 3P
+    : (v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05);
   const uplift = tieredUp(bestAvg);
   const ST_MAX = 1.20;
-  const stCapped = stPrice && stPrice > bestAvg ? Math.min(stPrice, bestAvg * ST_MAX) : null;
+  const stCapped = (!is3P && stPrice && stPrice > bestAvg) ? Math.min(stPrice, bestAvg * ST_MAX) : null;
   const spBase = stCapped && bestAvg ? Math.max(bestAvg * uplift, stCapped) : (bestAvg * uplift);
   const sp = spBase; // no VAT on US
 
@@ -1240,10 +1252,9 @@ function usRenderPurchases(monthFilter='all', search='') {
 
   tbody.innerHTML = purchases.map((p, i) => `<tr>
     <td><div style="font-size:13px;font-weight:500;color:var(--text);">${p.title||p.asin}</div><div style="font-family:var(--mono);font-size:10px;color:var(--accent);">${p.asin}</div></td>
-    <td style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${p.brand||'—'}</td>
     <td class="td-r" style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${p.date||'—'}</td>
     <td class="td-r" style="font-family:var(--mono);">$${(p.buy||0).toFixed(2)}</td>
-    <td class="td-r" style="font-family:var(--mono);">${p.qty}</td>
+    <td class="td-r" style="font-family:var(--mono);">${p.qty||1}</td>
     <td class="td-r" style="font-family:var(--mono);font-weight:700;">$${((p.buy||0)*(p.qty||1)).toFixed(2)}</td>
     <td><span style="font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;background:${p.uploaded?'rgba(0,212,168,0.1)':'rgba(255,165,2,0.1)'};color:${p.uploaded?'var(--green)':'var(--amber)'};">${p.uploaded?'Uploaded':'Pending'}</span></td>
     <td><button class="us-row-btn reject" onclick="usDeletePurchase(${i})">✕</button></td>
@@ -1426,7 +1437,7 @@ async function usLoadSheet() {
     usSheetRows = (r.values||[]).filter(row=>row[0]).map((row,i) => ({
       date: usCleanDate(row[0]||''), sku: row[1]||'', title: row[2]||'', asin: row[3]||'',
       buy: usCleanNum(row[4]), sell: usCleanNum(row[5]),
-      qty: parseInt(String(row[6]||'0').replace(/[^0-9]/g,''))||0,
+      qty: (() => { const v = parseInt(String(row[6]||'1').replace(/[^0-9]/g,'')); return (v > 0 && v < 1000) ? v : 1; })(),
       spend: usCleanNum(row[7]), supplier: row[8]||'',
       uploaded: row[9]==='TRUE'||row[9]===true, rowIdx: i+2
     }));

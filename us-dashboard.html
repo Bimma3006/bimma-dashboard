@@ -1180,8 +1180,11 @@ async function usParseAllFiles() {
     const text = await file.text();
     const rows = usParseCSV(text);
     const headers = rows[0] || [];
-    // Log headers once to console for debugging
-    console.log('[Bimma] Keepa CSV columns:', headers);
+    if (!window._bimmaHeadersLogged) {
+      window._bimmaHeadersLogged = true;
+      const feeHeaders = headers.filter(h => h.toLowerCase().includes('referral') || h.toLowerCase().includes('fba') || h.toLowerCase().includes('fee'));
+      console.log('[Bimma US] Fee columns found:', feeHeaders);
+    }
     for (let i = 1; i < rows.length; i++) {
       const row = {};
       headers.forEach((h, idx) => row[h.trim()] = (rows[i][idx] || '').trim());
@@ -1306,8 +1309,26 @@ function usAnalyseRow(row) {
 
   // Fees — use Keepa's actual values if available, else estimate
   // Keepa exports referral fee % and FBA fees directly
-  const keepaReferralPct = usPNum(row['Referral Fee %']) || usPNum(row['Referral Fee Percent']);
-  const keepaFbaFee = usPNum(row['FBA Fees']) || usPNum(row['FBA Fee']) || usPNum(row['Fulfillment Fee']);
+  // Referral fee — scan all columns for referral rate
+  let keepaReferralPct = usPNum(row['Referral Fee %']) || usPNum(row['Referral Fee Percent']) || usPNum(row['Referral fee %']);
+  if (!keepaReferralPct) {
+    for (const key of Object.keys(row)) {
+      if (key.toLowerCase().includes('referral') && key.toLowerCase().includes('%')) {
+        const v = usPNum(row[key]);
+        if (v && v > 0 && v < 100) { keepaReferralPct = v; break; }
+      }
+    }
+  }
+  // FBA fee — scan columns
+  let keepaFbaFee = usPNum(row['FBA Fees']) || usPNum(row['FBA Fee']) || usPNum(row['Fulfillment Fee']) || usPNum(row['FBA fees']);
+  if (!keepaFbaFee) {
+    for (const key of Object.keys(row)) {
+      if (key.toLowerCase().includes('fba') && (key.toLowerCase().includes('fee') || key.toLowerCase().includes('fees'))) {
+        const v = usPNum(row[key]);
+        if (v && v > 0 && v < 100) { keepaFbaFee = v; break; }
+      }
+    }
+  }
   const refFee = sp * (keepaReferralPct ? keepaReferralPct / 100 : US_FEES.referralPct);
   const fbaFee = keepaFbaFee && keepaFbaFee > 0 ? keepaFbaFee : usFbaFee(sp);
   const profit = sp - buyTotal - refFee - fbaFee;

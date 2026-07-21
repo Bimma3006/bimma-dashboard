@@ -409,6 +409,10 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     <button onclick="usHandleAuth()" id="usAuthBtn" style="margin-top:8px;width:100%;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.06em;padding:7px 12px;background:var(--accent);border:none;border-radius:var(--r-sm);color:#fff;cursor:pointer;transition:all var(--transition);">Connect Sheets</button>
     <button onclick="usLoadSheet()" id="usRefreshBtn" disabled style="margin-top:6px;width:100%;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.04em;padding:6px 12px;background:transparent;border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;">↻ Refresh</button>
     <a href="index.html" class="us-switch-link">← Switch to UK Dashboard</a>
+    <div style="display:flex;gap:6px;margin-top:8px;">
+      <button onclick="usDriveSave()" style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;padding:6px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;transition:all .15s;" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--text-3)'">↑ Save</button>
+      <button onclick="usDriveLoad()" style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;padding:6px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;transition:all .15s;" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--text-3)'">↓ Load</button>
+    </div>
   </div>
 </div>
 
@@ -971,7 +975,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
 
 const US_SHEET_ID = '1JZqfn8y-r8i7Gct7n3WXith9cQS60-aYcsUmNiZDPxc';
 const US_PURCH_TAB = 'Purchasing sheet';
-const US_SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+const US_SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.appdata';
 let usTokenClient = null, usAccessToken = null, usSheetRows = [];
 const US_FEES = {
   vat:         0,       // No VAT on Amazon US
@@ -1835,6 +1839,51 @@ function usSaveManualPurchase() {
   ['usManualAsin','usManualTitle','usManualBrand','usManualBuy'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('usManualQty').value = '1';
 }
+// ── DRIVE SAVE/LOAD (shared with UK dashboard) ─────
+const US_DRIVE_FILE = 'bimma-sync.json';
+const US_SYNC_KEYS = [
+  'bimma_keepa_key','bimma_stalker_sellers','bimma_stalker_snaps','bimma_stalker_feed',
+  'bimma_goog_cid','bimma_cfg','bimma_eur_gbp_rate','bimma_usd_gbp',
+  'us_purchases','us_expenses','us_viewed','us_rejected','us_goog_cid',
+  'bimma-a2a-viewed','bimma-a2a-rejected'
+];
+async function usDriveFindFile() {
+  try {
+    const r = await fetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name%3D'${US_DRIVE_FILE}'&fields=files(id)`, { headers: { 'Authorization': 'Bearer ' + usAccessToken } });
+    const d = await r.json(); return d.files?.[0]?.id || null;
+  } catch { return null; }
+}
+async function usDriveSave() {
+  if (!usAccessToken) { usToast('Connect Google Sheets first', 'error'); return; }
+  const payload = {};
+  US_SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) payload[k] = v; });
+  const body = JSON.stringify(payload);
+  const boundary = 'bimma_boundary';
+  const meta = JSON.stringify({ name: US_DRIVE_FILE, parents: ['appDataFolder'] });
+  const mp = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${boundary}--`;
+  try {
+    const fileId = await usDriveFindFile();
+    if (fileId) {
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, { method:'PATCH', headers:{'Authorization':'Bearer '+usAccessToken,'Content-Type':'application/json'}, body });
+    } else {
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`, { method:'POST', headers:{'Authorization':'Bearer '+usAccessToken,'Content-Type':`multipart/related; boundary=${boundary}`}, body:mp });
+    }
+    usToast('Saved to cloud ✓', 'success');
+  } catch(e) { usToast('Save failed: ' + e.message, 'error'); }
+}
+async function usDriveLoad() {
+  if (!usAccessToken) { usToast('Connect Google Sheets first', 'error'); return; }
+  try {
+    const fileId = await usDriveFindFile();
+    if (!fileId) { usToast('No cloud save found', 'error'); return; }
+    const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, { headers:{'Authorization':'Bearer '+usAccessToken} });
+    const payload = await r.json();
+    Object.keys(payload).forEach(k => localStorage.setItem(k, payload[k]));
+    usToast('Loaded from cloud ✓', 'success');
+    setTimeout(() => { usRenderDashboard(); usRenderPurchases(); usRenderExpenses(); }, 500);
+  } catch(e) { usToast('Load failed: ' + e.message, 'error'); }
+}
+
 function usToast(msg, type='') {
   const container = document.getElementById('us-toast');
   if (!container) return;

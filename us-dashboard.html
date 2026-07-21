@@ -56,7 +56,7 @@
 html, body { height: 100%; font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; width: 100%; }
 
 /* ── LAYOUT ─────────────────────────── */
-#us-layout { display: flex; min-height: 100vh; width: 100vw; overflow-x: hidden; }
+#us-layout { min-height: 100vh; }
 
 #us-sidebar {
   width: var(--sidebar-w);
@@ -68,14 +68,15 @@ html, body { height: 100%; font-family: var(--sans); background: var(--bg); colo
   transition: width 0.22s cubic-bezier(.4,0,.2,1);
 }
 body.us-collapsed #us-sidebar { width: 0 !important; border-right: none; }
-body.us-collapsed #us-main { margin-left: 0 !important; width: 100vw !important; }
+body.us-collapsed #us-main { margin-left: 0 !important; }
 
 #us-main {
   margin-left: var(--sidebar-w);
-  flex: 1; min-height: 100vh;
+  min-height: 100vh;
   display: flex; flex-direction: column;
   transition: margin-left 0.22s cubic-bezier(.4,0,.2,1);
-  width: calc(100vw - var(--sidebar-w));
+  box-sizing: border-box;
+  position: relative;
 }
 
 /* ── SIDEBAR ─────────────────────────── */
@@ -400,7 +401,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; width: 100vw !important;
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v1.3 · 21 Jul 26</div>
+    <div class="us-version" id="usVersion">v1.4 · 21 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>

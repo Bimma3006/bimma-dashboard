@@ -1463,7 +1463,26 @@ function usInitSort() {
   });
 }
 
-function usMarkViewed(asin) { usViewedAsins.add(asin); localStorage.setItem('us_viewed', JSON.stringify([...usViewedAsins])); }
+function usMarkViewed(asin) {
+  usViewedAsins.add(asin);
+  localStorage.setItem('us_viewed', JSON.stringify([...usViewedAsins]));
+  // Find the row and fade it without full re-render
+  const rows = document.querySelectorAll('#usTableBody tr');
+  rows.forEach(row => {
+    if (row.innerHTML.includes(asin)) {
+      const title = row.querySelector('.us-product-title');
+      if (title) title.style.opacity = '0.5';
+      // Add SEEN badge if not already there
+      const asinRow = row.querySelector('.us-asin-row');
+      if (asinRow && !asinRow.querySelector('.us-seen-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'us-seen-badge';
+        badge.innerHTML = `SEEN <span class="us-seen-x" onclick="usUnview('${asin}')">✕</span>`;
+        asinRow.appendChild(badge);
+      }
+    }
+  });
+}
 function usUnview(asin) { usViewedAsins.delete(asin); localStorage.setItem('us_viewed', JSON.stringify([...usViewedAsins])); usRenderTable(); }
 function usApprove(asin) {
   const deal = usAllDeals.find(d => d.asin === asin);

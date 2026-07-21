@@ -1311,18 +1311,18 @@ function usAnalyseRow(row) {
   const roi = buyTotal > 0 ? profit / buyTotal : null;
 
   // Strength
-  // S&S ROI — 15% off buy price applied to all deals
+  // S&S ROI — only for S&S eligible deals or S&S mode
   const snsBuyTotal = buyRawSS + inboundCost + US_FEES.prepFee;
   const ssProfit = sp - snsBuyTotal - (sp * US_FEES.referralPct) - usFbaFee(sp);
-  const ssRoi = snsBuyTotal > 0 ? ssProfit / snsBuyTotal : null;
+  const ssRoi = (cfg.ss || snsEligible) && snsBuyTotal > 0 ? ssProfit / snsBuyTotal : null;
 
   const minROI = 0.15, strongROI = 0.20;
   let colour = 'red', strength = 0;
   if (roi !== null) {
     if (roi >= strongROI) { colour = 'green'; strength = 3; }
     else if (roi >= minROI) { colour = 'amber'; strength = 2; }
-    else if (ssRoi !== null && ssRoi >= strongROI) { colour = 'green'; strength = 3; } // S&S rescues to strong
-    else if (ssRoi !== null && ssRoi >= minROI) { colour = 'amber'; strength = 2; }    // S&S rescues to marginal
+    else if ((cfg.ss || snsEligible) && ssRoi !== null && ssRoi >= strongROI) { colour = 'green'; strength = 3; }
+    else if ((cfg.ss || snsEligible) && ssRoi !== null && ssRoi >= minROI) { colour = 'amber'; strength = 2; }
     else { colour = 'red'; strength = 1; }
   }
   if (spikeFlag) { colour = 'red'; strength = 0; }

@@ -1259,6 +1259,8 @@ function usAnalyseRow(row) {
   const hasSns = snsEligible;
 
   // Inbound shipping cost ($0.87/lb from Keepa weight column)
+  const weightG = usPNum(row['Weight (g)']) || usPNum(row['Item Weight (g)']) || 0;
+  const weightLbs = weightG > 0 ? weightG / 453.592 : (usPNum(row['Weight: Pounds']) || usPNum(row['Item Weight: Pounds']) || 0);
   const inboundCost = weightLbs > 0 ? weightLbs * US_FEES.inboundPerLb : 0;
   const buyTotal = buyRaw + inboundCost + US_FEES.prepFee;
 
@@ -1306,8 +1308,6 @@ function usAnalyseRow(row) {
   const fbaFee = usFbaFee(sp);
 
   // Weight — Keepa exports in grams, convert to lbs
-  const weightG = usPNum(row['Weight (g)']) || usPNum(row['Item Weight (g)']) || 0;
-  const weightLbs = weightG > 0 ? weightG / 453.592 : (usPNum(row['Weight: Pounds']) || usPNum(row['Item Weight: Pounds']) || 0);
   const profit = sp - buyTotal - refFee - fbaFee;
   const roi = buyTotal > 0 ? profit / buyTotal : null;
 

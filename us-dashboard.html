@@ -1042,8 +1042,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
   const g = document.getElementById('usDashGreeting');
   if (g) g.textContent = greet + ', James.';
-  const dateEl = document.getElementById('usDashDate');
-  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+  const dashDateEl = document.getElementById('usDashDate');
+  if (dashDateEl) dashDateEl.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
   const d = document.getElementById('usTopbarDate');
   if (d) d.textContent = new Date().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
 

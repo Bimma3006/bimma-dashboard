@@ -222,7 +222,7 @@ body.us-collapsed #us-main { margin-left: 0; }
 
 /* ── DA MODE BAR ─────────────────────── */
 .us-modes { display: flex; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r-md); overflow: hidden; margin-bottom: 18px; }
-.us-mode { flex: 1; display: flex; flex-direction: column; padding: 14px 16px; cursor: pointer; border-right: 1px solid var(--border2); background: transparent; border-top: none; border-bottom: none; border-left: none; text-align: left; position: relative; transition: all var(--transition); }
+.us-mode { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 14px 16px; cursor: pointer; border-right: 1px solid var(--border2); background: transparent; border-top: none; border-bottom: none; border-left: none; text-align: left; position: relative; transition: all var(--transition); overflow: hidden; }
 .us-mode:last-child { border-right: none; }
 .us-mode:hover { background: rgba(79,143,255,0.05); }
 .us-mode.active { background: rgba(79,143,255,0.08); }
@@ -504,16 +504,6 @@ body.us-collapsed #us-main { margin-left: 0; }
         <div class="us-info-text" id="usModeDesc">Buy: <strong>Amazon: Current</strong> · Sell: <strong>180d avg</strong> · Inbound: <strong>$0.87/lb</strong> · Prep: <strong>$1.20</strong> · No VAT</div>
       </div>
 
-      <!-- Weight input for inbound calc -->
-      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-end;">
-        <div style="display:flex;flex-direction:column;gap:5px;">
-          <span class="us-label">Product weight (lbs) — for inbound shipping calc</span>
-          <input type="number" class="us-input" id="usWeightLbs" placeholder="e.g. 2.5" step="0.1" min="0" style="width:160px;" oninput="usCalcInbound()">
-        </div>
-        <div style="font-family:var(--mono);font-size:12px;color:var(--text-3);padding-bottom:10px;">
-          Inbound: <span id="usInboundCost" style="color:var(--accent);font-weight:700;">—</span>
-        </div>
-      </div>
 
       <!-- Upload -->
       <div class="us-upload">
@@ -1135,8 +1125,7 @@ async function usRunAnalysis() {
     const rows = await usParseAllFiles();
     if (!rows.length) { usToast('No valid rows found in CSV', 'error'); return; }
 
-    const inboundLbs = parseFloat(document.getElementById('usWeightLbs')?.value) || 0;
-    const deals = rows.map(r => usAnalyseRow(r, inboundLbs)).filter(Boolean);
+    const deals = rows.map(r => usAnalyseRow(r)).filter(Boolean);
     usAllDeals = deals;
     // Don't cache results in localStorage — too large
     usFilter = 'all';
@@ -1193,11 +1182,21 @@ function usPNum(val) {
   return isNaN(n) ? null : n;
 }
 
-function usAnalyseRow(row, inboundLbs) {
+function usAnalyseRow(row) {
   const cfg = US_MODES[usCurrentMode] || US_MODES['us'];
   const asin  = row['ASIN'] || row['Asin'] || '';
   const title = row['Product Name'] || row['Title'] || row['title'] || '';
   const brand = row['Brand'] || row['brand'] || '';
+
+  // Weight from Keepa CSV — try multiple column names, convert to lbs if in kg/g
+  let weightLbs = 0;
+  const weightRaw = usPNum(row['Weight: Pounds']) || usPNum(row['Item Weight: Pounds']) || usPNum(row['Package Weight: Pounds']);
+  if (weightRaw) {
+    weightLbs = weightRaw;
+  } else {
+    const weightKg = usPNum(row['Weight: Kg']) || usPNum(row['Item Weight: Kg']) || usPNum(row['Package Weight: Kg']) || usPNum(row['Weight']);
+    if (weightKg) weightLbs = weightKg * 2.20462;
+  }
 
   // Buy price
   let buyRaw = usPNum(row[cfg.buyCol]);
@@ -1208,8 +1207,8 @@ function usAnalyseRow(row, inboundLbs) {
   const SS_DISC = 0.15;
   if (cfg.ss) buyRaw = buyRaw * (1 - SS_DISC);
 
-  // Inbound shipping cost ($0.87/lb)
-  const inboundCost = inboundLbs > 0 ? inboundLbs * US_FEES.inboundPerLb : 0;
+  // Inbound shipping cost ($0.87/lb from Keepa weight column)
+  const inboundCost = weightLbs > 0 ? weightLbs * US_FEES.inboundPerLb : 0;
   const buyTotal = buyRaw + inboundCost + US_FEES.prepFee;
 
   // Sell price — 180d avg as base, no VAT on US
@@ -1265,7 +1264,7 @@ function usAnalyseRow(row, inboundLbs) {
 
   const spSource = stCapped && spBase === stCapped ? 'ST' : (avg90 && _use90 ? '90d' : '180d') + '+' + Math.round((uplift-1)*100) + '%';
 
-  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: cfg.ss, avg180: bestAvg, decision: null };
+  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: cfg.ss, avg180: bestAvg, weightLbs, inboundCost, decision: null };
 }
 
 // ── RENDER TABLE ──────────────────────────

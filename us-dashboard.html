@@ -1217,7 +1217,10 @@ function usAnalyseRow(row) {
   if (buyRaw === null && cfg.buyColFallback) buyRaw = usPNum(row[cfg.buyColFallback]);
   if (buyRaw === null || buyRaw <= 0) return null;
 
-  // S&S price — scan all columns case-insensitively for subscribe/save
+  // S&S eligible — same as UK: check Buy Box: Subscribe & Save column
+  const snsEligible = (row['Buy Box: Subscribe & Save'] || '').toLowerCase() === 'yes';
+
+  // S&S price — try to read actual S&S price column, fall back to 15% off
   let snsPriceRaw = null;
   for (const key of Object.keys(row)) {
     const k = key.toLowerCase();
@@ -1226,19 +1229,16 @@ function usAnalyseRow(row) {
       if (v && v > 0) { snsPriceRaw = v; break; }
     }
   }
-  // Also try common exact names as fallback
   if (!snsPriceRaw) {
-    snsPriceRaw = usPNum(row['Subscribe and Save: Current'])
-      || usPNum(row['New, Subscribe and Save: Current'])
+    snsPriceRaw = usPNum(row['New, Subscribe and Save: Current'])
+      || usPNum(row['Subscribe and Save: Current'])
       || usPNum(row['Subscribe & Save: Current'])
-      || usPNum(row['SnS: Current'])
-      || usPNum(row['New Subscribe and Save'])
       || null;
   }
 
   // In S&S mode: use sns price if available, else apply 15% off
   const SS_DISC = 0.15;
-  if (cfg.ss) {
+  if (cfg.ss && snsEligible) {
     if (snsPriceRaw && snsPriceRaw > 0) {
       buyRaw = snsPriceRaw;
     } else {
@@ -1246,8 +1246,7 @@ function usAnalyseRow(row) {
     }
   }
 
-  // Flag whether this product has a real S&S price (for all modes)
-  const hasSns = snsPriceRaw && snsPriceRaw > 0;
+  const hasSns = snsEligible;
 
   // Inbound shipping cost ($0.87/lb from Keepa weight column)
   const inboundCost = weightLbs > 0 ? weightLbs * US_FEES.inboundPerLb : 0;
@@ -1310,13 +1309,13 @@ function usAnalyseRow(row) {
 
   const spSource = stCapped && spBase === stCapped ? 'ST' : (avg90 && _use90 ? '90d' : '180d') + '+' + Math.round((uplift-1)*100) + '%';
 
-  // S&S ROI — use actual S&S price if available, else 15% off buy
+  // S&S ROI — use 15% off buy price (same as UK logic)
   const snsEffectiveBuy = snsPriceRaw && snsPriceRaw > 0 ? snsPriceRaw : buyRaw * (1 - SS_DISC);
   const snsBuyTotal = snsEffectiveBuy + inboundCost + US_FEES.prepFee;
   const ssProfit = sp - snsBuyTotal - (sp * US_FEES.referralPct) - usFbaFee(sp);
-  const ssRoi = snsBuyTotal > 0 ? ssProfit / snsBuyTotal : null;
+  const ssRoi = snsEligible && snsBuyTotal > 0 ? ssProfit / snsBuyTotal : null;
 
-  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: cfg.ss || hasSns, ssRoi, snsPriceRaw, avg180: bestAvg, weightLbs, inboundCost, decision: null };
+  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: cfg.ss || snsEligible, ssRoi, snsPriceRaw, avg180: bestAvg, weightLbs, inboundCost, decision: null };
 }
 
 // ── RENDER TABLE ──────────────────────────
@@ -1431,7 +1430,7 @@ function usRenderTable() {
           <a href="${amzUrl}" target="_blank" class="us-asin-link" onclick="usMarkViewed('${deal.asin}')">${deal.asin}</a>
           ${deal.spSource ? `<span class="us-sp-badge">${deal.spSource}</span>` : ''}
           ${viewed ? `<span class="us-seen-badge">SEEN <span class="us-seen-x" onclick="usUnview('${deal.asin}')">✕</span></span>` : ''}
-          ${deal.snsPriceRaw ? `<span style="font-family:var(--mono);font-size:9px;background:rgba(162,155,254,.1);color:var(--purple);border:1px solid rgba(162,155,254,.25);border-radius:3px;padding:1px 5px;">♻ S&S $${deal.snsPriceRaw.toFixed(2)}</span>` : ''} ${deal.spikeFlag ? `<span class="us-spike-badge">⚡ price spike — avg distorted</span>` : ''}
+          ${deal.ss ? `<span style="font-family:var(--mono);font-size:9px;background:rgba(162,155,254,.1);color:var(--purple);border:1px solid rgba(162,155,254,.25);border-radius:3px;padding:1px 5px;">♻ S&S${deal.ssRoi ? ' ' + (deal.ssRoi*100).toFixed(0)+'%' : ''}</span>` : ''} ${deal.spikeFlag ? `<span class="us-spike-badge">⚡ price spike — avg distorted</span>` : ''}
         </div>
         <div style="margin-top:2px;"><a href="${keepaUrl}" target="_blank" style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-decoration:none;" onclick="usMarkViewed('${deal.asin}')">Keepa ↗</a></div>
       </td>

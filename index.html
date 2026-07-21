@@ -2866,7 +2866,6 @@ input::placeholder { color: var(--text-4); }
       <span class="sk-sellers-title">Tracked Sellers</span>
       <div style="display:flex;gap:10px;align-items:center;">
         <div class="sk-mkt-tabs" id="skSellerMktTabs">
-          <button class="sk-mkt-tab" onclick="skSetSellerMkt('all',this)">All</button>
           <button class="sk-mkt-tab active" onclick="skSetSellerMkt('uk',this)">🇬🇧 UK</button>
         </div>
         <button class="sk-btn" onclick="stalkerRefreshAll()" style="padding:5px 12px;">↻ Refresh all</button>
@@ -6505,7 +6504,7 @@ document.addEventListener('bimma:pagechange', e => {
 
 // ── STALKER ──────────────────────────────
 let stalkerSellers   = [];
-let stalkerFeedFilter = 'all';
+let stalkerFeedFilter = 'market_2';
 let stalkerSnapshots = {};
 let stalkerFeedItems = [];
 let skSellerMkt = 'uk';
@@ -6911,9 +6910,7 @@ function stalkerRenderFeedFilters() {
   const mkBtn = (id, label, active) =>
     `<button onclick="stalkerSetFeedFilter('${id}')" style="font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:var(--r-xs);border:1px solid ${active ? 'var(--accent)' : 'var(--border2)'};background:${active ? 'var(--accent-glow)' : 'transparent'};color:${active ? 'var(--accent)' : 'var(--text-3)'};cursor:pointer;transition:all 0.15s;white-space:nowrap;">${label}</button>`;
 
-  let html = mkBtn('all', `All (${stalkerFeedItems.length})`, stalkerFeedFilter === 'all');
-  if (hasUK) html += mkBtn('market_2', `🇬🇧 UK (${ukItems.length})`, stalkerFeedFilter === 'market_2');
-  if (hasUS) html += mkBtn('market_1', `🇺🇸 US (${usItems.length})`, stalkerFeedFilter === 'market_1');
+  let html = mkBtn('market_2', `🇬🇧 UK (${ukItems.length})`, true);
 
   if (seen.size > 1) {
     html += `<span style="font-family:var(--mono);font-size:9px;color:var(--border3);margin:0 2px;">│</span>`;

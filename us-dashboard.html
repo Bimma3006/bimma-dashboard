@@ -1236,15 +1236,12 @@ function usAnalyseRow(row) {
       || null;
   }
 
-  // In S&S mode: use sns price if available, else apply 15% off
+  // Apply 15% S&S discount to buy price for all deals (standard S&S)
   const SS_DISC = 0.15;
-  if (cfg.ss && snsEligible) {
-    if (snsPriceRaw && snsPriceRaw > 0) {
-      buyRaw = snsPriceRaw;
-    } else {
-      buyRaw = buyRaw * (1 - SS_DISC);
-    }
-  }
+  const buyRawSS = buyRaw * (1 - SS_DISC);
+
+  // In S&S mode: use discounted price as buy
+  if (cfg.ss) buyRaw = buyRawSS;
 
   const hasSns = snsEligible;
 
@@ -1309,13 +1306,12 @@ function usAnalyseRow(row) {
 
   const spSource = stCapped && spBase === stCapped ? 'ST' : (avg90 && _use90 ? '90d' : '180d') + '+' + Math.round((uplift-1)*100) + '%';
 
-  // S&S ROI — use 15% off buy price (same as UK logic)
-  const snsEffectiveBuy = snsPriceRaw && snsPriceRaw > 0 ? snsPriceRaw : buyRaw * (1 - SS_DISC);
-  const snsBuyTotal = snsEffectiveBuy + inboundCost + US_FEES.prepFee;
+  // S&S ROI — 15% off buy price applied to all deals
+  const snsBuyTotal = buyRawSS + inboundCost + US_FEES.prepFee;
   const ssProfit = sp - snsBuyTotal - (sp * US_FEES.referralPct) - usFbaFee(sp);
-  const ssRoi = snsEligible && snsBuyTotal > 0 ? ssProfit / snsBuyTotal : null;
+  const ssRoi = snsBuyTotal > 0 ? ssProfit / snsBuyTotal : null;
 
-  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: cfg.ss || snsEligible, ssRoi, snsPriceRaw, avg180: bestAvg, weightLbs, inboundCost, decision: null };
+  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: true, ssRoi, snsPriceRaw, avg180: bestAvg, weightLbs, inboundCost, decision: null };
 }
 
 // ── RENDER TABLE ──────────────────────────
@@ -1384,6 +1380,7 @@ function usRenderTable() {
     <th data-col="bbCurrent" data-type="num" style="color:var(--accent);">BB Now</th>
     <th data-col="profit" data-type="num">Profit</th>
     <th data-col="roi" data-type="num">ROI</th>
+    <th data-col="ssRoi" data-type="num" style="color:var(--purple);">♻ S&S ROI</th>
     <th data-col="lastPriceChange" data-type="str">Last Change</th>
     <th data-col="boughtPerMonth" data-type="num">Sold/mo</th>
     <th class="no-sort" style="width:60px;"></th>
@@ -1440,6 +1437,7 @@ function usRenderTable() {
       <td class="td-r" style="color:${bbColour};">${fmtN(deal.bbCurrent)}</td>
       <td class="td-r" style="color:${deal.profit > 0 ? 'var(--green)' : 'var(--red)'};font-weight:700;">${fmtN(deal.profit)}</td>
       <td class="td-roi" style="color:${roiCol(deal.roi)};">${fmtP(deal.roi)}</td>
+      <td class="td-roi" style="color:${deal.ssRoi == null ? 'var(--text-3)' : deal.ssRoi >= 0.20 ? 'var(--green)' : deal.ssRoi >= 0.15 ? 'var(--amber)' : 'var(--text-3)'};">${deal.ssRoi != null ? (deal.ssRoi*100).toFixed(1)+'%' : '—'}</td>
       <td class="td-r" style="font-size:11px;color:var(--text-3);text-align:left;">${deal.lastPriceChange || '—'}</td>
       <td class="td-r">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
       <td>

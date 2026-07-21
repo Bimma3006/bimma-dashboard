@@ -1161,6 +1161,8 @@ async function usParseAllFiles() {
     const text = await file.text();
     const rows = usParseCSV(text);
     const headers = rows[0] || [];
+    // Log headers once to console for debugging
+    console.log('[Bimma] Keepa CSV columns:', headers);
     for (let i = 1; i < rows.length; i++) {
       const row = {};
       headers.forEach((h, idx) => row[h.trim()] = (rows[i][idx] || '').trim());
@@ -1215,12 +1217,24 @@ function usAnalyseRow(row) {
   if (buyRaw === null && cfg.buyColFallback) buyRaw = usPNum(row[cfg.buyColFallback]);
   if (buyRaw === null || buyRaw <= 0) return null;
 
-  // S&S price — read directly from Keepa export column
-  const snsPriceRaw = usPNum(row['Subscribe and Save: Current'])
-    || usPNum(row['Sales Rank: Subscribe and Save'])
-    || usPNum(row['Subscribe & Save: Current'])
-    || usPNum(row['SnS: Current'])
-    || null;
+  // S&S price — scan all columns case-insensitively for subscribe/save
+  let snsPriceRaw = null;
+  for (const key of Object.keys(row)) {
+    const k = key.toLowerCase();
+    if ((k.includes('subscribe') || k.includes('sns') || k.includes('s&s')) && k.includes('current')) {
+      const v = usPNum(row[key]);
+      if (v && v > 0) { snsPriceRaw = v; break; }
+    }
+  }
+  // Also try common exact names as fallback
+  if (!snsPriceRaw) {
+    snsPriceRaw = usPNum(row['Subscribe and Save: Current'])
+      || usPNum(row['New, Subscribe and Save: Current'])
+      || usPNum(row['Subscribe & Save: Current'])
+      || usPNum(row['SnS: Current'])
+      || usPNum(row['New Subscribe and Save'])
+      || null;
+  }
 
   // In S&S mode: use sns price if available, else apply 15% off
   const SS_DISC = 0.15;

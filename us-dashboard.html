@@ -1028,7 +1028,7 @@ function usShowPage(page, el) {
   if (el) el.classList.add('active');
   const titles = { dashboard:'Dashboard', analyser:'Deal Analyser', purchases:'Purchases', expenses:'Expenses', stalker:'Storefront Stalker' };
   document.getElementById('usTopbarTitle').textContent = titles[page] || page;
-  if (page === 'stalker') { stalkerInit(); }
+  if (page === 'stalker') { stalkerLoaded = false; stalkerInit(); }
 }
 
 function usToggleSidebar() {

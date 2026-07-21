@@ -826,8 +826,8 @@ body.us-collapsed #us-main { margin-left: 0; }
       <span class="sk-config-label">Marketplace</span>
       <div class="sk-config-row">
         <select id="stalkerMarket" class="sk-config-select">
-          <option value="2">🇬🇧 amazon.co.uk</option>
           <option value="1">🇺🇸 amazon.com</option>
+          <option value="2">🇬🇧 amazon.co.uk</option>
           <option value="3">🇩🇪 amazon.de</option>
           <option value="4">🇫🇷 amazon.fr</option>
           <option value="8">🇮🇹 amazon.it</option>
@@ -872,7 +872,6 @@ body.us-collapsed #us-main { margin-left: 0; }
       <div style="display:flex;gap:10px;align-items:center;">
         <div class="sk-mkt-tabs" id="skSellerMktTabs">
           <button class="sk-mkt-tab active" onclick="skSetSellerMkt('all',this)">All</button>
-          <button class="sk-mkt-tab" onclick="skSetSellerMkt('uk',this)">🇬🇧 UK</button>
           <button class="sk-mkt-tab" onclick="skSetSellerMkt('us',this)">🇺🇸 US</button>
         </div>
         <button class="sk-btn" onclick="stalkerRefreshAll()" style="padding:5px 12px;">↻ Refresh all</button>
@@ -1029,7 +1028,7 @@ function usShowPage(page, el) {
   if (el) el.classList.add('active');
   const titles = { dashboard:'Dashboard', analyser:'Deal Analyser', purchases:'Purchases', expenses:'Expenses', stalker:'Storefront Stalker' };
   document.getElementById('usTopbarTitle').textContent = titles[page] || page;
-  if (page === 'stalker') { stalkerInit(); }
+  if (page === 'stalker') { stalkerInit(); setTimeout(() => skSetSellerMkt('us', document.querySelector('#skSellerMktTabs .sk-mkt-tab:last-child')), 100); }
 }
 
 function usToggleSidebar() {

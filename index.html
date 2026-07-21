@@ -1275,29 +1275,33 @@ input::placeholder { color: var(--text-4); }
 .stalker-feed-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:12px; color:var(--text-3); font-family:var(--mono); font-size:13px; padding:60px 0; }
 .stalker-feed-empty-icon { font-size:44px; opacity:0.2; }
 /* feed items */
-.stalker-feed-date-header { padding:10px 22px 6px; font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-3); border-bottom:1px solid var(--border); background:var(--surface2); position:sticky; top:0; z-index:2; }
+.stalker-feed-date-header { position:sticky; top:0; z-index:2;  padding:12px 22px; font-family:var(--mono); font-size:10px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-2); border-bottom:1px solid var(--border2); background:var(--surface3); display:flex; align-items:center; gap:12px; }
 
 /* ── Feed card redesign ─────────────────── */
-.sf-card { display:grid; grid-template-columns:72px 1fr auto auto; gap:16px; align-items:center; padding:14px 22px; border-bottom:1px solid var(--border); border-left:3px solid var(--green); background:rgba(0,232,138,.03); transition:background .15s; }
-.sf-card:hover { background:rgba(0,232,138,.06); }
+.sf-card { display:grid; grid-template-columns:100px 1fr auto; gap:0; align-items:stretch; border-bottom:1px solid var(--border); transition:background .15s; position:relative; }
+.sf-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--green); }
+.sf-card:hover { background:rgba(0,232,138,.03); }
 .sf-card:last-child { border-bottom:none; }
-.sf-card-img-wrap { width:80px; height:80px; border-radius:10px; overflow:hidden; background:var(--surface3); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.sf-card-img-wrap { width:100px; height:100px; background:var(--surface3); border-right:1px solid var(--border2); display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; padding:8px; }
 .sf-card-img { width:100%; height:100%; object-fit:contain; }
-.sf-card-body { min-width:0; }
-.sf-card-meta { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
-.sf-badge-new { background:var(--green); color:#000; font-family:var(--mono); font-size:9px; font-weight:800; padding:2px 7px; border-radius:10px; letter-spacing:.05em; flex-shrink:0; }
+.sf-img-placeholder { font-size:28px; opacity:.2; }
+.sf-card-body { padding:16px 20px; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:6px; }
+.sf-card-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.sf-badge-new { background:var(--green); color:#000; font-family:var(--mono); font-size:9px; font-weight:800; padding:2px 8px; border-radius:10px; letter-spacing:.06em; flex-shrink:0; }
 .sf-card-time { font-family:var(--mono); font-size:10px; color:var(--text-3); }
+.sf-seller-chip { display:inline-flex; align-items:center; gap:4px; font-family:var(--mono); font-size:10px; font-weight:700; color:var(--text-2); background:var(--surface3); border:1px solid var(--border2); border-radius:4px; padding:1px 7px; }
 .sf-card-seller { font-family:var(--mono); font-size:10px; color:var(--text-2); font-weight:600; }
-.sf-card-title { font-size:14px; font-weight:600; color:var(--text); line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:5px; }
+.sf-card-title { font-size:14px; font-weight:600; color:var(--text); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .sf-card-asin-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.sf-asin-link { font-family:var(--mono); font-size:11px; color:var(--blue); text-decoration:none; }
+.sf-asin-link { font-family:var(--mono); font-size:10px; color:var(--blue); text-decoration:none; letter-spacing:.03em; }
 .sf-asin-link:hover { text-decoration:underline; }
-.sf-card-price { text-align:right; flex-shrink:0; min-width:80px; }
-.sf-price { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--text); }
-.sf-price-label { font-family:var(--mono); font-size:10px; color:var(--text-3); margin-top:2px; letter-spacing:.04em; }
-.sf-price-na { font-family:var(--mono); font-size:14px; color:var(--text-3); }
-.sf-card-actions { display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
-.sf-link { font-family:var(--mono); font-size:10px; font-weight:700; padding:5px 10px; border-radius:var(--r-xs); border:1px solid var(--border2); background:transparent; color:var(--text-3); text-decoration:none; transition:all .12s; white-space:nowrap; text-align:center; }
+.sf-card-right { display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:10px; padding:16px 20px; border-left:1px solid var(--border2); min-width:150px; flex-shrink:0; }
+.sf-card-price { text-align:right; }
+.sf-price { font-family:var(--mono); font-size:22px; font-weight:700; color:var(--text); line-height:1; }
+.sf-price-label { font-family:var(--mono); font-size:9px; color:var(--text-3); margin-top:3px; letter-spacing:.06em; text-transform:uppercase; }
+.sf-price-na { font-family:var(--mono); font-size:13px; color:var(--text-3); }
+.sf-card-actions { display:flex; gap:6px; }
+.sf-link { font-family:var(--mono); font-size:10px; font-weight:700; padding:5px 12px; border-radius:var(--r-sm); border:1px solid var(--border2); background:transparent; color:var(--text-3); text-decoration:none; transition:all .12s; white-space:nowrap; display:block; text-align:center; }
 .sf-link:hover { border-color:var(--border3); color:var(--text); }
 .sf-link-green { border-color:rgba(0,232,138,.3); color:var(--green); }
 .sf-link-green:hover { background:rgba(0,232,138,.08); }
@@ -7013,26 +7017,26 @@ function stalkerRenderFeed() {
             <div class="sf-card-meta">
               <span class="sf-badge-new">NEW</span>
               <span class="sf-card-time">${detectedStr}</span>
-              <span class="sf-card-seller">${flag} ${item.sellerName}</span>
+              <span class="sf-seller-chip">${flag} ${item.sellerName}</span>
             </div>
             <div class="sf-card-title" title="${(item.title||item.asin).replace(/"/g,'&quot;')}">${item.title||item.asin}</div>
             <div class="sf-card-asin-row">
-              <a href="${keepaUrl}" target="_blank" class="sf-asin-link">${item.asin}</a>
+              <a href="${amzUrl}" target="_blank" class="sf-asin-link">${item.asin}</a>
               ${_purchLabel ? _purchLabel : ''}
             </div>
           </div>
-          <div class="sf-card-price">
-            ${item.price
-              ? `<div class="sf-price">${currencySymbol}${item.price}</div>
-                 <div class="sf-price-label">${item.priceLabel||'Buy Box'}</div>`
-              : `<div class="sf-price-na">—</div>`}
-          </div>
-          <div class="sf-card-actions">
-            <a href="${keepaUrl}" target="_blank" class="sf-link">Keepa ↗</a>
-            <a href="${amzUrl}" target="_blank" class="sf-link sf-link-green">Amazon ↗</a>
+          <div class="sf-card-right">
+            <div class="sf-card-price">
+              ${item.price
+                ? `<div class="sf-price">${currencySymbol}${item.price}</div><div class="sf-price-label">${item.priceLabel||'Buy Box'}</div>`
+                : `<div class="sf-price-na">—</div>`}
+            </div>
+            <div class="sf-card-actions">
+              <a href="${keepaUrl}" target="_blank" class="sf-link">Keepa ↗</a>
+              <a href="${amzUrl}" target="_blank" class="sf-link sf-link-green">Amazon ↗</a>
+            </div>
           </div>
         </div>`;
-      }
 
       // Legacy basic row (old feed items without rich data)
       return `<div class="stalker-item">

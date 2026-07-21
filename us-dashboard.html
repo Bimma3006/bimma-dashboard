@@ -1328,11 +1328,15 @@ function usAnalyseRow(row) {
   if (spikeFlag) { colour = 'red'; strength = 0; }
 
   const boughtPerMonth = usPNum(row['Monthly Sales Trends: Bought in past month']) || usPNum(row['Sales Rank: Drops last 30 days']);
-  const lastPriceChange = row['Buy Box: Last Price Change'] || null;
+  const lastPriceChange = row['Buy Box: Last Price Change']
+    || row['Buy Box: Last Price Change Date']
+    || row['Last Price Change']
+    || row['Sales Rank: Last Drop']
+    || null;
 
   const spSource = stCapped && spBase === stCapped ? 'ST' : (avg90 && _use90 ? '90d' : '180d') + '+' + Math.round((uplift-1)*100) + '%';
 
-  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: true, ssRoi, snsPriceRaw, avg180: bestAvg, weightLbs, inboundCost, decision: null };
+  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: cfg.ss || snsEligible, ssRoi, snsPriceRaw, avg180: bestAvg, weightLbs, inboundCost, decision: null };
 }
 
 // ── RENDER TABLE ──────────────────────────
@@ -1415,7 +1419,7 @@ function usRenderTable() {
   const cntGreen = usAllDeals.filter(d => d.colour === 'green' && !d.spikeFlag).length;
   const cntAmber = usAllDeals.filter(d => d.colour === 'amber').length;
   const cntRed   = usAllDeals.filter(d => d.colour === 'red' && !d.spikeFlag).length;
-  const cntSS    = usAllDeals.filter(d => (d.ss || d.snsPriceRaw) && d.ssRoi != null && d.ssRoi >= 0.15).length;
+  const cntSS    = usAllDeals.filter(d => (d.ss) && d.ssRoi != null && d.ssRoi >= 0.15).length;
   const cntSpike = usAllDeals.filter(d => !!d.spikeFlag).length;
   const setC = (id, n) => { const el = document.getElementById(id); if(el) el.textContent = n > 0 ? n : ''; };
   setC('usCntAll', cntAll); setC('usCntGreen', cntGreen); setC('usCntAmber', cntAmber);

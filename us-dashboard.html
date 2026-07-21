@@ -664,7 +664,7 @@ body.us-collapsed #us-main { margin-left: 0; }
 
 
   <!-- ══ STOREFRONT STALKER ══ -->
-<div class="page" id="page-stalker">
+  <div class="us-page" id="us-page-stalker">
 <style>
   .sk-page { padding:32px 52px 64px; }
 
@@ -900,7 +900,7 @@ body.us-collapsed #us-main { margin-left: 0; }
   </div>
 
 </div><!-- /sk-page -->
-</div><!-- /page-stalker --></div>
+</div><!-- /page-stalker -->
 </div><!-- /us-main -->
 </div><!-- /us-layout -->
 <div id="usSetupModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:600;align-items:center;justify-content:center;">
@@ -914,7 +914,8 @@ body.us-collapsed #us-main { margin-left: 0; }
       <button class="us-btn us-btn-accent" onclick="usSaveClientId()">Save &amp; Connect</button>
     </div>
   </div>
-</div> style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;">
+</div>
+<div id="usAddPurchaseModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;">
   <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:28px;width:480px;max-width:90vw;box-shadow:var(--shadow);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div style="font-size:16px;font-weight:700;color:var(--text);">Add Purchase</div>
@@ -1018,6 +1019,7 @@ function usShowPage(page, el) {
   if (el) el.classList.add('active');
   const titles = { dashboard:'Dashboard', analyser:'Deal Analyser', purchases:'Purchases', expenses:'Expenses', stalker:'Storefront Stalker' };
   document.getElementById('usTopbarTitle').textContent = titles[page] || page;
+  if (page === 'stalker') { stalkerRenderSellers(); stalkerUpdateStats(); }
 }
 
 function usToggleSidebar() {

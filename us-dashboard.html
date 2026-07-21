@@ -56,7 +56,7 @@
 html, body { height: 100%; font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 
 /* ── LAYOUT ─────────────────────────── */
-#us-layout { display: flex; min-height: 100vh; }
+#us-layout { display: flex; min-height: 100vh; width: 100%; }
 
 #us-sidebar {
   width: var(--sidebar-w);
@@ -75,6 +75,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
   flex: 1; min-height: 100vh;
   display: flex; flex-direction: column;
   transition: margin-left 0.22s cubic-bezier(.4,0,.2,1);
+  width: 100%;
 }
 
 /* ── SIDEBAR ─────────────────────────── */

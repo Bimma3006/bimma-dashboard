@@ -1459,7 +1459,6 @@ async function usPushToSheet(deal, qty, sku, sell) {
   if (!usAccessToken) { usToast('Connect to Google Sheets first', 'error'); return; }
   const date = new Date().toISOString().split('T')[0];
   const spend = deal.buyTotal * qty;
-  const spend = deal.buyTotal * qty;
   const row = [date, '', deal.title||'', deal.asin||'', deal.buyTotal?.toFixed(2)||'', sell?.toFixed(2)||'', qty, spend.toFixed(2), deal.brand||''];
   const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const d = new Date(date); const monthTab = mn[d.getMonth()] + ' ' + d.getFullYear();

@@ -1345,7 +1345,7 @@ function usRenderTable() {
   document.getElementById('usTableHead').innerHTML = `<tr>
     <th class="th-left no-sort" style="min-width:240px;">Product</th>
     <th data-col="brand" data-type="str" class="th-left" style="min-width:90px;">Brand${brandLabel}</th>
-    <th data-col="buyTotal" data-type="num">Buy + Fees</th>
+    <th data-col="buyRaw" data-type="num">Buy Price</th>
     <th data-col="sp" data-type="num">SP 180d</th>
     <th data-col="bbCurrent" data-type="num" style="color:var(--accent);">BB Now</th>
     <th data-col="profit" data-type="num">Profit</th>
@@ -1401,7 +1401,7 @@ function usRenderTable() {
         <div style="margin-top:2px;"><a href="${keepaUrl}" target="_blank" style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-decoration:none;" onclick="usMarkViewed('${deal.asin}')">Keepa ↗</a></div>
       </td>
       <td><span class="us-brand-tag" onclick="usSetBrandFilter('${(deal.brand||'').replace(/'/g,"\\'")}')">${deal.brand || '—'}</span></td>
-      <td class="td-r">${fmtN(deal.buyTotal)}</td>
+      <td class="td-r">${fmtN(deal.buyRaw)}</td>
       <td class="td-r">${fmtN(deal.sp)}</td>
       <td class="td-r" style="color:${bbColour};">${fmtN(deal.bbCurrent)}</td>
       <td class="td-r" style="color:${deal.profit > 0 ? 'var(--green)' : 'var(--red)'};font-weight:700;">${fmtN(deal.profit)}</td>
@@ -1442,6 +1442,7 @@ function usApprove(asin) {
   if (usAccessToken) {
     const qty = parseInt(prompt(`How many units of ${deal.asin}?`, '1')) || 1;
     const sell = parseFloat(prompt(`Sell price? (SP 180d: $${deal.sp?.toFixed(2)})`, deal.sp?.toFixed(2))) || deal.sp;
+    // Note: cost saved includes inbound + prep fees
     const sku = prompt('SKU (leave blank to skip):', '') || '';
     usPushToSheet(deal, qty, sku, sell);
   }

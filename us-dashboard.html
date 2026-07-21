@@ -67,8 +67,8 @@ html, body { height: 100%; font-family: var(--sans); background: var(--bg); colo
   z-index: 100; overflow: hidden;
   transition: width 0.22s cubic-bezier(.4,0,.2,1);
 }
-body.us-collapsed #us-sidebar { width: 0; border-right: none; }
-body.us-collapsed #us-main { margin-left: 0; }
+body.us-collapsed #us-sidebar { width: 0 !important; border-right: none; }
+body.us-collapsed #us-main { margin-left: 0 !important; }
 
 #us-main {
   margin-left: var(--sidebar-w);
@@ -550,12 +550,12 @@ body.us-collapsed #us-main { margin-left: 0; }
       <div id="usFilters" style="display:none;">
         <div class="us-results-hdr">
           <div class="us-pills">
-            <button class="us-pill active" id="usPillAll"    onclick="usSetFilter('all',this)">All</button>
-            <button class="us-pill us-pill-green"  id="usPillGreen"  onclick="usSetFilter('green',this)"><span class="us-pill-dot" style="background:var(--green);"></span>Strong</button>
-            <button class="us-pill us-pill-amber"  id="usPillAmber"  onclick="usSetFilter('amber',this)"><span class="us-pill-dot" style="background:var(--amber);"></span>Marginal</button>
-            <button class="us-pill us-pill-red"    id="usPillRed"    onclick="usSetFilter('red',this)"><span class="us-pill-dot" style="background:var(--red);"></span>Reject</button>
-            <button class="us-pill us-pill-purple" id="usPillSS"     onclick="usSetFilter('subsave',this)"><span class="us-pill-dot" style="background:var(--purple);"></span>♻ S&S</button>
-            <button class="us-pill" id="usPillSpike" onclick="usSetFilter('spike',this)" style="border-color:rgba(255,165,2,.3);color:var(--amber);">⚡ Spiked</button>
+            <button class="us-pill active" id="usPillAll"    onclick="usSetFilter('all',this)">All <span id="usCntAll"></span></button>
+            <button class="us-pill us-pill-green"  id="usPillGreen"  onclick="usSetFilter('green',this)"><span class="us-pill-dot" style="background:var(--green);"></span>Strong <span id="usCntGreen"></span></button>
+            <button class="us-pill us-pill-amber"  id="usPillAmber"  onclick="usSetFilter('amber',this)"><span class="us-pill-dot" style="background:var(--amber);"></span>Marginal <span id="usCntAmber"></span></button>
+            <button class="us-pill us-pill-red"    id="usPillRed"    onclick="usSetFilter('red',this)"><span class="us-pill-dot" style="background:var(--red);"></span>Reject <span id="usCntRed"></span></button>
+            <button class="us-pill us-pill-purple" id="usPillSS"     onclick="usSetFilter('subsave',this)"><span class="us-pill-dot" style="background:var(--purple);"></span>♻ S&S <span id="usCntSS"></span></button>
+            <button class="us-pill" id="usPillSpike" onclick="usSetFilter('spike',this)" style="border-color:rgba(255,165,2,.3);color:var(--amber);">⚡ Spiked <span id="usCntSpike"></span></button>
             <button class="us-pill" id="usPillExcRecent" onclick="usToggleExcludeRecent(this)" style="border-style:dashed;">🚫 &lt;3d</button>
           </div>
           <div class="us-act-row">
@@ -1247,8 +1247,12 @@ function usAnalyseRow(row) {
 
   // Spike detection
   let spikeFlag = null;
-  if (bbCurrent && bestAvg && bbCurrent < bestAvg * 0.60) spikeFlag = 'avg_skew';
-  if (!spikeFlag && avg180 && avg365 && bbCurrent && avg180 > avg365 * 1.30 && bbCurrent < avg180) spikeFlag = 'avg_skew';
+  // Only flag spike if BB now is well below the projected sell price AND we have 365d data to compare
+  if (avg365 && avg180 && bbCurrent) {
+    if (avg180 > avg365 * 1.30 && bbCurrent < avg180 * 0.75) spikeFlag = 'avg_skew';
+  }
+  // Hard spike: BB now is less than 50% of bestAvg (was 60% — too aggressive for 3P)
+  if (!spikeFlag && bestAvg && bbCurrent && bbCurrent < bestAvg * 0.50) spikeFlag = 'avg_skew';
 
   // Fees — no VAT
   const refFee = sp * US_FEES.referralPct;
@@ -1271,7 +1275,12 @@ function usAnalyseRow(row) {
 
   const spSource = stCapped && spBase === stCapped ? 'ST' : (avg90 && _use90 ? '90d' : '180d') + '+' + Math.round((uplift-1)*100) + '%';
 
-  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: cfg.ss, avg180: bestAvg, weightLbs, inboundCost, decision: null };
+  // S&S ROI — if S&S mode, calc what roi would be with 15% off buy
+  const ssBuyTotal = buyTotal * (1 - 0.15);
+  const ssProfit = sp - ssBuyTotal - (sp * US_FEES.referralPct) - usFbaFee(sp);
+  const ssRoi = ssBuyTotal > 0 ? ssProfit / ssBuyTotal : null;
+
+  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: cfg.ss, ssRoi, avg180: bestAvg, weightLbs, inboundCost, decision: null };
 }
 
 // ── RENDER TABLE ──────────────────────────
@@ -1347,6 +1356,17 @@ function usRenderTable() {
 
   const count = document.getElementById('usResultCount');
   if (count) count.textContent = data.length + ' shown · ' + usAllDeals.length + ' total';
+
+  // Update pill counts
+  const cntAll   = usAllDeals.length;
+  const cntGreen = usAllDeals.filter(d => d.colour === 'green' && !d.spikeFlag).length;
+  const cntAmber = usAllDeals.filter(d => d.colour === 'amber').length;
+  const cntRed   = usAllDeals.filter(d => d.colour === 'red' && !d.spikeFlag).length;
+  const cntSS    = usAllDeals.filter(d => d.ss && d.ssRoi != null && d.ssRoi >= 0.15).length;
+  const cntSpike = usAllDeals.filter(d => !!d.spikeFlag).length;
+  const setC = (id, n) => { const el = document.getElementById(id); if(el) el.textContent = n > 0 ? n : ''; };
+  setC('usCntAll', cntAll); setC('usCntGreen', cntGreen); setC('usCntAmber', cntAmber);
+  setC('usCntRed', cntRed); setC('usCntSS', cntSS); setC('usCntSpike', cntSpike);
 
   const resetBtn = document.getElementById('usResetBtn');
   const exportBtn = document.getElementById('usExportBtn');

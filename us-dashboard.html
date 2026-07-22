@@ -562,6 +562,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
             <button class="us-pill us-pill-red"    id="usPillRed"    onclick="usSetFilter('red',this)"><span class="us-pill-dot" style="background:var(--red);"></span>Reject <span id="usCntRed"></span></button>
             <button class="us-pill us-pill-purple" id="usPillSS"     onclick="usSetFilter('subsave',this)"><span class="us-pill-dot" style="background:var(--purple);"></span>♻ S&S <span id="usCntSS"></span></button>
             <button class="us-pill" id="usPillSpike" onclick="usSetFilter('spike',this)" style="border-color:rgba(255,165,2,.3);color:var(--amber);">⚡ Spiked <span id="usCntSpike"></span></button>
+            <button class="us-pill" id="usPillBiz" onclick="usSetFilter('bizprice',this)" style="border-color:rgba(255,165,2,.3);color:var(--amber);">💼 Biz <span id="usCntBiz"></span></button>
             <button class="us-pill" id="usPillExcRecent" onclick="usToggleExcludeRecent(this)" style="border-style:dashed;">🚫 &lt;3d</button>
           </div>
           <div class="us-act-row">
@@ -1308,7 +1309,19 @@ function usAnalyseRow(row) {
   const fbaFee = usFbaFee(sp);
 
   // Weight — Keepa exports in grams, convert to lbs
-  const profit = sp - buyTotal - refFee - fbaFee;
+  // Business price — read discount % or price from Keepa CSV
+  const bizDiscountPct = usPNum(row['Business Discount: Percentage'])
+    ?? usPNum(row['Business Discount: %'])
+    ?? usPNum(row['Business Discount'])
+    ?? null;
+  const bizPriceRaw = bizDiscountPct !== null
+    ? buyRaw * (1 - bizDiscountPct / 100)
+    : (usPNum(row['Buy Box: Business Price']) ?? usPNum(row['Business Price']) ?? null);
+  const hasBizPrice = bizPriceRaw !== null && bizPriceRaw > 0;
+  const bizBuyTotal = hasBizPrice ? bizPriceRaw + inboundCost + US_FEES.prepFee : null;
+  const bizProfit = hasBizPrice ? sp - bizBuyTotal - refFee - fbaFee : null;
+  const bizRoi = hasBizPrice && bizBuyTotal > 0 ? bizProfit / bizBuyTotal : null;
+  const bizDiscount = bizDiscountPct ?? (hasBizPrice && buyRaw ? ((1 - bizPriceRaw / buyRaw) * 100) : null);
   const roi = buyTotal > 0 ? profit / buyTotal : null;
 
   // Strength
@@ -1337,7 +1350,7 @@ function usAnalyseRow(row) {
 
   const spSource = stCapped && spBase === stCapped ? 'ST' : (avg90 && _use90 ? '90d' : '180d') + '+' + Math.round((uplift-1)*100) + '%';
 
-  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: cfg.ss || snsEligible, ssRoi, snsPriceRaw, avg180: bestAvg, weightLbs, inboundCost, decision: null };
+  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: cfg.ss || snsEligible, ssRoi, snsPriceRaw, avg180: bestAvg, weightLbs, inboundCost, bizPriceRaw, bizBuyTotal, bizProfit, bizRoi, bizDiscount, hasBizPrice, decision: null };
 }
 
 // ── RENDER TABLE ──────────────────────────
@@ -1370,7 +1383,8 @@ function usRenderTable() {
   else if (usFilter === 'amber')  data = data.filter(d => d.colour === 'amber');
   else if (usFilter === 'red')    data = data.filter(d => d.colour === 'red' && !d.spikeFlag);
   else if (usFilter === 'subsave') data = data.filter(d => (d.ss || d.snsPriceRaw) && d.ssRoi != null && d.ssRoi >= 0.15).sort((a,b) => (b.ssRoi||0)-(a.ssRoi||0));
-  else if (usFilter === 'spike')  data = data.filter(d => !!d.spikeFlag);
+  else if (usFilter === 'spike')   data = data.filter(d => !!d.spikeFlag);
+  else if (usFilter === 'bizprice') data = data.filter(d => d.hasBizPrice && d.bizRoi != null && d.bizRoi >= 0.15).sort((a,b) => (b.bizRoi||0)-(a.bizRoi||0));
 
   if (usExcludeRecent) data = data.filter(d => !d.recentBought);
   if (usBrandFilter)   data = data.filter(d => d.brand === usBrandFilter);
@@ -1406,6 +1420,7 @@ function usRenderTable() {
     <th data-col="bbCurrent" data-type="num" style="color:var(--accent);">BB Now</th>
     <th data-col="profit" data-type="num">Profit</th>
     <th data-col="roi" data-type="num">ROI</th>
+    <th data-col="bizRoi" data-type="num" style="color:var(--amber);">💼 Biz ROI</th>
     <th data-col="ssRoi" data-type="num" style="color:var(--purple);">♻ S&S ROI</th>
     <th data-col="lastPriceChange" data-type="str">Last Change</th>
     <th data-col="boughtPerMonth" data-type="num">Sold/mo</th>
@@ -1422,9 +1437,10 @@ function usRenderTable() {
   const cntRed   = usAllDeals.filter(d => d.colour === 'red' && !d.spikeFlag).length;
   const cntSS    = usAllDeals.filter(d => (d.ss) && d.ssRoi != null && d.ssRoi >= 0.15).length;
   const cntSpike = usAllDeals.filter(d => !!d.spikeFlag).length;
+  const cntBiz   = usAllDeals.filter(d => d.hasBizPrice && d.bizRoi != null && d.bizRoi >= 0.15).length;
   const setC = (id, n) => { const el = document.getElementById(id); if(el) el.textContent = n > 0 ? n : ''; };
   setC('usCntAll', cntAll); setC('usCntGreen', cntGreen); setC('usCntAmber', cntAmber);
-  setC('usCntRed', cntRed); setC('usCntSS', cntSS); setC('usCntSpike', cntSpike);
+  setC('usCntRed', cntRed); setC('usCntSS', cntSS); setC('usCntSpike', cntSpike); setC('usCntBiz', cntBiz);
 
   const resetBtn = document.getElementById('usResetBtn');
   const exportBtn = document.getElementById('usExportBtn');
@@ -1463,6 +1479,7 @@ function usRenderTable() {
       <td class="td-r" style="color:${bbColour};">${fmtN(deal.bbCurrent)}</td>
       <td class="td-r" style="color:${deal.profit > 0 ? 'var(--green)' : 'var(--red)'};font-weight:700;">${fmtN(deal.profit)}</td>
       <td class="td-roi" style="color:${roiCol(deal.roi)};">${fmtP(deal.roi)}</td>
+      <td class="td-roi" style="color:${!deal.hasBizPrice ? 'var(--text-4)' : deal.bizRoi >= 0.20 ? 'var(--green)' : deal.bizRoi >= 0.15 ? 'var(--amber)' : 'var(--text-3)'};">${deal.hasBizPrice ? (deal.bizRoi != null ? `<span style="font-weight:700;">${(deal.bizRoi*100).toFixed(1)}%</span><div style="font-family:var(--mono);font-size:9px;color:var(--amber);margin-top:1px;">-${deal.bizDiscount?.toFixed(0)}% off</div>` : '—') : '<span style="color:var(--text-4);">—</span>'}</td>
       <td class="td-roi" style="color:${deal.ssRoi == null ? 'var(--text-3)' : deal.ssRoi >= 0.20 ? 'var(--green)' : deal.ssRoi >= 0.15 ? 'var(--amber)' : 'var(--text-3)'};">${deal.ssRoi != null ? (deal.ssRoi*100).toFixed(1)+'%' : '—'}</td>
       <td class="td-r" style="font-size:11px;color:var(--text-3);text-align:left;">${deal.lastPriceChange || '—'}</td>
       <td class="td-r">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>

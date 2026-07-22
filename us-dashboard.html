@@ -1322,6 +1322,7 @@ function usAnalyseRow(row) {
   const bizProfit = hasBizPrice ? sp - bizBuyTotal - refFee - fbaFee : null;
   const bizRoi = hasBizPrice && bizBuyTotal > 0 ? bizProfit / bizBuyTotal : null;
   const bizDiscount = bizDiscountPct ?? (hasBizPrice && buyRaw ? ((1 - bizPriceRaw / buyRaw) * 100) : null);
+  const profit = sp - buyTotal - refFee - fbaFee;
   const roi = buyTotal > 0 ? profit / buyTotal : null;
 
   // Strength

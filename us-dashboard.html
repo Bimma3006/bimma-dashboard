@@ -437,7 +437,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v1.9 · 24 Jul 26</div>
+    <div class="us-version" id="usVersion">v2.0 · 24 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
@@ -2019,7 +2019,7 @@ async function usAnalyseDeal(asin) {
 
   const prompt = `Quick 2-check read on this Amazon A2A deal. Ignore ROI/profit math entirely — just judge these two things:
 
-1. BRAND: Is "${deal.brand || 'this brand'}" a real, recognized consumer brand with genuine market presence (like Michael Todd Beauty, Cetaphil, Live Conscious) — or generic/unknown/no-name?
+1. BRAND: Is "${deal.brand || 'this brand'}" a real, established brand with genuine market presence — not necessarily a famous household name, but a proper DTC/Amazon-native brand in supplements, wellness, beauty, skincare, or similar consumer categories? Reference examples of the brand quality we're looking for: Insane Labz, Amuse, True Canine, No Cow, Ronnie Coleman, Honey Pot, Tree of Life, Zahler, Live Conscious, Burt's Bees, Pacifica, Harney & Sons, Myprotein, SUTERA, Viori, First Aid Beauty, Dasique, Global Healing Center, HYDRANT, The Beard Club, Reserveage, Bliss, Chewsy Chews, For Wellness, TB12, Source Naturals, Honest Beauty, Michael Todd Beauty, Cetaphil. If the brand feels like it belongs on that list — a real niche/DTC brand with its own following — treat it as recognized, even if you personally haven't heard of it. Only mark unrecognized if it's genuinely generic/no-name/unbranded.
 2. CHART: Based on this price history, is it healthy (stable or rising 180d avg, normal fluctuation) or unhealthy (declining avg, erratic/crashing, dead velocity)?
    - 180d Avg: $${deal.avg180?.toFixed(2)}
    - BB Now: $${deal.bbCurrent?.toFixed(2)} (ignore closeness to buy price — that's normal for A2A)

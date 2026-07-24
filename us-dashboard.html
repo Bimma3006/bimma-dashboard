@@ -437,7 +437,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v2.0 · 24 Jul 26</div>
+    <div class="us-version" id="usVersion">v2.1 · 24 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
@@ -2017,9 +2017,9 @@ async function usAnalyseDeal(asin) {
 
   if (btn) { btn.textContent = '⏳'; btn.classList.add('loading'); btn.disabled = true; }
 
-  const prompt = `Quick 2-check read on this Amazon A2A deal. Ignore ROI/profit math entirely — just judge these two things:
+  const prompt = `Quick check on this Amazon A2A deal — you have a web_search tool, use it once to check brand legitimacy.
 
-1. BRAND: Is "${deal.brand || 'this brand'}" a real, established brand with genuine market presence — not necessarily a famous household name, but a proper DTC/Amazon-native brand in supplements, wellness, beauty, skincare, or similar consumer categories? Reference examples of the brand quality we're looking for: Insane Labz, Amuse, True Canine, No Cow, Ronnie Coleman, Honey Pot, Tree of Life, Zahler, Live Conscious, Burt's Bees, Pacifica, Harney & Sons, Myprotein, SUTERA, Viori, First Aid Beauty, Dasique, Global Healing Center, HYDRANT, The Beard Club, Reserveage, Bliss, Chewsy Chews, For Wellness, TB12, Source Naturals, Honest Beauty, Michael Todd Beauty, Cetaphil. If the brand feels like it belongs on that list — a real niche/DTC brand with its own following — treat it as recognized, even if you personally haven't heard of it. Only mark unrecognized if it's genuinely generic/no-name/unbranded.
+1. BRAND: Search the web for "${deal.brand || deal.title}" to check if it's a real, established brand — does it have its own official website, real social presence, or genuine market footprint? Or does it look like a generic/throwaway Amazon-native listing name with no real business behind it (common with cheap Chinese-manufactured goods using random invented brand names)? Reference examples of the brand quality we DO want: Insane Labz, Amuse, True Canine, No Cow, Ronnie Coleman, Honey Pot, Tree of Life, Zahler, Live Conscious, Burt's Bees, Pacifica, Harney & Sons, Myprotein, SUTERA, Viori, First Aid Beauty, Dasique, Global Healing Center, HYDRANT, The Beard Club, Reserveage, Bliss, Chewsy Chews, For Wellness, TB12, Source Naturals, Honest Beauty, Michael Todd Beauty, Cetaphil — real DTC/niche brands with their own following, even if not famous. If the brand has no real website/presence and looks invented purely to sell one generic product line (mops, phone cases, random gadgets etc with made-up names), that's an automatic SKIP regardless of the chart.
 2. CHART: Based on this price history, is it healthy (stable or rising 180d avg, normal fluctuation) or unhealthy (declining avg, erratic/crashing, dead velocity)?
    - 180d Avg: $${deal.avg180?.toFixed(2)}
    - BB Now: $${deal.bbCurrent?.toFixed(2)} (ignore closeness to buy price — that's normal for A2A)
@@ -2029,10 +2029,10 @@ async function usAnalyseDeal(asin) {
 
 Product: ${deal.title}
 
-Reply ONLY in this JSON (no markdown), keep it short:
-{"verdict":"BUY","confidence":"HIGH","reason":"one short line: Brand: [known/unknown] · Chart: [healthy/unhealthy]","risks":"one short phrase or empty string"}
+After searching, reply with ONLY this JSON as your final message (no markdown, no other text):
+{"verdict":"BUY","confidence":"HIGH","reason":"one short line: Brand: [real brand found — say what it is, or generic/no-name] · Chart: [healthy/unhealthy]","risks":"one short phrase or empty string"}
 
-verdict = BUY (good brand + healthy chart), SKIP (bad brand or bad chart), WATCH (mixed/uncertain).`;
+verdict = BUY (real brand + healthy chart), SKIP (no real brand found, or bad chart), WATCH (mixed/uncertain).`;
 
   try {
     const resp = await fetch('https://wispy-dew-f7a9.jamescatterall49.workers.dev', {
@@ -2041,14 +2041,21 @@ verdict = BUY (good brand + healthy chart), SKIP (bad brand or bad chart), WATCH
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
       },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 100, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 600,
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],
+        messages: [{ role: 'user', content: prompt }]
+      })
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const rawText = await resp.text();
     let data;
     try { data = JSON.parse(rawText); } catch { throw new Error('Invalid response'); }
-    const text = data.content?.[0]?.text || '';
-    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text);
+    const fullText = textBlocks.join('\n');
+    const jsonMatch = fullText.match(/\{[\s\S]*"verdict"[\s\S]*?\}/);
+    const parsed = JSON.parse((jsonMatch ? jsonMatch[0] : fullText).replace(/```json|```/g,'').trim());
     deal.aiVerdict = parsed.verdict;
     deal.aiReasoning = `<strong>${parsed.confidence} confidence</strong> — ${parsed.reason}${parsed.risks ? ' <span style="color:var(--amber);">⚠ '+parsed.risks+'</span>' : ''}`;
     usRenderTable();
@@ -2065,7 +2072,7 @@ async function usAnalyseAll() {
   usToast('Analysing ' + Math.min(deals.length,50) + ' deals — this may take a minute…', '');
   for (const deal of deals.slice(0,50)) {
     await usAnalyseDeal(deal.asin);
-    await new Promise(r => setTimeout(r, 350));
+    await new Promise(r => setTimeout(r, 800));
   }
   usToast('AI analysis complete ✓', 'success');
 }

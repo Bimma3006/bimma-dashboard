@@ -359,6 +359,42 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
 .us-dots::after { content: '…'; animation: us-ldots 1.2s steps(4,end) infinite; }
 @keyframes us-ldots { 0%,20%{content:'.'} 40%{content:'..'} 60%,80%{content:'...'} 100%{content:''} }
 
+
+/* ── AI VERDICT ────────────────────────── */
+.ai-verdict-btn {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: 4px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text-3); cursor: pointer; transition: all .15s;
+  white-space: nowrap;
+}
+.ai-verdict-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ai-verdict-btn.loading { color: var(--text-4); border-color: var(--border); cursor: wait; }
+.ai-verdict-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--mono); font-size: 10px; font-weight: 800;
+  padding: 3px 10px; border-radius: 4px; cursor: pointer;
+  letter-spacing: .04em; text-transform: uppercase; white-space: nowrap;
+  border: 1px solid; transition: opacity .15s;
+}
+.ai-verdict-badge:hover { opacity: .8; }
+.ai-verdict-buy  { background: rgba(0,212,168,.12); color: var(--green); border-color: rgba(0,212,168,.3); }
+.ai-verdict-skip { background: rgba(255,71,87,.1);  color: var(--red);   border-color: rgba(255,71,87,.25); }
+.ai-verdict-watch{ background: rgba(255,165,2,.1);  color: var(--amber); border-color: rgba(255,165,2,.3); }
+.ai-reasoning-row td {
+  padding: 0 !important;
+  border-bottom: 1px solid var(--border2) !important;
+}
+.ai-reasoning-panel {
+  padding: 12px 16px 14px 56px;
+  background: var(--surface3);
+  font-size: 12px; line-height: 1.6; color: var(--text-2);
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.ai-reasoning-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.ai-reasoning-text { flex: 1; min-width: 0; }
+.ai-reasoning-text strong { color: var(--text); }
+
 /* ── SCROLLBAR ───────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -570,6 +606,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
             <input type="text" class="us-search" id="usSearch" placeholder="Search…" oninput="usRenderTable()">
             <button class="us-act-btn" id="usResetBtn" onclick="usReset()" style="display:none;">↺ Reset</button>
             <button class="us-act-btn us-act-btn-accent" id="usExportBtn" onclick="usExportApproved()" style="display:none;">↓ Export CSV</button>
+            <button class="us-act-btn" id="usAnalyseAllBtn" onclick="usAnalyseAll()" style="display:none;border-color:rgba(162,155,254,.35);color:var(--purple);">🤖 Analyse All</button>
           </div>
         </div>
         <div class="us-table-outer">
@@ -1449,6 +1486,8 @@ function usRenderTable() {
   const exportBtn = document.getElementById('usExportBtn');
   if (resetBtn) resetBtn.style.display = '';
   if (exportBtn) exportBtn.style.display = '';
+  const analyseAllBtn = document.getElementById('usAnalyseAllBtn');
+  if (analyseAllBtn) analyseAllBtn.style.display = '';
 
   if (!data.length) {
     document.getElementById('usTableBody').innerHTML = `<tr><td colspan="10" class="us-empty">No deals match this filter</td></tr>`;
@@ -1486,13 +1525,26 @@ function usRenderTable() {
       <td class="td-roi" style="color:${deal.ssRoi == null ? 'var(--text-3)' : deal.ssRoi >= 0.20 ? 'var(--green)' : deal.ssRoi >= 0.15 ? 'var(--amber)' : 'var(--text-3)'};">${deal.ssRoi != null ? (deal.ssRoi*100).toFixed(1)+'%' : '—'}</td>
       <td class="td-r" style="font-size:11px;color:var(--text-3);text-align:left;">${deal.lastPriceChange || '—'}</td>
       <td class="td-r">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
+      <td style="text-align:center;">
+        ${deal.aiVerdict
+          ? `<span class="ai-verdict-badge ai-verdict-${deal.aiVerdict.toLowerCase()}" onclick="usToggleReasoning('${deal.asin}')">${deal.aiVerdict === 'BUY' ? '✓' : deal.aiVerdict === 'SKIP' ? '✕' : '◎'} ${deal.aiVerdict}</span>`
+          : `<button class="ai-verdict-btn" id="ai-btn-${deal.asin}" onclick="usAnalyseDeal('${deal.asin}')">🤖 Analyse</button>`}
+      </td>
       <td>
         <div style="display:flex;gap:4px;justify-content:flex-end;">
           <button class="us-row-btn approve" onclick="usApprove('${deal.asin}')">✓</button>
           <button class="us-row-btn reject" onclick="usReject('${deal.asin}')">✕</button>
         </div>
       </td>
-    </tr>`;
+    </tr>
+    ${deal.aiReasoning ? `<tr class="ai-reasoning-row" id="ai-row-${deal.asin}" style="display:none;">
+      <td colspan="13">
+        <div class="ai-reasoning-panel">
+          <span class="ai-reasoning-icon">${deal.aiVerdict === 'BUY' ? '✅' : deal.aiVerdict === 'SKIP' ? '❌' : '👀'}</span>
+          <div class="ai-reasoning-text">${deal.aiReasoning}</div>
+        </div>
+      </td>
+    </tr>` : ''}`;
   }).join('');
 
   usInitSort();
@@ -1926,6 +1978,72 @@ async function usDriveLoad() {
     usToast('Loaded from cloud ✓', 'success');
     setTimeout(() => { usRenderDashboard(); usRenderPurchases(); usRenderExpenses(); }, 500);
   } catch(e) { usToast('Load failed: ' + e.message, 'error'); }
+}
+
+// ── AI DEAL ANALYSIS ───────────────────────────────
+function usToggleReasoning(asin) {
+  const row = document.getElementById('ai-row-' + asin);
+  if (!row) return;
+  row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+
+async function usAnalyseDeal(asin) {
+  const deal = usAllDeals.find(d => d.asin === asin);
+  if (!deal) return;
+  const btn = document.getElementById('ai-btn-' + asin);
+  if (btn) { btn.textContent = '⏳'; btn.classList.add('loading'); btn.disabled = true; }
+
+  const prompt = `You are an expert Amazon FBA arbitrage analyst. Analyse this US 3rd party A2A deal.
+
+DEAL:
+- ASIN: ${deal.asin}
+- Product: ${deal.title}
+- Brand: ${deal.brand || 'Unknown/Generic'}
+- Buy Price: $${deal.buyRaw?.toFixed(2)}
+- Projected Sell (180d avg+10%): $${deal.sp?.toFixed(2)}
+- BB Now: $${deal.bbCurrent?.toFixed(2)}
+- 180d Avg: $${deal.avg180?.toFixed(2)}
+- Profit: $${deal.profit?.toFixed(2)} | ROI: ${deal.roi ? (deal.roi*100).toFixed(1)+'%' : 'N/A'}
+- Sold/mo: ${deal.boughtPerMonth || 'Unknown'}
+- Spike: ${deal.spikeFlag || 'None'}
+- Last change: ${deal.lastPriceChange || 'Unknown'}
+
+RED FLAGS: generic/no-brand products, Prime Exclusive traps, erratic price history, BB near sell price, low velocity.
+GREEN FLAGS: established brand, clear temporary dip vs stable avg, good velocity, BB well below 180d avg.
+
+Reply ONLY in this JSON (no markdown):
+{"verdict":"BUY","confidence":"HIGH","reason":"2 sentences max","risks":"1 sentence"}
+
+verdict = BUY, SKIP, or WATCH. confidence = HIGH, MEDIUM, or LOW.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 200, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await resp.json();
+    const text = data.content?.[0]?.text || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    deal.aiVerdict = parsed.verdict;
+    deal.aiReasoning = `<strong>${parsed.confidence} confidence</strong> — ${parsed.reason}${parsed.risks ? ' <span style="color:var(--amber);">⚠ '+parsed.risks+'</span>' : ''}`;
+    usRenderTable();
+    setTimeout(() => { const r = document.getElementById('ai-row-'+asin); if(r) r.style.display=''; }, 50);
+  } catch(e) {
+    if (btn) { btn.textContent = '🤖 Retry'; btn.classList.remove('loading'); btn.disabled = false; }
+    usToast('AI error: ' + e.message, 'error');
+  }
+}
+
+async function usAnalyseAll() {
+  const deals = usAllDeals.filter(d => !d.spikeFlag && !d.aiVerdict);
+  if (!deals.length) { usToast('No deals to analyse', 'error'); return; }
+  usToast('Analysing ' + Math.min(deals.length,50) + ' deals — this may take a minute…', '');
+  for (const deal of deals.slice(0,50)) {
+    await usAnalyseDeal(deal.asin);
+    await new Promise(r => setTimeout(r, 350));
+  }
+  usToast('AI analysis complete ✓', 'success');
 }
 
 function usToast(msg, type='') {

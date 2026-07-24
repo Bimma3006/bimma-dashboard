@@ -2041,8 +2041,9 @@ Reply ONLY in this JSON (no markdown):
 verdict = BUY, SKIP, or WATCH. confidence = HIGH, MEDIUM, or LOW.`;
 
   try {
-    const apiUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://api.anthropic.com/v1/messages');
-    const resp = await fetch(apiUrl, {
+    const body = JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 200, messages: [{ role: 'user', content: prompt }] });
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.anthropic.com/v1/messages')}`;
+    const resp = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -2050,13 +2051,12 @@ verdict = BUY, SKIP, or WATCH. confidence = HIGH, MEDIUM, or LOW.`;
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-allow-browser': 'true'
       },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 200, messages: [{ role: 'user', content: prompt }] })
+      body
     });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const rawText = await resp.text();
-    console.log('[Bimma AI] Response:', rawText);
-    if (!resp.ok) throw new Error('API error ' + resp.status + ': ' + rawText.slice(0,100));
     let data;
-    try { data = JSON.parse(rawText); } catch(e) { throw new Error('Bad JSON: ' + rawText.slice(0,80)); }
+    try { data = JSON.parse(rawText); } catch { throw new Error('Proxy returned invalid response — try again'); }
     const text = data.content?.[0]?.text || '';
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
     deal.aiVerdict = parsed.verdict;

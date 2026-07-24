@@ -359,42 +359,6 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
 .us-dots::after { content: '…'; animation: us-ldots 1.2s steps(4,end) infinite; }
 @keyframes us-ldots { 0%,20%{content:'.'} 40%{content:'..'} 60%,80%{content:'...'} 100%{content:''} }
 
-
-/* ── AI VERDICT ────────────────────────── */
-.ai-verdict-btn {
-  font-family: var(--mono); font-size: 10px; font-weight: 700;
-  padding: 3px 8px; border-radius: 4px;
-  border: 1px solid var(--border2); background: transparent;
-  color: var(--text-3); cursor: pointer; transition: all .15s;
-  white-space: nowrap;
-}
-.ai-verdict-btn:hover { border-color: var(--accent); color: var(--accent); }
-.ai-verdict-btn.loading { color: var(--text-4); border-color: var(--border); cursor: wait; }
-.ai-verdict-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-family: var(--mono); font-size: 10px; font-weight: 800;
-  padding: 3px 10px; border-radius: 4px; cursor: pointer;
-  letter-spacing: .04em; text-transform: uppercase; white-space: nowrap;
-  border: 1px solid; transition: opacity .15s;
-}
-.ai-verdict-badge:hover { opacity: .8; }
-.ai-verdict-buy  { background: rgba(0,212,168,.12); color: var(--green); border-color: rgba(0,212,168,.3); }
-.ai-verdict-skip { background: rgba(255,71,87,.1);  color: var(--red);   border-color: rgba(255,71,87,.25); }
-.ai-verdict-watch{ background: rgba(255,165,2,.1);  color: var(--amber); border-color: rgba(255,165,2,.3); }
-.ai-reasoning-row td {
-  padding: 0 !important;
-  border-bottom: 1px solid var(--border2) !important;
-}
-.ai-reasoning-panel {
-  padding: 12px 16px 14px 56px;
-  background: var(--surface3);
-  font-size: 12px; line-height: 1.6; color: var(--text-2);
-  display: flex; align-items: flex-start; gap: 12px;
-}
-.ai-reasoning-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-.ai-reasoning-text { flex: 1; min-width: 0; }
-.ai-reasoning-text strong { color: var(--text); }
-
 /* ── SCROLLBAR ───────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -437,7 +401,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v2.7 · 24 Jul 26</div>
+    <div class="us-version" id="usVersion">v3.0 · 24 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
@@ -445,10 +409,6 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     <button onclick="usHandleAuth()" id="usAuthBtn" style="margin-top:8px;width:100%;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.06em;padding:7px 12px;background:var(--accent);border:none;border-radius:var(--r-sm);color:#fff;cursor:pointer;transition:all var(--transition);">Connect Sheets</button>
     <button onclick="usLoadSheet()" id="usRefreshBtn" disabled style="margin-top:6px;width:100%;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.04em;padding:6px 12px;background:transparent;border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;">↻ Refresh</button>
     <a href="index.html" class="us-switch-link">← Switch to UK Dashboard</a>
-    <div style="margin-top:10px;display:flex;gap:4px;">
-      <input type="password" id="usAnthropicKey" placeholder="sk-ant-… API key" class="us-input" style="font-size:10px;padding:5px 8px;flex:1;" value="">
-      <button onclick="usAntropicSaveKey()" style="font-family:var(--mono);font-size:10px;font-weight:700;padding:5px 8px;background:var(--accent);border:none;border-radius:var(--r-sm);color:#fff;cursor:pointer;flex-shrink:0;">Save</button>
-    </div>
     <div style="display:flex;gap:6px;margin-top:8px;">
       <button onclick="usDriveSave()" style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;padding:6px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;transition:all .15s;" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--text-3)'">↑ Save</button>
       <button onclick="usDriveLoad()" style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;padding:6px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;transition:all .15s;" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--text-3)'">↓ Load</button>
@@ -603,7 +563,6 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
             <button class="us-pill us-pill-purple" id="usPillSS"     onclick="usSetFilter('subsave',this)"><span class="us-pill-dot" style="background:var(--purple);"></span>♻ S&S <span id="usCntSS"></span></button>
             <button class="us-pill" id="usPillSpike" onclick="usSetFilter('spike',this)" style="border-color:rgba(255,165,2,.3);color:var(--amber);">⚡ Spiked <span id="usCntSpike"></span></button>
             <button class="us-pill" id="usPillBiz" onclick="usSetFilter('bizprice',this)" style="border-color:rgba(255,165,2,.3);color:var(--amber);">💼 Biz <span id="usCntBiz"></span></button>
-            <button class="us-pill" id="usPillAIKeep" onclick="usSetFilter('aikeep',this)" style="border-color:rgba(155,109,255,.35);color:var(--purple);">🤖 AI Keep <span id="usCntAIKeep"></span></button>
             <button class="us-pill" id="usPillExcRecent" onclick="usToggleExcludeRecent(this)" style="border-style:dashed;">🚫 &lt;3d</button>
           </div>
           <div class="us-act-row">
@@ -611,7 +570,6 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
             <input type="text" class="us-search" id="usSearch" placeholder="Search…" oninput="usRenderTable()">
             <button class="us-act-btn" id="usResetBtn" onclick="usReset()" style="display:none;">↺ Reset</button>
             <button class="us-act-btn us-act-btn-accent" id="usExportBtn" onclick="usExportApproved()" style="display:none;">↓ Export CSV</button>
-            <button class="us-act-btn" id="usAnalyseAllBtn" onclick="usAnalyseAll()" style="display:none;border-color:rgba(162,155,254,.35);color:var(--purple);">🤖 Analyse All</button>
           </div>
         </div>
         <div class="us-table-outer">
@@ -1120,11 +1078,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (inp) inp.value = savedCid;
     usLoadGIS();
   }
-  const savedAnthropicKey = localStorage.getItem('us_anthropic_key');
-  if (savedAnthropicKey) {
-    const el = document.getElementById('usAnthropicKey');
-    if (el) el.value = savedAnthropicKey;
-  }
 
   usRenderDashboard();
   usRenderPurchases();
@@ -1213,7 +1166,6 @@ async function usRunAnalysis() {
     document.getElementById('usFilters').style.display = 'block';
     usRenderTable();
     usToast(`${deals.length} deals analysed`, 'success');
-    usAutoAnalyseGoodDeals();
   } catch(e) {
     usToast('Error: ' + e.message, 'error');
     document.getElementById('usLoading').classList.remove('visible');
@@ -1450,7 +1402,6 @@ function usRenderTable() {
   else if (usFilter === 'subsave') data = data.filter(d => (d.ss || d.snsPriceRaw) && d.ssRoi != null && d.ssRoi >= 0.15).sort((a,b) => (b.ssRoi||0)-(a.ssRoi||0));
   else if (usFilter === 'spike')   data = data.filter(d => !!d.spikeFlag);
   else if (usFilter === 'bizprice') data = data.filter(d => d.hasBizPrice && d.bizRoi != null && d.bizRoi >= 0.15).sort((a,b) => (b.bizRoi||0)-(a.bizRoi||0));
-  else if (usFilter === 'aikeep')  data = data.filter(d => d.aiVerdict === 'BUY' || d.aiVerdict === 'WATCH');
 
   if (usExcludeRecent) data = data.filter(d => !d.recentBought);
   if (usBrandFilter)   data = data.filter(d => d.brand === usBrandFilter);
@@ -1504,18 +1455,14 @@ function usRenderTable() {
   const cntSS    = usAllDeals.filter(d => (d.ss) && d.ssRoi != null && d.ssRoi >= 0.15).length;
   const cntSpike = usAllDeals.filter(d => !!d.spikeFlag).length;
   const cntBiz   = usAllDeals.filter(d => d.hasBizPrice && d.bizRoi != null && d.bizRoi >= 0.15).length;
-  const cntAIKeep = usAllDeals.filter(d => d.aiVerdict === 'BUY' || d.aiVerdict === 'WATCH').length;
   const setC = (id, n) => { const el = document.getElementById(id); if(el) el.textContent = n > 0 ? n : ''; };
   setC('usCntAll', cntAll); setC('usCntGreen', cntGreen); setC('usCntAmber', cntAmber);
   setC('usCntRed', cntRed); setC('usCntSS', cntSS); setC('usCntSpike', cntSpike); setC('usCntBiz', cntBiz);
-  setC('usCntAIKeep', cntAIKeep);
 
   const resetBtn = document.getElementById('usResetBtn');
   const exportBtn = document.getElementById('usExportBtn');
   if (resetBtn) resetBtn.style.display = '';
   if (exportBtn) exportBtn.style.display = '';
-  const analyseAllBtn = document.getElementById('usAnalyseAllBtn');
-  if (analyseAllBtn) analyseAllBtn.style.display = '';
 
   if (!data.length) {
     document.getElementById('usTableBody').innerHTML = `<tr><td colspan="10" class="us-empty">No deals match this filter</td></tr>`;
@@ -1553,26 +1500,13 @@ function usRenderTable() {
       <td class="td-roi" style="color:${deal.ssRoi == null ? 'var(--text-3)' : deal.ssRoi >= 0.20 ? 'var(--green)' : deal.ssRoi >= 0.15 ? 'var(--amber)' : 'var(--text-3)'};">${deal.ssRoi != null ? (deal.ssRoi*100).toFixed(1)+'%' : '—'}</td>
       <td class="td-r" style="font-size:11px;color:var(--text-3);text-align:left;">${deal.lastPriceChange || '—'}</td>
       <td class="td-r">${deal.boughtPerMonth != null ? (deal.boughtPerMonth >= 1000 ? (deal.boughtPerMonth/1000).toFixed(1)+'k' : deal.boughtPerMonth) : '—'}</td>
-      <td style="text-align:center;">
-        ${deal.aiVerdict
-          ? `<span class="ai-verdict-badge ai-verdict-${deal.aiVerdict.toLowerCase()}" onclick="usToggleReasoning('${deal.asin}')">${deal.aiVerdict === 'BUY' ? '✓' : deal.aiVerdict === 'SKIP' ? '✕' : '◎'} ${deal.aiVerdict}</span>`
-          : `<button class="ai-verdict-btn" id="ai-btn-${deal.asin}" onclick="usAnalyseDeal('${deal.asin}')">🤖 Analyse</button>`}
-      </td>
       <td>
         <div style="display:flex;gap:4px;justify-content:flex-end;">
           <button class="us-row-btn approve" onclick="usApprove('${deal.asin}')">✓</button>
           <button class="us-row-btn reject" onclick="usReject('${deal.asin}')">✕</button>
         </div>
       </td>
-    </tr>
-    ${deal.aiReasoning ? `<tr class="ai-reasoning-row" id="ai-row-${deal.asin}" style="display:none;">
-      <td colspan="13">
-        <div class="ai-reasoning-panel">
-          <span class="ai-reasoning-icon">${deal.aiVerdict === 'BUY' ? '✅' : deal.aiVerdict === 'SKIP' ? '❌' : '👀'}</span>
-          <div class="ai-reasoning-text">${deal.aiReasoning}</div>
-        </div>
-      </td>
-    </tr>` : ''}`;
+    </tr>`;
   }).join('');
 
   usInitSort();
@@ -2006,120 +1940,6 @@ async function usDriveLoad() {
     usToast('Loaded from cloud ✓', 'success');
     setTimeout(() => { usRenderDashboard(); usRenderPurchases(); usRenderExpenses(); }, 500);
   } catch(e) { usToast('Load failed: ' + e.message, 'error'); }
-}
-
-function usAntropicSaveKey() {
-  const val = document.getElementById('usAnthropicKey')?.value.trim();
-  if (!val) { usToast('Enter an API key first', 'error'); return; }
-  localStorage.setItem('us_anthropic_key', val);
-  usToast('API key saved ✓', 'success');
-}
-function usToggleReasoning(asin) {
-  const row = document.getElementById('ai-row-' + asin);
-  if (!row) return;
-  row.style.display = row.style.display === 'none' ? '' : 'none';
-}
-
-async function usAnalyseDeal(asin) {
-  const deal = usAllDeals.find(d => d.asin === asin);
-  if (!deal) return;
-  const btn = document.getElementById('ai-btn-' + asin);
-
-  // Get Anthropic API key
-  const anthropicKey = localStorage.getItem('us_anthropic_key') || '';
-  if (!anthropicKey) {
-    const key = prompt('Enter your Anthropic API key to use AI analysis:');
-    if (!key) return;
-    localStorage.setItem('us_anthropic_key', key.trim());
-  }
-  const apiKey = localStorage.getItem('us_anthropic_key');
-
-  if (btn) { btn.textContent = '⏳'; btn.classList.add('loading'); btn.disabled = true; }
-
-  const prompt = `Quick check on this Amazon A2A deal — you have a web_search tool, use it once to check brand legitimacy.
-
-${deal.primeExclusiveFrequent ? 'HARD RULE — AUTOMATIC SKIP: This ASIN has "New, Prime Exclusive" pricing showing up across both the 90-day AND 180-day windows — that means it\'s in constant/recurring rotation (like a repeating lightning-deal cycle), not a one-off. The "dip" repeats indefinitely, so there is no reliable resale premium to flip into. Verdict MUST be SKIP regardless of brand or chart quality. State this as the primary reason.\n\n' : deal.hasPrimeExclusive ? 'NOTE: This ASIN has some Prime Exclusive pricing on record, but it does not appear to be in constant/frequent rotation (not present across both 90d and 180d windows) — likely a recent or occasional event rather than a repeating cycle. Don\'t auto-skip for this alone; factor it in as a minor watch-point only if other signals are also weak.\n\n' : ''}1. BRAND: Search the web for "${deal.brand || deal.title}" to check if it's a real, established brand — does it have its own official website, real social presence, or genuine market footprint? Or does it look like a generic/throwaway Amazon-native listing name with no real business behind it (common with cheap Chinese-manufactured goods using random invented brand names)? Reference examples of the brand quality we DO want: Insane Labz, Amuse, True Canine, No Cow, Ronnie Coleman, Honey Pot, Tree of Life, Zahler, Live Conscious, Burt's Bees, Pacifica, Harney & Sons, Myprotein, SUTERA, Viori, First Aid Beauty, Dasique, Global Healing Center, HYDRANT, The Beard Club, Reserveage, Bliss, Chewsy Chews, For Wellness, TB12, Source Naturals, Honest Beauty, Michael Todd Beauty, Cetaphil — real DTC/niche brands with their own following, even if not famous. If the brand has no real website/presence and looks invented purely to sell one generic product line (mops, phone cases, random gadgets etc with made-up names), that's an automatic SKIP regardless of the chart.
-2. CHART: This is A2A arbitrage — the strategy is BUY NOW at a temporary low price, HOLD, then SELL LATER once the price recovers toward its normal level. BB Now sitting below the 180d Avg is GOOD and EXPECTED — that gap IS the profit margin, not a warning sign, and today's snapshot price on its own tells you nothing about the trend.
-   The REAL decline signal is whether the shorter-term averages are meaningfully lower than the 180d average — that means the price has been sliding for a while, not just dipping today. Compare:
-   - 180d Avg (long-term baseline): ${deal.rawAvg180 ? '$'+deal.rawAvg180.toFixed(2) : 'N/A'}
-   - 90d Avg: ${deal.rawAvg90 ? '$'+deal.rawAvg90.toFixed(2) : 'N/A'}
-   - 30d Avg (most recent): ${deal.rawAvg30 ? '$'+deal.rawAvg30.toFixed(2) : 'N/A'}
-   If 30d and/or 90d avg is notably BELOW the 180d avg (e.g. more than ~10-15% lower), that's a genuine sustained decline — flag as unhealthy. If 30d/90d avg is roughly in line with or above the 180d avg, the chart is healthy regardless of where today's BB sits. Also weigh: dead velocity (near-zero sold/mo) or wildly erratic swings as additional unhealthy signals.
-   - BB Now (today's snapshot only, not a trend signal): $${deal.bbCurrent?.toFixed(2)}
-   - Sold/mo: ${deal.boughtPerMonth || 'Unknown'}
-   - Spike: ${deal.spikeFlag || 'None'}
-   - Last change: ${deal.lastPriceChange || 'Unknown'}
-
-Product: ${deal.title}
-
-After searching, reply with ONLY this JSON as your final message (no markdown, no other text):
-{"verdict":"BUY","confidence":"HIGH","reason":"one short line: Brand: [real brand found — say what it is, or generic/no-name] · Chart: [healthy/unhealthy]","risks":"one short phrase or empty string"}
-
-verdict = BUY (real brand + healthy chart), SKIP (no real brand found, or bad chart), WATCH (mixed/uncertain).`;
-
-  try {
-    const resp = await fetch('https://wispy-dew-f7a9.jamescatterall49.workers.dev', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 600,
-        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const rawText = await resp.text();
-    let data;
-    try { data = JSON.parse(rawText); } catch { throw new Error('Invalid response'); }
-    const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text);
-    const fullText = textBlocks.join('\n');
-    const jsonMatch = fullText.match(/\{[\s\S]*"verdict"[\s\S]*?\}/);
-    const parsed = JSON.parse((jsonMatch ? jsonMatch[0] : fullText).replace(/```json|```/g,'').trim());
-    deal.aiVerdict = parsed.verdict;
-    deal.aiReasoning = `<strong>${parsed.confidence} confidence</strong> — ${parsed.reason}${parsed.risks ? ' <span style="color:var(--amber);">⚠ '+parsed.risks+'</span>' : ''}`;
-    usRenderTable();
-    setTimeout(() => { const r = document.getElementById('ai-row-'+asin); if(r) r.style.display=''; }, 50);
-  } catch(e) {
-    if (btn) { btn.textContent = '🤖 Retry'; btn.classList.remove('loading'); btn.disabled = false; }
-    usToast('AI error: ' + e.message, 'error');
-  }
-}
-
-async function usAnalyseAll() {
-  const deals = usAllDeals.filter(d => !d.spikeFlag && !d.aiVerdict);
-  if (!deals.length) { usToast('No deals to analyse', 'error'); return; }
-  usToast('Analysing ' + Math.min(deals.length,50) + ' deals — this may take a minute…', '');
-  for (const deal of deals.slice(0,50)) {
-    await usAnalyseDeal(deal.asin);
-    await new Promise(r => setTimeout(r, 800));
-  }
-  usToast('AI analysis complete ✓', 'success');
-}
-
-// Auto-runs right after a CSV import: AI-checks only the deals that already pass
-// financial screening (Strong/Marginal, not Reject/Spiked), then switches the view
-// to show only the ones the AI approved (real brand + healthy chart).
-async function usAutoAnalyseGoodDeals() {
-  const AUTO_CAP = 150;
-  const candidates = usAllDeals.filter(d => !d.spikeFlag && d.colour !== 'red' && !d.aiVerdict);
-  if (!candidates.length) return;
-  const batch = candidates.slice(0, AUTO_CAP);
-  usToast(`🤖 Auto-checking ${batch.length} deal${batch.length === 1 ? '' : 's'} (brand + chart)…`, '');
-  for (const deal of batch) {
-    await usAnalyseDeal(deal.asin);
-    await new Promise(r => setTimeout(r, 800));
-  }
-  const keepPill = document.getElementById('usPillAIKeep');
-  usSetFilter('aikeep', keepPill);
-  if (candidates.length > AUTO_CAP) {
-    usToast(`Checked first ${AUTO_CAP} — ${candidates.length - AUTO_CAP} more available via 🤖 Analyse All`, '');
-  } else {
-    usToast('AI check complete — showing approved deals only', 'success');
-  }
 }
 
 function usToast(msg, type='') {

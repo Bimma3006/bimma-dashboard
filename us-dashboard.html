@@ -445,8 +445,9 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     <button onclick="usHandleAuth()" id="usAuthBtn" style="margin-top:8px;width:100%;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.06em;padding:7px 12px;background:var(--accent);border:none;border-radius:var(--r-sm);color:#fff;cursor:pointer;transition:all var(--transition);">Connect Sheets</button>
     <button onclick="usLoadSheet()" id="usRefreshBtn" disabled style="margin-top:6px;width:100%;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.04em;padding:6px 12px;background:transparent;border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;">↻ Refresh</button>
     <a href="index.html" class="us-switch-link">← Switch to UK Dashboard</a>
-    <div style="margin-top:10px;">
-      <input type="password" id="usAnthropicKey" placeholder="Anthropic API key for AI" class="us-input" style="font-size:10px;padding:5px 8px;" onchange="localStorage.setItem('us_anthropic_key',this.value.trim())" value="">
+    <div style="margin-top:10px;display:flex;gap:4px;">
+      <input type="password" id="usAnthropicKey" placeholder="sk-ant-… API key" class="us-input" style="font-size:10px;padding:5px 8px;flex:1;" value="">
+      <button onclick="usAntropicSaveKey()" style="font-family:var(--mono);font-size:10px;font-weight:700;padding:5px 8px;background:var(--accent);border:none;border-radius:var(--r-sm);color:#fff;cursor:pointer;flex-shrink:0;">Save</button>
     </div>
     <div style="display:flex;gap:6px;margin-top:8px;">
       <button onclick="usDriveSave()" style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;padding:6px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;transition:all .15s;" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--text-3)'">↑ Save</button>
@@ -1988,7 +1989,12 @@ async function usDriveLoad() {
   } catch(e) { usToast('Load failed: ' + e.message, 'error'); }
 }
 
-// ── AI DEAL ANALYSIS ───────────────────────────────
+function usAntropicSaveKey() {
+  const val = document.getElementById('usAnthropicKey')?.value.trim();
+  if (!val) { usToast('Enter an API key first', 'error'); return; }
+  localStorage.setItem('us_anthropic_key', val);
+  usToast('API key saved ✓', 'success');
+}
 function usToggleReasoning(asin) {
   const row = document.getElementById('ai-row-' + asin);
   if (!row) return;
@@ -2035,7 +2041,8 @@ Reply ONLY in this JSON (no markdown):
 verdict = BUY, SKIP, or WATCH. confidence = HIGH, MEDIUM, or LOW.`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const apiUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://api.anthropic.com/v1/messages');
+    const resp = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

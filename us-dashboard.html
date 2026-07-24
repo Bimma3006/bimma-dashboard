@@ -437,7 +437,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v1.7 · 24 Jul 26</div>
+    <div class="us-version" id="usVersion">v1.8 · 24 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
@@ -2032,11 +2032,14 @@ DEAL:
 - Spike: ${deal.spikeFlag || 'None'}
 - Last change: ${deal.lastPriceChange || 'Unknown'}
 
-RED FLAGS: generic/no-brand products, Prime Exclusive traps, erratic price history, BB near sell price, low velocity.
-GREEN FLAGS: established brand, clear temporary dip vs stable avg, good velocity, BB well below 180d avg.
+IMPORTANT — how to weigh BB Now: BB Now sitting at or near the Buy Price is NORMAL and EXPECTED for A2A sourcing (we buy at the going rate). Do NOT treat "BB near buy price" or "no margin of error vs current BB" as a red flag by itself — that's just how the deal was sourced. Only flag price-position risk if the 180d Avg itself is low/eroding or trending down, meaning there's no real historical premium to sell into. Focus on the brand and the historical demand picture, not a snapshot comparison to today's BB.
+
+BRAND is the single most important signal. Weight it heavily:
+GREEN FLAGS (favour BUY even with tighter margins): recognized, established consumer brands with real market presence and repeat buyers — e.g. brands like Michael Todd Beauty, Cetaphil, Live Conscious, and similar known skincare/supplement/wellness/beauty names. A brand with genuine consumer following and search demand is a strong buy signal on its own. Also: stable or rising 180d avg, decent velocity, consistent price history.
+RED FLAGS: fully generic/unbranded/no-name products, Prime Exclusive traps, erratic or crashing price history, declining 180d avg, very low or zero velocity, brands with no real consumer recognition or search demand.
 
 Reply ONLY in this JSON (no markdown):
-{"verdict":"BUY","confidence":"HIGH","reason":"2 sentences max","risks":"1 sentence"}
+{"verdict":"BUY","confidence":"HIGH","reason":"2 sentences max, lead with the brand assessment","risks":"1 sentence"}
 
 verdict = BUY, SKIP, or WATCH. confidence = HIGH, MEDIUM, or LOW.`;
 

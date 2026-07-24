@@ -1,6 +1,0 @@
-name = "bimma-ai-proxy"
-main = "ai-proxy.js"
-compatibility_date = "2026-07-01"
-account_id = "a71859b7986a53f6d6d7b3c10c22e845"
-
-workers_dev = true

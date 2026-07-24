@@ -1,8 +1,9 @@
-// Bimma AI Proxy — forwards browser requests to the Anthropic API,
-// adding the CORS headers browsers require. The Anthropic API key is
-// sent by the client in the x-api-key header (same key already stored
-// in the dashboard's localStorage) and simply passed through — it is
-// never stored in the Worker.
+// Bimma AI Proxy — deployed as "wispy-dew-f7a9" on workers.dev.
+// Forwards browser requests to the Anthropic API, adding the CORS
+// headers browsers require. The Anthropic API key is sent by the
+// client in the x-api-key header (same key already stored in the
+// dashboard's localStorage) and simply passed through — it is never
+// stored in the Worker.
 
 const ALLOWED_ORIGIN = 'https://bimma3006.github.io';
 

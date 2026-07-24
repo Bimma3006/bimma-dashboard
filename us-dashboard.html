@@ -401,7 +401,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v3.0 · 24 Jul 26</div>
+    <div class="us-version" id="usVersion">v3.1 · 24 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
@@ -570,6 +570,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
             <input type="text" class="us-search" id="usSearch" placeholder="Search…" oninput="usRenderTable()">
             <button class="us-act-btn" id="usResetBtn" onclick="usReset()" style="display:none;">↺ Reset</button>
             <button class="us-act-btn us-act-btn-accent" id="usExportBtn" onclick="usExportApproved()" style="display:none;">↓ Export CSV</button>
+            <button class="us-act-btn" id="usExportStrongBtn" onclick="usExportStrongAsins()" style="display:none;border-color:rgba(0,212,168,.35);color:var(--green);">↓ Export Strong ASINs</button>
           </div>
         </div>
         <div class="us-table-outer">
@@ -1461,8 +1462,10 @@ function usRenderTable() {
 
   const resetBtn = document.getElementById('usResetBtn');
   const exportBtn = document.getElementById('usExportBtn');
+  const exportStrongBtn = document.getElementById('usExportStrongBtn');
   if (resetBtn) resetBtn.style.display = '';
   if (exportBtn) exportBtn.style.display = '';
+  if (exportStrongBtn) exportStrongBtn.style.display = '';
 
   if (!data.length) {
     document.getElementById('usTableBody').innerHTML = `<tr><td colspan="10" class="us-empty">No deals match this filter</td></tr>`;
@@ -1574,6 +1577,15 @@ function usExportApproved() {
   const csv = rows.map(r => r.map(v => '"'+(v||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
   const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
   a.download = 'us-deals-approved.csv'; a.click();
+}
+
+function usExportStrongAsins() {
+  const strong = usAllDeals.filter(d => d.colour === 'green' && !d.spikeFlag);
+  if (!strong.length) { usToast('No Strong deals to export', 'error'); return; }
+  const asins = strong.map(d => d.asin).join('\n');
+  const a = document.createElement('a'); a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(asins);
+  a.download = 'us-strong-asins.txt'; a.click();
+  usToast(`${strong.length} ASIN${strong.length === 1 ? '' : 's'} exported`, 'success');
 }
 
 function usReset() {

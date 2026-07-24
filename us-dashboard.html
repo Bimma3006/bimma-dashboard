@@ -437,7 +437,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v2.5 · 24 Jul 26</div>
+    <div class="us-version" id="usVersion">v2.6 · 24 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
@@ -1392,13 +1392,14 @@ function usAnalyseRow(row) {
 
   const minROI = 0.15, strongROI = 0.20;
   let colour = 'red', strength = 0;
-  if (roi !== null) {
-    if (roi >= strongROI) { colour = 'green'; strength = 3; }
-    else if (roi >= minROI) { colour = 'amber'; strength = 2; }
-    else if ((cfg.ss || snsEligible) && ssRoi !== null && ssRoi >= strongROI) { colour = 'green'; strength = 3; }
-    else if ((cfg.ss || snsEligible) && ssRoi !== null && ssRoi >= minROI) { colour = 'amber'; strength = 2; }
-    else if (hasBizPrice && bizRoi !== null && bizRoi >= strongROI) { colour = 'green'; strength = 3; }
-    else if (hasBizPrice && bizRoi !== null && bizRoi >= minROI) { colour = 'amber'; strength = 2; }
+  const roiCandidates = [];
+  if (roi !== null) roiCandidates.push(roi);
+  if ((cfg.ss || snsEligible) && ssRoi !== null) roiCandidates.push(ssRoi);
+  if (hasBizPrice && bizRoi !== null) roiCandidates.push(bizRoi);
+  if (roiCandidates.length) {
+    const bestRoi = Math.max(...roiCandidates);
+    if (bestRoi >= strongROI) { colour = 'green'; strength = 3; }
+    else if (bestRoi >= minROI) { colour = 'amber'; strength = 2; }
     else { colour = 'red'; strength = 1; }
   }
   if (spikeFlag) { colour = 'red'; strength = 0; }

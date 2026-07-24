@@ -437,7 +437,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v2.6 · 24 Jul 26</div>
+    <div class="us-version" id="usVersion">v2.7 · 24 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
@@ -603,6 +603,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
             <button class="us-pill us-pill-purple" id="usPillSS"     onclick="usSetFilter('subsave',this)"><span class="us-pill-dot" style="background:var(--purple);"></span>♻ S&S <span id="usCntSS"></span></button>
             <button class="us-pill" id="usPillSpike" onclick="usSetFilter('spike',this)" style="border-color:rgba(255,165,2,.3);color:var(--amber);">⚡ Spiked <span id="usCntSpike"></span></button>
             <button class="us-pill" id="usPillBiz" onclick="usSetFilter('bizprice',this)" style="border-color:rgba(255,165,2,.3);color:var(--amber);">💼 Biz <span id="usCntBiz"></span></button>
+            <button class="us-pill" id="usPillAIKeep" onclick="usSetFilter('aikeep',this)" style="border-color:rgba(155,109,255,.35);color:var(--purple);">🤖 AI Keep <span id="usCntAIKeep"></span></button>
             <button class="us-pill" id="usPillExcRecent" onclick="usToggleExcludeRecent(this)" style="border-style:dashed;">🚫 &lt;3d</button>
           </div>
           <div class="us-act-row">
@@ -1212,6 +1213,7 @@ async function usRunAnalysis() {
     document.getElementById('usFilters').style.display = 'block';
     usRenderTable();
     usToast(`${deals.length} deals analysed`, 'success');
+    usAutoAnalyseGoodDeals();
   } catch(e) {
     usToast('Error: ' + e.message, 'error');
     document.getElementById('usLoading').classList.remove('visible');
@@ -1448,6 +1450,7 @@ function usRenderTable() {
   else if (usFilter === 'subsave') data = data.filter(d => (d.ss || d.snsPriceRaw) && d.ssRoi != null && d.ssRoi >= 0.15).sort((a,b) => (b.ssRoi||0)-(a.ssRoi||0));
   else if (usFilter === 'spike')   data = data.filter(d => !!d.spikeFlag);
   else if (usFilter === 'bizprice') data = data.filter(d => d.hasBizPrice && d.bizRoi != null && d.bizRoi >= 0.15).sort((a,b) => (b.bizRoi||0)-(a.bizRoi||0));
+  else if (usFilter === 'aikeep')  data = data.filter(d => d.aiVerdict === 'BUY' || d.aiVerdict === 'WATCH');
 
   if (usExcludeRecent) data = data.filter(d => !d.recentBought);
   if (usBrandFilter)   data = data.filter(d => d.brand === usBrandFilter);
@@ -1501,9 +1504,11 @@ function usRenderTable() {
   const cntSS    = usAllDeals.filter(d => (d.ss) && d.ssRoi != null && d.ssRoi >= 0.15).length;
   const cntSpike = usAllDeals.filter(d => !!d.spikeFlag).length;
   const cntBiz   = usAllDeals.filter(d => d.hasBizPrice && d.bizRoi != null && d.bizRoi >= 0.15).length;
+  const cntAIKeep = usAllDeals.filter(d => d.aiVerdict === 'BUY' || d.aiVerdict === 'WATCH').length;
   const setC = (id, n) => { const el = document.getElementById(id); if(el) el.textContent = n > 0 ? n : ''; };
   setC('usCntAll', cntAll); setC('usCntGreen', cntGreen); setC('usCntAmber', cntAmber);
   setC('usCntRed', cntRed); setC('usCntSS', cntSS); setC('usCntSpike', cntSpike); setC('usCntBiz', cntBiz);
+  setC('usCntAIKeep', cntAIKeep);
 
   const resetBtn = document.getElementById('usResetBtn');
   const exportBtn = document.getElementById('usExportBtn');
@@ -2093,6 +2098,28 @@ async function usAnalyseAll() {
     await new Promise(r => setTimeout(r, 800));
   }
   usToast('AI analysis complete ✓', 'success');
+}
+
+// Auto-runs right after a CSV import: AI-checks only the deals that already pass
+// financial screening (Strong/Marginal, not Reject/Spiked), then switches the view
+// to show only the ones the AI approved (real brand + healthy chart).
+async function usAutoAnalyseGoodDeals() {
+  const AUTO_CAP = 150;
+  const candidates = usAllDeals.filter(d => !d.spikeFlag && d.colour !== 'red' && !d.aiVerdict);
+  if (!candidates.length) return;
+  const batch = candidates.slice(0, AUTO_CAP);
+  usToast(`🤖 Auto-checking ${batch.length} deal${batch.length === 1 ? '' : 's'} (brand + chart)…`, '');
+  for (const deal of batch) {
+    await usAnalyseDeal(deal.asin);
+    await new Promise(r => setTimeout(r, 800));
+  }
+  const keepPill = document.getElementById('usPillAIKeep');
+  usSetFilter('aikeep', keepPill);
+  if (candidates.length > AUTO_CAP) {
+    usToast(`Checked first ${AUTO_CAP} — ${candidates.length - AUTO_CAP} more available via 🤖 Analyse All`, '');
+  } else {
+    usToast('AI check complete — showing approved deals only', 'success');
+  }
 }
 
 function usToast(msg, type='') {

@@ -437,7 +437,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v2.3 · 24 Jul 26</div>
+    <div class="us-version" id="usVersion">v2.4 · 24 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
@@ -1319,6 +1319,15 @@ function usAnalyseRow(row) {
   const bbCurrent = usPNum(row['Buy Box: Current']) || usPNum(row['Amazon: Current']);
   const stPrice = usPNum(row['Buy Box: Strikethrough Price']);
 
+  // Prime Exclusive pricing — a recurring members-only discount cycle, not a genuine
+  // one-off dip. Presence of any Prime Exclusive price data on this ASIN is a
+  // deterministic red flag for A2A (the "dip" repeats forever, no resale premium).
+  const primeExclCurrent = usPNum(row['New, Prime Exclusive: Current']);
+  const primeExcl30  = usPNum(row['New, Prime Exclusive: 30 days avg.'])  || usPNum(row['New, Prime Exclusive: 30 days average']);
+  const primeExcl90  = usPNum(row['New, Prime Exclusive: 90 days avg.'])  || usPNum(row['New, Prime Exclusive: 90 days average']);
+  const primeExcl180 = usPNum(row['New, Prime Exclusive: 180 days avg.']) || usPNum(row['New, Prime Exclusive: 180 days average']);
+  const hasPrimeExclusive = !!(primeExclCurrent || primeExcl30 || primeExcl90 || primeExcl180);
+
   // Used LN mode
   const ulnAvg = usPNum(row['Used, like new: 180 days avg.']);
   const ulnBuy = usPNum(row['Used, like new: Current']);
@@ -1400,7 +1409,7 @@ function usAnalyseRow(row) {
 
   const spSource = stCapped && spBase === stCapped ? 'ST' : (avg90 && _use90 ? '90d' : '180d') + '+' + Math.round((uplift-1)*100) + '%';
 
-  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: cfg.ss || snsEligible, ssRoi, snsPriceRaw, avg180: bestAvg, rawAvg180: avg180 || null, rawAvg90: avg90 || null, rawAvg30: avg30 || null, weightLbs, inboundCost, bizPriceRaw, bizBuyTotal, bizProfit, bizRoi, bizDiscount, hasBizPrice, decision: null };
+  return { asin, title, brand, buyTotal, buyRaw, sp, spSource, bbCurrent, profit, roi, colour, strength, spikeFlag, boughtPerMonth, lastPriceChange, ss: cfg.ss || snsEligible, ssRoi, snsPriceRaw, avg180: bestAvg, rawAvg180: avg180 || null, rawAvg90: avg90 || null, rawAvg30: avg30 || null, hasPrimeExclusive, weightLbs, inboundCost, bizPriceRaw, bizBuyTotal, bizProfit, bizRoi, bizDiscount, hasBizPrice, decision: null };
 }
 
 // ── RENDER TABLE ──────────────────────────
@@ -2020,7 +2029,7 @@ async function usAnalyseDeal(asin) {
 
   const prompt = `Quick check on this Amazon A2A deal — you have a web_search tool, use it once to check brand legitimacy.
 
-1. BRAND: Search the web for "${deal.brand || deal.title}" to check if it's a real, established brand — does it have its own official website, real social presence, or genuine market footprint? Or does it look like a generic/throwaway Amazon-native listing name with no real business behind it (common with cheap Chinese-manufactured goods using random invented brand names)? Reference examples of the brand quality we DO want: Insane Labz, Amuse, True Canine, No Cow, Ronnie Coleman, Honey Pot, Tree of Life, Zahler, Live Conscious, Burt's Bees, Pacifica, Harney & Sons, Myprotein, SUTERA, Viori, First Aid Beauty, Dasique, Global Healing Center, HYDRANT, The Beard Club, Reserveage, Bliss, Chewsy Chews, For Wellness, TB12, Source Naturals, Honest Beauty, Michael Todd Beauty, Cetaphil — real DTC/niche brands with their own following, even if not famous. If the brand has no real website/presence and looks invented purely to sell one generic product line (mops, phone cases, random gadgets etc with made-up names), that's an automatic SKIP regardless of the chart.
+${deal.hasPrimeExclusive ? 'HARD RULE — AUTOMATIC SKIP: This ASIN has active "New, Prime Exclusive" pricing on record. That means Amazon runs a recurring members-only discount cycle on this listing — the "dip" repeats indefinitely, it is not a genuine one-off buying opportunity, and there is no reliable resale premium to flip into. Verdict MUST be SKIP regardless of brand or chart quality. State this as the primary reason.\n\n' : ''}1. BRAND: Search the web for "${deal.brand || deal.title}" to check if it's a real, established brand — does it have its own official website, real social presence, or genuine market footprint? Or does it look like a generic/throwaway Amazon-native listing name with no real business behind it (common with cheap Chinese-manufactured goods using random invented brand names)? Reference examples of the brand quality we DO want: Insane Labz, Amuse, True Canine, No Cow, Ronnie Coleman, Honey Pot, Tree of Life, Zahler, Live Conscious, Burt's Bees, Pacifica, Harney & Sons, Myprotein, SUTERA, Viori, First Aid Beauty, Dasique, Global Healing Center, HYDRANT, The Beard Club, Reserveage, Bliss, Chewsy Chews, For Wellness, TB12, Source Naturals, Honest Beauty, Michael Todd Beauty, Cetaphil — real DTC/niche brands with their own following, even if not famous. If the brand has no real website/presence and looks invented purely to sell one generic product line (mops, phone cases, random gadgets etc with made-up names), that's an automatic SKIP regardless of the chart.
 2. CHART: This is A2A arbitrage — the strategy is BUY NOW at a temporary low price, HOLD, then SELL LATER once the price recovers toward its normal level. BB Now sitting below the 180d Avg is GOOD and EXPECTED — that gap IS the profit margin, not a warning sign, and today's snapshot price on its own tells you nothing about the trend.
    The REAL decline signal is whether the shorter-term averages are meaningfully lower than the 180d average — that means the price has been sliding for a while, not just dipping today. Compare:
    - 180d Avg (long-term baseline): ${deal.rawAvg180 ? '$'+deal.rawAvg180.toFixed(2) : 'N/A'}

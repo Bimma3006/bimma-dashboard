@@ -445,6 +445,9 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     <button onclick="usHandleAuth()" id="usAuthBtn" style="margin-top:8px;width:100%;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.06em;padding:7px 12px;background:var(--accent);border:none;border-radius:var(--r-sm);color:#fff;cursor:pointer;transition:all var(--transition);">Connect Sheets</button>
     <button onclick="usLoadSheet()" id="usRefreshBtn" disabled style="margin-top:6px;width:100%;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.04em;padding:6px 12px;background:transparent;border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;">↻ Refresh</button>
     <a href="index.html" class="us-switch-link">← Switch to UK Dashboard</a>
+    <div style="margin-top:10px;">
+      <input type="password" id="usAnthropicKey" placeholder="Anthropic API key for AI" class="us-input" style="font-size:10px;padding:5px 8px;" onchange="localStorage.setItem('us_anthropic_key',this.value.trim())" value="">
+    </div>
     <div style="display:flex;gap:6px;margin-top:8px;">
       <button onclick="usDriveSave()" style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;padding:6px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;transition:all .15s;" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--text-3)'">↑ Save</button>
       <button onclick="usDriveLoad()" style="flex:1;font-family:var(--mono);font-size:10px;font-weight:700;padding:6px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text-3);cursor:pointer;transition:all .15s;" onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--text-3)'">↓ Load</button>
@@ -1114,6 +1117,11 @@ window.addEventListener('DOMContentLoaded', () => {
     const inp = document.getElementById('usClientIdInput');
     if (inp) inp.value = savedCid;
     usLoadGIS();
+  }
+  const savedAnthropicKey = localStorage.getItem('us_anthropic_key');
+  if (savedAnthropicKey) {
+    const el = document.getElementById('usAnthropicKey');
+    if (el) el.value = savedAnthropicKey;
   }
 
   usRenderDashboard();
@@ -1991,6 +1999,16 @@ async function usAnalyseDeal(asin) {
   const deal = usAllDeals.find(d => d.asin === asin);
   if (!deal) return;
   const btn = document.getElementById('ai-btn-' + asin);
+
+  // Get Anthropic API key
+  const anthropicKey = localStorage.getItem('us_anthropic_key') || '';
+  if (!anthropicKey) {
+    const key = prompt('Enter your Anthropic API key to use AI analysis:');
+    if (!key) return;
+    localStorage.setItem('us_anthropic_key', key.trim());
+  }
+  const apiKey = localStorage.getItem('us_anthropic_key');
+
   if (btn) { btn.textContent = '⏳'; btn.classList.add('loading'); btn.disabled = true; }
 
   const prompt = `You are an expert Amazon FBA arbitrage analyst. Analyse this US 3rd party A2A deal.
@@ -2019,7 +2037,12 @@ verdict = BUY, SKIP, or WATCH. confidence = HIGH, MEDIUM, or LOW.`;
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-allow-browser': 'true'
+      },
       body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 200, messages: [{ role: 'user', content: prompt }] })
     });
     const data = await resp.json();

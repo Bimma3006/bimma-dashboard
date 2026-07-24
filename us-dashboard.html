@@ -437,7 +437,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v1.8 · 24 Jul 26</div>
+    <div class="us-version" id="usVersion">v1.9 · 24 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
@@ -2017,31 +2017,22 @@ async function usAnalyseDeal(asin) {
 
   if (btn) { btn.textContent = '⏳'; btn.classList.add('loading'); btn.disabled = true; }
 
-  const prompt = `You are an expert Amazon FBA arbitrage analyst. Analyse this US 3rd party A2A deal.
+  const prompt = `Quick 2-check read on this Amazon A2A deal. Ignore ROI/profit math entirely — just judge these two things:
 
-DEAL:
-- ASIN: ${deal.asin}
-- Product: ${deal.title}
-- Brand: ${deal.brand || 'Unknown/Generic'}
-- Buy Price: $${deal.buyRaw?.toFixed(2)}
-- Projected Sell (180d avg+10%): $${deal.sp?.toFixed(2)}
-- BB Now: $${deal.bbCurrent?.toFixed(2)}
-- 180d Avg: $${deal.avg180?.toFixed(2)}
-- Profit: $${deal.profit?.toFixed(2)} | ROI: ${deal.roi ? (deal.roi*100).toFixed(1)+'%' : 'N/A'}
-- Sold/mo: ${deal.boughtPerMonth || 'Unknown'}
-- Spike: ${deal.spikeFlag || 'None'}
-- Last change: ${deal.lastPriceChange || 'Unknown'}
+1. BRAND: Is "${deal.brand || 'this brand'}" a real, recognized consumer brand with genuine market presence (like Michael Todd Beauty, Cetaphil, Live Conscious) — or generic/unknown/no-name?
+2. CHART: Based on this price history, is it healthy (stable or rising 180d avg, normal fluctuation) or unhealthy (declining avg, erratic/crashing, dead velocity)?
+   - 180d Avg: $${deal.avg180?.toFixed(2)}
+   - BB Now: $${deal.bbCurrent?.toFixed(2)} (ignore closeness to buy price — that's normal for A2A)
+   - Sold/mo: ${deal.boughtPerMonth || 'Unknown'}
+   - Spike: ${deal.spikeFlag || 'None'}
+   - Last change: ${deal.lastPriceChange || 'Unknown'}
 
-IMPORTANT — how to weigh BB Now: BB Now sitting at or near the Buy Price is NORMAL and EXPECTED for A2A sourcing (we buy at the going rate). Do NOT treat "BB near buy price" or "no margin of error vs current BB" as a red flag by itself — that's just how the deal was sourced. Only flag price-position risk if the 180d Avg itself is low/eroding or trending down, meaning there's no real historical premium to sell into. Focus on the brand and the historical demand picture, not a snapshot comparison to today's BB.
+Product: ${deal.title}
 
-BRAND is the single most important signal. Weight it heavily:
-GREEN FLAGS (favour BUY even with tighter margins): recognized, established consumer brands with real market presence and repeat buyers — e.g. brands like Michael Todd Beauty, Cetaphil, Live Conscious, and similar known skincare/supplement/wellness/beauty names. A brand with genuine consumer following and search demand is a strong buy signal on its own. Also: stable or rising 180d avg, decent velocity, consistent price history.
-RED FLAGS: fully generic/unbranded/no-name products, Prime Exclusive traps, erratic or crashing price history, declining 180d avg, very low or zero velocity, brands with no real consumer recognition or search demand.
+Reply ONLY in this JSON (no markdown), keep it short:
+{"verdict":"BUY","confidence":"HIGH","reason":"one short line: Brand: [known/unknown] · Chart: [healthy/unhealthy]","risks":"one short phrase or empty string"}
 
-Reply ONLY in this JSON (no markdown):
-{"verdict":"BUY","confidence":"HIGH","reason":"2 sentences max, lead with the brand assessment","risks":"1 sentence"}
-
-verdict = BUY, SKIP, or WATCH. confidence = HIGH, MEDIUM, or LOW.`;
+verdict = BUY (good brand + healthy chart), SKIP (bad brand or bad chart), WATCH (mixed/uncertain).`;
 
   try {
     const resp = await fetch('https://wispy-dew-f7a9.jamescatterall49.workers.dev', {
@@ -2050,7 +2041,7 @@ verdict = BUY, SKIP, or WATCH. confidence = HIGH, MEDIUM, or LOW.`;
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
       },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 200, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 100, messages: [{ role: 'user', content: prompt }] })
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const rawText = await resp.text();

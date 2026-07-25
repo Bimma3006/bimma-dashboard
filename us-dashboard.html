@@ -401,7 +401,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v3.1 · 24 Jul 26</div>
+    <div class="us-version" id="usVersion">v3.2 · 25 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
@@ -1270,7 +1270,6 @@ function usAnalyseRow(row) {
   const avg180 = usPNum(row['Buy Box: 180 days avg.']) || usPNum(row['Buy Box: 180 days average']);
   const avg90  = usPNum(row['Buy Box: 90 days avg.'])  || usPNum(row['Buy Box: 90 days average']);
   const avg30  = usPNum(row['Buy Box: 30 days avg.'])  || usPNum(row['Buy Box: 30 days average']);
-  const avg365 = usPNum(row['Buy Box: 365 days avg.']) || usPNum(row['Buy Box: 365 days average']);
   const bbCurrent = usPNum(row['Buy Box: Current']) || usPNum(row['Amazon: Current']);
   const stPrice = usPNum(row['Buy Box: Strikethrough Price']);
 
@@ -1299,7 +1298,7 @@ function usAnalyseRow(row) {
 
   const tieredUp = v => is3P
     ? 1.10 // flat 10% uplift for 3rd party
-    : (v < 50 ? 1.20 : v < 100 ? 1.15 : v < 150 ? 1.10 : v < 200 ? 1.075 : 1.05);
+    : (v < 50 ? 1.15 : v < 100 ? 1.08 : v < 150 ? 1.06 : v < 200 ? 1.04 : 1.03);
   const uplift = tieredUp(bestAvg);
   const ST_MAX = 1.20;
   const stCapped = (!is3P && stPrice && stPrice > bestAvg) ? Math.min(stPrice, bestAvg * ST_MAX) : null;
@@ -1309,10 +1308,7 @@ function usAnalyseRow(row) {
   // Spike detection — disabled for 3rd party mode (uses 90d avg which handles this)
   let spikeFlag = null;
   if (!is3P) {
-    if (avg365 && avg180 && bbCurrent) {
-      if (avg180 > avg365 * 1.30 && bbCurrent < avg180 * 0.75) spikeFlag = 'avg_skew';
-    }
-    if (!spikeFlag && bestAvg && bbCurrent && bbCurrent < bestAvg * 0.50) spikeFlag = 'avg_skew';
+    if (bestAvg && bbCurrent && bbCurrent < bestAvg * 0.50) spikeFlag = 'avg_skew';
   }
 
   // Fees — use Keepa's actual values if available, else estimate

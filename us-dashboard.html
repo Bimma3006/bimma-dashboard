@@ -401,7 +401,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v3.3 · 25 Jul 26</div>
+    <div class="us-version" id="usVersion">v3.4 · 25 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
@@ -2478,11 +2478,11 @@ function stalkerRenderFeed() {
       if (item.title || item.imgKey || item.price) {
         const imgUrl = item.imgKey
           ? `https://m.media-amazon.com/images/I/${item.imgKey.replace(/\._[A-Z0-9,_]+_\./g, '._SL96_.')}${item.imgKey.includes('.') ? '' : '._SL96_.jpg'}`
-          : `https://m.media-amazon.com/images/P/${item.asin}.01._SL96_.jpg`;
+          : null;
         const currencySymbol = tld === 'com' ? '$' : '£';
         return `<div class="sf-card">
           <div class="sf-card-img-wrap">
-            <img src="${imgUrl}" class="sf-card-img" onerror="stalkerImgFallback(this,'${item.asin}')">
+            ${imgUrl ? `<img src="${imgUrl}" class="sf-card-img" onerror="stalkerImgFallback(this,'${item.asin}')">` : '<div class="stalker-product-img-placeholder">📦</div>'}
           </div>
           <div class="sf-card-body">
             <div class="sf-card-meta">
@@ -2551,14 +2551,11 @@ function stalkerClearFeed() {
 function stalkerImgFallback(el, asin) {
   const tried = parseInt(el.dataset.tried || '0');
   if (tried === 0) {
+    // One legitimate retry: same image key, different Amazon CDN edge domain
+    // (genuine transient failures only — no more ASIN-guessed URLs, since those
+    // often return a real-but-black placeholder image instead of erroring).
     el.dataset.tried = 1;
-    el.src = `https://m.media-amazon.com/images/P/${asin}.01._SL96_.jpg`;
-  } else if (tried === 1) {
-    el.dataset.tried = 2;
-    el.src = `https://images-eu.ssl-images-amazon.com/images/P/${asin}.01._SL96_.jpg`;
-  } else if (tried === 2) {
-    el.dataset.tried = 3;
-    el.src = `https://m.media-amazon.com/images/P/${asin}.01.LZZZZZZZ.jpg`;
+    el.src = el.src.replace('https://m.media-amazon.com/', 'https://images-eu.ssl-images-amazon.com/');
   } else {
     el.outerHTML = '<div class="stalker-product-img-placeholder">📦</div>';
   }
@@ -2715,7 +2712,7 @@ function stalkerRenderProductFeed(products, seller) {
     const imgKey = p.imagesCSV ? p.imagesCSV.split(',')[0] : null;
     const imgUrl = imgKey
       ? `https://m.media-amazon.com/images/I/${imgKey.replace(/\._[A-Z0-9,_]+_\./g, '._SL96_.')}${imgKey.includes('.') ? '' : '._SL96_.jpg'}`
-      : `https://m.media-amazon.com/images/P/${p.asin || asin}.01._SL96_.jpg`;
+      : null;
     // Price extraction from Keepa csv arrays
     // Each csv field = [keepaTime, price, keepaTime, price, ...]
     // Values are in pence/cents × 100, -1 = out of stock
@@ -2752,7 +2749,7 @@ function stalkerRenderProductFeed(products, seller) {
     const feeEstimate = price ? (parseFloat(price) * 0.15).toFixed(2) : null;
 
     return `<div class="stalker-product-row">
-      <img src="${imgUrl}" class="stalker-product-img" onerror="stalkerImgFallback(this,'${asin}')">
+      ${imgUrl ? `<img src="${imgUrl}" class="stalker-product-img" onerror="stalkerImgFallback(this,'${asin}')">` : '<div class="stalker-product-img-placeholder">📦</div>'}
       <div style="min-width:0;">
         <div class="stalker-product-title" title="${title}">${title}</div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">

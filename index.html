@@ -1472,7 +1472,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="giftcards" onclick="showPage('giftcards',this)"><span class="nav-icon">◈</span>Gift Cards</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v8.1 · 24 Jul 26</div>
+    <div class="sidebar-version">v8.2 · 25 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -6529,7 +6529,21 @@ function keepaMinToDate(keepaMin) {
 }
 
 function stalkerSave() {
-  localStorage.setItem('bimma_stalker_sellers', JSON.stringify(stalkerSellers));
+  // Never let an accidentally-empty in-memory list overwrite real saved sellers —
+  // only persist an empty array if storage was already empty (genuine fresh state).
+  if (stalkerSellers.length === 0) {
+    const existing = localStorage.getItem('bimma_stalker_sellers');
+    if (existing && existing !== '[]') {
+      console.warn('[Storefront Stalker] Refused to save empty seller list over existing saved data.');
+      return;
+    }
+  }
+  try {
+    localStorage.setItem('bimma_stalker_sellers', JSON.stringify(stalkerSellers));
+  } catch(e) {
+    console.warn('[Storefront Stalker] Failed to save sellers:', e.message);
+    return;
+  }
   // Save snapshots separately — can be large, keep separate key so feed clear never touches it
   try {
     localStorage.setItem('bimma_stalker_snaps', JSON.stringify(stalkerSnapshots));

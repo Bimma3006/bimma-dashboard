@@ -1472,7 +1472,7 @@ input::placeholder { color: var(--text-4); }
     <div class="nav-item" data-page="giftcards" onclick="showPage('giftcards',this)"><span class="nav-icon">◈</span>Gift Cards</div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-version">v8.3 · 25 Jul 26</div>
+    <div class="sidebar-version">v8.4 · 25 Jul 26</div>
     <div class="auth-row">
       <div class="auth-dot" id="authDot"></div>
       <span class="auth-label" id="authLabel">Not connected</span>
@@ -7243,7 +7243,7 @@ function stalkerRenderProductFeed(products, seller) {
   const rows = products.map(p => {
     const asin   = p.asin || '';
     const title  = p.title || asin;
-    const imgKey = p.imagesCSV ? p.imagesCSV.split(',')[0] : null;
+    const imgKey = (p.images && p.images.length && (p.images[0].l || p.images[0].m)) || (p.imagesCSV ? p.imagesCSV.split(',')[0] : null);
     const imgUrl = imgKey
       ? `https://m.media-amazon.com/images/I/${imgKey.replace(/\._[A-Z0-9,_]+_\./g, '._SL96_.')}${imgKey.includes('.') ? '' : '._SL96_.jpg'}`
       : null;
@@ -7343,7 +7343,7 @@ async function stalkerFetchAndPrependNewAsins(newAsins, seller) {
   const detectedAt = Date.now();
   const newFeedItems = newAsins.map(asin => {
     const p = productMap[asin] || {};
-    const imgKey = p.imagesCSV ? p.imagesCSV.split(',')[0] : null;
+    const imgKey = (p.images && p.images.length && (p.images[0].l || p.images[0].m)) || (p.imagesCSV ? p.imagesCSV.split(',')[0] : null);
     let price = null, priceLabel = 'New';
     try {
       const csv = p.csv;

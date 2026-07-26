@@ -401,7 +401,7 @@ body.us-collapsed #us-main { margin-left: 0 !important; }
     </div>
   </div>
   <div class="us-sidebar-footer">
-    <div class="us-version" id="usVersion">v3.4 · 25 Jul 26</div>
+    <div class="us-version" id="usVersion">v3.5 · 25 Jul 26</div>
     <div class="us-auth-row">
       <div class="us-auth-dot" id="usAuthDot" style="background:var(--red);"></div>
       <span id="usAuthLabel" style="font-size:10px;">Not connected</span>
@@ -2709,7 +2709,7 @@ function stalkerRenderProductFeed(products, seller) {
   const rows = products.map(p => {
     const asin   = p.asin || '';
     const title  = p.title || asin;
-    const imgKey = p.imagesCSV ? p.imagesCSV.split(',')[0] : null;
+    const imgKey = (p.images && p.images.length && (p.images[0].l || p.images[0].m)) || (p.imagesCSV ? p.imagesCSV.split(',')[0] : null);
     const imgUrl = imgKey
       ? `https://m.media-amazon.com/images/I/${imgKey.replace(/\._[A-Z0-9,_]+_\./g, '._SL96_.')}${imgKey.includes('.') ? '' : '._SL96_.jpg'}`
       : null;
@@ -2809,7 +2809,7 @@ async function stalkerFetchAndPrependNewAsins(newAsins, seller) {
   const detectedAt = Date.now();
   const newFeedItems = newAsins.map(asin => {
     const p = productMap[asin] || {};
-    const imgKey = p.imagesCSV ? p.imagesCSV.split(',')[0] : null;
+    const imgKey = (p.images && p.images.length && (p.images[0].l || p.images[0].m)) || (p.imagesCSV ? p.imagesCSV.split(',')[0] : null);
     let price = null, priceLabel = 'New';
     try {
       const csv = p.csv;
